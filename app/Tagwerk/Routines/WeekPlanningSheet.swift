@@ -16,11 +16,13 @@ struct WeekPlanningSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(Self.stepText(number: model.stepNumber, count: model.stepCount))
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(.secondaryText)
-                        ProgressView(value: Double(model.stepNumber), total: Double(model.stepCount))
+                        StepBar(number: model.stepNumber, count: model.stepCount)
+                        Text(model.stepTitle).font(.title2.weight(.bold))
+                        Text(Self.stepSubtitle(number: model.stepNumber, count: model.stepCount, next: model.nextStepTitle))
+                            .font(.subheadline).foregroundStyle(.secondaryText)
                     }
                     .accessibilityElement(children: .combine)
+                    .accessibilityValue(Self.stepText(number: model.stepNumber, count: model.stepCount))
                 }
                 switch model.step {
                 case .review: reviewSteps
@@ -50,8 +52,10 @@ struct WeekPlanningSheet: View {
             }
             Spacer()
             if model.isLastStep {
-                Button("Fertig") { close() }.buttonStyle(.borderedProminent)
+                Button("Fertig") { finish() }.buttonStyle(.borderedProminent)
             } else {
+                // Every step is optional: skipping goes on without saving what the step asked for.
+                Button("Überspringen") { model.skip() }.buttonStyle(.bordered)
                 Button("Weiter") { model.next() }.buttonStyle(.borderedProminent)
             }
         }
@@ -62,6 +66,12 @@ struct WeekPlanningSheet: View {
     private func close() {
         model.close()
         environment.routines.closeSheet()
+    }
+
+    /// "Fertig": the planning is done, so the card "Wochenplanung" in "Planen" stays away for today (RO15b).
+    private func finish() {
+        environment.routines.hideWeekPlanningCardToday()
+        close()
     }
 
     // MARK: 1 Review
@@ -200,8 +210,29 @@ struct WeekPlanningSheet: View {
         String(localized: "Schritt \(number) von \(count)")
     }
 
+    /// "Schritt 2 von 5 · danach: Fälligkeiten der neuen Woche"; on the last step only "Schritt 5 von 5".
+    static func stepSubtitle(number: Int, count: Int, next: String?) -> String {
+        guard let next else { return stepText(number: number, count: count) }
+        return String(localized: "Schritt \(number) von \(count) · danach: \(next)")
+    }
+
     /// "Mo. 23.11."
     static func dayText(_ day: PlanDay, calendar: Calendar) -> String {
         DateText.shortWeekday(day, calendar: calendar) + " " + DateText.numericDay(day, calendar: calendar)
+    }
+}
+
+/// Five segments, one per step: the steps up to the current one are filled (RO12b). Decoration; the value is on the heading.
+private struct StepBar: View {
+    let number: Int
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(1...max(1, count), id: \.self) { index in
+                Capsule().fill(index <= number ? Color.accentColor : Color(.systemFill)).frame(height: 6)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

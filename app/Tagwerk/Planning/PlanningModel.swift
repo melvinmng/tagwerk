@@ -1481,6 +1481,9 @@ final class PlanningModel {
     /// Once today is over: open tasks planned for today or due today (without a later day) and without a
     /// future time block ("Von heute übrig"). Recurring reminders are left out; their next occurrence follows.
     private(set) var leftFromToday: [TaskItem] = []
+    /// The same selection before today is over: what the sheet "Unerledigtes verschieben" works on, when the capacity card
+    /// offers it in the late afternoon or on an overbooked day (RO10a). Equal to `leftFromToday` once today is over.
+    private(set) var openFromToday: [TaskItem] = []
     /// The next working day within five days after today (decision 5).
     private(set) var nextPlanDay: PlanDay?
     /// Today's evening line, only while today is shown and over and a working day follows.
@@ -1504,6 +1507,16 @@ final class PlanningModel {
         await assign(id, to: anchor)
     }
 
+    /// Whether the capacity card of today offers "Unerledigtes verschieben": open tasks of today and an overbooked day or the late
+    /// afternoon (`LeftoverPreview.showsLeftoverLine`). The overbooking is the one of the card (`capacity(_:)`).
+    func showsLeftoverLine(overbooked: Bool) -> Bool {
+        let today = self.today
+        let endMinutes = workHours(on: today)?.endMinutes ?? 0
+        return LeftoverPreview.showsLeftoverLine(leftoverCount: openFromToday.count, isOverCapacity: overbooked,
+                                                 minutesOfDay: minutes(now(), from: today.startDate(in: calendar)),
+                                                 workdayEndMinutes: endMinutes)
+    }
+
     /// "Alle auf morgen": moves every task like `moveTask` (blocks go along) with one undo for all.
     func moveTasks(_ ids: [TaskID], to day: PlanDay) async {
         var moves: [DayMove] = []
@@ -1521,6 +1534,16 @@ final class PlanningModel {
         /// Part of `placed`: the block lies after the due day.
         var late: Int
         var unplaced: Int
+        /// The tasks counted in `unplaced`, so the result can name them (RO11b).
+        var unplacedTaskIDs: [TaskID] = []
+    }
+
+    /// What the target day of "Alles auf morgen" has free, for the preview of the sheet (RO9c): the same numbers as the capacity
+    /// card (`planInputs`), `nil` while there are none. A day without working time is a day off.
+    func leftoverTargetCapacity(on day: PlanDay) async -> (freeMinutes: Int?, isDayOff: Bool) {
+        let isDayOff = (workHours(on: day)?.minutes ?? 0) == 0
+        guard !isDayOff, let input = await planInputs(in: day...day).first else { return (nil, isDayOff) }
+        return (input.availableMinutes - input.plannedMinutes, false)
     }
 
     /// "In den nächsten freien Block" (#163): every task gets a time block in the first free stretch from the next working
@@ -1549,6 +1572,7 @@ final class PlanningModel {
         var moves: [DayMove] = []
         var late = 0
         var failed = 0
+        var failedIDs: [TaskID] = []
         for placed in result.placed {
             guard let task = tasks.first(where: { $0.id.key == placed.taskKey }) else { continue }
             let previous = planStore.assignment(for: task.id)
@@ -1560,12 +1584,14 @@ final class PlanningModel {
             } catch {
                 lastError = TaskListModel.message(for: error)
                 failed += 1
+                failedIDs.append(task.id)
             }
         }
         lastMove = nil
         lastMoveGroup = moves.isEmpty ? nil : moves
         await reload()
-        return LeftoverOutcome(placed: moves.count, late: late, unplaced: result.unplaced.count + failed)
+        let unplacedIDs = tasks.filter { result.unplaced.contains($0.id.key) }.map(\.id) + failedIDs
+        return LeftoverOutcome(placed: moves.count, late: late, unplaced: result.unplaced.count + failed, unplacedTaskIDs: unplacedIDs)
     }
 
     func undoMoveGroup() async {
@@ -1599,13 +1625,14 @@ final class PlanningModel {
         }
         nextPlanDay = (1...5).lazy.map { today.adding(days: $0, calendar: self.calendar) }
             .first { (self.workHours(on: $0)?.minutes ?? 0) > 0 }
-        leftFromToday = isTodayOver ? sortedTasks(open.filter { task in
+        openFromToday = sortedTasks(open.filter { task in
             if recurringIDs.contains(task.id) { return false }
             let planned = allAssignments[task.id]
             let dueToday = task.due.map { PlanDay($0) == today } ?? false
             guard planned == today || (dueToday && (planned.map { $0 <= today } ?? true)) else { return false }
             return blocks.futureBlocks(for: task.id, after: current).isEmpty
-        }, calendar: calendar) : []
+        }, calendar: calendar)
+        leftFromToday = isTodayOver ? openFromToday : []
         if scope == .day, anchor == today, isTodayOver, let next = nextPlanDay,
            let input = await planInputs(in: next...next).first {
             eveningEntry = EveningEntry(day: next, freeMinutes: max(0, input.availableMinutes - input.plannedMinutes),

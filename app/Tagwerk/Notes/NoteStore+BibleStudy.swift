@@ -41,32 +41,98 @@ extension NoteStore {
         sessions().filter { $0.noteID == noteID && $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
     }
 
+    /// The latest session, open or completed.
+    var lastSession: BibleStudySessionRecord? {
+        sessions().max { $0.startedAt < $1.startedAt }
+    }
+
     /// The book of the latest session, to suggest it for the next one.
     var lastBookKey: String? {
         sessions().max { $0.startedAt < $1.startedAt }?.book
     }
 
-    /// Starts a session: opens the note of the book, appends a dated section ("19.11.2026 · 3,21-31") and records the
-    /// session. `dateText` is the day as shown in the section title.
+    /// The latest session of a book by the time it started, open ones included (BV3a).
+    func lastSession(bookKey: String) -> BibleStudySessionRecord? {
+        sessions().filter { $0.book == bookKey }.max { $0.startedAt < $1.startedAt }
+    }
+
+    /// The books of the latest sessions, each once, newest first, for the chips "Zuletzt" (BS2b).
+    func recentBookKeys(limit: Int = 3) -> [String] {
+        var keys: [String] = []
+        for session in sessions().sorted(by: { $0.startedAt > $1.startedAt }) where !keys.contains(session.book) {
+            keys.append(session.book)
+            if keys.count == limit { break }
+        }
+        return keys
+    }
+
+    /// Where a new session in the book should begin (BS2b, BV3a): after the end of its latest session, at the start of that
+    /// session while it is open, or at 1,1 without one. Notes imported from Notion have no sessions and give 1,1.
+    func suggestion(for book: BibleBook) -> BibleProgress.Next {
+        let last = lastSession(bookKey: book.key)
+        return BibleProgress.suggestion(lastStart: last?.resolvedStart, lastEnd: last?.resolvedEnd, book: book.number)
+    }
+
+    /// Starts a session with the passage typed as free text. The text is kept as it is.
     @discardableResult
     func startSession(book: BibleBook, passage: String, dayKey: String, dateText: String, locale: Locale = .current)
         -> (note: NoteRecord, session: BibleStudySessionRecord) {
+        startSession(book: book, passage: nil, freeText: passage, dayKey: dayKey, dateText: dateText, locale: locale)
+    }
+
+    /// Starts a session: opens the note of the book, appends a dated section ("19.11.2026 · 3,21–") and records the
+    /// session. A passage that lies inside the verse table is stored as numbers and written as `passage.text()`; a passage
+    /// outside it, or none, falls back to `freeText`, which stays free text. `dateText` is the day as shown in the title.
+    @discardableResult
+    func startSession(book: BibleBook, passage: BiblePassage?, freeText: String? = nil, dayKey: String, dateText: String,
+                      locale: Locale = .current) -> (note: NoteRecord, session: BibleStudySessionRecord) {
+        let numbers = passage.flatMap { $0.isValid(in: book.number) ? $0 : nil }
+        let passageText = numbers?.text() ?? (freeText ?? passage?.text() ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let note = openBibleNote(book: book, locale: locale)
-        note.text = BibleStudyTemplate.appendingSession(to: note.text, dateText: dateText, passage: passage)
+        note.text = BibleStudyTemplate.appendingSession(to: note.text, dateText: dateText, passage: passageText)
         note.updatedAt = now()
-        let session = BibleStudySessionRecord(dayKey: dayKey, book: book.key,
-                                              passage: passage.trimmingCharacters(in: .whitespacesAndNewlines),
-                                              noteID: note.id, startedAt: now())
+        let session = BibleStudySessionRecord(dayKey: dayKey, book: book.key, passage: passageText, noteID: note.id, startedAt: now())
+        if let numbers {
+            session.startChapter = numbers.start.chapter
+            session.startVerse = numbers.start.verse
+            session.endChapter = numbers.end?.chapter ?? 0
+            session.endVerse = numbers.end?.verse ?? 0
+        }
         context.insert(session)
         save()
         return (note, session)
     }
 
-    /// Marks the session as completed; a second call changes nothing.
-    func completeSession(_ id: UUID) {
+    /// Marks the session as completed; a second call changes nothing. With `end` (BV2b) the end is stored when it is a verse
+    /// of the book and not before the start, and the heading of the session section is completed ("3,21–" becomes
+    /// "3,21–26") if that line is still exactly the one written at the start; a heading the reader changed stays as it is.
+    /// Without `end` the session keeps the end it has.
+    func completeSession(_ id: UUID, end: BibleReference? = nil) {
         guard let session = sessions().first(where: { $0.id == id }), session.completedAt == nil else { return }
         session.completedAt = now()
+        if let end, let bookNumber = Int(session.book),
+           BibleVerseCounts.isValid(book: bookNumber, chapter: end.chapter, verse: end.verse) {
+            let start = session.resolvedStart
+            if start.map({ end >= $0 }) ?? true {
+                let oldPassage = session.passage
+                session.endChapter = end.chapter
+                session.endVerse = end.verse
+                if let start { completeHeading(of: session, oldPassage: oldPassage, passage: BiblePassage(start: start, end: end)) }
+            }
+        }
         save()
+    }
+
+    private func completeHeading(of session: BibleStudySessionRecord, oldPassage: String, passage: BiblePassage) {
+        let newPassage = passage.text()
+        guard newPassage != oldPassage else { return }
+        session.passage = newPassage
+        guard let day = PlanDay(dayKey: session.dayKey), let note = notes(.all).first(where: { $0.id == session.noteID }) else { return }
+        let updated = BibleStudyTemplate.replacingSessionHeading(in: note.text, dateText: BibleStudyTemplate.dateText(day),
+                                                                 oldPassage: oldPassage, newPassage: newPassage)
+        guard updated != note.text else { return }
+        note.text = updated
+        note.updatedAt = now()
     }
 
     /// The days with at least one completed session inside `range` (by the day the session started).

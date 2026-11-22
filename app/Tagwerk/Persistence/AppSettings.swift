@@ -122,6 +122,14 @@ final class AppSettings {
     var weekPlanningReminderEnabled: Bool = false
     var weekPlanningReminderWeekday: Int = 1
     var weekPlanningReminderMinutes: Int = 1080
+    /// The day (`PlanDay.dayKey`) on which the card "Wochenplanung" in "Planen" was hidden or the planning was finished; the card
+    /// stays away for the rest of that day (RO15b). Not part of the backup.
+    var weekPlanningCardDismissedDayKey: String? = nil
+    /// Where "Bible Study starten" is offered (`BibleStudyOffer` raw value): the evening wrap-up, as before the choice existed.
+    var bibleStudyOfferRaw: String = "evening"
+    /// The one-time upgrade of "Helle Lichter ausmachen" (offset 60) in an untouched five-point list was done. Not part of the
+    /// backup: it only keeps a list that the user changed afterwards from being upgraded again.
+    var lightsOffsetUpgradeDone: Bool = false
     /// The routine card and the evening line in "Planen".
     var showsRoutinesInPlan: Bool = true
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
@@ -249,6 +257,11 @@ final class AppSettings {
             drinkPreset2Milliliters = resolved[1]
             drinkPreset3Milliliters = resolved[2]
         }
+    }
+
+    var bibleStudyOffer: BibleStudyOffer {
+        get { BibleStudyOffer(rawValue: bibleStudyOfferRaw) ?? .evening }
+        set { bibleStudyOfferRaw = newValue.rawValue }
     }
 
     var noteSortOrder: NoteSortOrder {

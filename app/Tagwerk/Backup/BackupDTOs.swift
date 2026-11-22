@@ -745,6 +745,11 @@ struct NoteAttachmentBackup: BackupEntity {
     var typeIdentifier: String
     var createdAt: Date
     var data: Data
+    /// Scans, drawings and their stroke data (NX); files written by an older version do not carry them and restore as plain.
+    var roleRaw: String?
+    var companionOfID: UUID?
+    var recognizedText: String?
+    var pageCount: Int?
 
     init(_ record: NoteAttachmentRecord) {
         self.init(record, data: Data())
@@ -757,11 +762,16 @@ struct NoteAttachmentBackup: BackupEntity {
         typeIdentifier = record.typeIdentifier
         createdAt = record.createdAt
         self.data = data
+        roleRaw = record.roleRaw.isEmpty ? nil : record.roleRaw
+        companionOfID = record.companionOfID
+        recognizedText = record.recognizedText
+        pageCount = record.pageCount == 0 ? nil : record.pageCount
     }
 
     /// The record without its file; `BackupEntities.restore` writes the bytes through `NoteAttachmentStore`.
     func makeRecord() -> NoteAttachmentRecord {
-        NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count, createdAt: createdAt)
+        NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count, createdAt: createdAt,
+                             roleRaw: roleRaw ?? "", companionOfID: companionOfID, recognizedText: recognizedText, pageCount: pageCount ?? 0)
     }
 }
 
@@ -774,6 +784,11 @@ struct BibleStudySessionBackup: BackupEntity {
     var noteID: UUID
     var startedAt: Date
     var completedAt: Date?
+    /// The passage as numbers (BS2). Optional so backups written before still read; missing means unknown (0).
+    var startChapter: Int?
+    var startVerse: Int?
+    var endChapter: Int?
+    var endVerse: Int?
 
     init(_ record: BibleStudySessionRecord) {
         id = record.id
@@ -783,6 +798,10 @@ struct BibleStudySessionBackup: BackupEntity {
         noteID = record.noteID
         startedAt = record.startedAt
         completedAt = record.completedAt
+        startChapter = record.startChapter
+        startVerse = record.startVerse
+        endChapter = record.endChapter
+        endVerse = record.endVerse
     }
 
     func makeRecord() -> BibleStudySessionRecord {
@@ -794,6 +813,10 @@ struct BibleStudySessionBackup: BackupEntity {
         record.noteID = noteID
         record.startedAt = startedAt
         record.completedAt = completedAt
+        record.startChapter = startChapter ?? 0
+        record.startVerse = startVerse ?? 0
+        record.endChapter = endChapter ?? 0
+        record.endVerse = endVerse ?? 0
         return record
     }
 }
@@ -1334,6 +1357,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var weekPlanningReminderEnabled: Bool?
     var weekPlanningReminderWeekday: Int?
     var weekPlanningReminderMinutes: Int?
+    /// Optional, so a backup written before the choice of the place of Bible Study still decodes; a missing value keeps the default.
+    var bibleStudyOfferRaw: String?
     /// Optional, so a backup written before the focus timer settings were part of it still decodes; a missing value keeps the default.
     var focusWorkMinutes: Int?
     var focusShortBreakMinutes: Int?
@@ -1434,6 +1459,7 @@ struct AppSettingsBackup: Codable, Equatable {
         weekPlanningReminderEnabled = record.weekPlanningReminderEnabled
         weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
         weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
+        bibleStudyOfferRaw = record.bibleStudyOfferRaw
         focusWorkMinutes = record.focusWorkMinutes
         focusShortBreakMinutes = record.focusShortBreakMinutes
         focusLongBreakMinutes = record.focusLongBreakMinutes
@@ -1526,6 +1552,7 @@ struct AppSettingsBackup: Codable, Equatable {
         if let weekPlanningReminderEnabled { record.weekPlanningReminderEnabled = weekPlanningReminderEnabled }
         if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
         if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
+        if let bibleStudyOfferRaw { record.bibleStudyOfferRaw = bibleStudyOfferRaw }
         if let focusWorkMinutes { record.focusWorkMinutes = focusWorkMinutes }
         if let focusShortBreakMinutes { record.focusShortBreakMinutes = focusShortBreakMinutes }
         if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }
@@ -1789,7 +1816,8 @@ extension BackupEntities {
         if let attachments {
             for item in noteAttachments {
                 try attachments.restore(id: item.id, noteID: item.noteID, fileName: item.fileName, typeIdentifier: item.typeIdentifier,
-                                        createdAt: item.createdAt, data: item.data)
+                                        createdAt: item.createdAt, data: item.data, roleRaw: item.roleRaw ?? "",
+                                        companionOfID: item.companionOfID, recognizedText: item.recognizedText, pageCount: item.pageCount ?? 0)
             }
         }
         if replacePrivate { for item in bibleStudySessions { context.insert(item.makeRecord()) } }

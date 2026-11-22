@@ -50,6 +50,19 @@ enum AccessibilityID {
         static let breakdown = "capture.breakdown"
     }
 
+    enum NoteEditor {
+        /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
+        static let insertMenu = "noteEditor.insertMenu"
+        /// "Fertig" of the full-screen drawing canvas (the note editor behind it has a "Fertig" too).
+        static let drawingDone = "noteEditor.drawingDone"
+        /// "Bearbeiten" of the drawing viewer.
+        static let drawingEdit = "noteEditor.drawingEdit"
+        /// "Fertig" of the table editor sheet.
+        static let tableDone = "noteEditor.tableDone"
+        /// The table button of the bar above the keyboard, shown while the cursor is in a table.
+        static let tableButton = "noteEditor.tableButton"
+    }
+
     enum Common {
         /// The symbol button above the keyboard that closes it.
         static let hideKeyboard = "common.hideKeyboard"
