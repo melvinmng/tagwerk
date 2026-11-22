@@ -20092,6 +20092,16 @@
         }
       }
     },
+    "Vielleicht hat dir der Brain Dump Klarheit gegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe the brain dump gave you some clarity."
+          }
+        }
+      }
+    },
     "Von Hand abhaken": {
       "localizations": {
         "en": {
@@ -21162,7 +21172,18 @@
         }
       }
     },
+    "Willst du etwas ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Want to change something?"
+          }
+        }
+      }
+    },
     "Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -24650,11 +24671,22 @@
       }
     },
     "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "“Get suggestions” sends this note to ChatGPT. Nothing is changed without your confirmation."
+          }
+        }
+      }
+    },
+    "„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Get suggestions” sends this note with your tasks and events of the next 7 days to ChatGPT. Nothing is changed without your confirmation."
           }
         }
       }

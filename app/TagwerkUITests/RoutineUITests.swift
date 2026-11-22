@@ -47,4 +47,18 @@ final class RoutineUITests: UITestCase {
         tab("Erfassen")
         _ = onScreen(label: "Tagesstart.*Starten", matching: true)
     }
+
+    /// RO5b: the card "Willst du etwas ändern?" appears below the brain dump once it holds text, and not before.
+    func testChangeCardAppearsWithText() {
+        tab("Erfassen")
+        onScreen(label: "Tagesstart.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
+        let brainDump = app.textViews["Brain Dump"]
+        scrollTo(brainDump)
+        XCTAssertFalse(app.staticTexts["Willst du etwas ändern?"].exists, "The card shows before there is any text")
+        brainDump.tap()
+        brainDump.typeText("Kopf voll wegen Umzug")
+        waitFor("Willst du etwas ändern?")
+        waitFor("Als Aufgabe anlegen")
+    }
 }

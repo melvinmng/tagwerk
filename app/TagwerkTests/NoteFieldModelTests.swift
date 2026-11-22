@@ -164,4 +164,40 @@ struct NoteFieldModelTests {
             #expect(label.symbol == "brain.head.profile" && label.role == .brainDump)
         }
     }
+
+    private func makeCardModel(kind: NoteKind = .evening, signedIn: Bool, text: String, calendar: Calendar = testCalendar()) -> NoteFieldModel {
+        let model = NoteFieldModel(store: store, kind: kind, day: day, debounce: .milliseconds(1), sleep: { _ in },
+                                   isSignedIn: { signedIn }, now: { testNow() }, calendar: calendar)
+        model.text = text
+        return model
+    }
+
+    @Test func changeCard_hiddenWhileEmpty() {
+        #expect(makeCardModel(signedIn: true, text: "").changeCard == nil)
+        #expect(makeCardModel(signedIn: true, text: " \n ").changeCard == nil)
+    }
+
+    @Test func changeCard_showsBothActionsWithSignIn() {
+        for kind in [NoteKind.morning, .evening] {
+            let card = makeCardModel(kind: kind, signedIn: true, text: "Kopf voll").changeCard
+            #expect(card == NoteFieldModel.ChangeCard(offersSuggestions: true, footer: .privacy))
+        }
+    }
+
+    @Test func changeCard_withoutSignIn_offersOnlyTask() {
+        let card = makeCardModel(signedIn: false, text: "Kopf voll").changeCard
+        #expect(card == NoteFieldModel.ChangeCard(offersSuggestions: false, footer: .signInHint))
+    }
+
+    @Test func changeCard_neverForDream() {
+        #expect(makeCardModel(kind: .dream, signedIn: true, text: "Ich bin geflogen.").changeCard == nil)
+    }
+
+    @Test func privacyFooter_onlyWithSuggestions() {
+        // An older day: signed in, but the context of the request does not fit; no button, so no sentence about sending.
+        let older = NoteFieldModel(store: store, kind: .evening, day: PlanDay(year: 2026, month: 11, day: 10), debounce: .milliseconds(1),
+                                   sleep: { _ in }, isSignedIn: { true }, now: { testNow() }, calendar: testCalendar())
+        older.text = "Kopf voll"
+        #expect(older.changeCard == NoteFieldModel.ChangeCard(offersSuggestions: false, footer: .none))
+    }
 }

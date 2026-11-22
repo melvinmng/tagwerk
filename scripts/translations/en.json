@@ -1614,7 +1614,6 @@
   "Notizen von ChatGPT auswerten lassen": "Let ChatGPT evaluate notes",
   "Vorschläge holen": "Get suggestions",
   "Vorschläge werden geholt …": "Getting suggestions …",
-  "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": "“Get suggestions” sends this note to ChatGPT. Nothing is changed without your confirmation.",
   "%lld von %lld bisher": "%1$lld of %2$lld so far",
   "Aufgaben der Woche festgelegt": "Tasks of the week set",
   "Beide Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.": "Both fields are optional. The reflection stays on this iPhone only.",
@@ -2471,5 +2470,8 @@
   "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it.",
   "Bleibt auf diesem iPhone, geht nie an ChatGPT.": "Stays on this iPhone and never goes to ChatGPT.",
   "Fokus für heute": "Focus for today",
-  "In „Planen“ setzen · %lld von %lld gewählt": "Set it in “Plan” · %1$lld of %2$lld chosen"
+  "In „Planen“ setzen · %lld von %lld gewählt": "Set it in “Plan” · %1$lld of %2$lld chosen",
+  "Vielleicht hat dir der Brain Dump Klarheit gegeben.": "Maybe the brain dump gave you some clarity.",
+  "Willst du etwas ändern?": "Want to change something?",
+  "„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.": "“Get suggestions” sends this note with your tasks and events of the next 7 days to ChatGPT. Nothing is changed without your confirmation."
 }
