@@ -110,6 +110,8 @@ final class AppEnvironment {
     var requestedTab: Int?
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
     var tasksPath: [TasksDestination] = []
+    /// Pages on top of the settings (`SettingsDestination`); set by the UI test mode to open a settings page at launch.
+    var settingsPath: [SettingsDestination] = []
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
     /// Age after which the repository/project catalog is fetched again.

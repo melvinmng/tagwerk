@@ -24,6 +24,10 @@ class UITestCase: XCTestCase {
     /// Extra launch arguments of a test class (e.g. a large text size).
     var extraLaunchArguments: [String] { [] }
 
+    /// Whether `setUp` starts the app. A test that starts the app itself with other arguments for every screen it visits (see
+    /// `launchApp(extraArguments:)`) turns this off, so the launch of `setUp` is not wasted.
+    var launchesInSetUp: Bool { true }
+
     override func setUp() async throws {
         try await super.setUp()
         continueAfterFailure = false
@@ -40,13 +44,14 @@ class UITestCase: XCTestCase {
             guard let self, let run = self.testRun, !run.hasSucceeded, let app = self.app else { return }
             print("UI TEST FAILED, accessibility tree:\n\(app.debugDescription)")
         }
-        launchApp()
+        if launchesInSetUp { launchApp() }
     }
 
-    /// Starts a fresh app process and waits for the marker the demo data sets when it is done.
-    func launchApp() {
+    /// Starts a fresh app process and waits for the marker the demo data sets when it is done. `extraArguments` come after
+    /// `extraLaunchArguments`, e.g. `-TagwerkUITestScreen settings.siri` to open a screen directly.
+    func launchApp(extraArguments: [String] = []) {
         let app = XCUIApplication()
-        app.launchArguments = ["-TagwerkUITest", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"] + extraLaunchArguments
+        app.launchArguments = ["-TagwerkUITest", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"] + extraLaunchArguments + extraArguments
         app.launch()
         self.app = app
         let ready = app.descendants(matching: .any)[AccessibilityID.App.demoReady]
@@ -223,6 +228,24 @@ extension UITestCase {
         XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "Search field missing", file: file, line: line)
         field.tap()
         field.typeText(text)
+    }
+
+    /// Scrolls the settings list in small steps (a lazy list only creates the rows near the screen, and a full-page swipe can jump
+    /// over a row) to the row that starts with this title and opens it. The scroll position stays when a page is left, so
+    /// the search goes to the top first; a fresh launch starts at the top already (`fromTop: false`).
+    func openSettingsRow(_ title: String, fromTop: Bool = true, file: StaticString = #filePath, line: UInt = #line) {
+        // Only rows of the list: the tab bar has a button "Erfassen" as well.
+        let row = app.cells.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
+        if fromTop { for _ in 0..<4 { app.swipeDown() } }
+        var steps = 0
+        while !(row.exists && row.isHittable), steps < 20 {
+            let list = app.collectionViews.firstMatch
+            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+                .press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)))
+            steps += 1
+        }
+        XCTAssertTrue(row.exists && row.isHittable, "Settings row \(title) is not reachable by scrolling", file: file, line: line)
+        row.tap()
     }
 
     /// Aufgaben › Notizen.

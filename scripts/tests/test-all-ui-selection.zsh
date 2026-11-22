@@ -32,11 +32,13 @@ check "no variables"                  "rc=0" "$(selection)"
 check "full set"                      "rc=0" "$(selection TAGWERK_UI_TEST_SET=full)"
 check "retries off with 0"            "rc=0" "$(selection TAGWERK_UI_TEST_RETRIES=0)"
 
-# The real list of the repository.
-expected_pr=$'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\n-skip-testing:TagwerkUITests/AccessibilityAuditEveningLargeTextUITests\nrc=0'
-check "pr set from the repository list" "$expected_pr" "$(selection TAGWERK_UI_TEST_SET=pr)"
+# The real list of the repository. The expected arguments come from the file itself (one -skip-testing per entry), so the check
+# keeps working when a test moves to the nightly list; what it proves is the translation, not the content of the list.
+skip_arguments=$(grep -vE '^[[:space:]]*(#|$)' "$ROOT/app/TagwerkUITests/nightly-only.txt" | sed -e 's/[[:space:]]//g' -e 's#^#-skip-testing:TagwerkUITests/#')
+check "the repository list is not empty" "1" "$([[ -n "$skip_arguments" ]] && print 1 || print 0)"
+check "pr set from the repository list" "$skip_arguments"$'\nrc=0' "$(selection TAGWERK_UI_TEST_SET=pr)"
 check "pr set with one retry" \
-  $'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\n-skip-testing:TagwerkUITests/AccessibilityAuditEveningLargeTextUITests\n-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
+  "$skip_arguments"$'\n-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
   "$(selection TAGWERK_UI_TEST_SET=pr TAGWERK_UI_TEST_RETRIES=1)"
 check "full set with one retry" \
   $'-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
