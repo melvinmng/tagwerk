@@ -1521,6 +1521,16 @@ final class PlanningModel {
         /// Part of `placed`: the block lies after the due day.
         var late: Int
         var unplaced: Int
+        /// The tasks counted in `unplaced`, so the result can name them (RO11b).
+        var unplacedTaskIDs: [TaskID] = []
+    }
+
+    /// What the target day of "Alles auf morgen" has free, for the preview of the sheet (RO9c): the same numbers as the capacity
+    /// card (`planInputs`), `nil` while there are none. A day without working time is a day off.
+    func leftoverTargetCapacity(on day: PlanDay) async -> (freeMinutes: Int?, isDayOff: Bool) {
+        let isDayOff = (workHours(on: day)?.minutes ?? 0) == 0
+        guard !isDayOff, let input = await planInputs(in: day...day).first else { return (nil, isDayOff) }
+        return (input.availableMinutes - input.plannedMinutes, false)
     }
 
     /// "In den nächsten freien Block" (#163): every task gets a time block in the first free stretch from the next working
@@ -1549,6 +1559,7 @@ final class PlanningModel {
         var moves: [DayMove] = []
         var late = 0
         var failed = 0
+        var failedIDs: [TaskID] = []
         for placed in result.placed {
             guard let task = tasks.first(where: { $0.id.key == placed.taskKey }) else { continue }
             let previous = planStore.assignment(for: task.id)
@@ -1560,12 +1571,14 @@ final class PlanningModel {
             } catch {
                 lastError = TaskListModel.message(for: error)
                 failed += 1
+                failedIDs.append(task.id)
             }
         }
         lastMove = nil
         lastMoveGroup = moves.isEmpty ? nil : moves
         await reload()
-        return LeftoverOutcome(placed: moves.count, late: late, unplaced: result.unplaced.count + failed)
+        let unplacedIDs = tasks.filter { result.unplaced.contains($0.id.key) }.map(\.id) + failedIDs
+        return LeftoverOutcome(placed: moves.count, late: late, unplaced: result.unplaced.count + failed, unplacedTaskIDs: unplacedIDs)
     }
 
     func undoMoveGroup() async {

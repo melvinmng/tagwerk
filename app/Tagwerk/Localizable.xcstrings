@@ -390,6 +390,22 @@
         }
       }
     },
+    "%@ hat %@ frei · passt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ hat %2$@ frei · passt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ has %2$@ free · fits"
+          }
+        }
+      }
+    },
     "%@ ist dem Issue nicht zugewiesen.": {
       "localizations": {
         "en": {
@@ -422,6 +438,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ cannot be assigned in %2$@."
+          }
+        }
+      }
+    },
+    "%@ ist kein Arbeitstag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not a working day"
           }
         }
       }
@@ -661,6 +687,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ is already on the list"
+          }
+        }
+      }
+    },
+    "%@ und %lld weitere": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ und %2$lld weitere"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ and %2$lld more"
           }
         }
       }
@@ -1138,6 +1180,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@: no bricks"
+          }
+        }
+      }
+    },
+    "%@: knapp, %@ frei, %@ nötig": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@: knapp, %2$@ frei, %3$@ nötig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: tight, %2$@ free, %3$@ needed"
           }
         }
       }
@@ -13044,6 +13102,26 @@
         }
       }
     },
+    "Kein freier Platz in den nächsten Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No free place in the next days"
+          }
+        }
+      }
+    },
+    "Kein freier Platz vor der Fälligkeit (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No free place before the due date (%@)"
+          }
+        }
+      }
+    },
     "Keine": {
       "localizations": {
         "en": {
@@ -19802,6 +19880,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drink portions"
+          }
+        }
+      }
+    },
+    "Trotzdem auf morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to tomorrow anyway"
           }
         }
       }

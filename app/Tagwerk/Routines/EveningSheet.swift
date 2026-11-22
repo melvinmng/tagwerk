@@ -13,6 +13,8 @@ struct EveningSheet: View {
     @State private var isStartingBibleStudy = false
     @State private var bibleSheet: JournalSheetTarget?
     @State private var isMovingLeftovers = false
+    /// The task of the result list whose date is being chosen.
+    @State private var pickingDateFor: TaskID?
     /// What the last bulk action did, with what is needed to take it back; the capsule of "Planen" is behind this sheet.
     @State private var leftoverReport: LeftoverSheet.Report?
 
@@ -134,6 +136,11 @@ struct EveningSheet: View {
                 BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
             }
             .sheet(item: $bibleSheet) { target in NoteEditorSheet(noteID: target.id) }
+            .sheet(item: Binding(get: { pickingDateFor.map(DateRequest.init) }, set: { pickingDateFor = $0?.id })) { request in
+                BulkDateSheet(title: "Datum wählen", calendar: model.calendar) { date in
+                    resolve(request.id) { await model.planning.moveTask(request.id, to: PlanDay(date: date, calendar: model.calendar)) }
+                }
+            }
             .sheet(isPresented: $isMovingLeftovers) {
                 LeftoverSheet(planning: model.planning, taskList: model.taskList) { report in leftoverReport = report }
             }
@@ -154,13 +161,50 @@ struct EveningSheet: View {
         if let report = leftoverReport {
             Section {
                 HStack {
-                    Text(LeftoverSheetText.outcome(moved: report.moved, late: report.late, unplaced: report.unplaced))
+                    // The tasks without a place are listed below with their reason, so the count is not repeated here (RO11b).
+                    Label(LeftoverSheetText.outcome(moved: report.moved, late: report.late,
+                                                    unplaced: report.unplacedTasks.isEmpty ? report.unplaced : 0), systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.primary)
                     Spacer()
                     if !report.moves.isEmpty {
                         Button("Rückgängig") { undoLeftover(report) }.buttonStyle(.borderless)
                     }
                 }
+                ForEach(report.unplacedTasks) { task in unplacedRow(task) }
             }
+        }
+    }
+
+    /// A task that found no free place: its reason and the ways out (RO11b). "Erledigt" only for sources that can be checked off
+    /// without a network (a GitHub issue needs one).
+    private func unplacedRow(_ task: LeftoverSheet.Report.Unplaced) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title).lineLimit(2)
+                Text(LeftoverSheetText.unplacedReason(due: task.due, calendar: model.calendar)).font(.caption).foregroundStyle(.secondaryText)
+            }
+            Spacer()
+            Menu {
+                Button("Datum …", systemImage: "calendar") { pickingDateFor = task.id }
+                if let next = model.planning.nextPlanDay {
+                    Button("Trotzdem auf morgen", systemImage: "arrow.right.circle") { resolve(task.id) { await model.planning.moveTask(task.id, to: next) } }
+                }
+                Button("Erledigt", systemImage: "checkmark.circle") {
+                    resolve(task.id) { await model.taskList.complete(task.id); await model.planning.reload() }
+                }
+                .disabled(task.id.source == .github)
+            } label: {
+                Image(systemName: "ellipsis.circle").font(.title3).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
+            .accessibilityLabel("Verschieben")
+        }
+    }
+
+    /// Runs the action for a task of the result list and takes the task out of the list.
+    private func resolve(_ id: TaskID, _ action: @escaping () async -> Void) {
+        Task {
+            await action()
+            leftoverReport?.unplacedTasks.removeAll { $0.id == id }
         }
     }
 
@@ -187,6 +231,11 @@ struct EveningSheet: View {
         let entry = environment.notes.openJournalEntry(dayKey: NoteDayKey.string(day))
         journalSheet = JournalSheetTarget(id: entry.id)
     }
+}
+
+/// The task a date is picked for in the result list.
+private struct DateRequest: Identifiable {
+    let id: TaskID
 }
 
 /// The journal entry shown in a sheet over the wrap-up.

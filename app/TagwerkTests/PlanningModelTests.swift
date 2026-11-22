@@ -420,7 +420,7 @@ struct PlanningModelTests {
         settings.defaultTaskMinutes = 900
         let model = await model(at: 18, 40)
         let outcome = await model.placeInFreeBlocks([id("Fahrrad")])
-        #expect(outcome == PlanningModel.LeftoverOutcome(placed: 0, late: 0, unplaced: 1))
+        #expect(outcome == PlanningModel.LeftoverOutcome(placed: 0, late: 0, unplaced: 1, unplacedTaskIDs: [id("Fahrrad")]))
         #expect(calendarStore.storedEvents.isEmpty)
         #expect(model.lastMoveGroup == nil)
         #expect(planStore.assignment(for: id("Fahrrad")) == today)

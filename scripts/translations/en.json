@@ -2489,5 +2489,12 @@
   "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": "%@ reminds at the time. The times follow the bedtime. At most four points remind; further ones only appear in the list.",
   "abgehakt, erinnert heute nicht mehr": "checked, no longer reminds today",
   "erinnert": "reminds",
-  "Antwort": "Answer"
+  "Antwort": "Answer",
+  "%@ hat %@ frei · passt": "%1$@ has %2$@ free · fits",
+  "%@ ist kein Arbeitstag": "%@ is not a working day",
+  "%@ und %lld weitere": "%1$@ and %2$lld more",
+  "%@: knapp, %@ frei, %@ nötig": "%1$@: tight, %2$@ free, %3$@ needed",
+  "Kein freier Platz in den nächsten Tagen": "No free place in the next days",
+  "Kein freier Platz vor der Fälligkeit (%@)": "No free place before the due date (%@)",
+  "Trotzdem auf morgen": "Move to tomorrow anyway"
 }
