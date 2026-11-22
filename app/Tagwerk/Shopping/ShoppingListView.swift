@@ -105,12 +105,14 @@ struct ShoppingListView: View {
                 }
             }
             .sheet(item: Binding(get: { translation?.preview }, set: { if $0 == nil { translation?.discard() } })) { preview in
-                ShoppingTranslationResultSheet(preview: preview, language: environment.settings.contentLanguages.shoppingLanguage()) { selected in
+                if let draft = translation?.draft {
+                ShoppingTranslationResultSheet(preview: preview, language: environment.settings.contentLanguages.shoppingLanguage(), draft: draft) { selected in
                     Task {
                         if let line = await translation?.apply(selected) { notice = line }
                     }
                 } onDiscard: {
                     translation?.discard()
+                }
                 }
             }
             .overlay {

@@ -5993,6 +5993,16 @@
         }
       }
     },
+    "Britisches Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "British English"
+          }
+        }
+      }
+    },
     "Buch": {
       "localizations": {
         "en": {
@@ -13759,6 +13769,16 @@
         }
       }
     },
+    "Markennamen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep brand names"
+          }
+        }
+      }
+    },
     "Markiert die Aufgabe wieder als offen": {
       "localizations": {
         "en": {
@@ -14791,6 +14811,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan the new week"
+          }
+        }
+      }
+    },
+    "Neuen Namen eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a new name"
+          }
+        }
+      }
+    },
+    "Neuer Name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New name"
           }
         }
       }
@@ -17247,6 +17287,16 @@
         }
       }
     },
+    "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the names of your open items, the translation with your changes and your message to ChatGPT. Amounts are not sent."
+          }
+        }
+      }
+    },
     "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": {
       "localizations": {
         "en": {
@@ -19104,6 +19154,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write something about the estimate …"
+          }
+        }
+      }
+    },
+    "Zur Übersetzung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the translation …"
           }
         }
       }
@@ -23373,6 +23433,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Translation"
+          }
+        }
+      }
+    },
+    "Übersetzung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation revised."
           }
         }
       }

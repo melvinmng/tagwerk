@@ -28,6 +28,8 @@ final class ShoppingTranslationModel {
     private(set) var offer: Offer?
     private(set) var isTranslating = false
     var preview: Preview?
+    /// The marks, the names typed over and the follow-up of the open preview (task D5); `nil` without a preview.
+    private(set) var draft: ShoppingTranslationDraft?
     /// Items renamed by the last "Übernehmen"; not empty while the capsule shows.
     private(set) var undo: [ShoppingModel.Renamed] = []
     /// A line for the notice above the input field, set by `translate()` and `apply(_:)`; the view takes and clears it.
@@ -108,6 +110,7 @@ final class ShoppingTranslationModel {
                 notice = Self.alreadyTranslatedLine(language)
             } else {
                 preview = Preview(id: UUID(), changes: changes, leftOut: plan.leftOut)
+                draft = makeDraft(changes: changes, plan: plan, language: language)
             }
         } catch let failure as ShoppingTranslator.Failure {
             guard requestID == id else { return }
@@ -151,14 +154,30 @@ final class ShoppingTranslationModel {
     }
 
     /// "Verwerfen": nothing changes, the card stays.
-    func discard() { preview = nil }
+    func discard() {
+        draft?.followUp.discard()
+        preview = nil
+        draft = nil
+    }
+
+    /// The draft of a preview: the follow-up sends the names of the first request again and is answered through the same
+    /// plan. Without a sign-in or the consent of the feature the sheet shows no input line (the view checks that).
+    private func makeDraft(changes: [ShoppingTranslationPlan.Change], plan: ShoppingTranslationPlan, language: VoiceLanguage) -> ShoppingTranslationDraft {
+        let translator = translator
+        let openKeys = Set(shopping.openItems.map { ShoppingName.key($0.name) })
+        return ShoppingTranslationDraft(changes: changes, plan: plan, language: language, openKeys: openKeys) { plan, language, current, pinned, focus, comment in
+            try await translator.revise(plan, to: language, current: current, pinned: pinned, focus: focus, comment: comment)
+        }
+    }
 
     /// Writes the chosen titles, settles the language (also after a partial success) and prepares the undo. Returns the line for
     /// the notice when something was skipped or failed, `nil` when all went well.
     func apply(_ selected: [ShoppingTranslationPlan.Change]) async -> String? {
         let language = currentLanguage
         let chosen = selected.filter { $0.blocked == nil }
+        draft?.followUp.discard()
         preview = nil
+        draft = nil
         guard !chosen.isEmpty else { return nil }
         let before = settings.shoppingItemsLanguage
         let report = await shopping.rename(chosen)
