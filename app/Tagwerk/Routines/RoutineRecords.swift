@@ -257,6 +257,14 @@ final class RoutineStore {
         return true
     }
 
+    /// Gives "Helle Lichter ausmachen" the offset 60 in an untouched list of the former five-point suggestion (RO6b). The
+    /// caller runs it once per installation. `false` for any other list, which stays as it is.
+    @discardableResult
+    func upgradeLightsOffset() -> Bool {
+        guard let upgraded = RoutineSchedule.upgradedLightsOffset(checklist()), let lights = upgraded.first else { return false }
+        return saveItem(lights)
+    }
+
     /// Creates the suggested points (design §11), only into an empty list.
     func adoptSuggestion() {
         guard checklist().isEmpty else { return }

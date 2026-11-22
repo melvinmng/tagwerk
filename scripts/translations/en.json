@@ -1543,7 +1543,6 @@
   "Abend-Checkliste": "Evening checklist",
   "Abstand": "Lead time",
   "Der Punkt konnte nicht gespeichert werden.": "The item could not be saved.",
-  "Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": "The times follow your bedtime. At most four items remind you; the others only appear in the list.",
   "Erinnerungen am Abend": "Evening reminders",
   "Für Vorschläge sendet Tagwerk den Text der jeweiligen Gedanken-Notiz sowie deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit) an ChatGPT (OpenAI), und nur, wenn du bei der Notiz auf „Vorschläge holen“ tippst. Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen werden nie gesendet.": "For suggestions, Tagwerk sends the text of that thoughts note plus your open tasks and events of the next 7 days (title, due date, time) to ChatGPT (OpenAI), and only when you tap “Get suggestions” on the note. Gratitude, habits, weekly reflection, Health data and earlier notes are never sent.",
   "Gedanken-Notiz": "Thoughts note",
@@ -1557,7 +1556,6 @@
   "Routinen": "Routines",
   "Zeigt die Karte „Tagesstart“ bzw. „Fokus heute“ und abends die Zeile „Tagesabschluss“ im Tab „Planen“.": "Shows the “Morning start” or “Today’s focus” card and, in the evening, the “Evening wrap-up” row in the Plan tab.",
   "Zielschlafzeit": "Target bedtime",
-  "ohne Erinnerung": "no reminder",
   "Handy weglegen": "Put the phone away",
   "Ins Bett": "Go to bed",
   "Tagesabschluss öffnen": "Open evening wrap-up",
@@ -2486,5 +2484,9 @@
   "Tagebuch öffnen": "Open journal",
   "Wo die Zeile „Bible Study starten“ in den Routinen steht. Das Tagebuch steht im Tagesabschluss.": "Where the row “Start Bible Study” is shown in the routines. The journal is in the evening wrap-up.",
   "Zeit mit Gott": "Time with God",
-  "Zuletzt: %@": "Last: %@"
+  "Zuletzt: %@": "Last: %@",
+  "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.": "%@ reminds at the time. The times follow the bedtime. At most four points remind.",
+  "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": "%@ reminds at the time. The times follow the bedtime. At most four points remind; further ones only appear in the list.",
+  "abgehakt, erinnert heute nicht mehr": "checked, no longer reminds today",
+  "erinnert": "reminds"
 }

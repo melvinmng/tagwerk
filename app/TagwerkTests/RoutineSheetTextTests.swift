@@ -47,3 +47,29 @@ struct TimeWithGodTextTests {
         #expect(TimeWithGodText.bibleTitle(last: nil) == "Bible Study starten")
     }
 }
+
+/// The rows of the evening checklist (RO4).
+struct ChecklistTextTests {
+    private let calendar = testCalendar()
+
+    private func item(offset: Int?) -> ChecklistItem { ChecklistItem(title: "Helle Lichter ausmachen", order: 0, offsetMinutes: offset) }
+
+    @Test func sheetDetail_checked_saysNoReminderToday() {
+        #expect(ChecklistText.sheetDetail(item(offset: 60), isChecked: true, reminds: true) == "abgehakt, erinnert heute nicht mehr")
+        #expect(ChecklistText.sheetDetail(item(offset: 60), isChecked: false, reminds: true) == nil)
+        // A point that does not remind has nothing to stop, checked or not.
+        #expect(ChecklistText.sheetDetail(item(offset: 60), isChecked: true, reminds: false) == nil)
+        #expect(ChecklistText.sheetDetail(item(offset: nil), isChecked: true, reminds: false) == nil)
+    }
+
+    @Test func clock_followsTheBedtime() {
+        #expect(ChecklistText.clock(item(offset: 60), bedtime: 1380, calendar: calendar) == "22:00")
+        #expect(ChecklistText.clock(item(offset: 60), bedtime: 1410, calendar: calendar) == "22:30")
+        #expect(ChecklistText.clock(item(offset: nil), bedtime: 1380, calendar: calendar) == nil)
+    }
+
+    @Test func settingsDetail_namesOffsetAndTime() {
+        #expect(ChecklistText.settingsDetail(item(offset: 60), bedtime: 1380, calendar: calendar) == "60 min vorher · 22:00")
+        #expect(ChecklistText.settingsDetail(item(offset: nil), bedtime: 1380, calendar: calendar) == nil)
+    }
+}

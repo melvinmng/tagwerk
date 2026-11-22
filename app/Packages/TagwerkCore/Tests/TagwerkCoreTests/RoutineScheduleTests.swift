@@ -89,10 +89,61 @@ struct RoutineScheduleTests {
         #expect(items.map(\.title) == ["Helle Lichter ausmachen", "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen",
                                        "Eine Stunde vorm Schlafen fertig machen", "Zähne putzen, umziehen, Haus/Wohnung aufräumen",
                                        "Eine halbe Stunde vorm Schlafen ins Bett legen"])
-        #expect(items.map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
-        let checklist = items.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
-        #expect(RoutineSchedule.reminderItems(checklist).count == 3)
         #expect(items.allSatisfy { $0.title.count <= RoutineSchedule.titleLimit })
+    }
+
+    @Test func suggestedItems_lightsRemindSixtyMinutesBefore() {
+        let items = RoutineSchedule.suggestedItems
+        #expect(items.map(\.offsetMinutes) == [60, 90, 60, nil, 30])
+        // 60 minutes before the default bedtime of 23:00 is the 22:00 of the original template, and it moves with the bedtime.
+        #expect(RoutineSchedule.anchorMinutes(bedtimeMinutes: 1380, offsetMinutes: 60) == 1320)
+        #expect(RoutineSchedule.anchorMinutes(bedtimeMinutes: 1410, offsetMinutes: 60) == 1350)
+    }
+
+    @Test func suggestedItems_fourPointsRemind() {
+        let checklist = RoutineSchedule.suggestedItems.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
+        #expect(RoutineSchedule.reminderItems(checklist).count == RoutineSchedule.maximumReminders)
+        #expect(RoutineSchedule.reminderItems(checklist).map(\.offsetMinutes) == [60, 90, 60, 30])
+    }
+
+    private func fivePointList(_ titles: [String] = RoutineSchedule.fivePointSuggestionTitles[0], offsets: [Int?] = [nil, 90, 60, nil, 30]) -> [ChecklistItem] {
+        titles.enumerated().map { ChecklistItem(title: $1, order: $0, offsetMinutes: offsets[$0]) }
+    }
+
+    @Test func upgradedLightsOffset_untouchedList_setsSixty() throws {
+        for titles in RoutineSchedule.fivePointSuggestionTitles {
+            let upgraded = try #require(RoutineSchedule.upgradedLightsOffset(fivePointList(titles)))
+            #expect(upgraded.map(\.offsetMinutes) == [60, 90, 60, nil, 30])
+            #expect(upgraded.map(\.title) == titles)
+        }
+    }
+
+    @Test func upgradedLightsOffset_changedList_isNil() {
+        #expect(RoutineSchedule.upgradedLightsOffset([]) == nil)
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(offsets: [nil, 90, 60, nil, 45])) == nil)
+        var renamed = RoutineSchedule.fivePointSuggestionTitles[0]
+        renamed[3] = "Zähne putzen"
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(renamed)) == nil)
+        // A list that mixes both languages is not the untouched suggestion.
+        var mixed = RoutineSchedule.fivePointSuggestionTitles[0]
+        mixed[0] = RoutineSchedule.fivePointSuggestionTitles[1][0]
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(mixed)) == nil)
+    }
+
+    @Test func upgradedLightsOffset_runsOnce() throws {
+        let upgraded = try #require(RoutineSchedule.upgradedLightsOffset(fivePointList()))
+        #expect(RoutineSchedule.upgradedLightsOffset(upgraded) == nil)
+    }
+
+    @Test func eveningNotifications_twoItemsAtSameMinute_bothPlanned() {
+        let checklist = RoutineSchedule.suggestedItems.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
+        let planned = RoutineSchedule.eveningNotifications(
+            items: checklist, bedtimeMinutes: 1380, enabled: true, checked: { _ in [] },
+            now: Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 10))!,
+            calendar: Calendar(identifier: .gregorian), locale: Locale(identifier: "de_DE"), days: 1)
+        let at2200 = planned.filter { $0.hour == 22 && $0.minute == 0 }
+        #expect(planned.count == 4 && at2200.count == 2)
+        #expect(Set(at2200.map(\.id)).count == 2)
     }
 
     private func legacyList(_ titles: [String], offsets: [Int?] = [90, 60, 30]) -> [ChecklistItem] {

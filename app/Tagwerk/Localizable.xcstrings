@@ -334,6 +334,26 @@
         }
       }
     },
+    "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ reminds at the time. The times follow the bedtime. At most four points remind."
+          }
+        }
+      }
+    },
+    "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ reminds at the time. The times follow the bedtime. At most four points remind; further ones only appear in the list."
+          }
+        }
+      }
+    },
     "%@ frei": {
       "localizations": {
         "en": {
@@ -8095,6 +8115,7 @@
       }
     },
     "Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22529,6 +22550,16 @@
         }
       }
     },
+    "abgehakt, erinnert heute nicht mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checked, no longer reminds today"
+          }
+        }
+      }
+    },
     "alle 2 Wochen": {
       "localizations": {
         "en": {
@@ -22741,6 +22772,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "removed: %@"
+          }
+        }
+      }
+    },
+    "erinnert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reminds"
           }
         }
       }
@@ -23517,6 +23558,7 @@
       }
     },
     "ohne Erinnerung": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
