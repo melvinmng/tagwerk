@@ -4149,6 +4149,16 @@
         }
       }
     },
+    "Alle Vorschläge besprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discuss all suggestions"
+          }
+        }
+      }
+    },
     "Alle übernehmen (%lld)": {
       "localizations": {
         "en": {
@@ -4175,6 +4185,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everything to the next working day"
+          }
+        }
+      }
+    },
+    "Alles früher am Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything earlier in the day"
           }
         }
       }
@@ -7685,6 +7705,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The note has changed in the meantime. Read it again."
+          }
+        }
+      }
+    },
+    "Die Planung gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This planning no longer exists."
           }
         }
       }
@@ -11298,6 +11328,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk will listen again in a moment"
+          }
+        }
+      }
+    },
+    "Gleichmäßiger verteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spread more evenly"
           }
         }
       }
@@ -15808,6 +15848,16 @@
         }
       }
     },
+    "Offene Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open suggestions"
+          }
+        }
+      }
+    },
     "Ohne Datum wird die Frist entfernt.": {
       "localizations": {
         "en": {
@@ -17333,6 +17383,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send"
+          }
+        }
+      }
+    },
+    "Senden gibt alle Vorschläge dieser Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives all suggestions of this planning, your changes, your rules and the appointments of these days to ChatGPT."
           }
         }
       }
@@ -19208,6 +19268,16 @@
         }
       }
     },
+    "von dir verschoben, bleibt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "moved by you, stays"
+          }
+        }
+      }
+    },
     "Vorschlag überarbeitet.": {
       "localizations": {
         "en": {
@@ -19218,12 +19288,32 @@
         }
       }
     },
+    "Weniger am Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less in the evening"
+          }
+        }
+      }
+    },
     "Weniger Vorschläge": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fewer suggestions"
+          }
+        }
+      }
+    },
+    "Zu allen Vorschlägen etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about all suggestions …"
           }
         }
       }
