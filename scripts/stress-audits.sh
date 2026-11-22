@@ -4,7 +4,8 @@
 # Every iteration is a run of its own (own log, own collect file), without retry on failure and without stopping
 # at the first failure, so each repetition counts. Run it when audits, UITestMode, DemoData or the app start change;
 # it takes many times as long as app/test-all.sh. One test run per checkout: the script takes the same lock as
-# app/test-all.sh.
+# app/test-all.sh. It also takes a slot of the simulator pool and, for the repetitions, the machine-wide UI stage lock
+# (see scripts/test-env.sh); the simulator is shut down at the end unless TAGWERK_KEEP_SIMULATOR=1.
 #
 # Usage: scripts/stress-audits.sh [--collect | --collect-all] [iterations] [only-testing ...]
 #   iterations     number of repetitions (default 10)
@@ -46,7 +47,10 @@ if (( ${#SELECTORS} == 0 )); then
 fi
 
 tagwerk_acquire_run_lock || exit 2
-trap tagwerk_release_run_lock EXIT
+# Gives back the locks and the pool simulator at the end, also after Ctrl-C or a termination signal.
+trap tagwerk_cleanup_run EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
 
 DESTINATION=$(tagwerk_test_destination) || exit 2
 RUN_DIR="$TAGWERK_TEST_LOG_DIR/stress-$(date +%Y%m%d-%H%M%S)"
@@ -55,7 +59,6 @@ echo "==> stress run: $ITERATIONS iteration(s), $DESTINATION, logs in $RUN_DIR"
 
 echo "==> xcodegen"
 (cd "$APP_DIR" && xcodegen --quiet) || exit 2
-tagwerk_prepare_ui_simulator "$DESTINATION" "$APP_DIR/Tagwerk.xcodeproj" || exit 2
 
 echo "==> build-for-testing"
 if ! xcodebuild build-for-testing -project "$APP_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" \
@@ -64,6 +67,11 @@ if ! xcodebuild build-for-testing -project "$APP_DIR/Tagwerk.xcodeproj" -scheme 
   echo "Build failed (log: $RUN_DIR/build.log)" >&2
   exit 2
 fi
+
+# The build is done before the UI stage lock is taken, so waiting for another UI stage does not delay the build and the
+# lock is only held while tests run.
+tagwerk_acquire_ui_lock || exit 2
+tagwerk_prepare_ui_simulator "$DESTINATION" "$APP_DIR/Tagwerk.xcodeproj" || exit 2
 
 ONLY_ARGUMENTS=()
 for selector in "${SELECTORS[@]}"; do ONLY_ARGUMENTS+=("-only-testing:TagwerkUITests/$selector"); done

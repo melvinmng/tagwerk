@@ -42,7 +42,10 @@ while (( $# > 0 )); do
 done
 
 WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+# The build below takes a slot of the simulator pool; tagwerk_cleanup_run gives it back (it holds no other lock here).
+trap 'rm -rf "$WORK"; tagwerk_cleanup_run' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
 
 if (( BUILD && ${#SYNC_ONE} == 0 )); then
   DESTINATION=$(tagwerk_test_destination) || exit 2

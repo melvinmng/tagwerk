@@ -16,6 +16,8 @@
 #   TAGWERK_DEVELOPER_DIR      Xcode developer directory instead of /Applications/Xcode.app
 #   TAGWERK_ONLY_UI_TESTS=1    run only the UI test stage (no package stages, no app unit tests, no String Catalog check)
 #   TAGWERK_TEST_RESULTS_DIR   folder for one .xcresult bundle per stage (see run_tests)
+#   TAGWERK_TEST_SIMULATOR     simulator name or UDID instead of a slot of the simulator pool (see scripts/test-env.sh)
+#   TAGWERK_KEEP_SIMULATOR=1   leave the pool simulator booted at the end of the run (it is shut down otherwise)
 #   TAGWERK_BUILD_ONLY=1       build, do not test: every stage that would run tests runs xcodebuild build-for-testing
 #                              instead, with the same schemes, destination and derived data folders, so the build
 #                              products are the ones a test run would produce. Used by CI to refresh the build cache
@@ -184,12 +186,17 @@ stage_failed() {
   exit 1
 }
 
-# Per-checkout simulator, derived data and logs, so several checkouts can test at the same time.
+# Per-checkout derived data and logs, simulator from the machine-wide pool, so several checkouts can test at the same time.
 source "$SCRIPT_DIR/../scripts/test-env.sh"
-# One run per checkout; a second run would share the simulator and the derived data folder.
+# One run per checkout; a second run would share the derived data folder.
 tagwerk_acquire_run_lock || exit 2
-trap tagwerk_release_run_lock EXIT
-DESTINATION=$(tagwerk_test_destination) || stage_failed
+# At the end of the run (also after Ctrl-C or a termination signal) the UI stage lock, the pool slot and the run lock are
+# released and the pool simulator is shut down, unless TAGWERK_KEEP_SIMULATOR=1.
+trap tagwerk_cleanup_run EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+# Takes a free pool slot (waits up to 30 minutes, then exits with code 2); TAGWERK_TEST_SIMULATOR bypasses the pool.
+DESTINATION=$(tagwerk_test_destination) || exit 2
 LOG_DIR="$TAGWERK_TEST_LOG_DIR"
 # The app stage builds here, so the String Catalog check can reuse its .stringsdata.
 DERIVED="$TAGWERK_TEST_DERIVED"
@@ -317,8 +324,10 @@ elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
   # exactly as the test run would. No simulator boot, permissions or test selection: nothing is executed.
   build_for_testing -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
 else
+  # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).
+  tagwerk_acquire_ui_lock || exit 2
   # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
-  # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (it keeps running).
+  # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
   tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
   build_ui_selection_args || stage_failed
   ui_status=0
@@ -328,6 +337,7 @@ else
   if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
     report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
   fi
+  tagwerk_release_ui_lock
   (( ui_status == 0 )) || stage_failed
 fi
 
