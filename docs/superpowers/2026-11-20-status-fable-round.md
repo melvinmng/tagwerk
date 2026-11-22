@@ -104,7 +104,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
 | (Integration) | #273, #275, #276 auf main + Texttöne; Fix Sonntags-DT und „+4 weitere“ (`fix/audit-sunday-and-collapsed`) | läuft (Sonnet, nur schnelle Tests) |
 | (G2 NF) | G2 Welle 1, Strang NF | läuft (Sonnet) |
-| (G2 BS1–BS2) | G2 Welle 1, Bible Study Recherche + Regeln | läuft (Sonnet) |
+| `feat/g2-bible-study` | G2 BS1–BS2 | Head `476965f`, schnell grün, gepusht, noch kein PR. Verszahlen-Tabelle vorläufig (Luther-Zählung aus Luther 1545, gemeinfrei/MIT), für Schlachter 2000 nicht belegt → Nutzerentscheidung A/B/C. Agent hat vor dem Lesen der Bedingungen ~410 Seiten von Bibleserver/BibleGateway automatisch abgerufen (laut Bedingungen untersagt), danach gelöscht; nichts davon im Repo |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
