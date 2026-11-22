@@ -19,6 +19,9 @@ public final class ChatGPTLogin {
     private let session: ChatGPTSessionStore
     private let authenticator: WebAuthenticating
     private let port: UInt16
+    /// Test hook: called with the port the loopback server actually listens on, before the sheet opens.
+    /// It differs from `port` only when port 0 was requested.
+    var onListening: ((UInt16) -> Void)?
 
     public init(session: ChatGPTSessionStore, authenticator: WebAuthenticating, port: UInt16 = 1455) {
         self.session = session
@@ -30,6 +33,7 @@ public final class ChatGPTLogin {
         let attempt = try await session.beginLogin()
         let server = LoopbackServer(port: port, expectedState: attempt.state)
         try await server.start()
+        onListening?(server.listeningPort ?? port)
         do {
             do {
                 try await authenticator.authenticate(url: attempt.url, callbackScheme: Self.callbackScheme)
