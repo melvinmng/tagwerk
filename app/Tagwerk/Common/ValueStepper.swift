@@ -87,7 +87,7 @@ struct ValueStepper: View {
                 }
             }
             if let hint = model.hint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary)
+                Text(hint).font(.footnote).foregroundStyle(.secondaryText)
             }
         }
         .modifier(StepperAccessibility(isEditing: model.isEditing, title: title, valueText: display(value),
@@ -121,7 +121,7 @@ struct ValueStepper: View {
                     .onSubmit { isFocused = false }
                     .frame(minWidth: 56, maxWidth: 120)
                     .onAppear { isFocused = true }
-                if let unit { Text(unit).foregroundStyle(.secondary) }
+                if let unit { Text(unit).foregroundStyle(.secondaryText) }
             }
         } else {
             Button(action: beginEditing) {

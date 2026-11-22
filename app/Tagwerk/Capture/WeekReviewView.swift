@@ -45,7 +45,7 @@ struct WeekReviewView: View {
             }
             if let review = model.review {
                 if review.isEmpty {
-                    Section { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondary) }
+                    Section { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondaryText) }
                 }
                 caloriesSection(review)
                 Section {
@@ -123,7 +123,7 @@ struct WeekReviewView: View {
     private func caloriesSection(_ review: WeekReview) -> some View {
         Section {
             if review.daysWithMeals == 0 {
-                Text("Keine Mahlzeiten erfasst").foregroundStyle(.secondary)
+                Text("Keine Mahlzeiten erfasst").foregroundStyle(.secondaryText)
             } else if let average = review.averageKcal {
                 Text("Ø \(IntakeFormat.kcalNumber(average, estimated: review.hasEstimate)) kcal an \(dayCount(review.daysWithMeals))")
             }
@@ -201,7 +201,7 @@ private struct GoalBars: View {
                     ForEach(Array(days.enumerated()), id: \.offset) { index, day in
                         VStack(spacing: 4) {
                             bar(values[index], isFuture: day.isFuture, height: barArea, top: top)
-                            Text(weekdays[index]).font(.caption2).foregroundStyle(.secondary)
+                            Text(weekdays[index]).font(.caption2).foregroundStyle(.secondaryText)
                         }
                         .frame(maxWidth: .infinity)
                         .accessibilityElement(children: .ignore)

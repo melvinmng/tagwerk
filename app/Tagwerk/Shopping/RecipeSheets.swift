@@ -111,7 +111,7 @@ struct RecipeConsentView: View {
                 }
                 .padding(.top, 4)
                 Text("Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity)
             }
             .padding()
@@ -270,7 +270,7 @@ struct RecipeInputView: View {
             case .note: RecipeNoteSection(store: environment.notes, selectedID: $noteID, showsOthers: $showsOtherNotes)
             }
             if let errorText {
-                Section { Text(errorText).foregroundStyle(.red) }
+                Section { Text(errorText).foregroundStyle(.redText) }
             }
             Section {
                 Button(action: tapRead) {
@@ -369,7 +369,7 @@ struct RecipeInputView: View {
                     Text("Foto \(index + 1)")
                     Spacer()
                     Button { photos.removeAll { $0.id == photo.id } } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondaryText)
                     }
                     .buttonStyle(.borderless)
                     .accessibilityLabel("Foto \(index + 1) entfernen")
@@ -615,7 +615,7 @@ struct RecipeResultView: View {
                 Text("Portionen")
             } footer: {
                 if baseServings == nil {
-                    Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.red)
+                    Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
                 }
             }
             Section {
@@ -624,7 +624,7 @@ struct RecipeResultView: View {
                         // The checkmark chooses; a tap on the ingredient opens its values (AN9a).
                         Button { draft.toggle(row.id) } label: {
                             Image(systemName: draft.isSelected(row.id) ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(draft.isSelected(row.id) ? Color.accentColor : Color.secondary)
+                                .foregroundStyle(draft.isSelected(row.id) ? Color.accentColor : Color.secondaryText)
                                 .minimumTapTarget()
                         }
                         .buttonStyle(.plain)
@@ -685,14 +685,14 @@ struct RecipeResultView: View {
                 Text(candidate.listName).foregroundStyle(.primary)
                 // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
                 if let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity {
-                    Text(quantity).foregroundStyle(Color.secondary)
+                    Text(quantity).foregroundStyle(Color.secondaryText)
                 }
             }
             if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
-                Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondary)
+                Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
             }
             Text(candidate.alreadyOnList ? candidate.category + " · " + String(localized: "schon auf der Liste") : candidate.category)
-                .font(.subheadline).foregroundStyle(Color.secondary)
+                .font(.subheadline).foregroundStyle(Color.secondaryText)
             PreviewRowMark(mark: mark)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

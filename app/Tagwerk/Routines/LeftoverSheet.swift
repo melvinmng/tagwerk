@@ -95,7 +95,7 @@ struct LeftoverSheet: View {
             Image(systemName: symbol).font(.title3).foregroundStyle(Color.accentColor).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.headline)
-                if let subtitle { Text(subtitle).font(.caption).foregroundStyle(.secondary) }
+                if let subtitle { Text(subtitle).font(.caption).foregroundStyle(.secondaryText) }
             }
             Spacer()
             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)

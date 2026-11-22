@@ -127,7 +127,7 @@ struct ChatView: View {
     private var contextChip: some View {
         Label(contextText, systemImage: isNotesContext ? "lock" : "scope")
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .padding(.horizontal, 12).padding(.vertical, 6)
             .background(.thinMaterial, in: Capsule())
             .padding(.vertical, 6)
@@ -182,19 +182,19 @@ struct ChatView: View {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     if conversation?.truncatedNotice == true {
                         Text("Ältere Nachrichten werden nicht mehr mitgeschickt.")
-                            .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                            .font(.caption).foregroundStyle(.secondaryText).frame(maxWidth: .infinity)
                     }
                     if !environment.ai.isSignedIn {
                         Label("Melde dich in Einstellungen › KI mit ChatGPT an, um den Assistenten zu nutzen.",
                               systemImage: "person.crop.circle.badge.exclamationmark")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(.secondaryText)
                     } else if conversation?.history.isEmpty != false {
                         if isNotesContext {
                             Text("Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.")
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.subheadline).foregroundStyle(.secondaryText)
                         } else {
                             Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.subheadline).foregroundStyle(.secondaryText)
                         }
 
                     }
@@ -209,7 +209,7 @@ struct ChatView: View {
                     }
                     if case .failed(let error) = conversation?.state {
                         HStack {
-                            Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                            Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.orangeText)
                             Spacer()
                             Button("Erneut versuchen") { Task { await assistant.retry() } }
                         }
@@ -217,7 +217,7 @@ struct ChatView: View {
                     }
                     if conversation?.roundLimitReached == true {
                         Text("Der Assistent hat zu viele Schritte gebraucht und angehalten. Formuliere die Bitte genauer.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(.secondaryText)
                     }
                     Color.clear.frame(height: 1).id("end")
                 }
@@ -238,7 +238,7 @@ struct ChatView: View {
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .background(Color.accentColor.opacity(0.25), in: RoundedRectangle(cornerRadius: 16))
                 if assistant.isSpoken(message) {
-                    Label("gesprochen", systemImage: "mic.fill").font(.caption2).foregroundStyle(.secondary)
+                    Label("gesprochen", systemImage: "mic.fill").font(.caption2).foregroundStyle(.secondaryText)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -262,7 +262,7 @@ struct ChatView: View {
         case .activity(let call, let output):
             // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
             if let text = assistant.activityText(call, output: output) {
-                Label(text, systemImage: "doc.text").font(.caption).foregroundStyle(.secondary)
+                Label(text, systemImage: "doc.text").font(.caption).foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -310,7 +310,7 @@ struct ChatView: View {
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(Color.purple.opacity(0.15), in: Capsule())
             Text("Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -334,7 +334,7 @@ struct ChatView: View {
                 // As before: the note under the buttons names the cards that are confirmed alone, from two open cards on.
                 if pending.count > 1,
                    let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
-                    Text(notice).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(notice).font(.footnote).foregroundStyle(.secondaryText).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if assistant.composesRevision, let pending = conversation?.pendingActions, !pending.isEmpty {
@@ -422,10 +422,10 @@ struct ActionCardView: View {
                 .buttonStyle(.borderless)
             }
             if let warning = card.warning {
-                Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.red)
+                Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.redText)
             }
             if case .done(let output) = status, let error = Self.error(in: output) {
-                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
             }
             if status == .pending { buttons }
         }
@@ -448,15 +448,15 @@ struct ActionCardView: View {
     private var changeText: some View {
         if let proposed = card.proposedChange, status == .pending {
             if let parts = ProposalChangeText.parts(current: card.change, proposed: proposed) {
-                Text(ProposalChangeText.attributed(parts)).font(.subheadline).foregroundStyle(.secondary)
+                Text(ProposalChangeText.attributed(parts)).font(.subheadline).foregroundStyle(.secondaryText)
                     .accessibilityLabel(Text(ProposalChangeText.spoken(parts)))
             } else {
-                Text(card.change).font(.subheadline).foregroundStyle(.secondary)
-                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondary).strikethrough()
+                Text(card.change).font(.subheadline).foregroundStyle(.secondaryText)
+                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondaryText).strikethrough()
                     .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
             }
         } else {
-            Text(card.change).font(.subheadline).foregroundStyle(.secondary)
+            Text(card.change).font(.subheadline).foregroundStyle(.secondaryText)
         }
     }
 
@@ -512,23 +512,23 @@ struct ActionCardView: View {
         switch status {
         case .pending:
             if let proposal {
-                Text("Vorschlag \(proposal.index) von \(proposal.count) · noch nicht ausgeführt").font(.caption).foregroundStyle(.purple)
+                Text("Vorschlag \(proposal.index) von \(proposal.count) · noch nicht ausgeführt").font(.caption).foregroundStyle(.purpleText)
             } else {
-                Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purple)
+                Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purpleText)
             }
         case .running:
-            HStack(spacing: 6) { ProgressView(); Text("Wird ausgeführt …").font(.caption).foregroundStyle(.secondary) }
+            HStack(spacing: 6) { ProgressView(); Text("Wird ausgeführt …").font(.caption).foregroundStyle(.secondaryText) }
         case .done(let output):
             if Self.error(in: output) != nil {
-                Text("Nicht ausgeführt").font(.caption).foregroundStyle(.orange)
+                Text("Nicht ausgeführt").font(.caption).foregroundStyle(.orangeText)
             } else {
                 let done = time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt")
-                Text(card.doneNote.map { done + " · " + $0 } ?? done).font(.caption).foregroundStyle(.green)
+                Text(card.doneNote.map { done + " · " + $0 } ?? done).font(.caption).foregroundStyle(.greenText)
             }
         case .declined:
-            Text("Verworfen").font(.caption).foregroundStyle(.secondary)
+            Text("Verworfen").font(.caption).foregroundStyle(.secondaryText)
         case .revised:
-            Text("Überarbeitet").font(.caption).foregroundStyle(.secondary)
+            Text("Überarbeitet").font(.caption).foregroundStyle(.secondaryText)
         }
     }
 

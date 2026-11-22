@@ -6,7 +6,7 @@
 # it takes many times as long as app/test-all.sh. One test run per checkout: the script takes the same lock as
 # app/test-all.sh.
 #
-# Usage: scripts/stress-audits.sh [--collect] [iterations] [only-testing ...]
+# Usage: scripts/stress-audits.sh [--collect | --collect-all] [iterations] [only-testing ...]
 #   iterations     number of repetitions (default 10)
 #   only-testing   test selectors relative to the UI test bundle, e.g. AccessibilityAuditRecipesUITests/testAuditCreateRecipe;
 #                  default: all audit classes
@@ -14,6 +14,9 @@
 #                  allowlist is written to a file per iteration; the report lists each finding with the number of iterations it
 #                  appeared in. Findings that do not appear in every iteration are the flaky ones. With the default test
 #                  selection the report also lists the allowlist entries that no finding matched in any iteration (dead entries).
+#   --collect-all  collect mode that writes every finding, the accepted ones with the allowlist entry and pattern that cover them
+#                  (TEST_RUNNER_AUDIT_COLLECT_ALL=1). The report adds a table per allowlist entry (findings per screen, default size
+#                  and AX5/dark apart) and, with the default test selection, the patterns of the entries that covered no finding.
 # Exit codes: 0 all repetitions passed (collect mode: always), 1 at least one failure, 2 setup failure or another run is active
 
 set -euo pipefail
@@ -25,11 +28,13 @@ APP_DIR="$REPO_ROOT/app"
 source "$REPO_ROOT/scripts/test-env.sh"
 
 COLLECT=0
+COLLECT_ALL=0
 if [[ "${1:-}" == "--collect" ]]; then COLLECT=1; shift; fi
+if [[ "${1:-}" == "--collect-all" ]]; then COLLECT=1; COLLECT_ALL=1; shift; fi
 ITERATIONS="${1:-10}"
 (( $# > 0 )) && shift
 if ! [[ "$ITERATIONS" =~ '^[1-9][0-9]*$' ]]; then
-  echo "Usage: scripts/stress-audits.sh [--collect] [iterations] [only-testing ...]" >&2
+  echo "Usage: scripts/stress-audits.sh [--collect | --collect-all] [iterations] [only-testing ...]" >&2
   exit 2
 fi
 SELECTORS=("$@")
@@ -69,6 +74,7 @@ for iteration in {1..$ITERATIONS}; do
   if (( COLLECT )); then
     export TEST_RUNNER_AUDIT_COLLECT_FILE="$RUN_DIR/collect-$iteration.txt"
     : > "$TEST_RUNNER_AUDIT_COLLECT_FILE"
+    if (( COLLECT_ALL )); then export TEST_RUNNER_AUDIT_COLLECT_ALL=1; fi
   fi
   # A failing run is expected data here: the exit code is not evaluated, the log is.
   xcodebuild test-without-building -project "$APP_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" \
@@ -77,14 +83,14 @@ for iteration in {1..$ITERATIONS}; do
 done
 
 echo "==> report"
-/usr/bin/python3 - "$RUN_DIR" "$COLLECT" "$ALL_CLASSES" <<'PYTHON'
+/usr/bin/python3 - "$RUN_DIR" "$COLLECT" "$ALL_CLASSES" "$COLLECT_ALL" <<'PYTHON'
 import collections
 import glob
 import os
 import re
 import sys
 
-run_dir, collect, all_classes = sys.argv[1], sys.argv[2] == "1", sys.argv[3] == "1"
+run_dir, collect, all_classes, collect_all = sys.argv[1], sys.argv[2] == "1", sys.argv[3] == "1", sys.argv[4] == "1"
 logs = sorted(glob.glob(os.path.join(run_dir, "iteration-*.log")), key=lambda path: int(re.findall(r"\d+", os.path.basename(path))[0]))
 start_pattern = re.compile(r"^Test Case '-\[(?:\S+\.)?(\S+) (\S+)\]' started\.")
 case_pattern = re.compile(r"^Test Case '-\[(?:\S+\.)?(\S+) (\S+)\]' (passed|failed) \(([\d.]+) seconds\)")
@@ -141,6 +147,10 @@ if messages:
 if collect:
     findings = collections.defaultdict(set)
     defined, hit = {}, set()
+    patterns = collections.defaultdict(list)
+    # (entry index or "rule", screen, pattern) -> iterations in which a finding was covered, and the number of findings
+    covered = collections.defaultdict(lambda: collections.Counter())
+    covered_iterations = collections.defaultdict(set)
     files = sorted(glob.glob(os.path.join(run_dir, "collect-*.txt")))
     for path in files:
         iteration = int(re.findall(r"\d+", os.path.basename(path))[0])
@@ -153,6 +163,19 @@ if collect:
                 if line.startswith("ENTRY-HIT "):
                     hit.add(int(line.split()[1]))
                     continue
+                if line.startswith("PATTERN-DEFINED "):
+                    index, _, pattern = line[len("PATTERN-DEFINED "):].rstrip("\n").partition(" | ")
+                    if pattern not in patterns[int(index)]:
+                        patterns[int(index)].append(pattern)
+                    continue
+                accepted = re.search(r" accepted=(rule|\d+:.*)$", line.rstrip("\n"))
+                if accepted:
+                    index, _, pattern = accepted.group(1).partition(":")
+                    screen = line.split(" | ", 1)[0]
+                    covered_key = (int(index) if pattern else -1, screen, pattern)
+                    covered[covered_key][iteration] += 1
+                    covered_iterations[covered_key].add(iteration)
+                    continue
                 # The frame is left out: a changing frame is part of what makes a finding flaky, not a different finding.
                 key = re.sub(r" frame=.*$", "", line.strip())
                 findings[key].add(iteration)
@@ -163,6 +186,36 @@ if collect:
         print(f"  {marker} {len(iterations):>3}/{total}  {key}")
     if not findings:
         print("  none")
+    if collect_all:
+        def size_of(screen):
+            return "AX5/dark" if screen.startswith("AX5/dark ") else "default"
+        by_entry = collections.defaultdict(list)
+        for (index, screen, pattern), counter in covered.items():
+            by_entry[index].append((screen, pattern, sum(counter.values()), len(counter)))
+        print(f"\nFindings covered by the allowlist, per entry (findings summed over {total} iteration(s); in brackets: iterations that had it).")
+        print("Columns per screen and pattern: findings (iterations). 'default' = default size run, 'AX5/dark' = largest text size in dark mode.")
+        for index in sorted(by_entry):
+            rows = by_entry[index]
+            sums = collections.Counter()
+            for screen, _, count, _ in rows:
+                sums[size_of(screen)] += count
+            title = "fixed rule for findings without an element" if index == -1 else defined.get(index, "?")
+            print(f"  [{index if index >= 0 else 'rule'}] {title}")
+            print(f"      total {sum(sums.values())}: default {sums['default']}, AX5/dark {sums['AX5/dark']}")
+            for screen, pattern, count, iterations_with in sorted(rows):
+                print(f"      {screen:<55} {pattern[:70]:<70} {count:>4} ({iterations_with}/{total})")
+        if all_classes:
+            print("\nPatterns of allowlist entries that covered no finding in any iteration (entry | pattern):")
+            matched = collections.defaultdict(set)
+            for (index, _, pattern) in covered:
+                matched[index].add(pattern)
+            unmatched = 0
+            for index in sorted(patterns):
+                for pattern in patterns[index]:
+                    if pattern not in matched[index]:
+                        unmatched += 1
+                        print(f"  [{index}] {defined.get(index, '?').split(' | ')[0]} | {pattern}")
+            print(f"  {unmatched} pattern(s) without a finding")
     if all_classes:
         dead = [index for index in sorted(defined) if index not in hit]
         print(f"\nAllowlist entries that no finding matched in any iteration ({len(dead)} of {len(defined)}; index | type | screens | first labels):")

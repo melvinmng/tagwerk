@@ -34,11 +34,11 @@ struct PreviewFollowUpSection<Item: Identifiable & Equatable & Sendable>: View w
                 }
                 if !model.overwritten.isEmpty {
                     Label("Von dir geänderte Zeilen wurden überschrieben. „Rückgängig“ bringt sie zurück.", systemImage: "exclamationmark.triangle")
-                        .font(.caption).foregroundStyle(.orange)
+                        .font(.caption).foregroundStyle(.orangeText)
                 }
             }
         } header: {
-            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles").foregroundStyle(Color.secondary) }
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles").foregroundStyle(Color.secondaryText) }
         } footer: {
             // The footer of the section, not a row: the system footer style passes the contrast audit at the largest text size.
             if availability != .hidden { footer }

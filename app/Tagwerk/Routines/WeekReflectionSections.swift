@@ -10,14 +10,14 @@ struct WeekReflectionSections: View {
     var body: some View {
         Section {
             if model.habitSummaries.isEmpty {
-                Text("In dieser Woche war keine Gewohnheit aktiv.").foregroundStyle(.secondary)
+                Text("In dieser Woche war keine Gewohnheit aktiv.").foregroundStyle(.secondaryText)
             }
             ForEach(model.habitSummaries) { summary in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Label(summary.habit.name, systemImage: summary.habit.symbol)
                         Spacer()
-                        Text(Self.countText(summary)).monospacedDigit().foregroundStyle(.secondary)
+                        Text(Self.countText(summary)).monospacedDigit().foregroundStyle(.secondaryText)
                     }
                     ProgressView(value: summary.total > 0 ? min(1, Double(summary.done) / Double(summary.total)) : 0)
                         .tint(.green)

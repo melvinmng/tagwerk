@@ -15,7 +15,7 @@ struct MealConsentSheet: View {
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.")
                     ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                     VStack(spacing: 10) {
                         Button(action: onAgree) {
                             Text("Einverstanden und schätzen").fontWeight(.semibold).frame(maxWidth: .infinity)
@@ -26,7 +26,7 @@ struct MealConsentSheet: View {
                     }
                     .padding(.top, 4)
                     Text("Du kannst das in den Einstellungen unter „Erfassen“ widerrufen.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()

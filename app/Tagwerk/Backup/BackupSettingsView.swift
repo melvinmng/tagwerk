@@ -40,7 +40,7 @@ struct BackupSettingsView: View {
                 .tint(.primary)
                 LabeledContent("Letzte Sicherung", value: Self.lastBackupText(settings.lastAutoBackupAt))
                 if let error = settings.lastBackupError {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    Text(error).font(.footnote).foregroundStyle(.redText)
                 }
             } header: {
                 Text("Automatische Sicherung")

@@ -40,10 +40,10 @@ struct ShoppingSortConsentSheet: View {
                     Text(purpose == .sort
                          ? "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien."
                          : "Die Einwilligung gilt auch für „Mit ChatGPT sortieren“; dabei gehen zusätzlich die Namen deiner Kategorien mit.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()
@@ -76,7 +76,7 @@ struct ShoppingSortResultSheet: View {
         NavigationStack {
             List {
                 if draft.changes.isEmpty {
-                    Text("ChatGPT schlägt keine andere Einteilung vor.").foregroundStyle(.secondary)
+                    Text("ChatGPT schlägt keine andere Einteilung vor.").foregroundStyle(.secondaryText)
                 }
                 if !draft.newCategories.isEmpty {
                     Section("Neue Kategorien") {
@@ -97,7 +97,7 @@ struct ShoppingSortResultSheet: View {
                                 checkRow(isOn: !categoryOff && !draft.deselectedItems.contains(change.id)) {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(change.itemName)
-                                        Text(verbatim: "\(change.fromCategory) → \(change.toCategory)").font(.subheadline).foregroundStyle(.secondary)
+                                        Text(verbatim: "\(change.fromCategory) → \(change.toCategory)").font(.subheadline).foregroundStyle(.secondaryText)
                                         PreviewRowMark(mark: draft.followUp.mark(of: change.id))
                                     }
                                 } toggle: {
@@ -179,7 +179,7 @@ struct ShoppingSortResultSheet: View {
         Button(action: toggle) {
             HStack(spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
                 label().foregroundStyle(.primary)
                 Spacer(minLength: 0)
             }

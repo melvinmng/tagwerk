@@ -11,6 +11,15 @@ extension SuggestionFacts.Urgency {
         case .none: .secondary
         }
     }
+
+    /// The same colours as text: the darker tones for the light appearance (fills keep `color`).
+    var textColor: Color {
+        switch self {
+        case .high: .redText
+        case .medium: .orangeText
+        case .none: .secondaryText
+        }
+    }
 }
 
 /// "P1" next to the title: red for P1, orange for P2, neutral otherwise.
@@ -22,7 +31,7 @@ struct PriorityMark: View {
             .font(.caption2.weight(.bold))
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
-            .foregroundStyle(mark.urgency == .none ? Color.secondary : Color.white)
+            .foregroundStyle(mark.urgency == .none ? Color.secondaryText : Color.white)
             .background(mark.urgency == .none ? Color.secondary.opacity(0.2) : mark.urgency.color, in: Capsule())
             .fixedSize()
     }
@@ -34,6 +43,13 @@ struct FactCapsule: View {
     var symbol: String?
     var urgency: SuggestionFacts.Urgency = .none
     var tint: Color?
+    /// The colour of the text when `tint` is set (the fill keeps the system colour).
+    var tintText: Color?
+
+    private var textColor: Color {
+        if let tint { return tintText ?? tint }
+        return urgency == .none ? Color.primary.opacity(0.75) : urgency.textColor
+    }
 
     var body: some View {
         HStack(spacing: 3) {
@@ -44,7 +60,7 @@ struct FactCapsule: View {
         .lineLimit(1)
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .foregroundStyle(tint ?? (urgency == .none ? Color.primary.opacity(0.75) : urgency.color))
+        .foregroundStyle(textColor)
         .background((tint ?? (urgency == .none ? Color.secondary : urgency.color)).opacity(0.15), in: Capsule())
         .fixedSize()
     }
@@ -69,7 +85,7 @@ struct SuggestionCapsules: View {
         HStack(spacing: 4) {
             if withMove, let target = facts.moveTarget {
                 FactCapsule(text: target.text, symbol: "arrow.uturn.right", urgency: target.urgency,
-                            tint: target.urgency == .none ? .purple : nil)
+                            tint: target.urgency == .none ? .purple : nil, tintText: .purpleText)
             }
             if let due { FactCapsule(text: due, symbol: "flag.fill", urgency: facts.due?.urgency ?? .none) }
             if let effort { FactCapsule(text: effort) }
@@ -126,7 +142,7 @@ struct SuggestionBlock: View {
         VStack(alignment: .leading, spacing: 2) {
             titleLine(facts)
             SuggestionCapsules(facts: facts)
-            if time { Text(timeText).font(.caption2).foregroundStyle(.secondary) }
+            if time { Text(timeText).font(.caption2).foregroundStyle(.secondaryText) }
             if reasonLines > 0, !suggestion.reason.isEmpty {
                 Text("„\(suggestion.reason)“").font(.caption2).lineLimit(reasonLines)
             }
@@ -221,7 +237,7 @@ struct SuggestionRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 header(facts)
                 if suggestion.kind == .dayChange {
-                    Text(SuggestionText.detail(suggestion, planning: environment.planning)).font(.caption).foregroundStyle(.secondary)
+                    Text(SuggestionText.detail(suggestion, planning: environment.planning)).font(.caption).foregroundStyle(.secondaryText)
                 } else {
                     SuggestionCapsules(facts: facts)
                 }
@@ -230,7 +246,7 @@ struct SuggestionRow: View {
                 }
                 SuggestionStateLabel(suggestion: suggestion)
                 if !suggestion.reason.isEmpty && suggestion.kind != .move {
-                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purple).lineLimit(reasonLines)
+                    Text("„\(suggestion.reason)“").font(.caption).foregroundStyle(.purpleText).lineLimit(reasonLines)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -262,7 +278,7 @@ struct SuggestionRow: View {
                 Text(suggestion.title).font(.subheadline).foregroundStyle(.primary).lineLimit(2)
             } else {
                 Label(SuggestionText.title(suggestion, calendar: environment.planning.calendar), systemImage: SuggestionText.symbol(suggestion))
-                    .font(.subheadline).foregroundStyle(.purple).lineLimit(2)
+                    .font(.subheadline).foregroundStyle(.purpleText).lineLimit(2)
             }
             Spacer(minLength: 0)
             if let priority = facts.priority { PriorityMark(mark: priority) }
@@ -291,7 +307,7 @@ struct MoveGhostRow: View {
         let from = suggestion.fromDay.map { $0.startDate(in: environment.planning.calendar).formatted(.dateTime.weekday(.abbreviated).day()) } ?? ""
         Label("von \(from) · \(suggestion.title)", systemImage: "arrow.uturn.right")
             .font(.subheadline)
-            .foregroundStyle(.purple.opacity(0.7))
+            .foregroundStyle(.purpleText.opacity(0.7))
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
@@ -343,7 +359,7 @@ struct SuggestionDetail: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(SuggestionText.title(current, calendar: planning.calendar)).font(.headline)
                     Label(SuggestionText.sheetWhen(current, calendar: planning.calendar), systemImage: SuggestionText.symbol(current))
-                        .font(.subheadline).foregroundStyle(.purple)
+                        .font(.subheadline).foregroundStyle(.purpleText)
                     SuggestionStateLabel(suggestion: current)
                 }
             }
@@ -353,11 +369,11 @@ struct SuggestionDetail: View {
                         .buttonStyle(.plain)
                 }
             } else if current.kind == .dayChange {
-                Section { Text(SuggestionText.detail(current, planning: planning)).foregroundStyle(.secondary) }
+                Section { Text(SuggestionText.detail(current, planning: planning)).foregroundStyle(.secondaryText) }
             }
             if !current.reason.isEmpty {
                 Section("Begründung") {
-                    Label("„\(current.reason)“", systemImage: "sparkles").foregroundStyle(.purple)
+                    Label("„\(current.reason)“", systemImage: "sparkles").foregroundStyle(.purpleText)
                 }
             }
             if current.kind != .dayChange, live != nil {
@@ -410,10 +426,10 @@ struct SuggestionStateLabel: View {
         let calendar = environment.planning.calendar
         if let ai = suggestion.aiPosition {
             Label("von dir verschoben · KI: \(Self.difference(ai, suggestion.position, calendar: calendar))", systemImage: "pencil")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
         } else if let previous = suggestion.previousPosition {
             Label("geändert · war \(Self.difference(previous, suggestion.position, calendar: calendar))", systemImage: "arrow.triangle.2.circlepath")
-                .font(.caption).foregroundStyle(.purple)
+                .font(.caption).foregroundStyle(.purpleText)
         }
     }
 
@@ -454,7 +470,7 @@ struct SuggestionMoveSection: View {
                 }
             }
             if let error {
-                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
             }
         } header: {
             Text("Von Hand ändern")
@@ -522,7 +538,7 @@ struct SuggestionConversation: View {
                     if message.role == .user {
                         Text(message.text)
                             .frame(maxWidth: .infinity, alignment: .trailing)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     } else {
                         answer(message, isLast: message.id == batch?.conversation?.last?.id)
                     }
@@ -548,13 +564,13 @@ struct SuggestionConversation: View {
             let changes = message.changes ?? []
             Label(changes.isEmpty ? "Nichts geändert" : "\(changes.count) Vorschläge geändert",
                   systemImage: "sparkles")
-                .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
+                .font(.subheadline.weight(.semibold)).foregroundStyle(.purpleText)
             ForEach(changes, id: \.self) { Text($0).font(.caption) }
             ForEach(message.rejected ?? [], id: \.self) { line in
-                Label(line, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+                Label(line, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
             }
             if !message.text.isEmpty {
-                Text("„\(message.text)“").font(.caption).foregroundStyle(.purple)
+                Text("„\(message.text)“").font(.caption).foregroundStyle(.purpleText)
             }
             if isLast {
                 HStack(spacing: 12) {
@@ -614,16 +630,16 @@ struct TaskCard: View {
                 Spacer(minLength: 0)
             }
             Text(([task.container.name] + task.subContainers.map(\.name)).joined(separator: " · "))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             if let bar = facts.bar {
                 EffortBar(bar: bar)
             } else if let effort = facts.effort {
-                Text("Aufwand \(effort)").font(.caption).foregroundStyle(.secondary)
+                Text("Aufwand \(effort)").font(.caption).foregroundStyle(.secondaryText)
             }
             HStack {
                 Text("Aufgabe öffnen").font(.subheadline)
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             .foregroundStyle(.tint)
         }
@@ -641,7 +657,7 @@ struct EffortBar: View {
                 Text("Aufwand \(CapacityText.duration(bar.total))").font(.caption.weight(.semibold))
                 Spacer()
                 Text("danach \(CapacityText.duration(min(bar.total, bar.planned + bar.suggested))) von \(CapacityText.duration(bar.total)) geplant")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
             GeometryReader { proxy in
                 let total = CGFloat(max(bar.total, bar.planned + bar.suggested, 1))
@@ -656,7 +672,7 @@ struct EffortBar: View {
             Text([bar.planned > 0 ? String(localized: "\(CapacityText.duration(bar.planned)) eingeplant") : nil,
                   String(localized: "+\(CapacityText.duration(bar.suggested)) dieser Vorschlag"),
                   bar.open > 0 ? String(localized: "\(CapacityText.duration(bar.open)) offen") : nil].compactMap { $0 }.joined(separator: " · "))
-                .font(.caption2).foregroundStyle(.secondary)
+                .font(.caption2).foregroundStyle(.secondaryText)
         }
     }
 }

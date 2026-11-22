@@ -238,7 +238,7 @@ struct SearchSheet: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondaryText).accessibilityHidden(true)
                     TextField("Suchen", text: $model.text)
                         .focused($fieldFocused)
                         .autocorrectionDisabled()
@@ -247,7 +247,7 @@ struct SearchSheet: View {
                         .onSubmit { fieldFocused = false }
                     if !model.text.isEmpty {
                         Button { model.text = "" } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondaryText)
                                 .frame(minWidth: 44, minHeight: 44)
                         }
                         .buttonStyle(.plain)
@@ -311,10 +311,10 @@ struct SearchSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Durchsucht Termine, Aufgaben, Notizen und die Einkaufsliste.")
                 Text(SearchTexts.footer(windowStart: model.windowStart, isExtended: false, calendar: calendar))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
                 if environment.gateway.calendarAccessState != .fullAccess {
                     Text("Kein Zugriff auf Kalender – Termine werden nicht durchsucht.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                 }
             }
             .listRowBackground(Color.clear)
@@ -327,7 +327,7 @@ struct SearchSheet: View {
                 Text("Keine Treffer für „\(model.query?.text ?? "")“.")
                 if model.eventState == .noAccess {
                     Text("Kein Zugriff auf Kalender – Termine werden nicht durchsucht.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                 }
                 if model.filter != .events, !model.includeCompleted {
                     Button("Erledigte einbeziehen") { model.includeCompleted = true }
@@ -384,13 +384,13 @@ struct SearchSheet: View {
                 }
             }
             if kind == .online, model.onlineState == .loaded, section == nil {
-                Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondary)
+                Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondaryText)
             }
             if kind == .openTasks {
                 if model.onlineState == .loading {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("GitHub wird durchsucht …").foregroundStyle(.secondary)
+                        Text("GitHub wird durchsucht …").foregroundStyle(.secondaryText)
                     }
                     .accessibilityElement(children: .combine)
                 } else if model.showsOnlineSearchRow {

@@ -229,14 +229,14 @@ struct ShoppingListView: View {
                         .environment(\.defaultMinListRowHeight, 0)
                 }
                 Text("\(model.openItems.count) offen · Liste „\(model.listTitle ?? "")“ in Erinnerungen")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
             }
             if model.openItems.isEmpty && model.completedItems.isEmpty {
                 Section {
                     Text("Die Liste ist leer. Füge unten Artikel hinzu.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .listRowBackground(Color.clear)
                 }
@@ -253,7 +253,7 @@ struct ShoppingListView: View {
                     DisclosureGroup(isExpanded: $showsCompleted) {
                         ForEach(model.completedItems) { row($0) }
                     } label: {
-                        Text("Erledigt · \(model.completedItems.count)").foregroundStyle(.secondary)
+                        Text("Erledigt · \(model.completedItems.count)").foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -289,7 +289,7 @@ struct ShoppingListView: View {
             } label: {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundStyle(item.isCompleted ? Color.secondary : Color.accentColor)
+                    .foregroundStyle(item.isCompleted ? Color.secondaryText : Color.accentColor)
                     .frame(width: 32, height: 44)
                     .contentShape(Rectangle())
             }
@@ -297,9 +297,9 @@ struct ShoppingListView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)
                     .strikethrough(item.isCompleted)
-                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(item.isCompleted ? Color.secondaryText : Color.primary)
                 if let quantity = item.quantity {
-                    Text(quantity).font(.subheadline).foregroundStyle(.secondary)
+                    Text(quantity).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             Spacer(minLength: 0)

@@ -60,7 +60,7 @@ struct PlanningSettingsSection: View {
                     calendarError = TaskListModel.message(for: error)
                 }
             }
-            if let calendarError { Text(calendarError).font(.caption).foregroundStyle(.red) }
+            if let calendarError { Text(calendarError).font(.caption).foregroundStyle(.redText) }
         }
         Picker("Plan-Kalender", selection: $settings.planCalendarID) {
             Text("Keiner").tag(String?.none)

@@ -33,9 +33,9 @@ struct PlanBatchConversationSheet: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(suggestion.title)
                                 Text(AIPlanner.positionText(suggestion.position, calendar: environment.planning.calendar))
-                                    .font(.subheadline).foregroundStyle(.secondary)
+                                    .font(.subheadline).foregroundStyle(.secondaryText)
                                 if suggestion.isMovedByUser {
-                                    Text("von dir verschoben, bleibt").font(.caption).foregroundStyle(.secondary)
+                                    Text("von dir verschoben, bleibt").font(.caption).foregroundStyle(.secondaryText)
                                 }
                             }
                         }
@@ -52,7 +52,7 @@ struct PlanBatchConversationSheet: View {
                         Label("Mit ChatGPT besprechen", systemImage: "sparkles")
                     }
                 } else {
-                    Text("Die Planung gibt es nicht mehr.").foregroundStyle(.secondary)
+                    Text("Die Planung gibt es nicht mehr.").foregroundStyle(.secondaryText)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -73,17 +73,17 @@ struct PlanBatchConversationSheet: View {
         let answers = (batch.conversation ?? []).filter { $0.suggestionID == nil }
         ForEach(answers) { message in
             if message.role == .user {
-                Text(message.text).frame(maxWidth: .infinity, alignment: .trailing).foregroundStyle(.secondary)
+                Text(message.text).frame(maxWidth: .infinity, alignment: .trailing).foregroundStyle(.secondaryText)
             } else {
                 VStack(alignment: .leading, spacing: 6) {
                     let changes = message.changes ?? []
                     Label(changes.isEmpty ? "Nichts geändert" : "\(changes.count) Vorschläge geändert", systemImage: "sparkles")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(.purpleText)
                     ForEach(changes, id: \.self) { Text($0).font(.caption) }
                     ForEach(message.rejected ?? [], id: \.self) { line in
-                        Label(line, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+                        Label(line, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
                     }
-                    if !message.text.isEmpty { Text("„\(message.text)“").font(.caption).foregroundStyle(.purple) }
+                    if !message.text.isEmpty { Text("„\(message.text)“").font(.caption).foregroundStyle(.purpleText) }
                     if message.id == answers.last?.id, batch.revisionUndo != nil {
                         Button("Rückgängig") { Task { await planner.undoRevision(of: batch.id) } }.buttonStyle(.borderless).font(.caption)
                     }

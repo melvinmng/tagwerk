@@ -55,7 +55,7 @@ struct RecipeNoteSection: View {
         let selectedOther = selectedID.flatMap { id in recipes.contains { $0.id == id } ? nil : entry(for: id) }
         Section {
             if recipes.isEmpty, selectedOther == nil {
-                Text("Im Ordner „Rezepte“ ist noch keine Notiz.").foregroundStyle(.secondary)
+                Text("Im Ordner „Rezepte“ ist noch keine Notiz.").foregroundStyle(.secondaryText)
             }
             ForEach(recipes) { row($0) }
             if let selectedOther { row(selectedOther) }
@@ -84,11 +84,11 @@ private struct RecipeNoteRowLabel: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: isOn ? "checkmark.circle.fill" : "circle").foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+            Image(systemName: isOn ? "checkmark.circle.fill" : "circle").foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).foregroundStyle(.primary)
                 // A fixed grey: the hierarchical `.secondary` takes the tint of the button around it and fails the contrast audit.
-                Text(entry.isStructured ? "strukturiert" : "wird mit ChatGPT gelesen").font(.subheadline).foregroundStyle(Color.secondary)
+                Text(entry.isStructured ? "strukturiert" : "wird mit ChatGPT gelesen").font(.subheadline).foregroundStyle(Color.secondaryText)
             }
             Spacer(minLength: 0)
         }
@@ -111,7 +111,7 @@ struct RecipeOtherNotesSheet: View {
                 } label: { RecipeNoteRowLabel(entry: entry, isOn: selectedID == entry.id) }
             }
             .overlay {
-                if entries.isEmpty { Text("Keine Notizen vorhanden.").foregroundStyle(.secondary) }
+                if entries.isEmpty { Text("Keine Notizen vorhanden.").foregroundStyle(.secondaryText) }
             }
             .navigationTitle("Andere Notiz wählen")
             .navigationBarTitleDisplayMode(.inline)

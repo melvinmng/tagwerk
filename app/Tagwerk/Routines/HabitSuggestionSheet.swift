@@ -22,12 +22,12 @@ struct HabitSuggestionSheet: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: selected.contains(suggestion.key) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(selected.contains(suggestion.key) ? Color.accentColor : Color.secondary)
-                                Image(systemName: suggestion.symbol).frame(width: 24).foregroundStyle(.secondary)
+                                    .foregroundStyle(selected.contains(suggestion.key) ? Color.accentColor : Color.secondaryText)
+                                Image(systemName: suggestion.symbol).frame(width: 24).foregroundStyle(.secondaryText)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(suggestion.name).foregroundStyle(.primary)
                                     if let note = note(for: suggestion, in: plan) {
-                                        Text(note).font(.caption).foregroundStyle(.secondary)
+                                        Text(note).font(.caption).foregroundStyle(.secondaryText)
                                     }
                                 }
                             }

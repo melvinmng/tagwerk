@@ -39,7 +39,7 @@ struct WorkoutSheet: View {
                             .keyboardDoneButton()
                             .multilineTextAlignment(.trailing)
                             .frame(maxWidth: 100)
-                        Text("kcal").foregroundStyle(.secondary)
+                        Text("kcal").foregroundStyle(.secondaryText)
                     }
                 } footer: {
                     Text("Der Beginn ist so vorbelegt, dass das Training jetzt endet. Tagwerk schätzt keinen Verbrauch; ein leeres Feld bleibt leer.")
@@ -47,7 +47,7 @@ struct WorkoutSheet: View {
                 if let warning = model.overlapWarning(start: start, minutes: minutes) {
                     Section {
                         Label(warning, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.orangeText)
                             .font(.subheadline)
                     }
                 }

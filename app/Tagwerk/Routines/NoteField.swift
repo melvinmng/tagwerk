@@ -186,7 +186,7 @@ struct NoteField: View {
                             .overlay(alignment: .topLeading) {
                                 if model.text.isEmpty {
                                     Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
-                                        .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
+                                        .foregroundStyle(.secondaryText).padding(.top, 8).padding(.leading, 5)
                                         .allowsHitTesting(false)
                                 }
                             }
@@ -271,11 +271,11 @@ struct NoteField: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(suggestions?.phase == .loading)
-                Text(suggestionFooter).font(.footnote).foregroundStyle(.secondary)
+                Text(suggestionFooter).font(.footnote).foregroundStyle(.secondaryText)
             }
         } else {
             Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
         }
     }
 
@@ -294,12 +294,12 @@ struct NoteField: View {
         case .idle:
             EmptyView()
         case .loading:
-            Section { HStack(spacing: 8) { ProgressView(); Text("Vorschläge werden geholt …").foregroundStyle(.secondary) } }
+            Section { HStack(spacing: 8) { ProgressView(); Text("Vorschläge werden geholt …").foregroundStyle(.secondaryText) } }
         case .empty:
-            Section { Text("Keine Vorschläge aus dieser Notiz.").foregroundStyle(.secondary) }
+            Section { Text("Keine Vorschläge aus dieser Notiz.").foregroundStyle(.secondaryText) }
         case .failed(let message):
             Section {
-                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orangeText)
                 Button("Erneut versuchen", action: fetchSuggestions)
             }
         case .loaded:
@@ -320,7 +320,7 @@ struct NoteField: View {
                     .buttonStyle(.borderedProminent)
                 }
                 if let notice = suggestions.singleConfirmationNotice {
-                    Text(notice).font(.footnote).foregroundStyle(.secondary)
+                    Text(notice).font(.footnote).foregroundStyle(.secondaryText)
                 }
             } header: {
                 Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
@@ -365,7 +365,7 @@ struct NoteField: View {
     private func targetRow(_ card: NoteSuggestionModel.Card, in suggestions: NoteSuggestionModel) -> AnyView? {
         guard let summary = suggestions.targetSummary(of: card) else { return nil }
         guard card.status == .pending else {
-            return card.target == nil ? nil : AnyView(Text(summary).font(.caption).foregroundStyle(.secondary))
+            return card.target == nil ? nil : AnyView(Text(summary).font(.caption).foregroundStyle(.secondaryText))
         }
         let value = suggestions.targetValue(of: card)
         return AnyView(
@@ -375,7 +375,7 @@ struct NoteField: View {
                     Image(systemName: "chevron.right").imageScale(.small)
                     Spacer(minLength: 0)
                 }
-                .foregroundStyle(card.needsTarget ? Color.orange : Color.accentColor)
+                .foregroundStyle(card.needsTarget ? Color.orangeText : Color.accentColor)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
