@@ -14827,6 +14827,7 @@
       }
     },
     "Menge, z. B. „500 g“": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
