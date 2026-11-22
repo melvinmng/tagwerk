@@ -55,6 +55,9 @@ enum AuditAllowlist {
             "Trinkportionen", "Brain Dump", "Leitfragen einfügen", "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.",
             "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?", "Bible Study · heute .*",
             "Tagebuch · .*",
+            // Section headers of the notes overview and the date groups of the notes list (NF1, NF3), in the system grey like the others.
+            "Meine Ordner", "Persönlich", "Angeheftet", "Letzte 7 Tage",
+            "(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember) \\d{4}",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
