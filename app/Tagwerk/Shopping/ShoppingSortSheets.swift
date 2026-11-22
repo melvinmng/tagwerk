@@ -63,67 +63,103 @@ struct ShoppingSortConsentSheet: View {
     }
 }
 
-/// "Vorschlag von ChatGPT": the proposed changes, each with a checkmark, to apply or discard.
+/// "Vorschlag von ChatGPT": the proposed changes, each with a checkmark, to apply or discard. A row can be moved to another
+/// category by hand and talked about with ChatGPT (plan ki-vorschlaege-anpassen, task D4); nothing is stored before
+/// "Vorschlag übernehmen".
 struct ShoppingSortResultSheet: View {
-    let proposal: ShoppingSorter.Proposal
+    @Environment(AppEnvironment.self) private var environment
+    let draft: ShoppingSortDraft
     let onApply: (ShoppingSorter.Proposal) -> Void
     let onDiscard: () -> Void
-
-    @State private var deselectedCategories: Set<String> = []
-    @State private var deselectedItems: Set<String> = []
 
     var body: some View {
         NavigationStack {
             List {
-                if proposal.changes.isEmpty {
+                if draft.changes.isEmpty {
                     Text("ChatGPT schlägt keine andere Einteilung vor.").foregroundStyle(.secondaryText)
                 }
-                if !proposal.newCategories.isEmpty {
+                if !draft.newCategories.isEmpty {
                     Section("Neue Kategorien") {
-                        ForEach(proposal.newCategories, id: \.self) { name in
-                            checkRow(isOn: !deselectedCategories.contains(name)) {
+                        ForEach(draft.newCategories, id: \.self) { name in
+                            checkRow(isOn: !draft.deselectedCategories.contains(name)) {
                                 Text("Neue Kategorie „\(name)“ anlegen")
                             } toggle: {
-                                toggle(name, in: &deselectedCategories)
+                                draft.toggleCategory(name)
                             }
                         }
                     }
                 }
-                if !proposal.changes.isEmpty {
+                if !draft.changes.isEmpty {
                     Section("Änderungen") {
-                        ForEach(proposal.changes) { change in
-                            let categoryOff = deselectedCategories.contains(change.toCategory)
-                            checkRow(isOn: !categoryOff && !deselectedItems.contains(change.id)) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(change.itemName)
-                                    Text(verbatim: "\(change.fromCategory) → \(change.toCategory)").font(.subheadline).foregroundStyle(.secondaryText)
+                        ForEach(draft.changes) { change in
+                            let categoryOff = draft.deselectedCategories.contains(change.toCategory)
+                            VStack(alignment: .leading, spacing: 4) {
+                                checkRow(isOn: !categoryOff && !draft.deselectedItems.contains(change.id)) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(change.itemName)
+                                        Text(verbatim: "\(change.fromCategory) → \(change.toCategory)").font(.subheadline).foregroundStyle(.secondaryText)
+                                        PreviewRowMark(mark: draft.followUp.mark(of: change.id))
+                                    }
+                                } toggle: {
+                                    draft.toggleItem(change.id)
                                 }
-                            } toggle: {
-                                toggle(change.id, in: &deselectedItems)
+                                .disabled(categoryOff)
+                                // Below the name, so the name keeps the width of the row at large text sizes.
+                                HStack(spacing: 8) {
+                                    Spacer(minLength: 0)
+                                    categoryMenu(change)
+                                    if draft.hasFollowUp {
+                                        Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
+                                            .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                                    }
+                                }
                             }
-                            .disabled(categoryOff)
                         }
                     }
                 }
+                if draft.hasFollowUp { followUpSection }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Vorschlag von ChatGPT")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(proposal.changes.isEmpty ? "Schließen" : "Verwerfen", action: onDiscard)
+                    Button(draft.changes.isEmpty ? "Schließen" : "Verwerfen", action: onDiscard)
                 }
-                if !proposal.changes.isEmpty {
+                if !draft.changes.isEmpty {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Vorschlag übernehmen") { onApply(selected) }.disabled(selected.changes.isEmpty)
+                        Button("Vorschlag übernehmen") { onApply(draft.selection) }.disabled(draft.selection.changes.isEmpty)
                     }
                 }
             }
+            .onDisappear { draft.followUp.discard() }
         }
         .presentationDetents([.medium, .large])
     }
 
-    private var selected: ShoppingSorter.Proposal {
-        Self.selection(proposal: proposal, deselectedCategories: deselectedCategories, deselectedItems: deselectedItems)
+    /// The category of one row: the categories of the list, the fixed section and the proposed new ones (AN9a).
+    private func categoryMenu(_ change: ShoppingSorter.Change) -> some View {
+        Menu {
+            Picker("Kategorie", selection: Binding(get: { change.toCategory }, set: { draft.pick($0, for: change.id) })) {
+                ForEach(draft.categoryChoices, id: \.self) { Text($0).tag($0) }
+            }
+        } label: {
+            Image(systemName: "folder").minimumTapTarget()
+        }
+        .accessibilityLabel("Kategorie wählen")
+        .accessibilityValue(change.toCategory)
+    }
+
+    private var followUpSection: some View {
+        PreviewFollowUpSection(
+            model: draft.followUp,
+            availability: FollowUpAvailability.state(hasConsent: environment.settings.hasShoppingSortConsent,
+                                                     isSignedIn: environment.ai.isSignedIn, isOffline: false),
+            place: .shopping,
+            quickReplies: [String(localized: "Keine neuen Kategorien"), String(localized: "Gröber einteilen")],
+            placeholder: "Zur Einteilung etwas sagen …",
+            footer: Text("Senden gibt die Namen deiner offenen Artikel und deiner Kategorien, den Vorschlag mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit."),
+            focusLabel: { String(localized: "Zu: \($0.itemName)") }, onSend: { message in Task { await draft.send(message) } })
     }
 
     /// What "Übernehmen" stores. `deselectedItems` holds `Change.id`s. Deselecting a new category drops the

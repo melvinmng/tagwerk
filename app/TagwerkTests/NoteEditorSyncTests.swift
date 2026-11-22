@@ -1,4 +1,6 @@
+import SwiftData
 import Testing
+import TagwerkCore
 @testable import Tagwerk
 
 struct NoteEditorSyncTests {
@@ -24,5 +26,20 @@ struct NoteEditorSyncTests {
 
     @Test func resolution_missingNoteCloses() {
         #expect(NoteEditorSync.resolution(local: "a", lastSaved: "a", stored: nil, isTrashed: false) == .close)
+    }
+
+    /// A button of the formatting bar writes through `saveText()`: the stored text is what the page stored itself, so the
+    /// store's change does not come back as "adopt".
+    @MainActor @Test func formattingAction_isOwnSave() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = NoteStore(context: container.mainContext)
+        let note = try #require(store.create(text: "Milch"))
+        let edit = MarkdownFormatting.apply(.checkbox, to: "Milch", selection: 5..<5)
+        #expect(edit.text == "- [ ] Milch")
+        store.updateText(note.id, text: edit.text)
+        let stored = store.note(id: note.id)?.text
+        #expect(NoteEditorSync.resolution(local: edit.text, lastSaved: edit.text, stored: stored, isTrashed: false) == .keep)
+        // The user types on before the delayed save: still the page's own text.
+        #expect(NoteEditorSync.resolution(local: edit.text + " 2", lastSaved: edit.text, stored: stored, isTrashed: false) == .keep)
     }
 }

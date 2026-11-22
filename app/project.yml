@@ -166,7 +166,11 @@ schemes:
         Tagwerk: all
         TagwerkTests: [test]
     test:
-      targets: [TagwerkTests]
+      targets:
+        - TagwerkTests
+        # Tests of the packages that cannot run on macOS (AIKit imports UIKit): one build graph and one DerivedData folder
+        # with the app, instead of a separate package build. Keep in sync with PACKAGE_TEST_PLATFORM in test-all.sh.
+        - package: AIKit/AIKitTests
       language: de
       region: DE
   TagwerkUITests:

@@ -12,6 +12,7 @@ struct MailTaskSheet: View {
     var onDiscard: (() -> Void)?
     /// The mail text is expanded in the card ("mehr").
     @State private var showsFullBody = false
+    @FocusState private var followUpFocused: Bool
 
     private var calendar: Calendar { environment.planning.calendar }
     /// Light purple behind a proposed field; a fill, so it does not carry any text.
@@ -23,6 +24,7 @@ struct MailTaskSheet: View {
                 mailCard
                 taskSection
                 dueSection
+                followUpSection
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Mail zu Aufgabe")
@@ -127,6 +129,29 @@ struct MailTaskSheet: View {
         } else {
             Text("Für die Zusammenfassung melde dich unter Einstellungen › KI bei ChatGPT an.")
                 .foregroundStyle(.secondaryText)
+        }
+    }
+
+    // MARK: Follow-up
+
+    /// The input line below the fields (task E1): the mail, the fields with the ones set by hand and the message go to ChatGPT.
+    /// Only with the consent of the summary and a ChatGPT sign-in; the fields stay editable by hand either way.
+    @ViewBuilder private var followUpSection: some View {
+        let availability = FollowUpAvailability.state(hasConsent: model.canFollowUp, isSignedIn: environment.ai.isSignedIn, isOffline: false)
+        Section {
+            FollowUpBar(availability: availability, state: model.followUpState, place: .chat,
+                        quickReplies: [String(localized: "Kürzer"), String(localized: "Frist prüfen"), String(localized: "Auf Deutsch")],
+                        placeholder: "Zum Vorschlag etwas sagen …",
+                        footer: Text("Senden gibt Betreff, Absendername und Text der Mail, die Aufgabe mit deinen Änderungen und deine Nachricht an ChatGPT. Adressen gehen nicht mit."),
+                        isFocused: $followUpFocused, onSend: { message in Task { await model.revise(message) } },
+                        onRetry: { Task { await model.revise(model.lastFollowUpMessage) } }) {
+                if !model.followUpReply.isEmpty {
+                    FollowUpAnswerRow(reply: model.followUpReply, mark: model.canUndoRevision ? .byAssistant : nil,
+                                      onUndo: model.canUndoRevision ? { model.undoRevision() } : nil)
+                }
+            }
+        } header: {
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles") }
         }
     }
 

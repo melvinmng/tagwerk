@@ -13,6 +13,25 @@ struct QuietHoursTests {
         instant(year, month, day, hour, minute, in: calendar)
     }
 
+    // MARK: Day fractions (24-hour bar)
+
+    @Test func dayFractions_insideOneDay() {
+        #expect(noon.dayFractions == [0.5...(14.0 / 24)])
+    }
+
+    @Test func dayFractions_acrossMidnight_hasTwoParts() {
+        #expect(night.dayFractions == [(23.0 / 24)...1.0, 0.0...(7.0 / 24)])
+    }
+
+    @Test func dayFractions_endingAtMidnight_hasOnePart() {
+        let evening = QuietHours(startMinutes: 20 * 60, endMinutes: 0)
+        #expect(evening.dayFractions == [(20.0 / 24)...1.0])
+    }
+
+    @Test func dayFractions_emptyWindow_isEmpty() {
+        #expect(QuietHours(startMinutes: 300, endMinutes: 300).dayFractions.isEmpty)
+    }
+
     // MARK: Membership
 
     @Test func sameDayWindow_startInclusiveEndExclusive() {

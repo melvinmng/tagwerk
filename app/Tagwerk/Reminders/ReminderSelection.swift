@@ -14,6 +14,32 @@ struct ReminderSelectionRows: View {
     /// Title of the row that opens the page for an own distance.
     var customTitle: LocalizedStringKey = "Eigene …"
     var calendar: Calendar = .tagwerk
+    /// The moment the reminders count from and the quiet hours; without them no hint is shown (default settings, alarms of
+    /// Calendar and Reminders, where quiet hours do not apply). Plan g1, RH6c.
+    var quietContext: (anchor: Date, quietHours: QuietHours?)? = nil
+
+    /// When quiet hours deliver the reminder `offset` later than its own moment: "kommt 07:00".
+    private func quietDelivery(of offset: ReminderOffset) -> Date? {
+        Self.quietDelivery(of: offset, model: model, quietContext: quietContext, calendar: calendar)
+    }
+
+    private static func quietDelivery(of offset: ReminderOffset, model: ReminderListModel,
+                                      quietContext: (anchor: Date, quietHours: QuietHours?)?, calendar: Calendar) -> Date? {
+        guard let quietContext, model.isSelected(offset) else { return nil }
+        return ReminderQuietHint.delivery(of: offset, anchor: quietContext.anchor, isAllDay: model.isAllDay,
+                                          quietHours: quietContext.quietHours, calendar: calendar)
+    }
+
+    /// The sentence under the list when a row carries "kommt …"; `nil` when no reminder is held back.
+    static func quietNote(model: ReminderListModel, quietContext: (anchor: Date, quietHours: QuietHours?)?,
+                          calendar: Calendar = .tagwerk) -> String? {
+        guard let window = quietContext?.quietHours,
+              model.choiceRows.contains(where: { quietDelivery(of: $0, model: model, quietContext: quietContext, calendar: calendar) != nil })
+        else { return nil }
+        let start = DateText.time(minutes: window.startMinutes, calendar: calendar)
+        let end = DateText.time(minutes: window.endMinutes, calendar: calendar)
+        return String(localized: "Fällt in die Ruhezeit (\(start)–\(end)) und wird bis zu deren Ende zurückgehalten.")
+    }
 
     var body: some View {
         if let defaultSwitchTitle {
@@ -27,6 +53,11 @@ struct ReminderSelectionRows: View {
                 HStack {
                     Text(ReminderText.describe(offset, subject: subject, isAllDay: model.isAllDay, locale: .current, calendar: calendar))
                     Spacer()
+                    if let delivery = quietDelivery(of: offset) {
+                        Text("kommt \(DateText.time(delivery, calendar: calendar, locale: .current))")
+                            .font(.footnote)
+                            .foregroundStyle(.secondaryText)
+                    }
                     if isSelected {
                         Image(systemName: "checkmark")
                             .foregroundStyle(model.isUsingDefault ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.tint))
@@ -59,11 +90,14 @@ struct ReminderSelectionPage: View {
     var defaultSwitchTitle: LocalizedStringKey? = "Standard verwenden"
     var calendar: Calendar = .tagwerk
     var footer: String?
+    /// See `ReminderSelectionRows.quietContext`.
+    var quietContext: (anchor: Date, quietHours: QuietHours?)? = nil
 
     var body: some View {
         Form {
             Section {
-                ReminderSelectionRows(model: model, subject: subject, defaultSwitchTitle: defaultSwitchTitle, calendar: calendar)
+                ReminderSelectionRows(model: model, subject: subject, defaultSwitchTitle: defaultSwitchTitle, calendar: calendar,
+                                      quietContext: quietContext)
             } footer: {
                 Text(footerText)
             }
@@ -73,8 +107,9 @@ struct ReminderSelectionPage: View {
     }
 
     private var footerText: String {
-        let hint = String(localized: "Antippen setzt oder entfernt eine Erinnerung.")
-        guard let footer else { return hint }
-        return hint + " " + footer
+        var parts = [String(localized: "Antippen setzt oder entfernt eine Erinnerung.")]
+        if let note = ReminderSelectionRows.quietNote(model: model, quietContext: quietContext, calendar: calendar) { parts.append(note) }
+        if let footer { parts.append(footer) }
+        return parts.joined(separator: " ")
     }
 }
