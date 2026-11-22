@@ -24,7 +24,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
 - Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
 
-Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur, (2) #284 Regel 1b + #280 Mengen + Fokus-Folge-PR (4 h, Doppelzustellung), (3) gebündelte Audit-Befunde.
+Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2) #284 Regel 1b + #280 Mengen + Fokus-Folge-PR (4 h, Doppelzustellung), (3) gebündelte Audit-Befunde.
 
 ## Offene Kleinigkeiten
 
@@ -121,7 +121,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0`; CI schnell grün, UI: eigener Test `NotesUITests.testEmptyJournalFolderOffersImport` rot („Ordner des Tagebuchs fehlt“, vermutlich NF-Abschnitte) → Reparatur zusammen mit #283 |
 | `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
 | (G2 NX) | G2 Welle 2, Strang NX (Scannen, Zeichnen, Tabellen) | läuft (Sonnet) |
-| (G2 RO) | G2 Welle 2, Strang RO (Routinen) inkl. Sperre in Tagesstart/-abschluss und DT-Ursache im Tagesabschluss | läuft (Sonnet) |
+| `feat/g2-routines` | G2 Strang RO (RO1–RO8) | PR #287, Head `c3c85b2`; schnell grün, UI kompiliert → GitHub. Sperre in Tagesstart/-abschluss nach #284 (NoteField `editorRow`, `persist()`-Guard); DT-Ursache Tagesabschluss nicht gefunden (nur sonntags) |
+| (Reparatur) | Pool-Simulator-Store zurücksetzen (`fix/pool-simulator-reset`), #283 und #282 UI-Fehler | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundations` | #254 Stränge A und B | **gemergt (#281, `main` = `ad7721b`)**; PR #281, Head `62bef72`; schnell grün; Offen für C: Zielstände nur vorwärts gespiegelt, `furtherNutrientsGranted()` nie aufgerufen, Schreiberlaubnis beim Spiegeln; `en.json` „%lld Mal“ falsch |
