@@ -4799,6 +4799,16 @@
         }
       }
     },
+    "Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
+          }
+        }
+      }
+    },
     "Antworten vorlesen": {
       "localizations": {
         "en": {

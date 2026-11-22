@@ -2488,5 +2488,6 @@
   "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.": "%@ reminds at the time. The times follow the bedtime. At most four points remind.",
   "%@ erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.": "%@ reminds at the time. The times follow the bedtime. At most four points remind; further ones only appear in the list.",
   "abgehakt, erinnert heute nicht mehr": "checked, no longer reminds today",
-  "erinnert": "reminds"
+  "erinnert": "reminds",
+  "Antwort": "Answer"
 }

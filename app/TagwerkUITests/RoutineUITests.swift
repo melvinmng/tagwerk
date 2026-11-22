@@ -97,4 +97,18 @@ final class RoutineUITests: UITestCase {
         waitFor("Willst du etwas ändern?")
         waitFor("Als Aufgabe anlegen")
     }
+
+    /// RO8b: the questions of the weekly reflection stay above their fields, also after something was typed.
+    func testReflectionQuestionsStayVisibleWithAnswer() {
+        tab("Erfassen")
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        let question = app.staticTexts["Was lief gut?"].firstMatch
+        scrollTo(question)
+        let field = app.textFields["Was lief gut?"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The field of the first question is missing")
+        field.tap()
+        field.typeText("Kapitel 2 fertig")
+        XCTAssertTrue(app.staticTexts["Was lief gut?"].firstMatch.exists, "The question disappeared with the answer")
+        XCTAssertTrue(app.staticTexts["Belastet mich etwas?"].firstMatch.exists)
+    }
 }
