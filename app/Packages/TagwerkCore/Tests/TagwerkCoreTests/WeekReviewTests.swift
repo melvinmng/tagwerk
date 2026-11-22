@@ -133,20 +133,6 @@ struct WeekReviewTests {
         #expect(WeekReview.title(weekStart: crossing, calendar: calendar, locale: Locale(identifier: "en_US")) == "KW 49 · 30. Nov – 6. Dec")
     }
 
-    @Test func planHeaderLine_estimatedTilde() {
-        let intake = DayIntake(kcal: 1243, kcalMin: 1100, kcalMax: 1400, protein: 0, carbs: 0, fat: 0, waterMilliliters: 1200,
-                               hasEstimate: true)
-        #expect(IntakeFormat.planHeaderLine(intake: intake, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: true)
-            == "~1.240 / 2.300 kcal · 1,2 / 2,0 l")
-    }
-
-    @Test func planHeaderLine_manualNoTilde() {
-        let intake = DayIntake(kcal: 1243, kcalMin: 1243, kcalMax: 1243, protein: 0, carbs: 0, fat: 0, waterMilliliters: 0,
-                               hasEstimate: false)
-        #expect(IntakeFormat.planHeaderLine(intake: intake, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: true)
-            == "1.243 / 2.300 kcal · 0 / 2,0 l")
-    }
-
     @Test func weekTraining_minutesAgainstGoal_countAsAddition() {
         #expect(IntakeFormat.weekTraining(minutes: 127, count: 3, goal: 150) == "2 h 7 min / 2 h 30 min · 3 Trainings")
         #expect(IntakeFormat.weekTraining(minutes: 45, count: 1, goal: 0) == "45 min · 1 Training")
@@ -160,17 +146,71 @@ struct WeekReviewTests {
         #expect(IntakeFormat.weekSteps(average: nil, goalDays: 0, elapsedDays: 3, goal: 8000) == "Keine Schritte aus Health")
     }
 
-    @Test func planHeaderLine_appendsTodaysSteps() {
-        let intake = DayIntake(kcal: 1243, kcalMin: 1100, kcalMax: 1400, protein: 0, carbs: 0, fat: 0, waterMilliliters: 1200,
-                               hasEstimate: true)
-        #expect(IntakeFormat.planHeaderLine(intake: intake, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: true, steps: 6412)
-            == "~1.240 / 2.300 kcal · 1,2 / 2,0 l · 6.412 Schritte")
-        // Steps alone do not open the line: it still starts with the first entry of the day.
-        #expect(IntakeFormat.planHeaderLine(intake: .empty, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: false,
-                                            steps: 6412) == nil)
+
+    // MARK: Budget, stored goals and further nutrients (nutrition plan, C4)
+
+    private func plan(kcal: Int, water: Int = 2000, steps: Int = 8000) -> GoalPlan {
+        GoalPlan(validFrom: monday, kcal: kcal, waterMilliliters: water, stepsPerDay: steps, workoutMinutesPerWeek: 150)
     }
 
-    @Test func planHeaderLine_nilWhenNoEntries() {
-        #expect(IntakeFormat.planHeaderLine(intake: .empty, goalKcal: 2300, goalWaterMilliliters: 2000, hasEntries: false) == nil)
+    private func budget(_ plan: GoalPlan, active: Double?, eaten: Double) -> EnergyBudget {
+        EnergyBudget.make(plan: plan, active: ActiveEnergy(healthKcal: active), creditPercent: 100, eatenKcal: eaten)
+    }
+
+    private func reviewWithBudgets(meals: [MealValue] = [], totals: [PlanDay: IntakeTotals] = [:], budgets: [PlanDay: EnergyBudget] = [:],
+                                   plans: [PlanDay: GoalPlan] = [:], steps: [PlanDay: Int] = [:], drinks: [DrinkValue] = []) -> WeekReview {
+        WeekReview.make(weekStart: monday, now: instant(2026, 11, 25, 9, 0, in: calendar), meals: meals, drinks: drinks, workouts: [],
+                        steps: steps, completedDates: [], goals: goals, totals: totals, budgets: budgets, plans: plans, calendar: calendar)
+    }
+
+    @Test func weekReview_dayWithinBudget_usesPlanAndStoredHealthOfThatDay() {
+        let earlier = plan(kcal: 2000)
+        let later = plan(kcal: 2600)
+        let result = reviewWithBudgets(meals: [meal(day: 16, kcal: 2400), meal(day: 17, kcal: 2400)],
+                                       budgets: [day(16): budget(earlier, active: 600, eaten: 2400), day(17): budget(later, active: nil, eaten: 2400)],
+                                       plans: [day(16): earlier, day(17): later])
+        #expect(result.days[0].goalKcal == 2600, "2.000 base plus 600 credited")
+        #expect(result.days[1].goalKcal == 2600)
+        // Day 16 was within its budget (2.400 < 2.600); against today's single goal of 2.300 it would not have been.
+        #expect(result.days[0].kcal.map { $0 <= Double(result.days[0].goalKcal) } == true)
+    }
+
+    @Test func weekReview_unknownActivity_fallsBackToBaseGoal() {
+        let base = plan(kcal: 2200)
+        let result = reviewWithBudgets(meals: [meal(day: 16, kcal: 1000)], budgets: [day(16): budget(base, active: nil, eaten: 1000)],
+                                       plans: [day(16): base])
+        #expect(result.days[0].goalKcal == 2200)
+        // A day the caller knows nothing about uses the single goals.
+        #expect(result.days[1].goalKcal == 2300)
+    }
+
+    @Test func weekReview_foreignEntriesCountAsEaten_andOpenTheDay() {
+        let own = DayIntake(kcal: 0, kcalMin: 0, kcalMax: 0, protein: 0, carbs: 0, fat: 0, waterMilliliters: 0, hasEstimate: false)
+        let totals = IntakeTotals(own: own, foreign: ForeignIntake(kcal: 700, protein: 30, waterMilliliters: 400, sources: ["Yazio"]))
+        let result = reviewWithBudgets(totals: [day(16): totals])
+        #expect(result.days[0].kcal == 700 && result.days[0].protein == 30 && result.days[0].waterMilliliters == 400)
+        #expect(result.daysWithMeals == 1)
+        #expect(result.days[1].kcal == nil, "a day without any entry stays empty, not 0")
+    }
+
+    @Test func weekReview_goalDaysUseTheGoalOfEachDay() {
+        let low = plan(kcal: 2300, water: 1000, steps: 4000)
+        let high = plan(kcal: 2300, water: 3000, steps: 12_000)
+        let result = reviewWithBudgets(plans: [day(16): low, day(17): high], steps: [day(16): 5000, day(17): 5000],
+                                       drinks: [drink(day: 16, ml: 1500), drink(day: 17, ml: 1500)])
+        #expect(result.waterGoalDays == 1 && result.stepGoalDays == 1)
+    }
+
+    @Test func weekReview_nutrientAverages_useOnlyDaysThatKnowTheValue() {
+        func item(fiber: Double?) -> MealItem {
+            MealItem(name: "x", amount: "1", kcalMin: 500, kcal: 500, kcalMax: 500, protein: 0, carbs: 0, fat: 0, fiber: fiber)
+        }
+        func meal(day: Int, fiber: Double?) -> MealValue {
+            MealValue(id: UUID(), date: instant(2026, 11, day, 12, 0, in: calendar), kind: .lunch, title: "x", items: [item(fiber: fiber)], origin: .manual)
+        }
+        let result = review(meals: [meal(day: 16, fiber: 20), meal(day: 17, fiber: 30), meal(day: 18, fiber: nil)])
+        #expect(result.averageNutrients.fiber == 25)
+        #expect(result.nutrientDays[.fiber] == 2)
+        #expect(result.averageNutrients.sugar == nil && result.nutrientDays[.sugar] == 0, "unknown is not 0")
     }
 }

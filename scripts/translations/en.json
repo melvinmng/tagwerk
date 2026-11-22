@@ -2433,5 +2433,8 @@
   "Weitere Ziele und frühere Stände": "More goals and earlier plans",
   "Zielstände": "Goal plans",
   "Zucker, höchstens": "Sugar, at most",
-  "Zucker-Obergrenze": "Sugar limit"
+  "Zucker-Obergrenze": "Sugar limit",
+  "Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.": "The goal of each day is its base goal plus the credited activity; the marks show it per day.",
+  "Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.": "Daily mean over the days on which the value is known. Meals without a value are missing from the sum, so the mean tends to be too low.",
+  "Ø %@ g an %@": "Avg. %1$@ g on %2$@"
 }

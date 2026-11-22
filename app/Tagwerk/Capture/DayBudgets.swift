@@ -3,7 +3,7 @@ import HealthBridge
 import TagwerkCore
 
 /// What a day counts: the plan that held on it, the Health values kept for it and the budget that follows from both.
-struct DayFigures: Equatable {
+struct DayFigures: Hashable {
     var day: PlanDay
     var plan: GoalPlan
     /// The stored Health values of the day (active energy, other apps' nutrition); `nil` while there are none.

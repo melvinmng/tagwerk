@@ -335,13 +335,15 @@ final class CaptureModel {
     /// Called after today's sums changed; the environment rewrites the widget snapshot.
     @ObservationIgnored var onTodayChanged: (() -> Void)?
 
-    /// "~1.240 / 2.300 kcal · 1,2 / 2,0 l · 6.412 Schritte" for the head of "Planen"; `nil` when switched off or nothing
-    /// recorded today. Steps appear only when known for today.
+    /// "noch ~1.480 kcal · 1,2 / 2,0 l · 6.412 Schritte" for the head of "Planen": what is left of today's budget, from the same
+    /// figures as the head of "Erfassen". `nil` when switched off or nothing recorded today (entries of other apps count as
+    /// recorded). Steps appear only when known for today.
     var planHeaderLine: String? {
         guard settings.showsIntakeInPlan else { return nil }
-        return IntakeFormat.planHeaderLine(intake: todayIntake, goalKcal: settings.goalKilocalories,
-                                           goalWaterMilliliters: settings.goalWaterMilliliters, hasEntries: todayHasEntries,
-                                           steps: todaySteps)
+        let figures = todayFigures
+        return IntakeFormat.planHeaderLine(budget: figures.budget, waterMilliliters: figures.totals.waterMilliliters,
+                                           goalWaterMilliliters: figures.plan.waterMilliliters,
+                                           hasEntries: todayHasEntries || figures.totals.foreign != nil, steps: todaySteps)
     }
 
     func goBack(days: Int = 1) async {

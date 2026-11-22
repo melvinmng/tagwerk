@@ -962,7 +962,7 @@ final class AppEnvironment {
         if let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider {
             closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
         }
-        return WeekReviewModel(store: intake, health: health, settings: settings, calendar: capture.calendar,
+        return WeekReviewModel(store: intake, health: health, settings: settings, budgets: budgets, calendar: capture.calendar,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
                                },
@@ -1015,18 +1015,17 @@ final class AppEnvironment {
         return counter
     }
 
-    /// The day's sums straight from the store: correct after midnight and on a background launch without a reload.
-    /// Steps come from the last Health read of the capture model and only while they belong to today; like calories
-    /// and water they stay out of the file when the nutrition switch is off.
+    /// The day's figures straight from the stores: correct after midnight and on a background launch without a reload. The budget
+    /// comes from the same place as the head of "Erfassen" (`DayBudgets`), so the widget shows the same number. Steps come from the
+    /// last Health read of the capture model and only while they belong to today; like calories and water they stay out of the
+    /// file when the nutrition switch is off.
     private func snapshotIntake(on day: PlanDay) -> SnapshotIntake? {
         guard settings.widgetShowsNutrition else { return nil }
-        let calendar = capture.calendar
-        let intake = IntakeRules.dayIntake(meals: self.intake.meals(on: day, calendar: calendar),
-                                           drinks: self.intake.drinks(on: day, calendar: calendar))
+        let figures = budgets.figures(on: day)
         let steps = day == capture.today ? capture.todaySteps : nil
-        return SnapshotIntake(kcal: intake.kcal, hasEstimate: intake.hasEstimate, goalKcal: settings.goalKilocalories,
-                              waterMilliliters: intake.waterMilliliters, goalWaterMilliliters: settings.goalWaterMilliliters,
-                              steps: steps, goalSteps: settings.goalStepsPerDay)
+        return SnapshotIntake(kcal: figures.totals.kcal, hasEstimate: figures.totals.hasEstimate, goalKcal: figures.plan.kcal,
+                              waterMilliliters: figures.totals.waterMilliliters, goalWaterMilliliters: figures.plan.waterMilliliters,
+                              steps: steps, goalSteps: figures.plan.stepsPerDay, creditedKcal: figures.budget.credited)
     }
 
     /// Writes the snapshot. The plan part is only written from loaded task sources; otherwise (Siri in the
@@ -1098,6 +1097,8 @@ final class AppEnvironment {
             hasher.combine(settings.widgetShowsNutrition)
             hasher.combine(settings.goalKilocalories)
             hasher.combine(settings.goalWaterMilliliters)
+            // The budget follows the plan, the Health values of today and the switches; a change there rewrites the file.
+            hasher.combine(capture.todayFigures)
             hasher.combine(settings.selectedCalendarIDs)
             hasher.combine(settings.planCalendarID)
             hasher.combine(settings.deadlineCalendarIDs)

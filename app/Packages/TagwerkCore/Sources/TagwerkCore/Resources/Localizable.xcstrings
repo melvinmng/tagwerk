@@ -18,6 +18,7 @@
       }
     },
     "%@ / %@ kcal · %@ / %@": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {

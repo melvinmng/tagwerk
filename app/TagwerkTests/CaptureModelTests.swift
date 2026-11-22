@@ -431,7 +431,7 @@ struct CaptureModelTests {
         await model.goBack()
         #expect(model.steps == 8240)
         #expect(model.todaySteps == 6412)
-        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l · 6.412 Schritte")
+        #expect(model.planHeaderLine == "noch 2.300 kcal · 0,5 / 2,0 l · 6.412 Schritte")
     }
 
     @Test func todaySteps_dropAfterMidnight() async {
@@ -640,7 +640,7 @@ struct CaptureModelTests {
         let model = make()
         await model.reload()
         await model.addWater(500)
-        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l")
+        #expect(model.planHeaderLine == "noch 2.300 kcal · 0,5 / 2,0 l")
         settings.showsIntakeInPlan = false
         #expect(model.planHeaderLine == nil)
     }

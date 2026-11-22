@@ -6691,6 +6691,16 @@
         }
       }
     },
+    "Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The goal of each day is its base goal plus the credited activity; the marks show it per day."
+          }
+        }
+      }
+    },
     "Das gewählte Modell gibt es nicht mehr. Tagwerk plant mit „Automatisch“.": {
       "localizations": {
         "en": {
@@ -18551,6 +18561,16 @@
         }
       }
     },
+    "Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean over the days on which the value is known. Meals without a value are missing from the sum, so the mean tends to be too low."
+          }
+        }
+      }
+    },
     "Tagesroutine": {
       "localizations": {
         "en": {
@@ -23621,6 +23641,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the morning start before noon, the evening wrap-up otherwise."
+          }
+        }
+      }
+    },
+    "Ø %@ g an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ø %1$@ g an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %1$@ g on %2$@"
           }
         }
       }

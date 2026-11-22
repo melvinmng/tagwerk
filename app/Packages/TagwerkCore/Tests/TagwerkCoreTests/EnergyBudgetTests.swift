@@ -141,6 +141,15 @@ struct EnergyBudgetTests {
                                             hasEntries: true) == "~120 kcal über Budget · 0 / 2,0 l")
         #expect(IntakeFormat.planHeaderLine(budget: result, waterMilliliters: 0, goalWaterMilliliters: 2000, hasEntries: false) == nil)
     }
+
+    @Test func planHeaderLine_showsTheRemainingBudget_andAppendsTodaysSteps() {
+        let line = IntakeFormat.planHeaderLine(budget: budget(percent: 100, eaten: 1340), waterMilliliters: 1200,
+                                               goalWaterMilliliters: 2000, hasEntries: true, steps: 6412, locale: Locale(identifier: "de_DE"))
+        #expect(line == "noch ~1.480 kcal · 1,2 / 2,0 l · 6.412 Schritte")
+        // Steps alone do not open the line.
+        #expect(IntakeFormat.planHeaderLine(budget: budget(), waterMilliliters: 0, goalWaterMilliliters: 2000, hasEntries: false,
+                                            steps: 6412) == nil)
+    }
 }
 
 struct ActiveEnergyMakeTests {
