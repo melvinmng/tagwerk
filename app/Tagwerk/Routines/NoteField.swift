@@ -12,10 +12,14 @@ final class NoteFieldModel {
     var selection: TextSelection?
     private(set) var noteID: UUID?
     private(set) var wasDictated: Bool
+    /// The lock hides the note of this day (NL3a): its text is not loaded, the field shows the lock screen, and nothing is written
+    /// (`persist`), because the empty text of a hidden note must never replace the stored one. `updateConcealment()` follows the lock.
+    private(set) var isConcealed = false
 
     let kind: NoteKind
     let day: PlanDay
     @ObservationIgnored private let store: NoteStore
+    @ObservationIgnored private let isConcealedNote: @MainActor (NoteRecord) -> Bool
     @ObservationIgnored private let isSignedIn: () -> Bool
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
@@ -31,21 +35,47 @@ final class NoteFieldModel {
 
     init(store: NoteStore, kind: NoteKind, day: PlanDay, debounce: Duration = .milliseconds(500),
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) },
-         isSignedIn: @escaping () -> Bool = { false }, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
+         isSignedIn: @escaping () -> Bool = { false }, now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk,
+         isConcealed: @escaping @MainActor (NoteRecord) -> Bool = { _ in false }) {
         precondition(kind == .morning || kind == .evening || kind == .dream)
         self.isSignedIn = isSignedIn
         self.now = now
         self.calendar = calendar
         self.store = store
+        self.isConcealedNote = isConcealed
         self.kind = kind
         self.day = day
         self.debounce = debounce
         self.sleep = sleep
         let note = store.note(kind: kind, dayKey: day.dayKey)
-        text = note?.text ?? ""
+        let hidden = note.map(isConcealed) ?? false
+        self.isConcealed = hidden
+        text = hidden ? "" : note?.text ?? ""
         noteID = note?.id
         wasDictated = note?.wasDictated ?? false
         savedText = note?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    // MARK: Lock
+
+    /// Follows the lock: when it closes, the typed text is saved first and then taken out of the field; when it opens, the stored
+    /// text is loaded. Call when the sheet appears and when the lock session or the protection changes.
+    func updateConcealment() {
+        let note = store.note(kind: kind, dayKey: day.dayKey)
+        let hidden = note.map(isConcealedNote) ?? false
+        guard hidden != isConcealed else { return }
+        if hidden {
+            flush()
+            isConcealed = true
+            text = ""
+            selection = nil
+        } else {
+            isConcealed = false
+            text = note?.text ?? ""
+            selection = nil
+            savedText = note?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            wasDictated = note?.wasDictated ?? false
+        }
     }
 
     // MARK: Saving
@@ -72,6 +102,8 @@ final class NoteFieldModel {
     func waitForSave() async { await pendingSave?.value }
 
     private func persist() {
+        // A hidden note has no text in the field: saving that would delete the stored note (`saveThought` removes an empty one).
+        guard !isConcealed else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed != savedText else { return }
         let record = store.saveThought(text, kind: kind, dayKey: day.dayKey, wasDictated: wasDictated)
@@ -118,7 +150,7 @@ final class NoteFieldModel {
     /// "Leitfragen einfügen" is offered until the first question is in the text, in either language (the questions stay
     /// as they were inserted when the app language changes later).
     var offersGuidingQuestions: Bool {
-        kind != .dream && !VoiceLanguage.allCases.contains { NoteTemplate.containsGuidingQuestions(text, locale: $0.locale) }
+        kind != .dream && !isConcealed && !VoiceLanguage.allCases.contains { NoteTemplate.containsGuidingQuestions(text, locale: $0.locale) }
     }
 
     /// Appends the eight questions in the app language; the text stays an ordinary note.
@@ -182,6 +214,7 @@ final class NoteFieldModel {
 struct NoteField: View {
     let model: NoteFieldModel
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.scenePhase) private var scenePhase
     @State private var voice: VoiceInputModel?
     @State private var creatingTask = false
     @State private var suggestions: NoteSuggestionModel?
@@ -210,16 +243,30 @@ struct NoteField: View {
                 if let voice, voice.isRecording {
                     // The arrow stays off: dictation only fills the field, nothing is sent from here.
                     VoiceRecordingBar(voice: voice, canSend: false)
+                } else if model.isConcealed {
+                    // The text is not in the model while the lock is closed; a gate in front of the one place that shows it.
+                    LockedContentView(kind: .note) { _ = await environment.noteLock.unlock(reason: NoteLock.reason) }
+                        .frame(height: 220)
                 } else {
                     editorRow
                 }
+            }
+            .onChange(of: environment.noteLock.isUnlocked) { _, _ in model.updateConcealment() }
+            .onChange(of: environment.noteLock.protection) { _, _ in model.updateConcealment() }
+            // A hidden note asks once when the sheet shows it; a failed or cancelled check leaves the lock screen standing.
+            .task(id: model.isConcealed) {
+                guard model.isConcealed, scenePhase == .active else { return }
+                _ = await environment.noteLock.unlock(reason: NoteLock.reason)
             }
             .onChange(of: model.text) { _, _ in
                 model.textChanged()
                 // Cards belong to the text they came from.
                 if let suggestions, suggestions.phase != .idle { suggestions.reset() }
             }
-            .onAppear(perform: prepareVoice)
+            .onAppear {
+                model.updateConcealment()
+                prepareVoice()
+            }
             // A row of a form can scroll out of sight without the sheet closing, so only the text is saved here.
             .onDisappear { model.flush() }
             .onChange(of: environment.routines.sheet) { _, sheet in

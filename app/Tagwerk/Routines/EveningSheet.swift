@@ -18,11 +18,13 @@ struct EveningSheet: View {
     /// What the last bulk action did, with what is needed to take it back; the capsule of "Planen" is behind this sheet.
     @State private var leftoverReport: LeftoverSheet.Report?
 
-    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool,
+         isConcealed: @escaping @MainActor (NoteRecord) -> Bool = { _ in false }) {
         self.model = model
         self.day = day
         // The wrap-up note belongs to the day the sheet was opened for (rule 10).
-        _note = State(initialValue: NoteFieldModel(store: notes, kind: .evening, day: day, isSignedIn: isSignedIn))
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .evening, day: day, isSignedIn: isSignedIn,
+                                                   isConcealed: isConcealed))
     }
 
     var body: some View {
