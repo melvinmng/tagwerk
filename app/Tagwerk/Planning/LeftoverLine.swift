@@ -9,7 +9,7 @@ struct LeftoverLine: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: "arrow.uturn.forward").foregroundStyle(Color.accentColor)
+                Image(systemName: "arrowshape.turn.up.right").foregroundStyle(Color.accentColor)
                 // Wraps instead of being cut at accessibility text sizes.
                 Text(LeftoverSheetText.lineTitle(count: count)).font(.subheadline.weight(.semibold))
                     .multilineTextAlignment(.leading)

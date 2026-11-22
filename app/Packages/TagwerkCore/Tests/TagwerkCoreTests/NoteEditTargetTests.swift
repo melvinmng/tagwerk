@@ -69,4 +69,19 @@ struct NoteEditTargetTests {
         #expect(NoteEditTarget.approximateLine(fraction: 0.5, in: "") == 1)
         #expect(NoteEditTarget.approximateLine(fraction: 0.5, in: "\n\n") == 2)
     }
+
+    @Test func line_atOffset() {
+        let text = "eins\nzwei\n\ndrei"
+        #expect(NoteEditTarget.line(atOffset: 0, in: text) == 1)
+        #expect(NoteEditTarget.line(atOffset: 4, in: text) == 1)
+        #expect(NoteEditTarget.line(atOffset: 5, in: text) == 2)
+        #expect(NoteEditTarget.line(atOffset: 10, in: text) == 3)
+        #expect(NoteEditTarget.line(atOffset: 11, in: text) == 4)
+        #expect(NoteEditTarget.line(atOffset: 99, in: text) == 4)
+        #expect(NoteEditTarget.line(atOffset: -3, in: text) == 1)
+        #expect(NoteEditTarget.line(atOffset: 0, in: "") == 1)
+        // The inverse of the end of a line, also with "\r\n".
+        for line in 1...4 { #expect(NoteEditTarget.line(atOffset: NoteEditTarget.offset(endOfLine: line, in: text), in: text) == line) }
+        #expect(NoteEditTarget.line(atOffset: 6, in: "a\r\nb\r\nc") == 3)
+    }
 }
