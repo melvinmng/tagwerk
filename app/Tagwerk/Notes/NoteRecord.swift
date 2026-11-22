@@ -21,7 +21,7 @@ final class NoteRecord {
     var processedAt: Date? = nil
     /// Phase 7: executed suggestions and tasks created by hand from this note ("2 Aufgaben daraus").
     var derivedActionCount: Int = 0
-    /// The folder the note lies in; `nil` is the default folder "Notizen" (and the virtual "Gedanken" for thought notes).
+    /// The folder the note lies in; `nil` is the default folder "Notizen".
     /// A note in the trash keeps its folder, so "Wiederherstellen" can put it back.
     var folderID: UUID? = nil
     /// When the note went to "Zuletzt gelöscht"; `nil` for a live note.

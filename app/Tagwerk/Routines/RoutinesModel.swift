@@ -121,6 +121,9 @@ final class RoutinesModel {
 
     func value(_ day: PlanDay) -> RoutineDayValue { store.day(day) }
 
+    /// The days with gratitude and their entries (the folder "Tagesstart" lists the days that have no note).
+    func gratitudeDays() -> [PlanDay: [String]] { store.gratitudeDays() }
+
     func checklist() -> [ChecklistItem] { store.checklist() }
 
     func toggleItem(_ id: UUID, on day: PlanDay) {
@@ -328,6 +331,26 @@ extension RoutinesModel {
         let events = overview.events == 1 ? String(localized: "1 Termin") : String(localized: "\(overview.events) Termine")
         let tasks = overview.tasks == 1 ? String(localized: "1 Aufgabe") : String(localized: "\(overview.tasks) Aufgaben")
         return events + ", " + tasks
+    }
+
+    /// The card "Wochenplanung" in "Planen" (RO15b): only on the weekday of the weekly planning reminder (`weekPlanningReminderWeekday`,
+    /// also when the reminder itself is off), only for today, until the planning was finished or the card was hidden for today.
+    /// The morning card goes first: while it shows, this one waits, so at most one start card is on screen; a focus card does
+    /// not hold it back.
+    var showsWeekPlanningCard: Bool {
+        _ = revision
+        guard settings.showsRoutinesInPlan else { return false }
+        let today = self.today
+        guard today.weekday(in: calendar) == settings.weekPlanningReminderWeekday,
+              settings.weekPlanningCardDismissedDayKey != today.dayKey else { return false }
+        if case .morning = card { return false }
+        return true
+    }
+
+    /// "Heute ausblenden" and "Fertig" of the planning: the card stays away for the rest of today.
+    func hideWeekPlanningCardToday() {
+        settings.weekPlanningCardDismissedDayKey = today.dayKey
+        revision += 1
     }
 
     func dismissMorningCard() {

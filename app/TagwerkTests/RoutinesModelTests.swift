@@ -469,4 +469,58 @@ struct RoutinesModelTests {
         model.focusChanged(task("Geplant").id, isCompleted: true)
         #expect(await model.dayReview(today).focus == HabitCounter(done: 1, total: 2))
     }
+
+    // MARK: Card "Wochenplanung" (RO15b)
+
+    @Test func weekPlanningCard_onlyOnPlanningWeekday() {
+        let model = makeModel()
+        settings.weekPlanningReminderWeekday = 4  // 2026-11-18 is a Wednesday
+        #expect(model.showsWeekPlanningCard)
+        settings.weekPlanningReminderWeekday = 1
+        #expect(!model.showsWeekPlanningCard)
+        // The reminder itself may be off.
+        settings.weekPlanningReminderEnabled = false
+        settings.weekPlanningReminderWeekday = 4
+        #expect(model.showsWeekPlanningCard)
+    }
+
+    @Test func weekPlanningCard_hiddenAfterFinish() {
+        let model = makeModel()
+        settings.weekPlanningReminderWeekday = 4
+        #expect(model.showsWeekPlanningCard)
+        model.hideWeekPlanningCardToday()
+        #expect(!model.showsWeekPlanningCard)
+    }
+
+    @Test func weekPlanningCard_hideIsForTodayOnly() {
+        let model = makeModel()
+        settings.weekPlanningReminderWeekday = 4
+        model.hideWeekPlanningCardToday()
+        #expect(!model.showsWeekPlanningCard)
+        // The same weekday a week later: the card is back.
+        clock.now = at(25, 22)
+        #expect(model.showsWeekPlanningCard)
+    }
+
+    @Test func weekPlanningCard_yieldsToTheMorningCard() {
+        let model = makeModel()
+        settings.weekPlanningReminderWeekday = 4
+        clock.now = at(18, 9, 30)
+        if case .morning = model.card {} else { Issue.record("the morning card should show at 09:30") }
+        #expect(!model.showsWeekPlanningCard)
+        model.dismissMorningCard()
+        #expect(model.showsWeekPlanningCard)
+    }
+
+    @Test func weekPlanningCard_subtitleNamesBothWeeks() {
+        // Wednesday 2026-11-18: the previous week (46) is looked back on, the running week (47) is planned.
+        #expect(WeekPlanningCard.subtitle(today: today, calendar: calendar) == "Rückblick auf KW 46, dann KW 47 planen · etwa 10 min")
+    }
+
+    @Test func weekPlanningCard_respectsTheSwitchOfThePlanCards() {
+        let model = makeModel()
+        settings.weekPlanningReminderWeekday = 4
+        settings.showsRoutinesInPlan = false
+        #expect(!model.showsWeekPlanningCard)
+    }
 }

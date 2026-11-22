@@ -8,34 +8,41 @@ import UniformTypeIdentifiers
 /// the last keystroke and when the page closes; a note left without text is removed. Attachments (pictures, files) are
 /// inserted as Markdown references at the cursor. It has no navigation stack of its own.
 struct NoteEditorView: View {
-    @Environment(AppEnvironment.self) private var environment
-    @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) var environment
+    @Environment(\.dismiss) var dismiss
     let noteID: UUID
     let store: NoteStore
     /// Whether the page offers the assistant. The note in its own sheet (`NoteEditorSheet`) does not: the chat is a sheet
     /// over the tabs and cannot appear on top of another sheet.
     let showsAssistant: Bool
 
-    private enum Mode { case view, edit }
+    enum Mode { case view, edit }
 
-    @State private var text = ""
+    @State var text = ""
     /// The text this page wrote to the store last, or loaded when it opened. A stored text that differs came from outside.
-    @State private var lastSavedText = ""
-    @State private var isLoaded = false
-    @State private var wasDeleted = false
-    @State private var selection: TextSelection?
-    @State private var mode: Mode = .edit
-    @State private var isChoosingPhotos = false
-    @State private var photoItems: [PhotosPickerItem] = []
-    @State private var isTakingPhoto = false
-    @State private var isChoosingFile = false
-    @State private var previewURL: URL?
-    @State private var shareURLs: [URL] = []
-    @State private var failureText: String?
-    @State private var isAddingToShopping = false
-    @State private var translation: RecipeTranslationModel?
+    @State var lastSavedText = ""
+    @State var isLoaded = false
+    @State var wasDeleted = false
+    @State var selection: TextSelection?
+    @State var mode: Mode = .edit
+    @FocusState var isTextFocused: Bool
+    @State var isChoosingPhotos = false
+    @State var photoItems: [PhotosPickerItem] = []
+    @State var isTakingPhoto = false
+    @State var isChoosingFile = false
+    @State var previewURL: URL?
+    @State var shareURLs: [URL] = []
+    @State var failureText: String?
+    @State var isAddingToShopping = false
+    @State var translation: RecipeTranslationModel?
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
-    @State private var notice: String?
+    @State var notice: String?
+    /// What the insert features put on top of the page (scanner, share sheet, rename prompt).
+    @State var inserts = NoteInsertState()
+
+    /// Stage C switch of the line mapping: `false` renders the page without edit links and shows the pencil button again,
+    /// so the editor opens with the cursor at the end. A constant, not a setting (decided by the device check).
+    static let usesTapToEdit = true
 
     init(noteID: UUID, store: NoteStore, showsAssistant: Bool = true) {
         self.noteID = noteID
@@ -48,18 +55,30 @@ struct NoteEditorView: View {
         content
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        switchMode()
-                    } label: {
-                        Image(systemName: mode == .edit ? "eye" : "pencil")
-                    }
-                    .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if mode == .edit, isTextFocused {
+                    NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
+                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil,
+                                      isInTable: tableIndexAtCursor != nil, onTable: openTableAtCursor)
                 }
-                if store.attachments != nil {
-                    ToolbarItem(placement: .topBarTrailing) { attachMenu }
-                    ToolbarItemGroup(placement: .keyboard) { attachMenu }
+            }
+            .toolbar {
+                if Self.usesTapToEdit {
+                    // The page shows; a tap on its text writes. "Fertig" is the way back.
+                    if mode == .edit {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Fertig") { finishEditing() }
+                        }
+                    }
+                } else {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            switchMode()
+                        } label: {
+                            Image(systemName: mode == .edit ? "eye" : "pencil")
+                        }
+                        .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
             }
@@ -82,6 +101,9 @@ struct NoteEditorView: View {
                 if case .success(let urls) = result { for url in urls { addFile(url) } }
             }
             .quickLookPreview($previewURL)
+            .noteInsertPresentations(inserts, attachments: store.attachments,
+                                     actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment,
+                                                                onTableFinished: finishTable, onEditTableAsText: { beginEditing(atLine: $0) }))
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -109,6 +131,7 @@ struct NoteEditorView: View {
                 // A running Bible Study session starts with the cursor below its new section.
                 if isRunningSession { selection = TextSelection(insertionPoint: text.endIndex) }
                 refreshShareURLs()
+                resumeTextRecognition()
             }
             // Debounced saving: every keystroke restarts the wait.
             .task(id: text) {
@@ -124,7 +147,7 @@ struct NoteEditorView: View {
                 saveText()
                 // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
                 // neither an empty one to remove nor an attachment list to trim while one of them is open.
-                guard !isTakingPhoto, previewURL == nil else { return }
+                guard !isTakingPhoto, previewURL == nil, !inserts.isPresenting else { return }
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
@@ -139,87 +162,41 @@ struct NoteEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 TextEditor(text: $text, selection: $selection)
-                    .keyboardDoneButton()
+                    .focused($isTextFocused)
+                    .submitLabel(.return)
                     .padding(.horizontal, 12)
             }
         case .view:
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 NoteMarkdownView(markdown: text, attachments: store.attachments,
-                                 attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: noteID) ?? []).map { ($0.id, $0.fileName) }),
-                                 onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment)
-                    .padding(.horizontal, 16)
+                                 attachmentDisplays: attachmentDisplays,
+                                 onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment,
+                                 onEdit: Self.usesTapToEdit ? { beginEditing(atLine: $0) } : nil,
+                                 onUnansweredTap: Self.usesTapToEdit ? { fraction in
+                                     beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
+                                 } : nil,
+                                 onEditTable: openTable(at:),
+                                 contextMenu: attachmentMenu)
+                    .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
     }
 
-    /// The gratitude of a morning entry stays in the routine record; the editor only shows it above the text.
+    /// Name, size and kind of the attachments for the page; read again when recognition of a scan finished (`inserts.revision`).
+    private var attachmentDisplays: [UUID: NoteAttachmentDisplay] {
+        _ = inserts.revision
+        return store.attachments?.displays(of: noteID) ?? [:]
+    }
+
+    /// The gratitude of a morning entry stays in the routine record; the editor only shows it as a card above the text.
     @ViewBuilder private var gratitudeHeader: some View {
-        let line = NotesListView.gratitudeLine(gratitude(of: store.note(id: noteID)))
-        if !line.isEmpty {
-            Text(line)
-                .font(.subheadline).foregroundStyle(.secondaryText)
-                .padding(.horizontal, 17).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        let note = store.note(id: noteID)
+        let entries = gratitude(of: note)
+        if !entries.isEmpty, let day = note?.dayKey.flatMap(NoteDayKey.day) {
+            GratitudeCard(entries: entries) { environment.routines.openStart(day) }
+                .padding(.horizontal, 16).padding(.vertical, 8)
         }
-    }
-
-    private var attachMenu: some View {
-        NoteAttachmentMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
-                           onPaste: { providers in Task { await addPasted(providers) } }, onChooseFile: { isChoosingFile = true })
-    }
-
-    private func moreMenu(_ note: NoteRecord?) -> some View {
-        Menu {
-            if let note {
-                Button {
-                    store.setPinned(noteID, !note.isPinned)
-                } label: {
-                    Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
-                }
-            }
-            if let session = store.openSession(noteID: noteID) {
-                Button {
-                    saveText()
-                    store.completeSession(session.id)
-                } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
-            }
-            if let note, isRecipeNote(note) {
-                Button {
-                    // The recipe sheet reads the saved text of the note.
-                    saveText()
-                    isAddingToShopping = true
-                } label: { Label("Zutaten auf die Einkaufsliste", systemImage: "cart.badge.plus") }
-            }
-            if let note, RecipeTranslationModel.isOffered(note, store: store) {
-                Button {
-                    // The translation reads the saved text of the note.
-                    saveText()
-                    translation = RecipeTranslationModel(noteID: noteID, store: store, translator: environment.recipeTranslator,
-                                                         recipeLanguage: environment.settings.resolvedRecipeLanguage)
-                } label: { Label("Übersetzen …", systemImage: "globe") }
-            }
-            ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
-            if !shareURLs.isEmpty {
-                ShareLink(items: shareURLs) { Label("Anhänge teilen", systemImage: "paperclip") }
-            }
-            // The trash is the way back, so deleting does not ask.
-            Button(role: .destructive) {
-                saveText()
-                wasDeleted = true
-                store.trash(noteID)
-                dismiss()
-            } label: { Label("Löschen", systemImage: "trash") }
-        } label: {
-            Image(systemName: "ellipsis")
-        }
-        .accessibilityLabel("Mehr")
-    }
-
-    /// A note of the folder "Rezepte" offers "Zutaten auf die Einkaufsliste".
-    private func isRecipeNote(_ note: NoteRecord) -> Bool {
-        guard note.kind == .free, let folderID = note.folderID else { return false }
-        return store.folder(id: folderID)?.role == .recipes
     }
 
     private var noticeBinding: Binding<Bool> {
@@ -230,7 +207,7 @@ struct NoteEditorView: View {
 
     /// Writes the text to the store. Every write of this page goes through here, so `lastSavedText` always names what the
     /// page stored itself (`NoteEditorSync`).
-    private func saveText() {
+    func saveText() {
         lastSavedText = text
         store.updateText(noteID, text: text)
     }
@@ -242,6 +219,13 @@ struct NoteEditorView: View {
         switch NoteEditorSync.resolution(local: text, lastSaved: lastSavedText, stored: note?.text, isTrashed: note?.deletedAt != nil) {
         case .keep: break
         case .adopt(let stored):
+            // The cursor keeps its place while it still lies inside the new text, otherwise it goes to the end.
+            if mode == .edit {
+                let offset = selection.flatMap { Self.insertionOffset(of: $0, in: text) } ?? stored.count
+                selection = TextSelection(insertionPoint: stored.index(stored.startIndex, offsetBy: min(offset, stored.count)))
+            } else {
+                selection = nil
+            }
             text = stored
             lastSavedText = stored
             refreshShareURLs()
@@ -251,11 +235,50 @@ struct NoteEditorView: View {
         }
     }
 
-    private func switchMode() {
-        // Saving is immediate on a switch, so the list and the page never show an older text.
+    /// The character offset of a cursor (a selection of a range counts by its start), or `nil` without one.
+    private static func insertionOffset(of selection: TextSelection, in text: String) -> Int? {
+        switch selection.indices {
+        case .selection(let range): text.distance(from: text.startIndex, to: range.lowerBound)
+        default: nil
+        }
+    }
+
+    /// Opens the editor with the cursor at the end of the source line (`nil`: end of the text) and focuses it. The page
+    /// shows the same text, so nothing needs saving first and `lastSavedText` stays as it is.
+    func beginEditing(atLine line: Int?) {
+        let offset = min(line.map { NoteEditTarget.offset(endOfLine: $0, in: text) } ?? text.count, text.count)
+        selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: offset))
+        mode = .edit
+        // The text field exists only after this update; focusing it then brings up the keyboard at the cursor.
+        Task { @MainActor in isTextFocused = true }
+    }
+
+    /// A button of the formatting bar: changes the text and the selection and saves like any other write of this page, so
+    /// the stored text is the one this page wrote itself and no "adopt" follows (`NoteEditorSync`).
+    func applyFormatting(_ action: MarkdownFormatting.Action) {
+        let offsets: Range<Int> = switch selection?.indices {
+        case .selection(let range)?: text.distance(from: text.startIndex, to: range.lowerBound) ..< text.distance(from: text.startIndex, to: range.upperBound)
+        default: text.count ..< text.count
+        }
+        let edit = MarkdownFormatting.apply(action, to: text, selection: offsets)
+        text = edit.text
+        let lower = edit.text.index(edit.text.startIndex, offsetBy: edit.selection.lowerBound)
+        let upper = edit.text.index(edit.text.startIndex, offsetBy: edit.selection.upperBound)
+        selection = lower == upper ? TextSelection(insertionPoint: lower) : TextSelection(range: lower ..< upper)
         saveText()
-        mode = mode == .edit ? .view : .edit
+    }
+
+    /// "Fertig": saves at once, so the list and the page never show an older text, and shows the page.
+    func finishEditing() {
+        saveText()
+        isTextFocused = false
+        mode = .view
         refreshShareURLs()
+    }
+
+    /// Stage C: the pencil button of the bar.
+    private func switchMode() {
+        if mode == .edit { finishEditing() } else { beginEditing(atLine: nil) }
     }
 
     /// A tap on a checkbox of the page flips it in the text and saves.
@@ -266,98 +289,16 @@ struct NoteEditorView: View {
         saveText()
     }
 
-    private func openAttachment(_ id: UUID) {
-        previewURL = store.attachments?.exportURL(for: id)
-    }
-
-    private func addPhotos(_ items: [PhotosPickerItem]) async {
-        for item in items {
-            guard let data = try? await item.loadTransferable(type: Data.self) else {
-                failureText = Self.message(for: .unreadable)
-                continue
-            }
-            add(data: data)
+    /// A drawing opens in its own large view, everything else in Quick Look.
+    func openAttachment(_ id: UUID) {
+        if store.attachments?.record(id: id)?.roleRaw == NoteAttachmentStore.Role.drawing.rawValue {
+            inserts.cover = .drawingViewer(id)
+        } else {
+            previewURL = store.attachments?.exportURL(for: id)
         }
-    }
-
-    private func addPasted(_ providers: [NSItemProvider]) async {
-        for provider in providers {
-            guard let data = await Self.imageData(from: provider) else {
-                failureText = Self.message(for: .unreadable)
-                continue
-            }
-            add(data: data)
-        }
-    }
-
-    /// The bytes of the picture on the clipboard, in the best image type the provider has.
-    private static func imageData(from provider: NSItemProvider) async -> Data? {
-        guard let type = provider.registeredTypeIdentifiers.compactMap(UTType.init).first(where: { $0.conforms(to: .image) }) else { return nil }
-        return await withCheckedContinuation { continuation in
-            provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, _ in continuation.resume(returning: data) }
-        }
-    }
-
-    private func add(data: Data) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addImage(data: data, to: noteID).id } insert: { id in
-            MarkdownText.reference(for: id, name: String(localized: "Bild"), isImage: true)
-        }
-    }
-
-    private func add(image: UIImage) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addImage(image, to: noteID).id } insert: { id in
-            MarkdownText.reference(for: id, name: String(localized: "Bild"), isImage: true)
-        }
-    }
-
-    private func addFile(_ url: URL) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addFile(at: url, to: noteID) } insert: { record in
-            MarkdownText.reference(for: record.id, name: record.fileName, isImage: false)
-        }
-    }
-
-    /// Stores an attachment and puts its reference into the text; shows a failure as an alert.
-    private func run<Result>(_ store: () throws -> Result, insert reference: (Result) -> String) {
-        do {
-            let result = try store()
-            insertReference(reference(result))
-        } catch let failure as NoteAttachmentStore.Failure {
-            failureText = Self.message(for: failure)
-        } catch {
-            failureText = Self.message(for: .unreadable)
-        }
-    }
-
-    /// Inserts the reference at the cursor (at the end without one) and switches to writing, so the user sees where it went.
-    private func insertReference(_ reference: String) {
-        var range: Range<String.Index>?
-        if case .selection(let selected)? = selection?.indices { range = selected }
-        let result = NoteAttachmentMenu.inserting(reference, into: text, replacing: range)
-        text = result.text
-        selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: result.cursorOffset))
-        mode = .edit
-        saveText()
-        refreshShareURLs()
-    }
-
-    private func refreshShareURLs() {
-        let referenced = MarkdownText.attachmentIDs(in: text)
-        shareURLs = (store.attachments?.attachments(of: noteID) ?? []).filter { referenced.contains($0.id) }
-            .compactMap { store.attachments?.exportURL(for: $0.id) }
     }
 
     // MARK: Texts
-
-    static func message(for failure: NoteAttachmentStore.Failure) -> String {
-        switch failure {
-        case .tooLarge: String(localized: "Die Datei ist größer als \(NoteAttachmentStore.maximumFileBytes / 1_048_576) MB und lässt sich nicht anhängen.")
-        case .notAnImage: String(localized: "Das ist kein Bild, das sich anhängen lässt.")
-        case .unreadable: String(localized: "Die Datei ließ sich nicht lesen.")
-        }
-    }
 
     private var failureBinding: Binding<Bool> {
         Binding(get: { failureText != nil }, set: { if !$0 { failureText = nil } })

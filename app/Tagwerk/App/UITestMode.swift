@@ -16,6 +16,8 @@ enum UITestMode {
     static let darkArgument = "-TagwerkUITestDark"
     static let clockArgument = "-TagwerkUITestNow"
     static let screenArgument = "-TagwerkUITestScreen"
+    /// `-TagwerkUITestScan <pages>`: "Dokument scannen" delivers that many test pages instead of opening the document camera.
+    static let scanArgument = "-TagwerkUITestScan"
 
     #if DEBUG && targetEnvironment(simulator)
     static var isActive: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
@@ -48,12 +50,20 @@ enum UITestMode {
     static var screen: UITestScreen? {
         isActive ? UITestScreen.named(in: ProcessInfo.processInfo.arguments) : nil
     }
+
+    /// The number of test pages that stand in for the document camera, or `nil` for the real camera.
+    static var scanPageCount: Int? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isActive, let index = arguments.firstIndex(of: scanArgument), index + 1 < arguments.count else { return nil }
+        return Int(arguments[index + 1]).map { min(max($0, 1), 10) }
+    }
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
     static var screen: UITestScreen? { nil }
+    static var scanPageCount: Int? { nil }
     #endif
 }
 

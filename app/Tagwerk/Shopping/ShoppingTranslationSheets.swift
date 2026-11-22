@@ -57,18 +57,21 @@ struct ShoppingTranslationCard: View {
 
 /// "Übersetzung": every item with its new name below the old one and a check; "Übernehmen" writes the checked ones (mockup SPC2a).
 struct ShoppingTranslationResultSheet: View {
+    @Environment(AppEnvironment.self) private var environment
     let preview: ShoppingTranslationModel.Preview
     let language: VoiceLanguage
+    /// The rows as they are now: the answer of ChatGPT, the names the user typed over and what a follow-up changed (task D5).
+    let draft: ShoppingTranslationDraft
     let onApply: ([ShoppingTranslationPlan.Change]) -> Void
     let onDiscard: () -> Void
 
-    @State private var deselected: Set<String> = []
+    @State private var renamedID: String?
+    @State private var newName = ""
 
-    private var applicable: [ShoppingTranslationPlan.Change] { preview.changes.filter { $0.blocked == nil } }
-    private var blocked: [ShoppingTranslationPlan.Change] { preview.changes.filter { $0.blocked != nil } }
-    private var selected: [ShoppingTranslationPlan.Change] {
-        ShoppingTranslationModel.selection(preview.changes, deselected: deselected)
-    }
+    private var deselected: Set<String> { draft.deselected }
+    private var applicable: [ShoppingTranslationPlan.Change] { draft.changes.filter { $0.blocked == nil } }
+    private var blocked: [ShoppingTranslationPlan.Change] { draft.changes.filter { $0.blocked != nil } }
+    private var selected: [ShoppingTranslationPlan.Change] { draft.selected }
 
     var body: some View {
         NavigationStack {
@@ -97,6 +100,7 @@ struct ShoppingTranslationResultSheet: View {
                         Text("Bleibt unverändert")
                     }
                 }
+                if draft.hasFollowUp { followUpSection }
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Mengen bleiben, wie sie sind. Die Namen ändern sich in Apple Erinnerungen; in einer geteilten Liste sehen auch die anderen die neuen Namen.")
@@ -109,8 +113,17 @@ struct ShoppingTranslationResultSheet: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Übersetzung")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Neuer Name", isPresented: Binding(get: { renamedID != nil }, set: { if !$0 { renamedID = nil } })) {
+                TextField("Name", text: $newName)
+                Button("Übernehmen") {
+                    if let renamedID { draft.rename(renamedID, to: newName) }
+                    renamedID = nil
+                }
+                Button("Abbrechen", role: .cancel) { renamedID = nil }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Verwerfen", action: onDiscard) }
                 ToolbarItem(placement: .confirmationAction) {
@@ -123,8 +136,8 @@ struct ShoppingTranslationResultSheet: View {
 
     private func row(_ change: ShoppingTranslationPlan.Change) -> some View {
         let isOn = !deselected.contains(change.id)
-        return Button {
-            if isOn { deselected.insert(change.id) } else { deselected.remove(change.id) }
+        return VStack(alignment: .leading, spacing: 4) { Button {
+            draft.toggle(change.id)
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
@@ -142,6 +155,34 @@ struct ShoppingTranslationResultSheet: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Self.accessibilityLabel(change, isSelected: isOn))
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+            // The name can be typed over by hand (AN9a) and the row can be talked about with ChatGPT. The buttons sit below the
+            // name, so the name keeps the width of the row at large text sizes.
+            HStack(spacing: 8) {
+                PreviewRowMark(mark: draft.followUp.mark(of: change.id))
+                Spacer(minLength: 0)
+                Button("Neuen Namen eingeben", systemImage: "pencil") {
+                    newName = change.newName
+                    renamedID = change.id
+                }
+                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                if draft.hasFollowUp {
+                    Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
+                        .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                }
+            }
+        }
+    }
+
+    private var followUpSection: some View {
+        PreviewFollowUpSection(
+            model: draft.followUp,
+            availability: FollowUpAvailability.state(hasConsent: environment.settings.hasShoppingSortConsent,
+                                                     isSignedIn: environment.ai.isSignedIn, isOffline: false),
+            place: .shopping,
+            quickReplies: [String(localized: "Britisches Englisch"), String(localized: "Markennamen lassen")],
+            placeholder: "Zur Übersetzung etwas sagen …",
+            footer: Text("Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit."),
+            focusLabel: { String(localized: "Zu: \($0.oldName)") }, onSend: { message in Task { await draft.send(message) } })
     }
 
     /// "Äpfel wird Apples, ausgewählt"

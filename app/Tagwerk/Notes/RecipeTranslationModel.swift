@@ -23,6 +23,18 @@ final class RecipeTranslationModel: Identifiable {
     /// The language to translate into; preselected, the user can change it while `choosing` or after a failure.
     var target: VoiceLanguage
 
+    /// The translation as the user and ChatGPT left it (task D3): the text of the preview, which the user can edit. "Original
+    /// ersetzen" and "Als Kopie sichern" write this text, after it was checked again.
+    var editedText = ""
+    /// Why the edited text cannot be written yet; `nil` while it can.
+    private(set) var editProblem: String?
+    /// The follow-up about the translation: the request that is running or failed, and the sentence of the last answer.
+    private(set) var followUpState: FollowUpState = .ready
+    private(set) var followUpReply = ""
+    private(set) var lastMessage = ""
+    /// The text before the last answer, for one step of "Rückgängig"; any edit by hand drops it.
+    private(set) var previousText: String?
+
     let noteID: UUID
     /// One sheet per note (`sheet(item:)`).
     nonisolated var id: UUID { noteID }
@@ -89,6 +101,11 @@ final class RecipeTranslationModel: Identifiable {
             let translated = try await translator.translate(original, to: target)
             guard mine == generation else { return }
             phase = .preview(original: original, translated: translated)
+            editedText = translated
+            editProblem = nil
+            followUpState = .ready
+            followUpReply = ""
+            previousText = nil
         } catch is CancellationError {
             if mine == generation { phase = .choosing }
         } catch let failure as RecipeTranslator.Failure {
@@ -103,6 +120,7 @@ final class RecipeTranslationModel: Identifiable {
     /// Stops a running request; its answer is dropped. Also called when the sheet closes.
     func cancel() {
         generation += 1
+        if followUpState == .sending { followUpState = .ready }
         taskToken += 1
         task?.cancel()
         task = nil
@@ -121,18 +139,93 @@ final class RecipeTranslationModel: Identifiable {
     /// the phase says so. Returns whether the note was changed.
     @discardableResult
     func replace() -> Bool {
-        guard case .preview(let original, let translated) = phase else { return false }
+        guard case .preview(let original, _) = phase else { return false }
         guard let note = store.note(id: noteID), note.deletedAt == nil, note.text == original else {
             phase = .failed(String(localized: "Die Notiz wurde inzwischen geändert."))
             return false
         }
-        store.updateText(noteID, text: translated)
+        guard checkedEditedText(original: original) else { return false }
+        store.updateText(noteID, text: editedText)
         return true
     }
 
     /// Saves the translation as a new note in the same folder, with attachments of its own. The note itself stays as it is.
     func saveCopy() -> NoteRecord? {
-        guard case .preview(_, let translated) = phase else { return nil }
-        return store.duplicate(noteID, text: translated)
+        guard case .preview(let original, _) = phase, checkedEditedText(original: original) else { return nil }
+        return store.duplicate(noteID, text: editedText)
+    }
+
+    // MARK: Editing and following up (plan ki-vorschlaege-anpassen, task D3)
+
+    /// The user typed in the preview. The check runs again before anything is written; here it only drops the undo step (undoing
+    /// the answer would undo the typing) and the old reason.
+    func textEdited() {
+        previousText = nil
+        followUpReply = ""
+        editProblem = nil
+    }
+
+    /// Whether the edited text still reads as this recipe: the rules of an answer of ChatGPT (lines, amounts, links, attachments)
+    /// and the same structure. Sets `editProblem` to the reason when not.
+    @discardableResult
+    func checkedEditedText(original: String) -> Bool {
+        do {
+            try RecipeTranslationPlan(markdown: original).validateEdited(editedText, language: target)
+            editProblem = nil
+            return true
+        } catch {
+            editProblem = RecipeTranslator.editedMessage(for: error)
+            return false
+        }
+    }
+
+    /// One more request about the translation, only where the translation is offered (a note in the folder "Rezepte" that is no
+    /// private note) and only while the stored text is still the original. The answer replaces the edited text; "Rückgängig"
+    /// brings the text before it back. A late answer after `cancel()` is dropped.
+    func revise(_ comment: String) async {
+        let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard case .preview(let original, _) = phase, followUpState != .sending, !comment.isEmpty else { return }
+        guard let note = store.note(id: noteID), Self.isOffered(note, store: store) else {
+            followUpState = .failed(RecipeTranslator.Failure.notARecipe.message)
+            return
+        }
+        guard note.text == original else {
+            followUpState = .failed(String(localized: "Die Notiz wurde inzwischen geändert."))
+            return
+        }
+        lastMessage = comment
+        generation += 1
+        let mine = generation
+        followUpState = .sending
+        do {
+            let answer = try await translator.revise(original, to: target, current: editedText, comment: comment)
+            guard mine == generation else { return }
+            if answer != editedText {
+                previousText = editedText
+                editedText = answer
+                followUpReply = String(localized: "Übersetzung überarbeitet.")
+            } else {
+                followUpReply = String(localized: "Keine Änderung.")
+            }
+            editProblem = nil
+            followUpState = .ready
+        } catch is CancellationError {
+            if mine == generation { followUpState = .ready }
+        } catch let failure as RecipeTranslator.Failure {
+            guard mine == generation else { return }
+            followUpState = .failed(failure == .mismatch ? String(localized: "Die Antwort passt nicht zur Notiz. Es wurde nichts geändert.") : failure.message)
+        } catch {
+            guard mine == generation else { return }
+            followUpState = .failed(RecipeTranslator.Failure.failed.message)
+        }
+    }
+
+    /// "Rückgängig": the text from before the last answer.
+    func undoRevision() {
+        guard let previousText else { return }
+        editedText = previousText
+        self.previousText = nil
+        followUpReply = ""
+        editProblem = nil
     }
 }

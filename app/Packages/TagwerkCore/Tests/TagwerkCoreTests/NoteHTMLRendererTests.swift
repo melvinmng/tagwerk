@@ -41,7 +41,7 @@ struct NoteHTMLRendererTests {
         #expect(output.contains("<th>Name</th><th class=\"right\">Menge</th>"))
         #expect(output.contains("<td>Milch</td><td class=\"right\">2</td>"))
         #expect(output.contains("<hr>"))
-        #expect(output.contains("data-index=\"0\"") && output.contains("☐") && output.contains("data-index=\"1\"") && output.contains("☑"))
+        #expect(output.contains("data-index=\"0\"") && output.contains("aria-checked=\"false\"") && output.contains("data-index=\"1\"") && output.contains("aria-checked=\"true\""))
     }
 
     @Test func renderer_codeIsEscaped() {
@@ -81,9 +81,56 @@ struct NoteHTMLRendererTests {
         #expect(html("<img src=\"attachment:\(id.uuidString)\" alt=\"A\">").contains("<img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"A\">"))
     }
 
-    @Test func renderer_fileLink_becomesAChip() {
+    @Test func renderer_fileLink_withoutKnownAttachment_keepsPlainLink() {
         #expect(html("[Rechnung.pdf](attachment:\(id.uuidString))").contains("<a class=\"file\" href=\"attachment:\(id.uuidString)\">📎 Rechnung.pdf</a>"))
-        #expect(html("[](attachment:\(id.uuidString))", names: [id: "Plan <1>.pdf"]).contains("📎 Plan &lt;1&gt;.pdf</a>"))
+    }
+
+    @Test func renderer_unknownAttachmentKeepsPlainLink() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [UUID(): NoteAttachmentDisplay(name: "Anderes.pdf", detail: "1 KB", kind: .file)]
+        let output = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<a class=\"file\" href=\"attachment:\(id.uuidString)\">📎 \(String(id.uuidString.prefix(8)))</a>"))
+        #expect(!output.contains("class=\"chip\""))
+    }
+
+    @Test func renderer_fileReferenceBecomesChipWithNameAndSize() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Plan <1>.pdf", detail: "1,2 MB", kind: .file)]
+        // Without a label the chip names the file; a label of the link wins.
+        let unlabeled = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(unlabeled.contains("<a class=\"chip\" href=\"attachment:\(id.uuidString)\"><span class=\"name\">Plan &lt;1&gt;.pdf</span><span class=\"detail\">1,2 MB</span></a>"))
+        let labeled = NoteHTMLRenderer.html(markdown: "[Mietvertrag](attachment:\(id.uuidString))", options: options)
+        #expect(labeled.contains("<span class=\"name\">Mietvertrag</span><span class=\"detail\">1,2 MB</span>"))
+    }
+
+    @Test func renderer_chipWithoutDetail_omitsTheDetailSpan() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "a.pdf", detail: "", kind: .file)]
+        let output = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<span class=\"name\">a.pdf</span></a>") && !output.contains("class=\"detail\""))
+    }
+
+    @Test func renderer_imageKeepsImgTag() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Foto.jpg", detail: "300 KB", kind: .image)]
+        let output = NoteHTMLRenderer.html(markdown: "![Urlaub](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"Urlaub\">"))
+        // A link to a picture is not turned into a file chip.
+        #expect(!NoteHTMLRenderer.html(markdown: "[Foto](attachment:\(id.uuidString))", options: options).contains("class=\"chip\""))
+    }
+
+    @Test func renderer_checkedItemGetsDoneClass() {
+        let output = html("- [ ] offen\n- [x] erledigt\n- Punkt")
+        #expect(output.contains("<li class=\"task\">") && output.contains("<li class=\"task done\">"))
+        #expect(output.components(separatedBy: "class=\"task done\"").count - 1 == 1)
+        #expect(output.contains("<li>Punkt</li>"))
+    }
+
+    @Test func legacyHtmlSignature_matchesOptionsVariant() {
+        let markdown = "# Titel\n\n[](attachment:\(id.uuidString))\n\n- [x] a"
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Plan.pdf")]
+        #expect(NoteHTMLRenderer.html(markdown: markdown, attachmentNames: [id: "Plan.pdf"]) == NoteHTMLRenderer.html(markdown: markdown, options: options))
     }
 
     @Test func renderer_checkboxIndicesMatchToggling() {
@@ -128,6 +175,105 @@ struct NoteHTMLRendererTests {
         #expect(html("eins\nzwei").contains("eins<br>\nzwei"))
     }
 
+    // MARK: Edit links
+
+    private func editHTML(_ markdown: String) -> String {
+        NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(editLinks: true))
+    }
+
+    private func edit(_ line: Int, _ text: String) -> String { "<a class=\"e\" href=\"tagwerk-edit:\(line)\">\(text)</a>" }
+
+    @Test func editLinks_wrapEveryTextRunWithItsLine() {
+        let output = editHTML("# Titel\n\nZeile drei\nZeile vier\n\n- Punkt\n")
+        #expect(output.contains("<h1>\(edit(1, "Titel"))</h1>"))
+        #expect(output.contains("<p>\(edit(3, "Zeile drei"))<br>\n\(edit(4, "Zeile vier"))</p>"))
+        #expect(output.contains("<li>\(edit(6, "Punkt"))</li>"))
+    }
+
+    @Test func editLinks_nestedListItemKeepsOwnLine() {
+        let output = editHTML("- a\n  - b\n- c\n")
+        #expect(output.contains(edit(1, "a")) && output.contains(edit(2, "b")) && output.contains(edit(3, "c")))
+    }
+
+    @Test func editLinks_notInsideRealLink() {
+        let output = editHTML("Vor [Link](https://example.com) nach\n\n[](attachment:\(id.uuidString))")
+        #expect(output.contains("<a href=\"https://example.com\">Link</a>"))
+        #expect(output.contains(edit(1, "Vor ")) && output.contains(edit(1, " nach")))
+        // No anchor inside an anchor: every opening tag is closed before the next one opens.
+        for chunk in output.components(separatedBy: "<a ").dropFirst() { #expect(!chunk.prefix(while: { $0 != "/" }).contains("<a")) }
+        #expect(!output.contains("<a class=\"e\" href=\"tagwerk-edit:1\"><a"))
+    }
+
+    @Test func editLinks_notInsideCheckboxLink() {
+        let output = editHTML("- [ ] offen\n- [x] fertig\n")
+        #expect(output.contains(edit(1, "offen")) && output.contains(edit(2, "fertig")))
+        let boxes = output.components(separatedBy: "<a class=\"task-box\"").dropFirst().map { $0.components(separatedBy: "</a>")[0] }
+        #expect(boxes.count == 2 && boxes.allSatisfy { !$0.contains("tagwerk-edit") })
+    }
+
+    @Test func editLinks_emphasisWrapsAnchorNotViceVersa() {
+        let output = editHTML("Text **fett** und *kursiv*")
+        #expect(output.contains("<strong>\(edit(1, "fett"))</strong>") && output.contains("<em>\(edit(1, "kursiv"))</em>"))
+    }
+
+    @Test func editLinks_inlineCodeIsLinked() {
+        #expect(editHTML("A `b` C").contains(edit(1, "<code>b</code>")))
+    }
+
+    @Test func editLinks_codeBlockPointsToFirstLine() {
+        // Fenced: the fence is line 3, the first content line 4. Indented: the block starts on its first content line.
+        let fenced = editHTML("Text\n\n```\ncode\nmehr\n```\n")
+        #expect(fenced.contains("<a class=\"e block\" href=\"tagwerk-edit:4\"><pre><code>code\nmehr\n</code></pre></a>"))
+        let indented = editHTML("Text\n\n    code\n    mehr\n")
+        #expect(indented.contains("href=\"tagwerk-edit:3\"><pre>"))
+        let unclosed = editHTML("```\nnur\n")
+        #expect(unclosed.contains("href=\"tagwerk-edit:2\"><pre>"))
+    }
+
+    @Test func editLinks_tableHasNone() {
+        let output = editHTML("Davor\n\n| A | B |\n|--|--|\n| 1 | 2 |\n")
+        let table = output.components(separatedBy: "<table>")[1].components(separatedBy: "</table>")[0]
+        #expect(!table.contains("tagwerk-edit") && table.contains("<td>1</td>"))
+    }
+
+    @Test func editLinks_tailLinkPresent() {
+        let output = editHTML("Text")
+        #expect(output.hasSuffix("<a class=\"e tail\" href=\"tagwerk-edit:end\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n"))
+        #expect(NoteHTMLRenderer.page(body: output).contains("a.e.tail"))
+    }
+
+    @Test func editLinks_off_htmlIsUnchanged() {
+        let markdown = "# Titel\n\nText **fett**\n\n- [ ] a\n\n```\ncode\n```\n"
+        let plain = NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions())
+        #expect(plain == NoteHTMLRenderer.html(markdown: markdown))
+        #expect(!plain.contains("tagwerk-edit") && !plain.contains("class=\"e"))
+        #expect(plain.contains("<h1>Titel</h1>") && plain.contains("<pre><code>code\n</code></pre>"))
+    }
+
+    @Test func editLinks_crlfText_linesMatch() {
+        let output = editHTML("# Titel\r\n\r\nZeile drei\r\nZeile vier\r\n")
+        #expect(output.contains(edit(1, "Titel")) && output.contains(edit(3, "Zeile drei")) && output.contains(edit(4, "Zeile vier")))
+    }
+
+    @Test func editLinks_rawHtmlGetsNoLink() {
+        let output = editHTML("<div>Roh</div>\n\nText")
+        #expect(output.contains("<div>Roh</div>") && output.contains(edit(3, "Text")))
+    }
+
+    @Test func editLinks_escapesTextInsideTheAnchor() {
+        #expect(editHTML("a < b & c").contains(edit(1, "a &lt; b &amp; c")))
+    }
+
+    @Test func image_isALinkToItsAttachment() {
+        let output = NoteHTMLRenderer.html(markdown: "![Urlaub](attachment:\(id.uuidString))")
+        #expect(output.contains("<a class=\"img\" href=\"attachment:\(id.uuidString)\"><img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"Urlaub\"></a>"))
+    }
+
+    @Test func page_editLinkStyle() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }"))
+    }
+
     // MARK: Page
 
     @Test func page_containsCSP() {
@@ -138,11 +284,149 @@ struct NoteHTMLRendererTests {
         #expect(page.contains("<p>x</p>"))
     }
 
+    @Test func page_limitsImageHeight() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("max-height:40vh") && page.contains("object-fit:contain") && page.contains("max-width:100%"))
+    }
+
+    @Test func page_headingSizes() {
+        let page = NoteHTMLRenderer.page(body: "")
+        // 24 pt and 17 pt over the 17 pt body text, so both follow the text size.
+        #expect(page.contains("h1 { font-size: 1.41em; font-weight: 700; }"))
+        #expect(page.contains("h2 { font-size: 1em; font-weight: 600; }"))
+        #expect(page.contains("line-height") && page.contains("/1.45"))
+    }
+
+    @Test func page_checkboxHitAreaIs44Points() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("min-width:44px") && page.contains("min-height:44px"))
+        #expect(page.contains("li.done") && !page.contains("line-through"))
+    }
+
+    @Test func page_chipTextUsesNormalTextColorOnTintedBackground() {
+        let page = NoteHTMLRenderer.page(body: "")
+        let rule = page.components(separatedBy: "a.chip {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(rule.contains("var(--code)") && rule.contains("color: var(--text)"))
+    }
+
     @Test func page_followsSchemeAndTextSize() {
         #expect(NoteHTMLRenderer.page(body: "", colorScheme: .system).contains("prefers-color-scheme: dark) { :root { --text: #f2f2f7"))
         #expect(NoteHTMLRenderer.page(body: "", colorScheme: .dark).contains(":root { --text: #f2f2f7"))
         #expect(!NoteHTMLRenderer.page(body: "", colorScheme: .light).contains("prefers-color-scheme: dark"))
         #expect(NoteHTMLRenderer.page(body: "", textScale: 2).contains("34.00px"))
         #expect(NoteHTMLRenderer.page(body: "", textScale: 100).contains("68.00px"))
+    }
+
+    // MARK: Tables
+
+    private func tableHTML(_ markdown: String, editLinks: Bool = false) -> String {
+        NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(editLinks: editLinks, tableLinks: true))
+    }
+
+    @Test func table_cellsLinkToTableIndex() {
+        let output = tableHTML("| A | B |\n|---|---|\n| 1 | **2** |\n")
+        let link = { (text: String) in "<a class=\"t\" href=\"tagwerk-table:0\">\(text)</a>" }
+        #expect(output.contains("<th>\(link("A"))</th>"))
+        #expect(output.contains("<td>\(link("1"))</td>"))
+        #expect(output.contains("<strong>\(link("2"))</strong>"))
+        #expect(output.contains("<div class=\"table\">") && output.contains("</table>\n</div>"))
+    }
+
+    @Test func table_withoutOptionHasNoLinks() {
+        let output = NoteHTMLRenderer.html(markdown: "| A |\n|---|\n| 1 |\n", options: .init())
+        #expect(!output.contains("tagwerk-table") && output.contains("<td>1</td>"))
+    }
+
+    @Test func table_emptyCellStaysTappable() {
+        let output = tableHTML("| A | B |\n|---|---|\n|   | x |\n")
+        #expect(output.contains("<td><a class=\"t\" href=\"tagwerk-table:0\">&nbsp;</a></td>"))
+    }
+
+    @Test func table_numberingMatchesBlocks() {
+        let text = "> | Q |\n> |---|\n> | 0 |\n\n| A |\n|---|\n| 1 |\n\n```\n| C |\n|---|\n```\n\n- | L |\n  |---|\n  | 2 |\n\nText\n| B |\n|---|\n| 3 |\n"
+        let output = tableHTML(text)
+        let indices = output.components(separatedBy: "href=\"tagwerk-table:").dropFirst().compactMap { $0.prefix { $0.isNumber } }.map(String.init)
+        #expect(Set(indices) == ["0", "1"])
+        #expect(MarkdownTable.blocks(in: text).count == 2)
+        #expect(output.contains("tagwerk-table:0\">A</a>") && output.contains("tagwerk-table:1\">B</a>"))
+        // The tables in the quote and in the list are shown, without a link.
+        #expect(output.contains("<td>0</td>") && output.contains("<td>2</td>"))
+    }
+
+    @Test func table_realLinkInCellStaysLink() {
+        let output = tableHTML("| A |\n|---|\n| [Seite](https://example.com) text |\n")
+        #expect(output.contains("<a href=\"https://example.com\">Seite</a>"))
+        #expect(output.contains("tagwerk-table:0\"> text</a>"))
+        // No anchor inside an anchor.
+        #expect(!output.contains("<a class=\"t\" href=\"tagwerk-table:0\"><a "))
+    }
+
+    @Test func table_hasNoEditLinks_evenWithEditLinksOn() {
+        let output = tableHTML("Davor\n\n| A |\n|---|\n| 1 |\n", editLinks: true)
+        let table = output.components(separatedBy: "<table>")[1].components(separatedBy: "</table>")[0]
+        #expect(!table.contains("tagwerk-edit"))
+        #expect(output.contains("tagwerk-edit:1"))
+    }
+
+    @Test func table_typedLinkToTableSchemeIsNotALink() {
+        let output = tableHTML("[x](tagwerk-table:0)\n\n<a href=\"tagwerk-table:0\">y</a>\n")
+        #expect(!output.contains("href=\"tagwerk-table:0\""))
+    }
+
+    @Test func page_tableWrapsAt200pt() {
+        let page = NoteHTMLRenderer.page(body: "")
+        let rule = page.components(separatedBy: "th, td {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(rule.contains("max-width: 200pt") && rule.contains("white-space: normal"))
+        #expect(page.contains("div.table {") && page.contains("overflow-x: auto") && page.contains("mask-image"))
+        #expect(page.contains("th { background: var(--code); font-weight: 600; }"))
+    }
+
+    // MARK: Scans
+
+    @Test func renderer_scanBecomesCardWithPagesAndPreviewImage() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let display = NoteAttachmentDisplay(name: "Scan 20.11.2026.pdf", detail: "8 Seiten · 3,1 MB · PDF", kind: .scan(pages: 8))
+        let options = NoteHTMLRenderer.RenderOptions(attachments: [id: display])
+        let output = NoteHTMLRenderer.html(markdown: MarkdownText.reference(for: id, name: "Mietvertrag", isImage: false), options: options)
+        #expect(output.contains("<a class=\"scan\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301\" data-pages=\"8\">"))
+        #expect(output.contains("<img src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301\" alt=\"\">"))
+        #expect(output.contains("<span class=\"name\">Mietvertrag</span><span class=\"detail\">8 Seiten · 3,1 MB · PDF</span>"))
+        // Without a label the name of the attachment is shown.
+        let unnamed = NoteHTMLRenderer.html(markdown: "[](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)", options: options)
+        #expect(unnamed.contains("<span class=\"name\">Scan 20.11.2026.pdf</span>"))
+        #expect(NoteHTMLRenderer.page(body: "").contains("a.scan {"))
+    }
+
+    @Test func renderer_scanDetailIsEscaped() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let display = NoteAttachmentDisplay(name: "x", detail: "<b>8</b>", kind: .scan(pages: 8))
+        let output = NoteHTMLRenderer.html(markdown: "[x](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)",
+                                           options: NoteHTMLRenderer.RenderOptions(attachments: [id: display]))
+        #expect(output.contains("&lt;b&gt;8&lt;/b&gt;") && !output.contains("<b>8"))
+    }
+
+    // MARK: Drawings
+
+    @Test func renderer_drawingGetsPaperClass() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let photo = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!
+        let options = NoteHTMLRenderer.RenderOptions(attachments: [id: NoteAttachmentDisplay(name: "Zeichnung.png", kind: .drawing),
+                                                                   photo: NoteAttachmentDisplay(name: "Foto.jpg", kind: .image)])
+        let output = NoteHTMLRenderer.html(markdown: "![Zeichnung](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n\n![Foto](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)", options: options)
+        #expect(output.contains("<a class=\"img paper\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301\">"))
+        #expect(output.contains("<a class=\"img\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302\">"))
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("a.img.paper img {") && page.contains("background: #fff"))
+    }
+
+    @Test func renderer_editedPictureHasANewAddress() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        func output(version: Int) -> String {
+            NoteHTMLRenderer.html(markdown: "![Zeichnung](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)",
+                                  options: .init(attachments: [id: NoteAttachmentDisplay(name: "Z.png", kind: .drawing, version: version)]))
+        }
+        #expect(output(version: 0).contains("src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301\""))
+        #expect(output(version: 2).contains("src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301?v=2\""))
+        #expect(output(version: 2) != output(version: 3))
     }
 }

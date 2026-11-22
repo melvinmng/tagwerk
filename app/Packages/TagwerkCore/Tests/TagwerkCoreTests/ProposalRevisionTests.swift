@@ -49,6 +49,74 @@ struct ProposalRevisionTests {
         #expect(Set(outcome.ignored) == ["b", "x"])
     }
 
+    // MARK: Screen copy
+
+    @Test func syncByHand_marksEditedAndAddedItemsAndDropsRemovedOnes() {
+        var revision = revision()
+
+        revision.syncByHand([Row(id: "a", value: "Roggenmehl"), Row(id: "c", value: "Eier"), Row(id: "d", value: "Butter")])
+
+        #expect(revision.items.map(\.id) == ["a", "c", "d"])
+        #expect(revision.mark(of: "a") == .byUser && revision.mark(of: "d") == .byUser && revision.mark(of: "c") == nil)
+        #expect(revision.proposal(of: "a")?.value == "Mehl")
+        #expect(revision.pinnedIDs == ["a", "d"])
+    }
+
+    @Test func syncByHand_dropsTheUndoStep_andIgnoresAnUnchangedList() {
+        var revision = revision()
+        revision.replaceAll(with: [Row(id: "a", value: "Dinkelmehl"), Row(id: "b", value: "Zucker"), Row(id: "c", value: "Eier")])
+        revision.syncByHand(revision.items)
+        #expect(revision.canUndo)
+        revision.syncByHand([Row(id: "a", value: "Dinkelmehl"), Row(id: "c", value: "Eier")])
+        #expect(!revision.canUndo)
+    }
+
+    // MARK: Replacing everything
+
+    @Test func replaceAll_addsChangesAndRemovesItems() {
+        var revision = revision()
+        revision.edit(Row(id: "b", value: "Honig"))
+
+        let outcome = revision.replaceAll(with: [Row(id: "a", value: "Mehl"), Row(id: "c", value: "Eigelb"), Row(id: "d", value: "Butter")])
+
+        #expect(revision.items.map(\.value) == ["Mehl", "Eigelb", "Butter"])
+        #expect(outcome.changed == ["c"] && outcome.added == ["d"] && outcome.removed == ["b"])
+        // "b" was set by hand and the answer dropped it: reported, and "Rückgängig" brings it back with its mark.
+        #expect(outcome.overwritten == ["b"])
+        #expect(revision.mark(of: "c") == .byAssistant && revision.mark(of: "d") == .byAssistant && revision.mark(of: "a") == nil)
+        let undone = revision.undo()
+        #expect(undone)
+        #expect(revision.items.map(\.value) == ["Mehl", "Honig", "Eier"] && revision.mark(of: "b") == .byUser)
+    }
+
+    @Test func replaceAll_reportsPinnedItemsTheAnswerChanges() {
+        var revision = revision()
+        revision.edit(Row(id: "a", value: "Roggenmehl"))
+
+        let outcome = revision.replaceAll(with: [Row(id: "a", value: "Dinkelmehl"), Row(id: "b", value: "Zucker"), Row(id: "c", value: "Eier")])
+
+        #expect(outcome.overwritten == ["a"] && outcome.changed == ["a"])
+        #expect(revision.mark(of: "a") == .byAssistant && revision.proposal(of: "a") == nil)
+    }
+
+    @Test func replaceAll_keepsMarksOfRepeatedItemsAndIsNoStepWhenNothingChanged() {
+        var revision = revision()
+        revision.edit(Row(id: "a", value: "Roggenmehl"))
+
+        let outcome = revision.replaceAll(with: revision.items)
+
+        #expect(outcome == ProposalRevision<Row>.Outcome())
+        #expect(revision.mark(of: "a") == .byUser && !revision.canUndo)
+    }
+
+    @Test func replaceAll_ignoresRepeatedIDsAndFollowsTheAnswerOrder() {
+        var revision = revision()
+        let outcome = revision.replaceAll(with: [Row(id: "c", value: "Eier"), Row(id: "a", value: "Mehl"), Row(id: "a", value: "Zweimal"),
+                                                 Row(id: "b", value: "Zucker")])
+        #expect(revision.items.map(\.id) == ["c", "a", "b"] && outcome.ignored == ["a"])
+        #expect(revision.canUndo)
+    }
+
     // MARK: Scope all
 
     @Test func scopeAll_changesNamedItemsAndLeavesTheRest() {

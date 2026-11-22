@@ -150,6 +150,19 @@ struct NotificationPlanMultipleTests {
         #expect(plan.first?.id == PlannedNotification.identifier(for: item.id, index: 0))
     }
 
+    @Test func focusHold_collapsesSameMinuteOfOneEntry() {
+        // A Focus filter holds everything from 08:00 to 13:00: three reminders of one task land on the same minute.
+        let three = defaults(task: [.before(amount: 4, unit: .hours), .before(amount: 3, unit: .hours), .before(amount: 1, unit: .hours)])
+        let item = task("Midday", day: 18, hour: 12)
+        let hold = FocusHold(from: at(18, 8), until: at(18, 13))
+        var held = rules(three)
+        held.focusHold = hold
+        let plan = result([item], rules: held).notifications
+        #expect(plan.count == 1)
+        #expect(plan.first?.fireDate == at(18, 13))
+        #expect(plan.first?.id == PlannedNotification.identifier(for: item.id, index: 0))
+    }
+
     @Test func quietHours_keepRemindersOfDifferentEntriesApart() {
         let night = QuietHours(startMinutes: 23 * 60, endMinutes: 7 * 60)
         let one = defaults(task: [.before(amount: 1, unit: .hours)])

@@ -22,6 +22,17 @@ public struct QuietHours: Equatable, Hashable, Sendable {
     /// No window at all: start equals end.
     public var isEmpty: Bool { startMinutes == endMinutes }
 
+    /// The window as fractions of the day for a 24-hour bar: one part, or two when it crosses midnight (the part after
+    /// midnight is left out when the window ends exactly at midnight); none for an empty window.
+    public var dayFractions: [ClosedRange<Double>] {
+        guard !isEmpty else { return [] }
+        let day = Double(Self.minutesPerDay)
+        let start = Double(startMinutes) / day
+        let end = Double(endMinutes) / day
+        if startMinutes < endMinutes { return [start...end] }
+        return endMinutes == 0 ? [start...1.0] : [start...1.0, 0.0...end]
+    }
+
     /// Whether a wall-clock time lies inside the window.
     public func contains(minutes: Int) -> Bool {
         guard !isEmpty else { return false }

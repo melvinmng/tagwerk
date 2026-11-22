@@ -179,6 +179,16 @@ struct BackupTests {
         reflection.goalsProgress = "Projekt läuft"
         reflection.gratitudeTaken = true
         context.insert(reflection)
+        context.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 512.5, creditPercent: 75,
+                                                 foreign: ForeignIntake(kcal: 340, protein: 12, carbs: 40, fat: 9,
+                                                                        nutrients: NutrientValues(fiber: 5, sugar: 11, saturatedFat: 3, salt: 1.5),
+                                                                        waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
+        settings.activityCreditPercent = 75
+        settings.goalPlansMigrated = true
+        context.insert(GoalPlanRecord(GoalPlan(validFrom: day, kcal: 2100, proteinGrams: 110, carbsGrams: 240, fatGrams: 70,
+                                               fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2500, stepsPerDay: 9000,
+                                               workoutMinutesPerWeek: 180, activeKcalPerDay: 450, targetWeightKg: 72.5,
+                                               paceKgPerWeek: -0.4, origin: .assistant, note: "Cut")))
         try? context.save()
     }
 
@@ -256,6 +266,21 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func backup_roundTripsOffer() throws {
+        sourceSettings.bibleStudyOffer = .both
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(target.settings.bibleStudyOffer == .both)
+        // An older backup without the field keeps the evening as the place of Bible Study.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["bibleStudyOfferRaw"] = nil
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(fresh.settings.bibleStudyOffer == .evening)
+    }
+
     @Test func focusStartSettings_roundTrip() throws {
         sourceSettings.focusAsksDurationAtStart = false
         sourceSettings.focusLastStartMinutes = 45
@@ -321,6 +346,63 @@ struct BackupTests {
         }
         let missing = BackupEntities.modelNames.subtracting(counts.keys).subtracting(["AppSettings"])
         #expect(missing.isEmpty, "no test record for: \(missing.sorted())")
+    }
+
+    @Test func goalPlanBackup_roundTripsEveryField() throws {
+        let plan = try #require(try source.mainContext.fetch(FetchDescriptor<GoalPlanRecord>()).first)
+        let decoded = try JSONDecoder().decode(GoalPlanBackup.self, from: JSONEncoder().encode(GoalPlanBackup(plan)))
+        #expect(decoded.makeRecord().value == plan.value)
+        #expect(plan.value.fiberGrams == 30 && plan.value.targetWeightKg == 72.5 && plan.value.origin == .assistant)
+    }
+
+    @Test func settingsBackup_withoutGoalPlanFields_keepsTheDeviceValues() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["goalPlansMigrated", "activityCreditPercent"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let target = try makeTarget()
+        older.apply(to: target.settings)
+        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated)
+    }
+
+    @Test func restore_oldFileWithoutGoalPlans_rebuildsTheFirstPlanFromTheRestoredGoals() throws {
+        // A file from before the goal plans has no list; its single goals become the plan instead of the plans of the device.
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["goalPlans"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        target.container.mainContext.insert(GoalPlanRecord(GoalPlan(validFrom: PlanDay(year: 2026, month: 1, day: 1), kcal: 1500,
+                                                                    waterMilliliters: 1000, stepsPerDay: 1, workoutMinutesPerWeek: 1)))
+        let inspection = try target.service.inspect(JSONSerialization.data(withJSONObject: object))
+        try target.service.restore(inspection)
+        let plans = try target.container.mainContext.fetch(FetchDescriptor<GoalPlanRecord>())
+        #expect(plans.count == 1)
+        #expect(plans.first?.kcal == 2100, "the plan is built from the restored goalKilocalories")
+        #expect(target.settings.goalPlansMigrated)
+    }
+
+    @Test func restore_oldFileWithoutDayHealth_keepsTheStoredValuesOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["dayHealth"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 1)
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 300, creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-01"])
+    }
+
+    @Test func restore_withDayHealth_replacesTheStoredValues() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: PlanDay(year: 2026, month: 11, day: 1), activeKcal: 300,
+                                                                      creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-18"])
+        #expect(stored.first?.value.foreign.sources == ["Yazio"])
     }
 
     // MARK: Round trip
@@ -651,6 +733,51 @@ struct BackupTests {
         #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
     }
 
+    @Test func gratitudeOnlyDay_survivesRestore() throws {
+        let origin = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 17)
+        let record = RoutineDayRecord(day: day)
+        record.gratitudeData = try JSONEncoder().encode(["Sonne", "Ruhe"])
+        origin.container.mainContext.insert(record)
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        // No note was created for the day; the entry of "Tagesstart" comes from the routine record alone.
+        #expect(RoutineStore(context: target.container.mainContext).gratitudeDays() == [day: ["Sonne", "Ruhe"]])
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<NoteRecord>()) == 0)
+    }
+
+    // MARK: Note list order
+
+    @Test func settings_roundTripSortDirectionAndGrouping() throws {
+        let origin = try makeTarget()
+        origin.settings.noteSortAscending = true
+        origin.settings.noteGroupsByDate = false
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        #expect(!target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.noteSortAscending && !target.settings.noteGroupsByDate)
+    }
+
+    @Test func settings_olderFileKeepsDefaults() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "noteSortAscending")
+        settings.removeValue(forKey: "noteGroupsByDate")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.noteSortAscending = true
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        // A missing value keeps what the device has.
+        #expect(target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {
@@ -864,6 +991,48 @@ struct BackupTests {
         // A second restore replaces the files instead of doubling them.
         try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
         #expect(target.files.records().count == 2)
+    }
+
+    @Test func drawingAndScan_roundTripWithCompanionAndText() throws {
+        let context = source.mainContext
+        let note = NoteRecord(text: "Skizze", now: clock.now)
+        context.insert(note)
+        try context.save()
+        let picture = try sourceFiles.addData(Data((0..<300).map { UInt8(($0 * 5 + 1) % 251) }), fileName: "Zeichnung.png", type: .png, role: .drawing, to: note.id)
+        let strokes = try sourceFiles.addData(Data((0..<200).map { UInt8(($0 * 11 + 2) % 251) }), fileName: "Zeichnung.strokes", type: .data, role: .strokes,
+                                              to: note.id, companionOf: picture.id)
+        let scan = try sourceFiles.addData(Data((0..<400).map { UInt8(($0 * 13 + 4) % 251) }), fileName: "Scan 20.11.2026.pdf", type: .pdf, role: .scan,
+                                           to: note.id, pageCount: 3)
+        sourceFiles.setRecognizedText("Kündigungsfrist drei Monate", for: scan.id)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        for original in [picture, strokes, scan] {
+            let restored = try #require(target.files.record(id: original.id))
+            #expect(restored.roleRaw == original.roleRaw && restored.companionOfID == original.companionOfID)
+            #expect(restored.pageCount == original.pageCount && restored.recognizedText == original.recognizedText && restored.noteID == note.id)
+            #expect(target.files.data(for: original.id) == sourceFiles.data(for: original.id))
+        }
+        #expect(target.files.companion(of: picture.id, role: .strokes)?.id == strokes.id)
+        #expect(target.files.record(id: scan.id)?.recognizedText == "Kündigungsfrist drei Monate" && target.files.record(id: scan.id)?.pageCount == 3)
+    }
+
+    @Test func olderAttachmentWithoutNewFields_restores() throws {
+        // A file written before scans and drawings carries none of the new keys.
+        let data = try backup.makeBackupData(includePrivate: true)
+        var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var attachments = try #require(entities["noteAttachments"] as? [[String: Any]])
+        for index in attachments.indices {
+            for key in ["roleRaw", "companionOfID", "recognizedText", "pageCount"] { attachments[index].removeValue(forKey: key) }
+        }
+        entities["noteAttachments"] = attachments
+        object["entities"] = entities
+        let older = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(older))
+        let restored = target.files.records()
+        #expect(Set(restored.map(\.fileName)) == ["Plan.pdf", "Gebet.pdf"])
+        #expect(restored.allSatisfy { $0.roleRaw == "" && $0.companionOfID == nil && $0.recognizedText == nil && $0.pageCount == 0 })
     }
 
     @Test func restore_ofOlderFileWithoutAttachments_works() throws {

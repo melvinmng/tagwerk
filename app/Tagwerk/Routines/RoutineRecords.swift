@@ -194,6 +194,18 @@ final class RoutineStore {
         return Set(records.map { PlanDay(year: $0.year, month: $0.month, day: $0.day) }.filter { range.contains($0) })
     }
 
+    /// Every day with at least one gratitude entry, with its entries (blank ones are left out). Days without any are not listed.
+    func gratitudeDays() -> [PlanDay: [String]] {
+        _ = revision
+        let records = (try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.gratitudeData != nil }))) ?? []
+        var result: [PlanDay: [String]] = [:]
+        for record in records {
+            let entries = record.value.gratitude.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !entries.isEmpty { result[PlanDay(year: record.year, month: record.month, day: record.day)] = entries }
+        }
+        return result
+    }
+
     private func dayRecord(_ day: PlanDay) -> RoutineDayRecord? {
         let key = day.dayKey
         return try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.dayKey == key })).first
@@ -243,6 +255,14 @@ final class RoutineStore {
         for item in items { deleteItem(item.id) }
         adoptSuggestion()
         return true
+    }
+
+    /// Gives "Helle Lichter ausmachen" the offset 60 in an untouched list of the former five-point suggestion (RO6b). The
+    /// caller runs it once per installation. `false` for any other list, which stays as it is.
+    @discardableResult
+    func upgradeLightsOffset() -> Bool {
+        guard let upgraded = RoutineSchedule.upgradedLightsOffset(checklist()), let lights = upgraded.first else { return false }
+        return saveItem(lights)
     }
 
     /// Creates the suggested points (design §11), only into an empty list.

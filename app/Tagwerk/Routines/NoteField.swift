@@ -137,6 +137,25 @@ final class NoteFieldModel {
         kind.allowsSuggestions && isSignedIn() && taskTitle != nil && day == RoutineSchedule.routineDay(at: now(), calendar: calendar)
     }
 
+    // MARK: The card "Willst du etwas ändern?"
+
+    /// What is under the footer of the card: the sentence about sending the note, or the hint to sign in.
+    enum ChangeCardFooter: Equatable { case none, signInHint, privacy }
+
+    /// The card below the brain dump (RO5b): only for the thought notes and only once the field holds text. It always offers
+    /// "Als Aufgabe anlegen"; "Vorschläge holen" only where `canSuggest` allows it (so a locked note never gets it), and the
+    /// footer says what that button sends (`privacy`) or, without a ChatGPT sign-in, where to sign in.
+    struct ChangeCard: Equatable {
+        var offersSuggestions: Bool
+        var footer: ChangeCardFooter
+    }
+
+    var changeCard: ChangeCard? {
+        guard kind.allowsSuggestions, taskTitle != nil else { return nil }
+        if canSuggest { return ChangeCard(offersSuggestions: true, footer: .privacy) }
+        return ChangeCard(offersSuggestions: false, footer: isSignedIn() ? .none : .signInHint)
+    }
+
     // MARK: Tasks from the note
 
     /// The first non-empty line, for "Als Aufgabe anlegen"; `nil` for an empty note.
@@ -163,8 +182,19 @@ struct NoteField: View {
     @State private var asksConsent = false
     /// The issue card whose target is being chosen.
     @State private var targetCardID: String?
+    /// The card whose sheet "Vorschlag anpassen" is open.
+    @State private var adjustingCardID: String?
+    @FocusState private var followUpFocused: Bool
 
     private var isDreamLog: Bool { model.kind == .dream }
+
+    /// Title, folder symbol and folder role of the field (RO4): the brain dump of both sheets wears the symbol and colour
+    /// of the folder "Brain Dump", the dream log those of "Dream Log", so field and folder are recognised as the same thing.
+    static func headerLabel(for kind: NoteKind) -> (title: LocalizedStringKey, symbol: String, role: NoteFolderRole) {
+        kind == .dream
+            ? ("Dream Log", NotesFoldersView.symbol(for: .dreamLog), .dreamLog)
+            : ("Brain Dump", NotesFoldersView.symbol(for: .brainDump), .brainDump)
+    }
 
     var body: some View {
         Section {
@@ -175,28 +205,7 @@ struct NoteField: View {
                     // The arrow stays off: dictation only fills the field, nothing is sent from here.
                     VoiceRecordingBar(voice: voice, canSend: false)
                 } else {
-                    HStack(alignment: .top, spacing: 4) {
-                        TextEditor(text: Bindable(model).text, selection: Bindable(model).selection)
-                            .keyboardDoneButton()
-                            .frame(minHeight: 110)
-                            .accessibilityLabel(isDreamLog ? "Was hast du geträumt?" : "Brain Dump")
-                            .overlay(alignment: .topLeading) {
-                                if model.text.isEmpty {
-                                    Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
-                                        .foregroundStyle(.secondaryText).padding(.top, 8).padding(.leading, 5)
-                                        .allowsHitTesting(false)
-                                }
-                            }
-                        if environment.settings.voiceInputEnabled, let voice {
-                            VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                                  language: environment.settings.dictationLanguage(at: .notes))
-                        }
-                    }
-                }
-                if !isDreamLog, model.taskTitle != nil {
-                    Button { creatingTask = true } label: { Label("Als Aufgabe anlegen", systemImage: "plus.circle") }
-                        .buttonStyle(.borderless)
-                    suggestionButton
+                    editorRow
                 }
             }
             .onChange(of: model.text) { _, _ in
@@ -224,6 +233,11 @@ struct NoteField: View {
                     }
                 }
             }
+            .sheet(item: Binding(get: { adjustingCardID.map(TargetRequest.init) }, set: { adjustingCardID = $0?.id })) { request in
+                if let suggestions, let card = suggestions.cards.first(where: { $0.id == request.id }) {
+                    ProposalAdjustSheet(assistant: suggestions, call: card.call)
+                }
+            }
             .sheet(isPresented: $asksConsent) {
                 NoteConsentSheet(
                     onAgree: {
@@ -235,7 +249,8 @@ struct NoteField: View {
             }
         } header: {
             HStack {
-                Text(isDreamLog ? "Dream Log" : "Brain Dump")
+                let label = Self.headerLabel(for: model.kind)
+                FolderSectionHeader(title: label.title, symbol: label.symbol, role: label.role)
                 Spacer()
                 if model.offersGuidingQuestions {
                     Button("Leitfragen einfügen") { model.insertGuidingQuestions() }.textCase(nil)
@@ -243,41 +258,64 @@ struct NoteField: View {
             }
         } footer: {
             if isDreamLog {
-                Text("Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.")
+                Text("Bleibt auf diesem iPhone, geht nie an ChatGPT.")
             }
         }
+        if let card = model.changeCard { changeCard(card) }
         if !isDreamLog, let suggestions { suggestionSection(suggestions) }
+    }
+
+    /// The field with its microphone. The one place that shows the text of the note, so a gate in front of it (a locked note)
+    /// is a single condition here.
+    private var editorRow: some View {
+            HStack(alignment: .top, spacing: 4) {
+                TextEditor(text: Bindable(model).text, selection: Bindable(model).selection)
+                    .keyboardDoneButton()
+                    .frame(minHeight: 110)
+                    .accessibilityLabel(isDreamLog ? "Was hast du geträumt?" : "Brain Dump")
+                    .overlay(alignment: .topLeading) {
+                        if model.text.isEmpty {
+                            Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
+                                .foregroundStyle(.secondaryText).padding(.top, 8).padding(.leading, 5)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                if environment.settings.voiceInputEnabled, let voice {
+                    VoiceMicrophoneButton(voice: voice, isEnabled: true,
+                                          language: environment.settings.dictationLanguage(at: .notes))
+                }
+            }
     }
 
     // MARK: Suggestions
 
-    /// "✦ Vorschläge holen" with the sign-in; for an older day or without a sign-in it is not offered.
+    /// The card of RO5b: the question as its heading, the two actions, and below it what "Vorschläge holen" sends. Same in the
+    /// morning start and the evening wrap-up; the dream log never gets it.
     @ViewBuilder
-    private var suggestionButton: some View {
-        if environment.ai.isSignedIn {
-            if model.canSuggest {
+    private func changeCard(_ card: NoteFieldModel.ChangeCard) -> some View {
+        Section {
+            Text("Vielleicht hat dir der Brain Dump Klarheit gegeben.").foregroundStyle(.secondaryText)
+            if card.offersSuggestions {
                 Button {
                     if environment.settings.noteSuggestionConsent { fetchSuggestions() } else { asksConsent = true }
                 } label: {
                     Label("Vorschläge holen", systemImage: "sparkles")
                 }
-                .buttonStyle(.borderless)
                 .disabled(suggestions?.phase == .loading)
-                Text(suggestionFooter).font(.footnote).foregroundStyle(.secondaryText)
             }
-        } else {
-            Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
-                .font(.footnote).foregroundStyle(.secondaryText)
+            Button { creatingTask = true } label: { Label("Als Aufgabe anlegen", systemImage: "plus.circle") }
+        } header: {
+            Text("Willst du etwas ändern?")
+        } footer: {
+            switch card.footer {
+            case .privacy:
+                Text("„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
+            case .signInHint:
+                Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
+            case .none:
+                EmptyView()
+            }
         }
-    }
-
-    /// The evening wrap-up adds the invitation to check the brain dump against the next seven days; the sentence about
-    /// sending the note to ChatGPT stays in both sheets.
-    private var suggestionFooter: String {
-        let sending = String(localized: "„Vorschläge holen“ sendet diese Notiz an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
-        guard model.kind == .evening else { return sending }
-        let invitation = String(localized: "Willst du etwas ändern? Vielleicht hat dir der Brain Dump Klarheit gegeben. „Vorschläge holen“ prüft ihn gegen deine Aufgaben und Termine der nächsten 7 Tage.")
-        return invitation + " " + sending
     }
 
     @ViewBuilder
@@ -301,7 +339,8 @@ struct NoteField: View {
                                    onConfirm: { Task { await suggestions.confirm(card.id) } },
                                    onDecline: { suggestions.decline(card.id) },
                                    canConfirm: !card.needsTarget,
-                                   accessory: targetRow(card, in: suggestions))
+                                   accessory: targetRow(card, in: suggestions),
+                                   onAdjust: card.status == .pending && card.text.canAdjust ? { adjustingCardID = card.id } : nil)
                 }
                 // Cards that wait for a target are not part of it (review focus 10).
                 if suggestions.confirmableCount > 1 {
@@ -316,7 +355,40 @@ struct NoteField: View {
             } header: {
                 Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
             }
+            if suggestions.openCount > 0 { followUpSection(suggestions) }
         }
+    }
+
+    /// The line to write to ChatGPT about the open cards (task C2): a second request with the note, the open cards as they are
+    /// now and the message. Only with the consent of the suggestions and a ChatGPT sign-in; without them the cards can still be
+    /// adjusted by hand.
+    private func followUpSection(_ suggestions: NoteSuggestionModel) -> some View {
+        let availability = FollowUpAvailability.state(hasConsent: environment.settings.noteSuggestionConsent,
+                                                      isSignedIn: environment.ai.isSignedIn, isOffline: false)
+        return Section {
+            FollowUpBar(availability: availability, state: suggestions.followUpState, place: .notes,
+                        quickReplies: NoteSuggestionModel.quickReplies, placeholder: "Zu den Vorschlägen etwas sagen …",
+                        footer: Text("Senden gibt diese Notiz, die offenen Vorschläge mit deinen Änderungen und deine Nachricht an ChatGPT."),
+                        isFocused: $followUpFocused, onSend: { reviseSuggestions($0) },
+                        onRetry: { reviseSuggestions(suggestions.followUpLastMessage) }) {
+                if !suggestions.followUpReply.isEmpty {
+                    FollowUpAnswerRow(reply: suggestions.followUpReply, mark: nil,
+                                      onUndo: suggestions.canUndoRevision ? { suggestions.undoRevision() } : nil)
+                }
+            }
+        } header: {
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles") }
+        }
+    }
+
+    /// Saves the note first, so the text that is sent is the text that is stored.
+    private func reviseSuggestions(_ message: String) {
+        guard let suggestions else { return }
+        model.flush()
+        guard let noteID = model.noteID else { return }
+        let text = model.text
+        let kind = model.kind
+        Task { await suggestions.revise(noteID: noteID, text: text, kind: kind, comment: message) }
     }
 
     /// The row below an issue card: the target as a button while the card is open, as plain text afterwards.
@@ -361,5 +433,20 @@ struct NoteField: View {
         input.writeDraft = { model.writeDictation($0) }
         input.onSend = { _ in }
         voice = input
+    }
+}
+
+/// The heading of a section of the routine sheets that writes into a notes folder: the symbol of the folder in its own
+/// named colour, then the title (RO4). The symbol is decoration; the title carries the meaning.
+struct FolderSectionHeader: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let role: NoteFolderRole
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol).foregroundStyle(NoteFolderTint.color(for: role)).accessibilityHidden(true)
+            Text(title)
+        }
     }
 }

@@ -44,9 +44,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Tagwerk zeigt deine Trainings und Schritte aus Health im Tab „Erfassen“.</string>
+	<string>Tagwerk zeigt deine Trainings, Schritte, Aktivitätsenergie, dein Gewicht und deine Körperdaten aus Health im Tab „Erfassen“ und liest auf Wunsch Ernährungseinträge anderer Apps.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health.</string>
+	<string>Tagwerk speichert deine Mahlzeiten mit ihren Nährwerten, dein Wasser, deine Trainings und dein Gewicht in Health.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>

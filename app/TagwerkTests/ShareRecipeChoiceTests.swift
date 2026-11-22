@@ -24,7 +24,7 @@ struct ShareRecipeChoiceTests {
     @Test func choice_isOfferedOnlyWhenTheSheetAsksForIt() {
         #expect(RecipeSheet.savesOnly(offersSaveOnly: true, purpose: .saveOnly))
         #expect(!RecipeSheet.savesOnly(offersSaveOnly: true, purpose: .shopping))
-        // "Rezept hinzufügen" of the shopping page has no choice: it always goes to the list.
+        // A sheet without the second button always goes to the list. The shopping page offers both buttons too (EK3b).
         #expect(!RecipeSheet.savesOnly(offersSaveOnly: false, purpose: .saveOnly))
         #expect(!RecipeSheet.savesOnly(offersSaveOnly: false, purpose: .shopping))
     }

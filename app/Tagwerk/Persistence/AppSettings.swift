@@ -66,6 +66,11 @@ final class AppSettings {
     var workoutGoalMigrated: Bool = false
     var proteinGoalEnabled: Bool = false
     var goalProteinGrams: Int = 120
+    /// The one-time takeover of the single goals as the first goal plan ran (`GoalStore.migrateIfNeeded()`).
+    var goalPlansMigrated: Bool = false
+    /// Share of the active energy that raises the daily budget, in percent: 0, 50, 75 or 100. Half is the default because
+    /// wrist devices estimate the active energy rather coarsely (decision BU1b).
+    var activityCreditPercent: Int = 50
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330
@@ -110,6 +115,14 @@ final class AppSettings {
     var weekPlanningReminderEnabled: Bool = false
     var weekPlanningReminderWeekday: Int = 1
     var weekPlanningReminderMinutes: Int = 1080
+    /// The day (`PlanDay.dayKey`) on which the card "Wochenplanung" in "Planen" was hidden or the planning was finished; the card
+    /// stays away for the rest of that day (RO15b). Not part of the backup.
+    var weekPlanningCardDismissedDayKey: String? = nil
+    /// Where "Bible Study starten" is offered (`BibleStudyOffer` raw value): the evening wrap-up, as before the choice existed.
+    var bibleStudyOfferRaw: String = "evening"
+    /// The one-time upgrade of "Helle Lichter ausmachen" (offset 60) in an untouched five-point list was done. Not part of the
+    /// backup: it only keeps a list that the user changed afterwards from being upgraded again.
+    var lightsOffsetUpgradeDone: Bool = false
     /// The routine card and the evening line in "Planen".
     var showsRoutinesInPlan: Bool = true
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
@@ -117,6 +130,10 @@ final class AppSettings {
 
     /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
     var noteSortOrderRaw: String = "modified"
+    /// Turns the order of the note lists around ("Älteste zuerst"; for the title order "Z bis A"). One setting for all folders.
+    var noteSortAscending: Bool = false
+    /// Date groups ("Heute", "Letzte 7 Tage", months) in the note lists; has no effect on the title order.
+    var noteGroupsByDate: Bool = true
 
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
@@ -136,7 +153,7 @@ final class AppSettings {
 
     /// JSON of `ReminderDefaults` (plan P4); `nil` means the defaults that behave like the former lead time.
     var reminderDefaultsData: Data? = nil
-    /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
+    /// Focus filter "Mitteilungen zurückhalten" (runtime state, not a preference): set while a Focus with the filter is
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil
@@ -233,6 +250,11 @@ final class AppSettings {
             drinkPreset2Milliliters = resolved[1]
             drinkPreset3Milliliters = resolved[2]
         }
+    }
+
+    var bibleStudyOffer: BibleStudyOffer {
+        get { BibleStudyOffer(rawValue: bibleStudyOfferRaw) ?? .evening }
+        set { bibleStudyOfferRaw = newValue.rawValue }
     }
 
     var noteSortOrder: NoteSortOrder {

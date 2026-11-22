@@ -118,6 +118,7 @@ struct DayView: View {
         PlanIntakeLine(model: model, day: plan.day)
         // The one new element of phase 7: the morning card or today's focus, in the day view of today only.
         if model.scope == .day, plan.day == model.today { RoutineCard(model: environment.routines, plan: plan) }
+        if model.scope == .day, plan.day == model.today { WeekPlanningCard(model: environment.routines) }
         DeadlineCard(model: model, actions: deadlineActions)
         DeadlineSuggestionCard(model: model)
         CapacityCard(model: model, plan: plan) { editingHours = true }
@@ -267,9 +268,9 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
-            if plan.day == model.today, !model.leftFromToday.isEmpty {
+            if plan.day == model.today, model.showsLeftoverLine(overbooked: plan.capacity.isOverbooked) {
                 Divider()
-                LeftoverLine(count: model.leftFromToday.count) { environment.routines.openLeftover() }
+                LeftoverLine(count: model.openFromToday.count) { environment.routines.openLeftover() }
             }
             if plan.day == model.today, environment.routines.eveningLine != nil {
                 Divider()

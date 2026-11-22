@@ -128,4 +128,18 @@ import Testing
         let ids = make(full()).sections.flatMap(\.rows).map(\.id)
         #expect(Set(ids).count == ids.count)
     }
+
+    @Test func noteRow_findsAWordThatOnlyTheScanHas() {
+        var input = full()
+        input.notes = [NoteSearchItem(id: UUID(), text: "Mietvertrag\nUnterschrieben", kindLabel: "Notiz", updatedAt: instant(2026, 11, 1),
+                                      scanText: "Die Kündigungsfrist beträgt drei Monate.")]
+        let results = SearchResults.make(query: SearchQuery("kündigungsfrist")!, filter: .all, includeCompleted: true, input: input, now: now, calendar: calendar)
+        let rows = results.sections.first { $0.kind == .notes }?.rows ?? []
+        #expect(rows.count == 1)
+        if case .note(_, let match)? = rows.first { #expect(match.snippet?.field == .scan) } else { Issue.record("Expected a note row") }
+        // Without the scan text there is no hit.
+        input.notes[0] = NoteSearchItem(id: input.notes[0].id, text: input.notes[0].text, kindLabel: "Notiz", updatedAt: input.notes[0].updatedAt)
+        #expect(SearchResults.make(query: SearchQuery("kündigungsfrist")!, filter: .all, includeCompleted: true, input: input, now: now,
+                                   calendar: calendar).sections.first { $0.kind == .notes } == nil)
+    }
 }

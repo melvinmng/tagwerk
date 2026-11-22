@@ -262,8 +262,14 @@ public struct NoteSortKey: Sendable {
 
 extension NoteSortOrder {
     /// Pinned notes always come first. Dates sort newest first, titles alphabetically; ties fall back to the change date.
-    public func precedes(_ first: NoteSortKey, _ second: NoteSortKey) -> Bool {
+    /// `reversed` turns the order inside the pinned and the unpinned notes around (oldest first, "Z bis A"); pinned
+    /// notes stay on top.
+    public func precedes(_ first: NoteSortKey, _ second: NoteSortKey, reversed: Bool = false) -> Bool {
         if first.isPinned != second.isPinned { return first.isPinned }
+        return reversed ? ordered(second, first) : ordered(first, second)
+    }
+
+    private func ordered(_ first: NoteSortKey, _ second: NoteSortKey) -> Bool {
         switch self {
         case .modified:
             return first.updatedAt > second.updatedAt
@@ -274,6 +280,15 @@ extension NoteSortOrder {
             let order = first.title.localizedStandardCompare(second.title)
             if order != .orderedSame { return order == .orderedAscending }
             return first.updatedAt > second.updatedAt
+        }
+    }
+
+    /// The date a list sorted this way is grouped by; `nil` for the title order, which has no date groups.
+    public func groupingDate(of key: NoteSortKey) -> Date? {
+        switch self {
+        case .modified: key.updatedAt
+        case .created: key.createdAt
+        case .title: nil
         }
     }
 }

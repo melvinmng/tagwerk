@@ -48,6 +48,32 @@ final class WeekPlanningModel {
     var isFirstStep: Bool { step == WeekPlanningRules.steps.first }
     var isLastStep: Bool { step == WeekPlanningRules.steps.last }
 
+    /// "Überspringen": to the next step without saving what this step asked for. What was typed stays in the model and is saved
+    /// when the sheet closes. On the last step nothing happens.
+    func skip() {
+        guard let index = WeekPlanningRules.steps.firstIndex(of: step), index + 1 < WeekPlanningRules.steps.count else { return }
+        step = WeekPlanningRules.steps[index + 1]
+    }
+
+    /// The title of a step, shown large above its content.
+    static func title(of step: WeekPlanningStep) -> String {
+        switch step {
+        case .review: String(localized: "Rückblick")
+        case .reflection: String(localized: "Reflexion")
+        case .deadlines: String(localized: "Fälligkeiten der neuen Woche")
+        case .plan: String(localized: "Woche planen")
+        case .habits: String(localized: "Neue Woche planen")
+        }
+    }
+
+    var stepTitle: String { Self.title(of: step) }
+
+    /// The title of the step after this one; `nil` on the last step.
+    var nextStepTitle: String? {
+        guard let index = WeekPlanningRules.steps.firstIndex(of: step), index + 1 < WeekPlanningRules.steps.count else { return nil }
+        return Self.title(of: WeekPlanningRules.steps[index + 1])
+    }
+
     /// To the next step; the reflection is saved first. On the last step nothing happens.
     func next() {
         saveReflection()
