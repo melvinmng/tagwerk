@@ -69,10 +69,10 @@ enum AuditAllowlist {
             "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.", "Künftig immer bei „Seminar“ aus „Demo Freigabe“",
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten",
             "Deadlines", "in 3 Tagen", "P1",
-            "\\d+:\\d+–\\d+:\\d+ · .* eingeplant", "Tagesabschluss",
+            "\\d+:\\d+–\\d+:\\d+ · .* eingeplant", "Tagesabschluss", "morgen", "Klausur Statistik", "Anmeldung Abschlussarbeit",
         ], reason: "Text on tinted cards (red deadline card, pink suggestion card), on the translucent bar of the day view and on the capacity line and "
             + "the \"Tagesabschluss\" line of the day card (#268; \"9:00–18:00 · 1 h Pause · …\"), in the tones "
-            + "`redText`, `orangeText`, `purpleText` or `secondaryText`. Part of the overdue/deadline texts (\"morgen\" in the search sheet) pass since strand K "
+            + "`redText`, `orangeText`, `purpleText` or `secondaryText`. Part of the overdue/deadline texts pass since strand K "
             + "(default size and AX5: 65 findings before, 26 after in three repetitions each, measured before the day card of #268 existed). The tint of the card changes with the content behind the translucent bar, so the "
             + "pair is not fixed by a colour alone (#188, \"Sekundärtexte auf getönten Karten\")."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
