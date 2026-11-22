@@ -32,6 +32,15 @@ public enum NoteProtection {
         return isLocked || (settings.locksPrivateFolders && isPrivateContent)
     }
 
+    /// Rule 6: which notes the menu entry "Sperren" is offered for: the user's own notes and the notes of Tagesstart,
+    /// Tagesabschluss, Brain Dump and Rezepte. A private note (journal, Bible Study, dream log, or anything in a private folder)
+    /// is protected by the folder switch instead; the entry is missing there while "Private Ordner sperren" is on. Private notes
+    /// of a kind that is private by itself are never offered (their folder is the way to protect them).
+    public static func canLock(kind: NoteKind, isInPrivateFolder: Bool, settings: Settings) -> Bool {
+        guard !kind.isPrivate else { return false }
+        return !(isInPrivateFolder && settings.isEnabled && settings.locksPrivateFolders)
+    }
+
     /// Whether a folder shows the lock screen instead of its list: a private folder with the switch "Private Ordner sperren".
     public static func isProtectedFolder(isPrivateFolder: Bool, settings: Settings) -> Bool {
         settings.isActive && settings.locksPrivateFolders && isPrivateFolder

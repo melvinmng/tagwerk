@@ -25,6 +25,25 @@ struct NoteProtectionTests {
         #expect(!NoteProtection.isProtectedFolder(isPrivateFolder: true, settings: none))
     }
 
+    @Test func canLock_ownAndRoutineNotes_yes() {
+        for kind in [NoteKind.free, .morning, .evening] {
+            #expect(NoteProtection.canLock(kind: kind, isInPrivateFolder: false, settings: settings(privateFolders: true)))
+        }
+    }
+
+    @Test func canLock_privateKinds_never() {
+        for kind in [NoteKind.journal, .bibleStudy, .dream] {
+            #expect(!NoteProtection.canLock(kind: kind, isInPrivateFolder: true, settings: settings(privateFolders: false)))
+            #expect(!NoteProtection.canLock(kind: kind, isInPrivateFolder: false, settings: settings(privateFolders: false)))
+        }
+    }
+
+    @Test func canLock_noteInPrivateFolder_followsFolderSwitch() {
+        #expect(!NoteProtection.canLock(kind: .free, isInPrivateFolder: true, settings: settings(privateFolders: true)))
+        #expect(NoteProtection.canLock(kind: .free, isInPrivateFolder: true, settings: settings(privateFolders: false)))
+        #expect(NoteProtection.canLock(kind: .free, isInPrivateFolder: true, settings: settings(enabled: false, privateFolders: true)))
+    }
+
     @Test func folder_privateWithSwitch() {
         #expect(NoteProtection.isProtectedFolder(isPrivateFolder: true, settings: settings(privateFolders: true)))
         #expect(!NoteProtection.isProtectedFolder(isPrivateFolder: true, settings: settings(privateFolders: false)))

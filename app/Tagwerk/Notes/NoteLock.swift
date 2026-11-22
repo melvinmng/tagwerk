@@ -44,13 +44,23 @@ struct SystemDeviceOwnerAuthenticator: DeviceOwnerAuthenticating {
 }
 
 #if DEBUG && targetEnvironment(simulator)
-/// Answers every check with a fixed result, for the UI tests (`-TagwerkUITestLockAuthentication succeed|fail`). The simulator
-/// has no Face ID prompt the tests could answer.
-struct FixedDeviceOwnerAuthenticator: DeviceOwnerAuthenticating {
-    let succeeds: Bool
+/// Answers the checks with fixed results, for the UI tests (`UITestMode.lockAuthentication`). The simulator has no Face ID
+/// prompt the tests could answer. The answers are used in turn, the last one repeats.
+final class FixedDeviceOwnerAuthenticator: DeviceOwnerAuthenticating, @unchecked Sendable {
+    private let answers: [Bool]
+    private let lock = NSLock()
+    private var next = 0
+
+    init(answers: [Bool]) { self.answers = answers }
+
     func canAuthenticate() -> Bool { true }
     func biometry() -> DeviceBiometry { .faceID }
-    func authenticate(reason: String) async -> Bool { succeeds }
+    func authenticate(reason: String) async -> Bool {
+        lock.withLock {
+            defer { next += 1 }
+            return answers[min(next, answers.count - 1)]
+        }
+    }
 }
 #endif
 
@@ -145,11 +155,20 @@ final class NoteLock {
 
     // MARK: Concealment
 
-    /// Protected content that is not unlocked: it shows the lock screen and no text, preview, picture or count.
-    func isConcealed(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
-        guard !isUnlocked else { return false }
+    /// The note is covered by the lock (rule 1), whether or not it is unlocked right now.
+    func isProtected(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
         let isPrivateContent = !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID, privateFolderIDs: privateFolderIDs)
         return NoteProtection.isProtected(isLocked: note.isLocked, isPrivateContent: isPrivateContent, settings: protection)
+    }
+
+    func isProtected(_ note: NoteRecord, in store: NoteStore) -> Bool {
+        guard protection.isActive else { return false }
+        return isProtected(note, privateFolderIDs: NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info)))
+    }
+
+    /// Protected content that is not unlocked: it shows the lock screen and no text, preview, picture or count.
+    func isConcealed(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
+        !isUnlocked && isProtected(note, privateFolderIDs: privateFolderIDs)
     }
 
     func isConcealed(_ note: NoteRecord, in store: NoteStore) -> Bool {
@@ -157,9 +176,34 @@ final class NoteLock {
         return isConcealed(note, privateFolderIDs: NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info)))
     }
 
+    /// Whether "Sperren" is offered for the note (rule 6).
+    func canLock(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
+        NoteProtection.canLock(kind: note.kind, isInPrivateFolder: note.folderID.map(privateFolderIDs.contains) ?? false,
+                               settings: protection)
+    }
+
+    /// Locking for the first time, or with the switch off, shows the explanation first (`NoteLockIntroSheet`).
+    var needsIntro: Bool { !settings.noteLockEnabled || !settings.noteLockExplained }
+
+    func markExplained() { settings.noteLockExplained = true }
+
+    /// Runs `action` at once when nothing in `concealed` hides, otherwise after the device owner passed the check. Deleting,
+    /// moving and removing the mark of hidden notes goes through here (rule 7).
+    func afterUnlock(whenConcealed concealed: Bool, _ action: @escaping @MainActor () -> Void) {
+        guard concealed else { return action() }
+        Task {
+            if await unlock(reason: Self.reason) { action() }
+        }
+    }
+
     /// A private folder with the switch "Private Ordner sperren" that is not unlocked.
     func isConcealed(folderID: UUID, privateFolderIDs: Set<UUID>) -> Bool {
         !isUnlocked && NoteProtection.isProtectedFolder(isPrivateFolder: privateFolderIDs.contains(folderID), settings: protection)
+    }
+
+    /// The sentence for a locked note where the assistant is offered (#233 B9 shows it under "Mit ChatGPT bearbeiten").
+    static var assistantNotice: String {
+        String(localized: "Gesperrt: Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.")
     }
 
     /// The reason the system prompt shows.

@@ -198,7 +198,8 @@ struct NotesFoldersView: View {
         return Button {
             environment.tasksPath.append(.notesFolder(.folder(folder.id)))
         } label: {
-            rowLabel(symbol: folder.role == nil ? "folder" : Self.symbol(for: folder.role), title: Text(folder.name), count: count, depth: node.depth, role: folder.role)
+            rowLabel(symbol: folder.role == nil ? "folder" : Self.symbol(for: folder.role), title: Text(folder.name), count: count, depth: node.depth, role: folder.role,
+                     isLocked: isProtected(folderID: folder.id))
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -222,12 +223,21 @@ struct NotesFoldersView: View {
         }
     }
 
+    /// A private folder behind the lock (the switch "Private Ordner sperren" is on): its row carries the lock.
+    private func isProtected(folderID: UUID) -> Bool {
+        NoteProtection.isProtectedFolder(isPrivateFolder: NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info)).contains(folderID),
+                                         settings: environment.noteLock.protection)
+    }
+
     private func rowLabel(symbol: String, title: Text, count: Int, depth: Int, role: NoteFolderRole? = nil,
-                          showsChevron: Bool = true) -> some View {
+                          showsChevron: Bool = true, isLocked: Bool = false) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol).font(.title3).foregroundStyle(NoteFolderTint.color(for: role)).frame(width: 28)
             title.foregroundStyle(.primary)
             Spacer(minLength: 8)
+            if isLocked {
+                Image(systemName: "lock.fill").font(.footnote).foregroundStyle(.secondaryText).accessibilityLabel("Gesperrt")
+            }
             Text("\(count)").monospacedDigit().foregroundStyle(.secondaryText)
             if showsChevron {
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)

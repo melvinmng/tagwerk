@@ -7200,6 +7200,16 @@
         }
       }
     },
+    "Der Titel ist die erste Zeile der Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The title is the first line of the note."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -7922,6 +7932,16 @@
         }
       }
     },
+    "Die Sperre schützt vor Mitlesen in Tagwerk, nicht die Sicherungsdatei. Bewahre die Datei an einem geschützten Ort auf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The lock protects against reading along in Tagwerk, not the backup file. Keep the file in a protected place."
+          }
+        }
+      }
+    },
     "Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.": {
       "localizations": {
         "en": {
@@ -8202,6 +8222,16 @@
         }
       }
     },
+    "Diese Notiz ist gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This note is locked."
+          }
+        }
+      }
+    },
     "Diese Quelle ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -8344,6 +8374,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This folder has a fixed purpose and can’t be deleted or moved."
+          }
+        }
+      }
+    },
+    "Dieser Ordner ist gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is locked."
           }
         }
       }
@@ -9155,6 +9195,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Removes the item from the input"
+          }
+        }
+      }
+    },
+    "Entsperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
           }
         }
       }
@@ -10735,6 +10785,16 @@
         }
       }
     },
+    "Geht nie an ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never goes to ChatGPT"
+          }
+        }
+      }
+    },
     "Gehören zum Kalendertermin und erscheinen auf allen Geräten. Ruhezeiten gelten dafür nicht.": {
       "localizations": {
         "en": {
@@ -11023,6 +11083,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saved: %@"
+          }
+        }
+      }
+    },
+    "Gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked"
+          }
+        }
+      }
+    },
+    "Gesperrt: Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked: this note does not go to ChatGPT. Remove the lock if the assistant should read it."
+          }
+        }
+      }
+    },
+    "Gesperrte Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes"
+          }
+        }
+      }
+    },
+    "Gesperrte Notizen · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes · %lld"
           }
         }
       }
@@ -12370,6 +12470,16 @@
         }
       }
     },
+    "In Listen und Suche bleibt der Titel sichtbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The title stays visible in lists and search"
+          }
+        }
+      }
+    },
     "In Planen anzeigen": {
       "localizations": {
         "en": {
@@ -12587,6 +12697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back up now"
+          }
+        }
+      }
+    },
+    "Jetzt sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock now"
           }
         }
       }
@@ -13221,6 +13341,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No deleted notes."
+          }
+        }
+      }
+    },
+    "Keine gesperrten Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No locked notes."
           }
         }
       }
@@ -14637,12 +14767,52 @@
         }
       }
     },
+    "Mit Face ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Face ID"
+          }
+        }
+      }
+    },
+    "Mit Face ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Face ID"
+          }
+        }
+      }
+    },
     "Mit Gerätecode schützen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Protect with device passcode"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with device passcode"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with device passcode"
           }
         }
       }
@@ -14673,6 +14843,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Protect with Optic ID"
+          }
+        }
+      }
+    },
+    "Mit Optic ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Optic ID"
+          }
+        }
+      }
+    },
+    "Mit Optic ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Optic ID"
           }
         }
       }
@@ -14713,6 +14903,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Protect with Touch ID"
+          }
+        }
+      }
+    },
+    "Mit Touch ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Touch ID"
+          }
+        }
+      }
+    },
+    "Mit Touch ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Touch ID"
           }
         }
       }
@@ -15763,6 +15973,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save note"
+          }
+        }
+      }
+    },
+    "Notiz sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock note"
           }
         }
       }
@@ -18285,6 +18505,26 @@
         }
       }
     },
+    "Sperre aufheben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove lock"
+          }
+        }
+      }
+    },
+    "Sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
+          }
+        }
+      }
+    },
     "Sprachchat-Antwort": {
       "localizations": {
         "en": {
@@ -18711,6 +18951,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change status"
+          }
+        }
+      }
+    },
+    "Steht unverschlüsselt in der Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is unencrypted in the backup"
           }
         }
       }
@@ -22686,6 +22936,26 @@
         }
       }
     },
+    "enthalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "included"
+          }
+        }
+      }
+    },
+    "entsperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unlocked"
+          }
+        }
+      }
+    },
     "erlaubt": {
       "localizations": {
         "en": {
@@ -22830,6 +23100,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "closed"
+          }
+        }
+      }
+    },
+    "gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "locked"
           }
         }
       }
@@ -22980,6 +23260,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "in der Datei unverschlüsselt enthalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "included unencrypted in the file"
           }
         }
       }
@@ -24045,6 +24335,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Face ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Face ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Optic ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Optic ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Touch ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Touch ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit dem Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with the device passcode"
           }
         }
       }

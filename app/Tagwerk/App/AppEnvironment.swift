@@ -138,7 +138,7 @@ final class AppEnvironment {
     /// The device check of the note lock; the UI tests can fix its answer.
     private static func makeDeviceOwnerAuthenticator() -> any DeviceOwnerAuthenticating {
         #if DEBUG && targetEnvironment(simulator)
-        if let succeeds = UITestMode.lockAuthentication { return FixedDeviceOwnerAuthenticator(succeeds: succeeds) }
+        if let answers = UITestMode.lockAuthentication { return FixedDeviceOwnerAuthenticator(answers: answers) }
         #endif
         return SystemDeviceOwnerAuthenticator()
     }

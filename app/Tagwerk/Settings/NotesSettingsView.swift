@@ -52,6 +52,12 @@ struct NotesSettingsView: View {
             Toggle("Private Ordner sperren", isOn: privateFolders)
                 .disabled(!environment.settings.noteLockEnabled)
                 .accessibilityIdentifier("notes.lock.privateFolders")
+            NavigationLink {
+                LockedNotesView()
+            } label: {
+                LabeledContent("Gesperrte Notizen", value: "\(environment.notes.lockedCount)")
+            }
+            .accessibilityIdentifier("notes.lock.list")
         } header: {
             Text("Sperre")
         } footer: {
