@@ -175,6 +175,15 @@ enum AuditAllowlist {
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
 
         Entry(auditType: .dynamicType, labels: [
+            "Automatisch", "Wie gesprochen", "Nie",
+        ], screens: ["Einstellungen › Sprachen", "Einstellungen › KI › Sprache"], reason:
+            "Current value of a menu-style `Picker` row (\"Stimme Deutsch\": Automatisch, \"Sprachchat-Antwort\": Wie gesprochen, "
+            + "\"Antworten vorlesen\": Nie). The system draws the value as a `UILabel` inside its own menu button; "
+            + "the app only supplies the selection and the option texts, so there is no font or frame of ours to change. The audit names "
+            + "\"this UILabel\" and reports different values from run to run on the same code. The row titles next to them are SwiftUI texts "
+            + "and are not on this entry."),
+
+        Entry(auditType: .dynamicType, labels: [
             "Britisches Englisch", "Markennamen lassen", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
         ], screens: ["Einkaufsliste › Übersetzung"] + recipeScreens, reason:
             "Quick replies of the follow-up of the translation preview and of the recipe sheets (plan ki-vorschlaege-anpassen, tasks D2 and D5): bordered buttons with a text "
