@@ -72,6 +72,54 @@ struct FocusQuietTests {
         #expect(result.state == FocusQuiet.State())
     }
 
+    @Test func applying_endBeforeTheTarget_startsTheCatchUp() {
+        let started = FocusQuiet.State(since: at(18, 14))
+        let ended = FocusQuiet.applying(active: false, now: at(18, 17), to: started, quietHours: night, calendar: calendar)
+        #expect(ended == FocusQuiet.State(since: nil, catchUpFrom: at(18, 14), catchUpAt: nil))
+    }
+
+    @Test func applying_endAfterTheTarget_startsNoCatchUp() {
+        // Held until 13:00 (four hours after 09:00); the end reported at 17:00 finds everything delivered.
+        let started = FocusQuiet.State(since: at(18, 9))
+        let ended = FocusQuiet.applying(active: false, now: at(18, 17), to: started, quietHours: night, calendar: calendar)
+        #expect(ended == FocusQuiet.State())
+        // The target itself counts as passed.
+        let atTarget = FocusQuiet.applying(active: false, now: at(18, 13), to: started, quietHours: night, calendar: calendar)
+        #expect(atTarget == FocusQuiet.State())
+    }
+
+    @Test func applying_endAfterTheTarget_withoutQuietHours_usesEightHours() {
+        let started = FocusQuiet.State(since: at(18, 9))
+        let early = FocusQuiet.applying(active: false, now: at(18, 16), to: started, quietHours: nil, calendar: calendar)
+        #expect(early.catchUpFrom == at(18, 9))
+        let late = FocusQuiet.applying(active: false, now: at(18, 17), to: started, quietHours: nil, calendar: calendar)
+        #expect(late == FocusQuiet.State())
+    }
+
+    @Test func applying_endAfterTheTarget_keepsAnEarlierPendingCatchUp() {
+        let started = FocusQuiet.State(since: at(18, 12), catchUpFrom: at(18, 8))
+        let ended = FocusQuiet.applying(active: false, now: at(18, 20), to: started, quietHours: nil, calendar: calendar)
+        #expect(ended == FocusQuiet.State(since: nil, catchUpFrom: at(18, 8), catchUpAt: nil))
+    }
+
+    // MARK: Fallback target
+
+    @Test func fallbackTarget_fourHoursAfterTheStart() {
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 14), quietHours: night, calendar: calendar) == at(18, 18))
+    }
+
+    @Test func fallbackTarget_insideQuietHours_movesToTheirEnd() {
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 21, 30), quietHours: night, calendar: calendar) == at(19, 7))
+        // Exactly at the start of the window counts as inside.
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 19), quietHours: night, calendar: calendar) == at(19, 7))
+    }
+
+    @Test func fallbackTarget_withoutQuietHours_isEightHours() {
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: nil, calendar: calendar) == at(18, 21))
+        let empty = QuietHours(startMinutes: 300, endMinutes: 300)
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: empty, calendar: calendar) == at(18, 21))
+    }
+
     // MARK: Hold
 
     @Test func hold_withQuietHours_endsWithTheRunningWindow() {
@@ -79,9 +127,10 @@ struct FocusQuietTests {
         #expect(hold == FocusHold(from: at(18, 23, 30), until: at(19, 7)))
     }
 
-    @Test func hold_withQuietHours_outsideTheWindow_endsWithTheNextOne() {
+    @Test func hold_endsAtTheFallbackTarget() {
         let hold = FocusQuiet.hold(since: at(18, 13), now: at(18, 14), quietHours: night, calendar: calendar)
-        #expect(hold == FocusHold(from: at(18, 13), until: at(19, 7)))
+        #expect(hold == FocusHold(from: at(18, 13), until: at(18, 17)))
+        #expect(FocusQuiet.hold(since: at(18, 13), now: at(18, 17), quietHours: night, calendar: calendar) == nil)
     }
 
     @Test func hold_withoutQuietHours_lastsEightHoursFromTheStart() {

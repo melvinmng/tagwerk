@@ -99,12 +99,37 @@ struct NotificationSchedulerQuietHoursTests {
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 17))
     }
 
-    @Test func focusActive_withQuietHours_holdsUntilTheirEnd() async {
+    @Test func focusActive_withQuietHours_holdsForFourHours() async {
         enableQuietHours()
         settings.focusQuietSince = at(18, 9)
-        local.tasks = [task("A", day: 18, hour: 14)]
+        local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
         await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
+    }
+
+    @Test func focusActive_fallbackInsideQuietHours_movesToTheirEnd() async {
+        enableQuietHours()
+        settings.focusQuietSince = at(18, 20)
+        local.tasks = [task("A", day: 18, hour: 23, minute: 30)]  // fires 21:30; four hours after 20:00 is 00:00
+        await scheduler(now: at(18, 21)).reschedule()
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
+    }
+
+    @Test func focusEndsAfterTheFallback_deliversNothingTwice() async {
+        enableQuietHours()
+        settings.focusQuietSince = at(18, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00, held until 13:00
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
+        // 13:00 passes and iOS delivers the held notification.
+        center.removePendingForTest("tagwerk.task.local:A#0")
+        // The end of the Focus is reported late, after the fallback target.
+        let late = at(18, 17)
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: late, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: late).reschedule()
+        #expect(center.pending.isEmpty)
+        #expect(settings.focusQuietState == FocusQuiet.State())
     }
 
     @Test func focusEndsEarly_restoresTheOriginalTime() async {

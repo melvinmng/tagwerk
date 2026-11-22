@@ -51,7 +51,8 @@ final class IntentServices {
     /// notifications again; the plan holds them back while active and lets those that came due fire after the end.
     func setFocusQuiet(active: Bool, now: Date = .now) async {
         let settings = environment.settings
-        settings.focusQuietState = FocusQuiet.applying(active: active, now: now, to: settings.focusQuietState)
+        settings.focusQuietState = FocusQuiet.applying(active: active, now: now, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: environment.planning.calendar)
         try? environment.modelContainer.mainContext.save()
         // A cold start in the background has loaded nothing; sources that are not loaded keep their old requests.
         if settings.setupCompleted { await environment.loadTasksInBackground() }
