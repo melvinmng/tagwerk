@@ -89,6 +89,19 @@ enum AuditAllowlist {
             + "\"nearly passed\" or \"failed\" depending on the run and the text size; the system draws the colours of the headers and of the "
             + "bordered style (#188, \"Schrift auf Tönung\"), and the footer already uses the fixed grey of the other footnotes."),
 
+        Entry(auditType: .contrast, labels: [
+            "Mit ChatGPT besprechen", "Senden gibt das Rezept .*", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
+        ], screens: recipeScreens + recipeScreensLargeText, reason:
+            "Header, footer and quick replies of the follow-up section of the recipe sheets (plan ki-vorschlaege-anpassen, task D2): the "
+            + "system grey of a grouped section header and footer, and the purple bordered buttons of the shared follow-up bar (the same style "
+            + "as the quick replies of \"Tag planen\"), on the grouped background (\"nearly passed\" in some runs, not in others on the same "
+            + "screen). Same group as the other section headers and the tinted buttons above; the system draws the colours (#188, "
+            + "\"Sekundärtexte\", \"Schrift auf Tönung\")."),
+        Entry(auditType: .contrast, labels: ["\\d+\\. .*"], screens: ["Rezept anlegen (Bestätigung)", "AX5/dark Rezept anlegen (Bestätigung)"], reason:
+            "Steps of the recipe on the confirmation of \"Rezept speichern\" (plan ki-vorschlaege-anpassen, task D2): with the follow-up section "
+            + "above them the list is longer than the screen, and the audit measures the rows that lie partly under the translucent bottom bar "
+            + "with \"Rezept speichern\" against the material of the bar (primary text, normally 15:1 on the grouped background). The row "
+            + "scrolls clear of the bar; the finding is the measurement on the material, like the other rows under a bar."),
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
@@ -132,8 +145,10 @@ enum AuditAllowlist {
             + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
 
-        Entry(auditType: .dynamicType, labels: ["Britisches Englisch", "Markennamen lassen"], screens: ["Einkaufsliste › Übersetzung"], reason:
-            "Quick replies of the follow-up of the translation preview (plan ki-vorschlaege-anpassen, task D5): bordered buttons with a text "
+        Entry(auditType: .dynamicType, labels: [
+            "Britisches Englisch", "Markennamen lassen", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
+        ], screens: ["Einkaufsliste › Übersetzung"] + recipeScreens, reason:
+            "Quick replies of the follow-up of the translation preview and of the recipe sheets (plan ki-vorschlaege-anpassen, tasks D2 and D5): bordered buttons with a text "
             + "style in a horizontal scroll row, shared with the quick replies of \"Tag planen\" (`FollowUpBar`). The audit reports a partial "
             + "lack of support in some runs (it does so for different texts of the screen from run to run); the buttons grow with the text size "
             + "and are not clipped in the large text run. Stays on the device test list (large text)."),
