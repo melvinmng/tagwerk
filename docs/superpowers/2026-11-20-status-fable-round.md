@@ -24,7 +24,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
 - Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
 
-Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 (läuft), (2b) Folge-PR Mengen-Knopf + Fokus 4 h + Doppelzustellung, (2c) Sperre in RO (#287) und NX (#288) nach #284, (3) gebündelte Audit-Befunde.
+Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 (läuft), (2b) Folge-PR Mengen-Knopf + Fokus 4 h + Doppelzustellung (läuft), (2c) Sperre in RO (#287) und NX (#288) nach #284, (3) gebündelte Audit-Befunde.
 
 ## Offene Kleinigkeiten
 
@@ -124,7 +124,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | (Fix) | #284 Regel 1b + CI-Fehler; #285 Verstabelle auf macOS | läuft (Sonnet) |
 | `feat/g2-routines` | G2 Strang RO (RO1–RO8) | **gemergt (#287)**; CI UI nur „Zeit mit Gott“-Überschrift Kontrast knapp (→ Audit-Bündel); PR #287, Head `7698826` (main per Merge-Treiber eingearbeitet), vorher `c3c85b2`; schnell grün, UI kompiliert → GitHub. Sperre in Tagesstart/-abschluss nach #284 (NoteField `editorRow`, `persist()`-Guard); DT-Ursache Tagesabschluss nicht gefunden (nur sonntags) |
 | (Reparatur) | Pool-Simulator-Store zurücksetzen (`fix/pool-simulator-reset`), #283 und #282 UI-Fehler | läuft (Sonnet) |
-| `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
+| `test/leaner-ui-tests-impl` | Tests schlanker Tasks 3, 4, 7 | PR #289, Head `d26235d`; Direktsprung, Render-Tests, Snapshot-Abgleich; PR-Satz ~3 min kürzer |
+| `fix/follow-ups-recipe-focus` | Nachträge: Mengen-Knopf, Fokus 4 h, Doppelzustellung | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundations` | #254 Stränge A und B | **gemergt (#281, `main` = `ad7721b`)**; PR #281, Head `62bef72`; schnell grün; Offen für C: Zielstände nur vorwärts gespiegelt, `furtherNutrientsGranted()` nie aufgerufen, Schreiberlaubnis beim Spiegeln; `en.json` „%lld Mal“ falsch |
 | `feat/nutrition-budget-ui-impl` | #254 Stränge C und D | PR #283 (jetzt Basis main); CI UI rot durch eigene Änderungen: CaptureUITests (Rechenzeile, Ballaststoff-Feld), „Tagesstart/Tagesabschluss nicht auf dem Bildschirm“, Tippfläche „noch ~1.870 kcal“ (Planen-Kopf), Kontrast „Aktivität“ (Einstellungen › Erfassen) → Reparatur nächster freier Platz; Head `a7fd856`; #281 jetzt `f0d1c3e` (main + `%lld Mal`-Fix), beide gepusht; schnell grün, UI kompiliert → GitHub. Trainings merken `energyInHealth` |
