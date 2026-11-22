@@ -110,4 +110,14 @@ struct HTMLSanitizerTests {
             #expect(!output.lowercased().contains("onerror=") && !output.lowercased().contains("onload=") && !output.lowercased().contains("onfocus="), "\(input) -> \(output)")
         }
     }
+
+    @Test func rawHTML_dropsAppSchemes() {
+        // Only the renderer writes links of the app's own schemes; raw HTML of a note cannot.
+        for scheme in ["tagwerk-edit:3", "tagwerk-edit:end", "tagwerk-toggle:0", "tagwerk-table:1", "TAGWERK-EDIT:3", "tagwerk-\u{200B}edit:3"] {
+            let output = HTMLSanitizer.clean("<a href=\"\(scheme)\">x</a>")
+            #expect(!output.lowercased().contains("tagwerk-") && !output.contains("href"), "\(scheme) -> \(output)")
+            #expect(output.contains("x"))
+        }
+        #expect(!HTMLSanitizer.clean("<a class=\"e\" href=\"tagwerk-edit:3\">x</a>").contains("class"))
+    }
 }

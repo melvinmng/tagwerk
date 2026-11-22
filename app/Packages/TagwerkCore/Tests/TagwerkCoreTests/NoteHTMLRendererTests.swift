@@ -175,6 +175,105 @@ struct NoteHTMLRendererTests {
         #expect(html("eins\nzwei").contains("eins<br>\nzwei"))
     }
 
+    // MARK: Edit links
+
+    private func editHTML(_ markdown: String) -> String {
+        NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(editLinks: true))
+    }
+
+    private func edit(_ line: Int, _ text: String) -> String { "<a class=\"e\" href=\"tagwerk-edit:\(line)\">\(text)</a>" }
+
+    @Test func editLinks_wrapEveryTextRunWithItsLine() {
+        let output = editHTML("# Titel\n\nZeile drei\nZeile vier\n\n- Punkt\n")
+        #expect(output.contains("<h1>\(edit(1, "Titel"))</h1>"))
+        #expect(output.contains("<p>\(edit(3, "Zeile drei"))<br>\n\(edit(4, "Zeile vier"))</p>"))
+        #expect(output.contains("<li>\(edit(6, "Punkt"))</li>"))
+    }
+
+    @Test func editLinks_nestedListItemKeepsOwnLine() {
+        let output = editHTML("- a\n  - b\n- c\n")
+        #expect(output.contains(edit(1, "a")) && output.contains(edit(2, "b")) && output.contains(edit(3, "c")))
+    }
+
+    @Test func editLinks_notInsideRealLink() {
+        let output = editHTML("Vor [Link](https://example.com) nach\n\n[](attachment:\(id.uuidString))")
+        #expect(output.contains("<a href=\"https://example.com\">Link</a>"))
+        #expect(output.contains(edit(1, "Vor ")) && output.contains(edit(1, " nach")))
+        // No anchor inside an anchor: every opening tag is closed before the next one opens.
+        for chunk in output.components(separatedBy: "<a ").dropFirst() { #expect(!chunk.prefix(while: { $0 != "/" }).contains("<a")) }
+        #expect(!output.contains("<a class=\"e\" href=\"tagwerk-edit:1\"><a"))
+    }
+
+    @Test func editLinks_notInsideCheckboxLink() {
+        let output = editHTML("- [ ] offen\n- [x] fertig\n")
+        #expect(output.contains(edit(1, "offen")) && output.contains(edit(2, "fertig")))
+        let boxes = output.components(separatedBy: "<a class=\"task-box\"").dropFirst().map { $0.components(separatedBy: "</a>")[0] }
+        #expect(boxes.count == 2 && boxes.allSatisfy { !$0.contains("tagwerk-edit") })
+    }
+
+    @Test func editLinks_emphasisWrapsAnchorNotViceVersa() {
+        let output = editHTML("Text **fett** und *kursiv*")
+        #expect(output.contains("<strong>\(edit(1, "fett"))</strong>") && output.contains("<em>\(edit(1, "kursiv"))</em>"))
+    }
+
+    @Test func editLinks_inlineCodeIsLinked() {
+        #expect(editHTML("A `b` C").contains(edit(1, "<code>b</code>")))
+    }
+
+    @Test func editLinks_codeBlockPointsToFirstLine() {
+        // Fenced: the fence is line 3, the first content line 4. Indented: the block starts on its first content line.
+        let fenced = editHTML("Text\n\n```\ncode\nmehr\n```\n")
+        #expect(fenced.contains("<a class=\"e block\" href=\"tagwerk-edit:4\"><pre><code>code\nmehr\n</code></pre></a>"))
+        let indented = editHTML("Text\n\n    code\n    mehr\n")
+        #expect(indented.contains("href=\"tagwerk-edit:3\"><pre>"))
+        let unclosed = editHTML("```\nnur\n")
+        #expect(unclosed.contains("href=\"tagwerk-edit:2\"><pre>"))
+    }
+
+    @Test func editLinks_tableHasNone() {
+        let output = editHTML("Davor\n\n| A | B |\n|--|--|\n| 1 | 2 |\n")
+        let table = output.components(separatedBy: "<table>")[1].components(separatedBy: "</table>")[0]
+        #expect(!table.contains("tagwerk-edit") && table.contains("<td>1</td>"))
+    }
+
+    @Test func editLinks_tailLinkPresent() {
+        let output = editHTML("Text")
+        #expect(output.hasSuffix("<a class=\"e tail\" href=\"tagwerk-edit:end\"></a>\n"))
+        #expect(NoteHTMLRenderer.page(body: output).contains("a.e.tail"))
+    }
+
+    @Test func editLinks_off_htmlIsUnchanged() {
+        let markdown = "# Titel\n\nText **fett**\n\n- [ ] a\n\n```\ncode\n```\n"
+        let plain = NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions())
+        #expect(plain == NoteHTMLRenderer.html(markdown: markdown))
+        #expect(!plain.contains("tagwerk-edit") && !plain.contains("class=\"e"))
+        #expect(plain.contains("<h1>Titel</h1>") && plain.contains("<pre><code>code\n</code></pre>"))
+    }
+
+    @Test func editLinks_crlfText_linesMatch() {
+        let output = editHTML("# Titel\r\n\r\nZeile drei\r\nZeile vier\r\n")
+        #expect(output.contains(edit(1, "Titel")) && output.contains(edit(3, "Zeile drei")) && output.contains(edit(4, "Zeile vier")))
+    }
+
+    @Test func editLinks_rawHtmlGetsNoLink() {
+        let output = editHTML("<div>Roh</div>\n\nText")
+        #expect(output.contains("<div>Roh</div>") && output.contains(edit(3, "Text")))
+    }
+
+    @Test func editLinks_escapesTextInsideTheAnchor() {
+        #expect(editHTML("a < b & c").contains(edit(1, "a &lt; b &amp; c")))
+    }
+
+    @Test func image_isALinkToItsAttachment() {
+        let output = NoteHTMLRenderer.html(markdown: "![Urlaub](attachment:\(id.uuidString))")
+        #expect(output.contains("<a class=\"img\" href=\"attachment:\(id.uuidString)\"><img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"Urlaub\"></a>"))
+    }
+
+    @Test func page_editLinkStyle() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }"))
+    }
+
     // MARK: Page
 
     @Test func page_containsCSP() {

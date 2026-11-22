@@ -44,7 +44,10 @@ public enum NoteHTMLRenderer {
         // Smart punctuation stays off: a note shows exactly what was typed.
         let document = Document(parsing: markdown, options: [.disableSmartOpts])
         var visitor = BodyVisitor(options: options)
-        return visitor.visit(document)
+        var output = visitor.visit(document)
+        // A tap below the text writes at the end of the note.
+        if options.editLinks { output += "<a class=\"e tail\" href=\"\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)\"></a>\n" }
+        return output
     }
 
     /// Kept for existing callers; forwards to `html(markdown:options:)`. `attachmentNames` names the attachments.
@@ -83,6 +86,10 @@ public enum NoteHTMLRenderer {
         li.task { list-style: none; margin-left: -1.4em; }
         li.done { color: var(--muted); }
         a { color: var(--accent); text-decoration: none; }
+        a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }
+        a.e.block { display: block; }
+        a.e.tail { display: block; min-height: 50vh; }
+        a.img { display: inline-block; max-width: 100%; }
         a.task-box { display: inline-flex; min-width:44px; min-height:44px; align-items: center; justify-content: center;
                      vertical-align: top; margin: calc((1.45em - 44px) / 2) calc(.4em + (1.1em - 44px) / 2) calc((1.45em - 44px) / 2) calc((1.1em - 44px) / 2); }
         a.task-box .box { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 1.1em; height: 1.1em;
@@ -139,6 +146,8 @@ public enum NoteHTMLRenderer {
         /// The checkboxes are numbered in document order, like `MarkdownText.togglingCheckbox` counts them.
         var checkboxIndex = 0
         var sanitizer = HTMLSanitizer()
+        /// Greater than zero inside a real link or a table: no edit link there (no anchor inside an anchor).
+        var anchorDepth = 0
 
         init(options: RenderOptions) { self.options = options }
 
@@ -169,7 +178,27 @@ public enum NoteHTMLRenderer {
         mutating func visitBlockQuote(_ blockQuote: BlockQuote) -> String { "<blockquote>\n\(children(of: blockQuote))</blockquote>\n" }
 
         mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
-            "<pre><code>\(NoteHTMLRenderer.escape(codeBlock.code))</code></pre>\n"
+            let block = "<pre><code>\(NoteHTMLRenderer.escape(codeBlock.code))</code></pre>"
+            guard let line = firstContentLine(of: codeBlock), canLinkForEditing else { return block + "\n" }
+            return "<a class=\"e block\" href=\"\(NoteEditTarget.scheme):\(line)\">\(block)</a>\n"
+        }
+
+        /// The source line of the first line of code: after the opening fence of a fenced block, the first line of an
+        /// indented one. The number of lines the block spans against the lines of its code tells the two apart.
+        private func firstContentLine(of codeBlock: CodeBlock) -> Int? {
+            guard let range = codeBlock.range else { return nil }
+            let codeLines = codeBlock.code.isEmpty ? 0 : codeBlock.code.split(separator: "\n", omittingEmptySubsequences: false).count - (codeBlock.code.hasSuffix("\n") ? 1 : 0)
+            let spannedLines = range.upperBound.line - range.lowerBound.line + 1
+            return spannedLines > codeLines ? range.lowerBound.line + 1 : range.lowerBound.line
+        }
+
+        /// Whether the next piece of text may become an edit link.
+        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !sanitizer.isSuppressing }
+
+        /// Wraps an inline piece in the edit link of the source line of `markup`.
+        private func editLinked(_ html: String, for markup: Markup) -> String {
+            guard canLinkForEditing, !html.isEmpty, let line = markup.range?.lowerBound.line else { return html }
+            return "<a class=\"e\" href=\"\(NoteEditTarget.scheme):\(line)\">\(html)</a>"
         }
 
         mutating func visitThematicBreak(_ thematicBreak: ThematicBreak) -> String { "<hr>\n" }
@@ -204,6 +233,9 @@ public enum NoteHTMLRenderer {
         }
 
         mutating func visitTable(_ table: Table) -> String {
+            // A table is edited in its own sheet (NX); there is no edit link inside.
+            anchorDepth += 1
+            defer { anchorDepth -= 1 }
             let alignments = table.columnAlignments
             func row(_ cells: some Sequence<Table.Cell>, tag: String) -> String {
                 var output = "<tr>"
@@ -228,7 +260,7 @@ public enum NoteHTMLRenderer {
         // Inlines
 
         mutating func visitText(_ text: Text) -> String {
-            sanitizer.isSuppressing ? "" : NoteHTMLRenderer.escape(text.string)
+            sanitizer.isSuppressing ? "" : editLinked(NoteHTMLRenderer.escape(text.string), for: text)
         }
 
         // A single line break in a note is a line break on the page.
@@ -243,13 +275,15 @@ public enum NoteHTMLRenderer {
         mutating func visitStrikethrough(_ strikethrough: Strikethrough) -> String { wrap("del", strikethrough) }
 
         mutating func visitInlineCode(_ code: InlineCode) -> String {
-            sanitizer.isSuppressing ? "" : "<code>\(NoteHTMLRenderer.escape(code.code))</code>"
+            sanitizer.isSuppressing ? "" : editLinked("<code>\(NoteHTMLRenderer.escape(code.code))</code>", for: code)
         }
 
         mutating func visitInlineHTML(_ html: InlineHTML) -> String { sanitizer.feed(html.rawHTML) }
 
         mutating func visitLink(_ link: Link) -> String {
+            anchorDepth += 1
             let label = children(of: link)
+            anchorDepth -= 1
             guard !sanitizer.isSuppressing else { return "" }
             guard let target = link.destination.flatMap(HTMLSanitizer.allowedLinkTarget) else { return label }
             if let id = HTMLSanitizer.attachmentID(inReference: target) {
@@ -268,7 +302,9 @@ public enum NoteHTMLRenderer {
             guard !sanitizer.isSuppressing else { return "" }
             // Only attachments are shown; a remote or any other image source is never put on the page.
             guard let id = image.source.flatMap(HTMLSanitizer.attachmentID(inReference:)) else { return "[Bild]" }
-            return "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            let picture = "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            // A tap opens the picture large (Quick Look); it never starts writing.
+            return anchorDepth == 0 ? "<a class=\"img\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
         }
 
         private mutating func wrap(_ tag: String, _ markup: Markup) -> String {
