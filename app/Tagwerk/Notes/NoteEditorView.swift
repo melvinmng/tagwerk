@@ -8,34 +8,34 @@ import UniformTypeIdentifiers
 /// the last keystroke and when the page closes; a note left without text is removed. Attachments (pictures, files) are
 /// inserted as Markdown references at the cursor. It has no navigation stack of its own.
 struct NoteEditorView: View {
-    @Environment(AppEnvironment.self) private var environment
-    @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) var environment
+    @Environment(\.dismiss) var dismiss
     let noteID: UUID
     let store: NoteStore
     /// Whether the page offers the assistant. The note in its own sheet (`NoteEditorSheet`) does not: the chat is a sheet
     /// over the tabs and cannot appear on top of another sheet.
     let showsAssistant: Bool
 
-    private enum Mode { case view, edit }
+    enum Mode { case view, edit }
 
-    @State private var text = ""
+    @State var text = ""
     /// The text this page wrote to the store last, or loaded when it opened. A stored text that differs came from outside.
-    @State private var lastSavedText = ""
-    @State private var isLoaded = false
-    @State private var wasDeleted = false
-    @State private var selection: TextSelection?
-    @State private var mode: Mode = .edit
-    @State private var isChoosingPhotos = false
-    @State private var photoItems: [PhotosPickerItem] = []
-    @State private var isTakingPhoto = false
-    @State private var isChoosingFile = false
-    @State private var previewURL: URL?
-    @State private var shareURLs: [URL] = []
-    @State private var failureText: String?
-    @State private var isAddingToShopping = false
-    @State private var translation: RecipeTranslationModel?
+    @State var lastSavedText = ""
+    @State var isLoaded = false
+    @State var wasDeleted = false
+    @State var selection: TextSelection?
+    @State var mode: Mode = .edit
+    @State var isChoosingPhotos = false
+    @State var photoItems: [PhotosPickerItem] = []
+    @State var isTakingPhoto = false
+    @State var isChoosingFile = false
+    @State var previewURL: URL?
+    @State var shareURLs: [URL] = []
+    @State var failureText: String?
+    @State var isAddingToShopping = false
+    @State var translation: RecipeTranslationModel?
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
-    @State private var notice: String?
+    @State var notice: String?
 
     init(noteID: UUID, store: NoteStore, showsAssistant: Bool = true) {
         self.noteID = noteID
@@ -163,64 +163,6 @@ struct NoteEditorView: View {
         }
     }
 
-    private var attachMenu: some View {
-        NoteAttachmentMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
-                           onPaste: { providers in Task { await addPasted(providers) } }, onChooseFile: { isChoosingFile = true })
-    }
-
-    private func moreMenu(_ note: NoteRecord?) -> some View {
-        Menu {
-            if let note {
-                Button {
-                    store.setPinned(noteID, !note.isPinned)
-                } label: {
-                    Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
-                }
-            }
-            if let session = store.openSession(noteID: noteID) {
-                Button {
-                    saveText()
-                    store.completeSession(session.id)
-                } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
-            }
-            if let note, isRecipeNote(note) {
-                Button {
-                    // The recipe sheet reads the saved text of the note.
-                    saveText()
-                    isAddingToShopping = true
-                } label: { Label("Zutaten auf die Einkaufsliste", systemImage: "cart.badge.plus") }
-            }
-            if let note, RecipeTranslationModel.isOffered(note, store: store) {
-                Button {
-                    // The translation reads the saved text of the note.
-                    saveText()
-                    translation = RecipeTranslationModel(noteID: noteID, store: store, translator: environment.recipeTranslator,
-                                                         recipeLanguage: environment.settings.resolvedRecipeLanguage)
-                } label: { Label("Übersetzen …", systemImage: "globe") }
-            }
-            ShareLink(item: text) { Label("Teilen", systemImage: "square.and.arrow.up") }
-            if !shareURLs.isEmpty {
-                ShareLink(items: shareURLs) { Label("Anhänge teilen", systemImage: "paperclip") }
-            }
-            // The trash is the way back, so deleting does not ask.
-            Button(role: .destructive) {
-                saveText()
-                wasDeleted = true
-                store.trash(noteID)
-                dismiss()
-            } label: { Label("Löschen", systemImage: "trash") }
-        } label: {
-            Image(systemName: "ellipsis")
-        }
-        .accessibilityLabel("Mehr")
-    }
-
-    /// A note of the folder "Rezepte" offers "Zutaten auf die Einkaufsliste".
-    private func isRecipeNote(_ note: NoteRecord) -> Bool {
-        guard note.kind == .free, let folderID = note.folderID else { return false }
-        return store.folder(id: folderID)?.role == .recipes
-    }
-
     private var noticeBinding: Binding<Bool> {
         Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })
     }
@@ -229,7 +171,7 @@ struct NoteEditorView: View {
 
     /// Writes the text to the store. Every write of this page goes through here, so `lastSavedText` always names what the
     /// page stored itself (`NoteEditorSync`).
-    private func saveText() {
+    func saveText() {
         lastSavedText = text
         store.updateText(noteID, text: text)
     }
@@ -269,94 +211,7 @@ struct NoteEditorView: View {
         previewURL = store.attachments?.exportURL(for: id)
     }
 
-    private func addPhotos(_ items: [PhotosPickerItem]) async {
-        for item in items {
-            guard let data = try? await item.loadTransferable(type: Data.self) else {
-                failureText = Self.message(for: .unreadable)
-                continue
-            }
-            add(data: data)
-        }
-    }
-
-    private func addPasted(_ providers: [NSItemProvider]) async {
-        for provider in providers {
-            guard let data = await Self.imageData(from: provider) else {
-                failureText = Self.message(for: .unreadable)
-                continue
-            }
-            add(data: data)
-        }
-    }
-
-    /// The bytes of the picture on the clipboard, in the best image type the provider has.
-    private static func imageData(from provider: NSItemProvider) async -> Data? {
-        guard let type = provider.registeredTypeIdentifiers.compactMap(UTType.init).first(where: { $0.conforms(to: .image) }) else { return nil }
-        return await withCheckedContinuation { continuation in
-            provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, _ in continuation.resume(returning: data) }
-        }
-    }
-
-    private func add(data: Data) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addImage(data: data, to: noteID).id } insert: { id in
-            MarkdownText.reference(for: id, name: String(localized: "Bild"), isImage: true)
-        }
-    }
-
-    private func add(image: UIImage) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addImage(image, to: noteID).id } insert: { id in
-            MarkdownText.reference(for: id, name: String(localized: "Bild"), isImage: true)
-        }
-    }
-
-    private func addFile(_ url: URL) {
-        guard let attachments = store.attachments else { return }
-        run { try attachments.addFile(at: url, to: noteID) } insert: { record in
-            MarkdownText.reference(for: record.id, name: record.fileName, isImage: false)
-        }
-    }
-
-    /// Stores an attachment and puts its reference into the text; shows a failure as an alert.
-    private func run<Result>(_ store: () throws -> Result, insert reference: (Result) -> String) {
-        do {
-            let result = try store()
-            insertReference(reference(result))
-        } catch let failure as NoteAttachmentStore.Failure {
-            failureText = Self.message(for: failure)
-        } catch {
-            failureText = Self.message(for: .unreadable)
-        }
-    }
-
-    /// Inserts the reference at the cursor (at the end without one) and switches to writing, so the user sees where it went.
-    private func insertReference(_ reference: String) {
-        var range: Range<String.Index>?
-        if case .selection(let selected)? = selection?.indices { range = selected }
-        let result = NoteAttachmentMenu.inserting(reference, into: text, replacing: range)
-        text = result.text
-        selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: result.cursorOffset))
-        mode = .edit
-        saveText()
-        refreshShareURLs()
-    }
-
-    private func refreshShareURLs() {
-        let referenced = MarkdownText.attachmentIDs(in: text)
-        shareURLs = (store.attachments?.attachments(of: noteID) ?? []).filter { referenced.contains($0.id) }
-            .compactMap { store.attachments?.exportURL(for: $0.id) }
-    }
-
     // MARK: Texts
-
-    static func message(for failure: NoteAttachmentStore.Failure) -> String {
-        switch failure {
-        case .tooLarge: String(localized: "Die Datei ist größer als \(NoteAttachmentStore.maximumFileBytes / 1_048_576) MB und lässt sich nicht anhängen.")
-        case .notAnImage: String(localized: "Das ist kein Bild, das sich anhängen lässt.")
-        case .unreadable: String(localized: "Die Datei ließ sich nicht lesen.")
-        }
-    }
 
     private var failureBinding: Binding<Bool> {
         Binding(get: { failureText != nil }, set: { if !$0 { failureText = nil } })
