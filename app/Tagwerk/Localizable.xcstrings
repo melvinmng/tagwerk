@@ -5739,6 +5739,16 @@
         }
       }
     },
+    "Beides bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both stay on your iPhone and never go to ChatGPT."
+          }
+        }
+      }
+    },
     "Beides öffnet „Planen“ in der Woche, die du planst. Den KI-Plan startest du dort mit dem KI-Knopf; von hier wird nichts gesendet.": {
       "localizations": {
         "en": {
@@ -5919,6 +5929,26 @@
         }
       }
     },
+    "Bible Study anbieten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offer Bible Study"
+          }
+        }
+      }
+    },
+    "Bible Study fortsetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Bible Study"
+          }
+        }
+      }
+    },
     "Bible Study starten": {
       "localizations": {
         "en": {
@@ -6051,6 +6081,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Workout” sheet"
+          }
+        }
+      }
+    },
+    "Bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on your iPhone and never goes to ChatGPT."
           }
         }
       }
@@ -7041,6 +7081,7 @@
       }
     },
     "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -10972,6 +11013,16 @@
         }
       }
     },
+    "Geschrieben · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written · %@"
+          }
+        }
+      }
+    },
     "Geschätzt": {
       "localizations": {
         "en": {
@@ -11698,6 +11749,16 @@
         }
       }
     },
+    "Heute geschrieben · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written today · %@"
+          }
+        }
+      }
+    },
     "Heute keine Pause": {
       "localizations": {
         "en": {
@@ -12119,6 +12180,26 @@
         }
       }
     },
+    "Im Tagesabschluss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the evening wrap-up"
+          }
+        }
+      }
+    },
+    "Im Tagesstart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the morning start"
+          }
+        }
+      }
+    },
     "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
       "localizations": {
         "en": {
@@ -12367,6 +12448,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show in Plan"
+          }
+        }
+      }
+    },
+    "In beiden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In both"
           }
         }
       }
@@ -15546,6 +15637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove nobody"
+          }
+        }
+      }
+    },
+    "Nirgends": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nowhere"
           }
         }
       }
@@ -18893,6 +18994,16 @@
         }
       }
     },
+    "Tagebuch öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open journal"
+          }
+        }
+      }
+    },
     "Tagesabschluss": {
       "localizations": {
         "en": {
@@ -21283,6 +21394,16 @@
         }
       }
     },
+    "Wo die Zeile „Bible Study starten“ in den Routinen steht. Das Tagebuch steht im Tagesabschluss.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where the row “Start Bible Study” is shown in the routines. The journal is in the evening wrap-up."
+          }
+        }
+      }
+    },
     "Woche": {
       "localizations": {
         "en": {
@@ -21546,6 +21667,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Time in daylight"
+          }
+        }
+      }
+    },
+    "Zeit mit Gott": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time with God"
           }
         }
       }
@@ -21940,6 +22071,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent and frequent"
+          }
+        }
+      }
+    },
+    "Zuletzt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last: %@"
           }
         }
       }

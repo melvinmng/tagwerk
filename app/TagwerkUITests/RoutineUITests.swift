@@ -20,6 +20,42 @@ final class RoutineUITests: UITestCase {
         waitFor("Bible Study starten")
     }
 
+    /// RO3: journal and Bible Study sit in one section "Zeit mit Gott" in the evening wrap-up.
+    func testEveningShowsTimeWithGodWithState() {
+        tab("Erfassen")
+        onScreen(label: "Tagesabschluss.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Tagesabschluss"].waitForExistence(timeout: Self.timeout), "The evening sheet did not open")
+        let heading = app.staticTexts["Zeit mit Gott"].firstMatch
+        scrollTo(heading)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch schreiben")).firstMatch.exists)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study starten")).firstMatch.exists)
+    }
+
+    /// RO3: with the place set to "In beiden", the morning start offers Bible Study, and no journal row.
+    func testMorningShowsBibleStudyWhenOfferedThere() {
+        tab("Einstellungen")
+        let row = app.cells.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Routinen")).firstMatch
+        var steps = 0
+        while !(row.exists && row.isHittable), steps < 20 {
+            let list = app.collectionViews.firstMatch
+            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+                .press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)))
+            steps += 1
+        }
+        row.tap()
+        let picker = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study anbieten")).firstMatch
+        scrollTo(picker)
+        picker.tap()
+        tapButton("In beiden")
+        tab("Erfassen")
+        onScreen(label: "Tagesstart.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
+        let bible = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study starten")).firstMatch
+        scrollTo(bible)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch")).firstMatch.exists,
+                       "The morning start has no journal row")
+    }
+
     /// RO1b: dream log first, then gratitude, then the brain dump, the focus row last.
     func testMorningSheetOrder() {
         tab("Erfassen")

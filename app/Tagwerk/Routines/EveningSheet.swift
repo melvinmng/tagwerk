@@ -76,30 +76,9 @@ struct EveningSheet: View {
 
                 NoteField(model: note)
 
-                Section {
-                    Button { openJournal() } label: {
-                        HStack {
-                            Label("Tagebuch schreiben", systemImage: "book.closed")
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                        }
-                    }
-                    .tint(.primary)
-                } footer: {
-                    Text("Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT.")
-                }
-
-                // Always offered, with or without a habit that Bible Study fulfils: one tap to the start of a session.
-                Section {
-                    Button { isStartingBibleStudy = true } label: {
-                        HStack {
-                            Label("Bible Study starten", systemImage: "book.pages")
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                        }
-                    }
-                    .tint(.primary)
-                }
+                TimeWithGodSection(day: day, showsJournal: true,
+                                   showsBibleStudy: model.settings.bibleStudyOffer.isOffered(in: .routineEvening),
+                                   onJournal: { openJournal() }, onBibleStudy: { openBibleStudy(environment: environment) })
 
                 // Sundays: the weekly planning is one tap away (it contains the reflection).
                 if day.weekday(in: model.calendar) == 1 {
@@ -193,6 +172,15 @@ struct EveningSheet: View {
             for move in report.moves.reversed() { await model.planning.undo(move) }
             // The same group may still be offered by the capsule of "Planen".
             if model.planning.lastMoveGroup == report.moves { model.planning.clearMoveGroupUndo() }
+        }
+    }
+
+    /// "Bible Study starten", or the open session of the latest study when there is one.
+    private func openBibleStudy(environment: AppEnvironment) {
+        if let last = environment.notes.lastSession, last.completedAt == nil {
+            bibleSheet = JournalSheetTarget(id: last.noteID)
+        } else {
+            isStartingBibleStudy = true
         }
     }
 

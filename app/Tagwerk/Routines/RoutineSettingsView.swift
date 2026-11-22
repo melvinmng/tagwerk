@@ -100,6 +100,19 @@ struct RoutineSettingsView: View {
             }
 
             Section {
+                Picker("Bible Study anbieten", selection: $settings.bibleStudyOffer) {
+                    Text("Im Tagesabschluss").tag(BibleStudyOffer.evening)
+                    Text("Im Tagesstart").tag(BibleStudyOffer.morning)
+                    Text("In beiden").tag(BibleStudyOffer.both)
+                    Text("Nirgends").tag(BibleStudyOffer.never)
+                }
+            } header: {
+                Text("Bible Study")
+            } footer: {
+                Text("Wo die Zeile „Bible Study starten“ in den Routinen steht. Das Tagebuch steht im Tagesabschluss.")
+            }
+
+            Section {
                 NavigationLink("Gewohnheiten bearbeiten") { HabitListView(model: environment.habits) }
             } header: {
                 Text("Gewohnheiten")

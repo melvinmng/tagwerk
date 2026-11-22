@@ -21,6 +21,8 @@ struct MorningSheet: View {
     @State private var isLoaded = false
     @State private var note: NoteFieldModel
     @State private var dream: NoteFieldModel
+    @State private var isStartingBibleStudy = false
+    @State private var bibleSheet: JournalSheetTarget?
 
     /// The first field, then one more each time the previous one is filled (at most three).
     private var visibleFields: Int {
@@ -49,6 +51,9 @@ struct MorningSheet: View {
                     FolderSectionHeader(title: "Dankbar für", symbol: NotesFoldersView.symbol(for: .morningRoutine), role: .morningRoutine)
                 }
                 NoteField(model: note)
+                if model.settings.bibleStudyOffer.isOffered(in: .routineStart) {
+                    TimeWithGodSection(day: day, showsJournal: false, showsBibleStudy: true, onJournal: {}, onBibleStudy: { openBibleStudy() })
+                }
                 if day == model.today { focusSection }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -73,6 +78,20 @@ struct MorningSheet: View {
             }
             // Swiping the sheet away: what was typed stays, the start is not marked as done.
             .onDisappear { if isLoaded { model.setGratitude(gratitude, on: day) } }
+            .sheet(isPresented: $isStartingBibleStudy) {
+                BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
+            }
+            .sheet(item: $bibleSheet) { target in NoteEditorSheet(noteID: target.id) }
+        }
+    }
+
+    /// "Bible Study starten", or the open session of the latest study when there is one.
+    private func openBibleStudy() {
+        note.flush()
+        if let last = environment.notes.lastSession, last.completedAt == nil {
+            bibleSheet = JournalSheetTarget(id: last.noteID)
+        } else {
+            isStartingBibleStudy = true
         }
     }
 

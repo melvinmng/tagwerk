@@ -110,6 +110,8 @@ final class AppSettings {
     var weekPlanningReminderEnabled: Bool = false
     var weekPlanningReminderWeekday: Int = 1
     var weekPlanningReminderMinutes: Int = 1080
+    /// Where "Bible Study starten" is offered (`BibleStudyOffer` raw value): the evening wrap-up, as before the choice existed.
+    var bibleStudyOfferRaw: String = "evening"
     /// The routine card and the evening line in "Planen".
     var showsRoutinesInPlan: Bool = true
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
@@ -237,6 +239,11 @@ final class AppSettings {
             drinkPreset2Milliliters = resolved[1]
             drinkPreset3Milliliters = resolved[2]
         }
+    }
+
+    var bibleStudyOffer: BibleStudyOffer {
+        get { BibleStudyOffer(rawValue: bibleStudyOfferRaw) ?? .evening }
+        set { bibleStudyOfferRaw = newValue.rawValue }
     }
 
     var noteSortOrder: NoteSortOrder {
