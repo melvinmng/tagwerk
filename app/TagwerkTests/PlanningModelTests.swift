@@ -296,6 +296,29 @@ struct PlanningModelTests {
         #expect(Set(evening.leftFromToday.map(\.title)) == ["Fahrrad", "Heute fällig"])
     }
 
+    @Test func openFromToday_isFilledBeforeTodayIsOver_leftFromTodayStaysEmpty() async {
+        planStore.assign(id("Fahrrad"), to: today)
+        let morning = await model()
+        #expect(morning.openFromToday.map(\.title) == ["Fahrrad"])
+        #expect(morning.leftFromToday.isEmpty)
+        let evening = await model(at: 18, 40)
+        #expect(evening.openFromToday.map(\.title) == evening.leftFromToday.map(\.title))
+    }
+
+    @Test func showsLeftoverLine_followsTheRuleOfTheCard() async {
+        planStore.assign(id("Fahrrad"), to: today)
+        // Working hours are 9:00 to 18:00: the row appears from 16:00 on, or at any time when the day is overbooked.
+        #expect(await !model(at: 10).showsLeftoverLine(overbooked: false))
+        #expect(await model(at: 10).showsLeftoverLine(overbooked: true))
+        #expect(await !model(at: 15, 59).showsLeftoverLine(overbooked: false))
+        #expect(await model(at: 16).showsLeftoverLine(overbooked: false))
+        #expect(await model(at: 18, 40).showsLeftoverLine(overbooked: false))
+    }
+
+    @Test func showsLeftoverLine_withoutOpenTasks_isFalse() async {
+        #expect(await !model(at: 17).showsLeftoverLine(overbooked: true))
+    }
+
     @Test func nextPlanDay_skipsDaysOff_withinFiveDays() async {
         #expect(await model(at: 18, 40).nextPlanDay == tomorrow)
         // Friday evening: Saturday and Sunday are off.

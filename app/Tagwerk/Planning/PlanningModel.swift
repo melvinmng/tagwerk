@@ -1481,6 +1481,9 @@ final class PlanningModel {
     /// Once today is over: open tasks planned for today or due today (without a later day) and without a
     /// future time block ("Von heute übrig"). Recurring reminders are left out; their next occurrence follows.
     private(set) var leftFromToday: [TaskItem] = []
+    /// The same selection before today is over: what the sheet "Unerledigtes verschieben" works on, when the capacity card
+    /// offers it in the late afternoon or on an overbooked day (RO10a). Equal to `leftFromToday` once today is over.
+    private(set) var openFromToday: [TaskItem] = []
     /// The next working day within five days after today (decision 5).
     private(set) var nextPlanDay: PlanDay?
     /// Today's evening line, only while today is shown and over and a working day follows.
@@ -1502,6 +1505,16 @@ final class PlanningModel {
     /// The row button of the panel ("Heute", "Morgen", "Einplanen"): commits the task to the shown day.
     func commitToShownDay(_ id: TaskID) async {
         await assign(id, to: anchor)
+    }
+
+    /// Whether the capacity card of today offers "Unerledigtes verschieben": open tasks of today and an overbooked day or the late
+    /// afternoon (`LeftoverPreview.showsLeftoverLine`). The overbooking is the one of the card (`capacity(_:)`).
+    func showsLeftoverLine(overbooked: Bool) -> Bool {
+        let today = self.today
+        let endMinutes = workHours(on: today)?.endMinutes ?? 0
+        return LeftoverPreview.showsLeftoverLine(leftoverCount: openFromToday.count, isOverCapacity: overbooked,
+                                                 minutesOfDay: minutes(now(), from: today.startDate(in: calendar)),
+                                                 workdayEndMinutes: endMinutes)
     }
 
     /// "Alle auf morgen": moves every task like `moveTask` (blocks go along) with one undo for all.
@@ -1612,13 +1625,14 @@ final class PlanningModel {
         }
         nextPlanDay = (1...5).lazy.map { today.adding(days: $0, calendar: self.calendar) }
             .first { (self.workHours(on: $0)?.minutes ?? 0) > 0 }
-        leftFromToday = isTodayOver ? sortedTasks(open.filter { task in
+        openFromToday = sortedTasks(open.filter { task in
             if recurringIDs.contains(task.id) { return false }
             let planned = allAssignments[task.id]
             let dueToday = task.due.map { PlanDay($0) == today } ?? false
             guard planned == today || (dueToday && (planned.map { $0 <= today } ?? true)) else { return false }
             return blocks.futureBlocks(for: task.id, after: current).isEmpty
-        }, calendar: calendar) : []
+        }, calendar: calendar)
+        leftFromToday = isTodayOver ? openFromToday : []
         if scope == .day, anchor == today, isTodayOver, let next = nextPlanDay,
            let input = await planInputs(in: next...next).first {
             eveningEntry = EveningEntry(day: next, freeMinutes: max(0, input.availableMinutes - input.plannedMinutes),

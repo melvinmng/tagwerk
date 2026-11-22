@@ -1,6 +1,6 @@
 import Foundation
 
-/// What "Unerledigtes verschieben" tells before anything moves (RO9c). Pure rules;
+/// What "Unerledigtes verschieben" tells before anything moves (RO9c) and when its row is offered (RO10a). Pure rules;
 /// the free minutes come from the capacity of the target day (`capacity(_:)`), nothing is counted again here.
 public enum LeftoverPreview {
     /// Whether the open tasks fit into the target day.
@@ -22,5 +22,16 @@ public enum LeftoverPreview {
         guard let freeMinutes else { return .unknown }
         let free = max(0, freeMinutes)
         return neededMinutes <= free ? .fits(freeMinutes: free) : .tight(freeMinutes: free, neededMinutes: neededMinutes)
+    }
+
+    /// How long before the end of work the row of the capacity card appears without an overbooked day.
+    public static let lateAfternoonLeadMinutes = 120
+
+    /// Whether the capacity card offers "Unerledigtes verschieben": there are open tasks of today and either the day is
+    /// overbooked or it is late afternoon (from two hours before the end of work on). Before that the card stays at its
+    /// two lines.
+    public static func showsLeftoverLine(leftoverCount: Int, isOverCapacity: Bool, minutesOfDay: Int, workdayEndMinutes: Int) -> Bool {
+        guard leftoverCount > 0 else { return false }
+        return isOverCapacity || minutesOfDay >= workdayEndMinutes - lateAfternoonLeadMinutes
     }
 }

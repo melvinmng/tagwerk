@@ -38,7 +38,7 @@ struct LeftoverSheet: View {
     }
 
     /// The tasks left from today; a snapshot of the model, which refreshes after every change.
-    private var tasks: [TaskItem] { planning.leftFromToday }
+    private var tasks: [TaskItem] { planning.openFromToday }
 
     var body: some View {
         NavigationStack {

@@ -267,9 +267,9 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
-            if plan.day == model.today, !model.leftFromToday.isEmpty {
+            if plan.day == model.today, model.showsLeftoverLine(overbooked: plan.capacity.isOverbooked) {
                 Divider()
-                LeftoverLine(count: model.leftFromToday.count) { environment.routines.openLeftover() }
+                LeftoverLine(count: model.openFromToday.count) { environment.routines.openLeftover() }
             }
             if plan.day == model.today, environment.routines.eveningLine != nil {
                 Divider()
