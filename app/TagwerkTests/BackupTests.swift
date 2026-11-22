@@ -136,6 +136,10 @@ struct BackupTests {
         context.insert(bibleNote)
         let session = BibleStudySessionRecord(dayKey: "2026-11-18", book: "45", passage: "3,21-31", noteID: bibleNote.id, startedAt: now)
         session.completedAt = now
+        session.startChapter = 3
+        session.startVerse = 21
+        session.endChapter = 4
+        session.endVerse = 9
         context.insert(session)
 
         let habit = Habit(name: "Lesen", symbol: "book", order: 1, source: .journal, daysPerWeek: 5, daylightMinutes: 30, start: day,
@@ -494,6 +498,34 @@ struct BackupTests {
         try target.service.restore(try target.service.inspect(old))
         let restored = try target.container.mainContext.fetch(FetchDescriptor<EventTravelOverride>()).map(\.asOverride)
         #expect(restored == [TravelOverride(eventKey: "evt-2", seriesFrom: clock.now, mode: .fixed(minutes: 35))])
+    }
+
+    @Test func session_roundTripsReferenceFields() throws {
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let session = try #require(try target.container.mainContext.fetch(FetchDescriptor<BibleStudySessionRecord>()).first)
+        #expect(session.passage == "3,21-31" && session.completedAt != nil)
+        #expect(session.startChapter == 3 && session.startVerse == 21 && session.endChapter == 4 && session.endVerse == 9)
+    }
+
+    @Test func session_fromAnOlderBackup_restoresWithUnknownReference() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var sessions = try #require(entities["bibleStudySessions"] as? [[String: Any]])
+        #expect(!sessions.isEmpty)
+        sessions = sessions.map { item in
+            var item = item
+            for key in ["startChapter", "startVerse", "endChapter", "endVerse"] { item.removeValue(forKey: key) }
+            return item
+        }
+        entities["bibleStudySessions"] = sessions
+        object["entities"] = entities
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try JSONSerialization.data(withJSONObject: object)))
+        let session = try #require(try target.container.mainContext.fetch(FetchDescriptor<BibleStudySessionRecord>()).first)
+        #expect(session.passage == "3,21-31" && session.startChapter == 0 && session.endChapter == 0)
+        #expect(session.resolvedPassage == BiblePassage(start: BibleReference(chapter: 3, verse: 21), end: BibleReference(chapter: 3, verse: 31)))
     }
 
     @Test func travelOverride_withTransportAndStart_roundTrips() throws {

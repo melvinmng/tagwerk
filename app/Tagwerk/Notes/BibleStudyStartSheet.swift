@@ -59,6 +59,6 @@ struct BibleStudyStartSheet: View {
 
     /// "19.11.2026", fixed so the section titles of a note read alike whatever the language was when they were written.
     static func dateText(_ day: PlanDay) -> String {
-        String(format: "%02d.%02d.%04d", day.day, day.month, day.year)
+        BibleStudyTemplate.dateText(day)
     }
 }
