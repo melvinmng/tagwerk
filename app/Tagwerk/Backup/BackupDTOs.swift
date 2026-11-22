@@ -1145,6 +1145,69 @@ struct ReminderOverrideBackup: BackupEntity {
 
 /// The settings that travel with a backup. Left out: the model list from ChatGPT (a cache) and everything that names a place on
 /// this device (the backup folder and its state). Secrets are not in the database at all; they live in the Keychain.
+/// One goal plan ("Zielstand"): the goals that hold from `validFromKey` on.
+struct GoalPlanBackup: BackupEntity {
+    static let modelName = "GoalPlanRecord"
+    var id: UUID
+    var validFromKey: String
+    var kcal: Int
+    var proteinGrams: Int?
+    var carbsGrams: Int?
+    var fatGrams: Int?
+    var fiberGrams: Int?
+    var sugarLimitGrams: Int?
+    var waterMilliliters: Int
+    var stepsPerDay: Int
+    var workoutMinutesPerWeek: Int
+    var activeKcalPerDay: Int
+    var targetWeightKg: Double?
+    var paceKgPerWeek: Double?
+    var originRaw: String
+    var note: String
+
+    init(_ record: GoalPlanRecord) {
+        id = record.id
+        validFromKey = record.validFromKey
+        kcal = record.kcal
+        proteinGrams = record.proteinGrams
+        carbsGrams = record.carbsGrams
+        fatGrams = record.fatGrams
+        fiberGrams = record.fiberGrams
+        sugarLimitGrams = record.sugarLimitGrams
+        waterMilliliters = record.waterMilliliters
+        stepsPerDay = record.stepsPerDay
+        workoutMinutesPerWeek = record.workoutMinutesPerWeek
+        activeKcalPerDay = record.activeKcalPerDay
+        targetWeightKg = record.targetWeightKg
+        paceKgPerWeek = record.paceKgPerWeek
+        originRaw = record.originRaw
+        note = record.note
+    }
+
+    func makeRecord() -> GoalPlanRecord {
+        let record = GoalPlanRecord(GoalPlan(id: id, validFrom: PlanDay(dayKey: validFromKey) ?? PlanDay(year: 1970, month: 1, day: 1),
+                                             kcal: kcal, waterMilliliters: waterMilliliters, stepsPerDay: stepsPerDay,
+                                             workoutMinutesPerWeek: workoutMinutesPerWeek))
+        record.id = id
+        record.validFromKey = validFromKey
+        record.kcal = kcal
+        record.proteinGrams = proteinGrams
+        record.carbsGrams = carbsGrams
+        record.fatGrams = fatGrams
+        record.fiberGrams = fiberGrams
+        record.sugarLimitGrams = sugarLimitGrams
+        record.waterMilliliters = waterMilliliters
+        record.stepsPerDay = stepsPerDay
+        record.workoutMinutesPerWeek = workoutMinutesPerWeek
+        record.activeKcalPerDay = activeKcalPerDay
+        record.targetWeightKg = targetWeightKg
+        record.paceKgPerWeek = paceKgPerWeek
+        record.originRaw = originRaw
+        record.note = note
+        return record
+    }
+}
+
 struct AppSettingsBackup: Codable, Equatable {
     var workdayStartMinutes: Int
     var workdayEndMinutes: Int
@@ -1180,6 +1243,9 @@ struct AppSettingsBackup: Codable, Equatable {
     var workoutGoalMigrated: Bool
     var proteinGoalEnabled: Bool
     var goalProteinGrams: Int
+    /// Optional, so a backup written before the goal plans still decodes; a missing value keeps the device's value.
+    var goalPlansMigrated: Bool?
+    var activityCreditPercent: Int?
     var mealEstimationConsent: Bool
     var shoppingListID: String?
     var shoppingSuggestionDismissed: Bool
@@ -1277,6 +1343,8 @@ struct AppSettingsBackup: Codable, Equatable {
         workoutGoalMigrated = record.workoutGoalMigrated
         proteinGoalEnabled = record.proteinGoalEnabled
         goalProteinGrams = record.goalProteinGrams
+        goalPlansMigrated = record.goalPlansMigrated
+        activityCreditPercent = record.activityCreditPercent
         mealEstimationConsent = record.mealEstimationConsent
         shoppingListID = record.shoppingListID
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
@@ -1362,6 +1430,8 @@ struct AppSettingsBackup: Codable, Equatable {
         record.workoutGoalMigrated = workoutGoalMigrated
         record.proteinGoalEnabled = proteinGoalEnabled
         record.goalProteinGrams = goalProteinGrams
+        if let goalPlansMigrated { record.goalPlansMigrated = goalPlansMigrated }
+        if let activityCreditPercent { record.activityCreditPercent = activityCreditPercent }
         record.mealEstimationConsent = mealEstimationConsent
         record.shoppingListID = shoppingListID
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
@@ -1456,6 +1526,9 @@ struct BackupEntities: Codable, Equatable {
     var focusSessions: [FocusSessionBackup]?
     var effortSamples: [EffortSampleBackup]?
     var weekReflections: [WeekReflectionBackup] = []
+    /// Optional on purpose, like the focus data: a file written before the goal plans has no list. A restore then rebuilds the
+    /// first plan from the restored single goals of the settings instead of keeping plans that do not match them.
+    var goalPlans: [GoalPlanBackup]?
 
     init() {}
 
@@ -1496,10 +1569,11 @@ struct BackupEntities: Codable, Equatable {
         focusSessions = try container.decodeIfPresent([FocusSessionBackup].self, forKey: .focusSessions)
         effortSamples = try container.decodeIfPresent([EffortSampleBackup].self, forKey: .effortSamples)
         weekReflections = try container.decodeIfPresent([WeekReflectionBackup].self, forKey: .weekReflections) ?? []
+        goalPlans = try container.decodeIfPresent([GoalPlanBackup].self, forKey: .goalPlans)
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1549,6 +1623,7 @@ extension BackupEntities {
         focusSessions = Self.fetch(FocusSessionRecord.self, in: context).filter { $0.outcomeRaw != nil }.map(FocusSessionBackup.init)
         effortSamples = Self.fetch(EffortSampleRecord.self, in: context).map(EffortSampleBackup.init)
         weekReflections = Self.fetch(WeekReflectionRecord.self, in: context).map(WeekReflectionBackup.init)
+        goalPlans = Self.fetch(GoalPlanRecord.self, in: context).map(GoalPlanBackup.init)
     }
 
     /// Replaces the data of every model in the file with the content of the file. The settings record is updated in place. When
@@ -1598,6 +1673,10 @@ extension BackupEntities {
         if focusSessions != nil { Self.delete(FocusSessionRecord.self, in: context) { $0.outcomeRaw != nil } }
         if effortSamples != nil { Self.delete(EffortSampleRecord.self, in: context) { _ in true } }
         Self.delete(WeekReflectionRecord.self, in: context) { _ in true }
+        Self.delete(GoalPlanRecord.self, in: context) { _ in true }
+        // A file without goal plans: the plans of this device would not match the restored single goals, so the first plan is
+        // rebuilt from them below.
+        if goalPlans == nil { settings.goalPlansMigrated = false }
         // Unique keys of the old records must be gone before records with the same keys come in.
         try context.save()
         for item in localTasks { context.insert(item.makeRecord()) }
@@ -1640,7 +1719,9 @@ extension BackupEntities {
         for item in focusSessions ?? [] where item.outcomeRaw != nil && !keptSessionIDs.contains(item.id) { context.insert(item.makeRecord()) }
         for item in effortSamples ?? [] { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
+        for item in goalPlans ?? [] { context.insert(item.makeRecord()) }
         try context.save()
+        if goalPlans == nil { GoalStore(context: context, settings: settings).migrateIfNeeded() }
     }
 
     /// Whether a note folder is part of a backup written without the switch "Tagebuch und Bible Study einschließen": the
