@@ -2175,6 +2175,16 @@
         }
       }
     },
+    "%lld ausgewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected"
+          }
+        }
+      }
+    },
     "%lld ausgewählt · %@": {
       "localizations": {
         "de": {
@@ -3498,6 +3508,16 @@
         }
       }
     },
+    "A bis Z": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A to Z"
+          }
+        }
+      }
+    },
     "Ab %@, vor der Fälligkeit, ohne Überschneidung": {
       "localizations": {
         "en": {
@@ -4089,6 +4109,16 @@
         }
       }
     },
+    "Alle auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select all"
+          }
+        }
+      }
+    },
     "Alle bestätigen (%lld)": {
       "localizations": {
         "en": {
@@ -4461,11 +4491,22 @@
       }
     },
     "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pinned notes always stay on top. The choice applies to all folders."
+          }
+        }
+      }
+    },
+    "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned notes always stay on top. The choice applies to all folders. The entries of Tagesstart and Tagesabschluss and the Dream Log stay sorted by day."
           }
         }
       }
@@ -10274,6 +10315,16 @@
         }
       }
     },
+    "Für diesen Tag ist keine Dankbarkeit eingetragen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No gratitude is entered for this day."
+          }
+        }
+      }
+    },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
       "extractionState": "stale",
       "localizations": {
@@ -10513,6 +10564,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deleted"
+          }
+        }
+      }
+    },
+    "Gelöscht am %@ · aus „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gelöscht am %1$@ · aus „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted on %@ · from “%@”"
           }
         }
       }
@@ -12360,6 +12427,16 @@
         }
       }
     },
+    "Kein Brain Dump an diesem Tag.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Brain Dump on this day."
+          }
+        }
+      }
+    },
     "Kein Fokus läuft": {
       "localizations": {
         "en": {
@@ -12726,6 +12803,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No active habit."
+          }
+        }
+      }
+    },
+    "Keine auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select none"
           }
         }
       }
@@ -13145,6 +13232,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
+    "Letzte 7 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
           }
         }
       }
@@ -13685,6 +13782,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Multiple selection"
+          }
+        }
+      }
+    },
+    "Meine Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My folders"
           }
         }
       }
@@ -14315,6 +14422,16 @@
         }
       }
     },
+    "Nach Datum gruppieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by date"
+          }
+        }
+      }
+    },
     "Nach Hause · %@": {
       "localizations": {
         "en": {
@@ -14361,6 +14478,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meal name"
+          }
+        }
+      }
+    },
+    "Namen zurücksetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset name"
           }
         }
       }
@@ -14535,6 +14662,16 @@
         }
       }
     },
+    "Neue Notiz in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note in %@"
+          }
+        }
+      }
+    },
     "Neue Notiz „%@“": {
       "localizations": {
         "en": {
@@ -14561,6 +14698,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan the new week"
+          }
+        }
+      }
+    },
+    "Neuen Ordner anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add folder"
           }
         }
       }
@@ -14631,6 +14778,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New Testament"
+          }
+        }
+      }
+    },
+    "Neueste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest first"
           }
         }
       }
@@ -14826,6 +14983,7 @@
       }
     },
     "Noch %lld Tage": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15058,7 +15216,28 @@
         }
       }
     },
+    "Notizen auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select notes"
+          }
+        }
+      }
+    },
+    "Notizen bleiben %lld Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay here for %lld days and are then deleted for good, together with their attachments."
+          }
+        }
+      }
+    },
     "Notizen bleiben hier %lld Tage und werden dann endgültig gelöscht.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15631,6 +15810,7 @@
       }
     },
     "Ordner": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15905,6 +16085,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loading people …"
+          }
+        }
+      }
+    },
+    "Persönlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal"
           }
         }
       }
@@ -16488,6 +16678,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "First set up a list under Settings › Shopping list."
+          }
+        }
+      }
+    },
+    "Richtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direction"
           }
         }
       }
@@ -17228,6 +17428,7 @@
       }
     },
     "Sortieren": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -20413,6 +20614,16 @@
         }
       }
     },
+    "Z bis A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z to A"
+          }
+        }
+      }
+    },
     "Zeigt Details": {
       "localizations": {
         "en": {
@@ -22127,12 +22338,42 @@
         }
       }
     },
+    "noch %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
+    "noch 1 Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day left"
+          }
+        }
+      }
+    },
     "noch nicht eingeplant": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "nur Dankbarkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gratitude only"
           }
         }
       }
@@ -22619,6 +22860,16 @@
         }
       }
     },
+    "Älteste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldest first"
+          }
+        }
+      }
+    },
     "Ändern": {
       "localizations": {
         "en": {
@@ -22815,6 +23066,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the evening wrap-up"
+          }
+        }
+      }
+    },
+    "Öffnet den Tagesstart dieses Tages zum Ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the morning start of this day so you can change it."
           }
         }
       }

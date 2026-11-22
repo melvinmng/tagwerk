@@ -121,6 +121,9 @@ final class RoutinesModel {
 
     func value(_ day: PlanDay) -> RoutineDayValue { store.day(day) }
 
+    /// The days with gratitude and their entries (the folder "Tagesstart" lists the days that have no note).
+    func gratitudeDays() -> [PlanDay: [String]] { store.gratitudeDays() }
+
     func checklist() -> [ChecklistItem] { store.checklist() }
 
     func toggleItem(_ id: UUID, on day: PlanDay) {

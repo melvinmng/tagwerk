@@ -1348,6 +1348,10 @@ struct AppSettingsBackup: Codable, Equatable {
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
+    /// Optional, so a backup written before the sort direction and the date groups existed still decodes; a missing value keeps
+    /// the device's value.
+    var noteSortAscending: Bool?
+    var noteGroupsByDate: Bool?
     var backupIncludesPrivateNotes: Bool
     var voiceInputEnabled: Bool
     var voiceExplained: Bool
@@ -1435,6 +1439,8 @@ struct AppSettingsBackup: Codable, Equatable {
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
+        noteSortAscending = record.noteSortAscending
+        noteGroupsByDate = record.noteGroupsByDate
         backupIncludesPrivateNotes = record.backupIncludesPrivateNotes
         voiceInputEnabled = record.voiceInputEnabled
         voiceExplained = record.voiceExplained
@@ -1521,6 +1527,8 @@ struct AppSettingsBackup: Codable, Equatable {
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw
+        if let noteSortAscending { record.noteSortAscending = noteSortAscending }
+        if let noteGroupsByDate { record.noteGroupsByDate = noteGroupsByDate }
         record.backupIncludesPrivateNotes = backupIncludesPrivateNotes
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained

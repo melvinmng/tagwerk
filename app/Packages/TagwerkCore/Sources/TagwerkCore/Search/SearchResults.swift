@@ -48,13 +48,16 @@ public struct NoteSearchItem: Sendable, Hashable, Identifiable {
     public let updatedAt: Date
     /// "YYYY-MM-DD" of a morning or evening note; `nil` for the user's own notes.
     public let dayKey: String?
+    /// The routine day this hit opens instead of a note: a day of "Tagesstart" that only has gratitude. `nil` for notes.
+    public let routineDay: PlanDay?
 
-    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil) {
+    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil, routineDay: PlanDay? = nil) {
         self.id = id
         self.text = text
         self.kindLabel = kindLabel
         self.updatedAt = updatedAt
         self.dayKey = dayKey
+        self.routineDay = routineDay
     }
 }
 

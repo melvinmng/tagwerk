@@ -718,6 +718,51 @@ struct BackupTests {
         #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
     }
 
+    @Test func gratitudeOnlyDay_survivesRestore() throws {
+        let origin = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 17)
+        let record = RoutineDayRecord(day: day)
+        record.gratitudeData = try JSONEncoder().encode(["Sonne", "Ruhe"])
+        origin.container.mainContext.insert(record)
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        // No note was created for the day; the entry of "Tagesstart" comes from the routine record alone.
+        #expect(RoutineStore(context: target.container.mainContext).gratitudeDays() == [day: ["Sonne", "Ruhe"]])
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<NoteRecord>()) == 0)
+    }
+
+    // MARK: Note list order
+
+    @Test func settings_roundTripSortDirectionAndGrouping() throws {
+        let origin = try makeTarget()
+        origin.settings.noteSortAscending = true
+        origin.settings.noteGroupsByDate = false
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        #expect(!target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.noteSortAscending && !target.settings.noteGroupsByDate)
+    }
+
+    @Test func settings_olderFileKeepsDefaults() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "noteSortAscending")
+        settings.removeValue(forKey: "noteGroupsByDate")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.noteSortAscending = true
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        // A missing value keeps what the device has.
+        #expect(target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {

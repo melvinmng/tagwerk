@@ -4,7 +4,7 @@ import TagwerkCore
 /// The notes of one folder (or of "Alle Notizen", "Zuletzt gelöscht"): search, sorting, selection, quick
 /// capture at the bottom, pinning, moving and deleting. Notes stay on this device. It has no navigation stack of its own.
 struct NotesListView: View {
-    @Environment(AppEnvironment.self) private var environment
+    @Environment(AppEnvironment.self) var environment
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let store: NoteStore
     let scope: NotesScope
@@ -13,11 +13,11 @@ struct NotesListView: View {
     @State private var draftWasDictated = false
     @State private var voice: VoiceInputModel?
     @State private var searchText = ""
-    @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<UUID>()
-    @State private var movingNoteIDs: [UUID] = []
+    @State var editMode: EditMode = .inactive
+    @State var selection = Set<UUID>()
+    @State var movingNoteIDs: [UUID] = []
     @State private var confirmsEmptyTrash = false
-    @State private var deletingForGood: [UUID] = []
+    @State var deletingForGood: [UUID] = []
     @State private var isStartingBibleStudy = false
     @State private var isCreatingRecipe = false
 
@@ -26,7 +26,7 @@ struct NotesListView: View {
         self.scope = scope
     }
 
-    private var isTrash: Bool { scope == .trash }
+    var isTrash: Bool { scope == .trash }
 
     /// The system folder of the journal: it opens with "Heute schreiben".
     private var isJournal: Bool {
@@ -41,7 +41,7 @@ struct NotesListView: View {
     }
 
     /// The role of the shown folder, if it is a system folder.
-    private var folderRole: NoteFolderRole? {
+    var folderRole: NoteFolderRole? {
         if case .folder(let id) = scope { return store.folder(id: id)?.role }
         return nil
     }
@@ -50,8 +50,16 @@ struct NotesListView: View {
     private var allowsCapture: Bool { scope.allowsCapture && (folderRole?.acceptsOwnNotes ?? true) }
 
     var body: some View {
-        @Bindable var settings = environment.settings
         let notes = visibleNotes
+        // "Tagesstart" also lists the days that only have gratitude (NO14); they are display entries, not notes.
+        let gratitudeDays = folderRole == .morningRoutine && !isTrash ? environment.routines.gratitudeDays() : [:]
+        let morningEntries = folderRole == .morningRoutine && !isTrash
+            ? Self.morningEntries(notes: notes, gratitudeDays: gratitudeDays, query: searchText) : []
+        let notesByID = Dictionary(uniqueKeysWithValues: notes.map { ($0.id, $0) })
+        let settings = environment.settings
+        let sections = Self.sections(of: notes, order: settings.noteSortOrder,
+                                     groupsByDate: settings.noteGroupsByDate && !isTrash && folderRole?.noteKind == nil,
+                                     now: .now, calendar: environment.planning.calendar)
         let attachmentIndex = store.attachments?.index() ?? [:]
         List(selection: $selection) {
             if isJournal, !editMode.isEditing {
@@ -77,44 +85,62 @@ struct NotesListView: View {
                     .buttonStyle(.plain)
                 }
             }
-            if notes.isEmpty {
+            if notes.isEmpty, morningEntries.isEmpty {
                 Text(emptyText)
                     .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
             }
-            Section {
-                ForEach(notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
-            } footer: {
-                Text(isTrash ? Self.trashFootnote : Self.listFootnote)
+            ForEach(sections) { section in
+                Section {
+                    if folderRole == .morningRoutine, !isTrash {
+                        ForEach(morningEntries, id: \.self) { entry in
+                            switch entry {
+                            case .note(let id, _):
+                                if let note = notesByID[id] { card(note, attachmentIndex: attachmentIndex) }
+                            case .gratitudeOnly(let day):
+                                gratitudeOnlyCard(day, gratitude: gratitudeDays[day] ?? [])
+                            }
+                        }
+                    } else {
+                        ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
+                    }
+                } header: {
+                    if let group = section.group {
+                        Text(Self.groupTitle(group, calendar: environment.planning.calendar)).textCase(nil)
+                    } else if isTrash, !notes.isEmpty {
+                        Text(Self.trashHeader).textCase(nil)
+                    }
+                } footer: {
+                    if !isTrash, section.id == sections.last?.id { Text(Self.listFootnote) }
+                }
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle(title)
+        .navigationTitle(editMode.isEditing ? Self.selectionTitle(selection.count) : title)
+        .navigationBarBackButtonHidden(editMode.isEditing)
         .searchable(text: $searchText, prompt: "Notizen durchsuchen")
         .environment(\.editMode, $editMode)
         .toolbar {
-            if !isTrash || !notes.isEmpty { ToolbarItem(placement: .topBarTrailing) { EditButton() } }
-            if !isTrash {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("Sortieren nach", selection: $settings.noteSortOrder) {
-                            Text("Bearbeitet").tag(NoteSortOrder.modified)
-                            Text("Erstellt").tag(NoteSortOrder.created)
-                            Text("Titel").tag(NoteSortOrder.title)
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                    }
-                    .accessibilityLabel("Sortieren")
-                }
-            } else if !notes.isEmpty {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Alle löschen", role: .destructive) { confirmsEmptyTrash = true }
-                }
-            }
             if editMode.isEditing {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(selection.isSuperset(of: notes.map(\.id)) && !notes.isEmpty ? "Keine auswählen" : "Alle auswählen") {
+                        toggleSelectAll(notes)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") { endSelection() }.fontWeight(.semibold)
+                }
                 ToolbarItemGroup(placement: .bottomBar) { selectionActions }
+            } else {
+                if isTrash, !notes.isEmpty {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Alle löschen", role: .destructive) { confirmsEmptyTrash = true }
+                    }
+                }
+                if !isTrash || !notes.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) { optionsMenu }
+                }
             }
         }
         // The notes chat from this list; not in "Zuletzt gelöscht" and not in a private folder.
@@ -200,9 +226,10 @@ struct NotesListView: View {
         environment.tasksPath.append(.note(entry.id))
     }
 
-    private var visibleNotes: [NoteRecord] {
-        let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder)
-            .filter { NoteText.matches($0.text, query: searchText) }
+    var visibleNotes: [NoteRecord] {
+        let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder,
+                                ascending: environment.settings.noteSortAscending)
+            .filter { Self.matchesSearch($0, gratitude: gratitude(of: $0), query: searchText) }
         // The entries of a routine folder are days: newest day first, not by change date.
         return folderRole?.noteKind == nil ? notes : Self.byDayDescending(notes)
     }
@@ -220,28 +247,6 @@ struct NotesListView: View {
         if !searchText.isEmpty { return String(localized: "Keine Notizen gefunden.") }
         return isTrash ? String(localized: "Keine gelöschten Notizen.")
                        : String(localized: "Noch keine Notizen. Schreib oder diktiere unten die erste.")
-    }
-
-    @ViewBuilder private var selectionActions: some View {
-        if isTrash {
-            Button("Wiederherstellen") {
-                for id in selection { store.restore(id) }
-                selection = []
-            }
-            .disabled(selection.isEmpty)
-            Spacer()
-            Button("Löschen", role: .destructive) { deletingForGood = Array(selection) }
-                .disabled(selection.isEmpty)
-        } else {
-            Button("Bewegen") { movingNoteIDs = Array(selection) }
-                .disabled(selection.isEmpty)
-            Spacer()
-            Button("Löschen", role: .destructive) {
-                for id in selection { store.trash(id) }
-                selection = []
-            }
-            .disabled(selection.isEmpty)
-        }
     }
 
     // MARK: Cards
@@ -268,6 +273,7 @@ struct NotesListView: View {
                         Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                         Spacer(minLength: 4)
+                        if isTrash, let deletedAt = note.deletedAt { trashBadge(deletedAt: deletedAt) }
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
                                 .font(.footnote).foregroundStyle(.secondaryText).labelStyle(.titleAndIcon)
@@ -336,18 +342,51 @@ struct NotesListView: View {
         }
     }
 
+    /// The card of a day that only has gratitude: the day, the gratitude and where it comes from. A tap opens its page;
+    /// the entry cannot be pinned, moved, selected or deleted (the gratitude is cleared in the morning routine).
+    private func gratitudeOnlyCard(_ day: PlanDay, gratitude: [String]) -> some View {
+        let calendar = environment.planning.calendar
+        return Button {
+            guard !editMode.isEditing else { return }
+            environment.tasksPath.append(.morningDay(day))
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Self.routineTitle(day: day, calendar: calendar)).font(.body.weight(.semibold)).foregroundStyle(.primary)
+                Text(Self.gratitudeLine(gratitude)).font(.subheadline).foregroundStyle(.secondaryText)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                Text(Self.gratitudeOnlyFooter(day: day, calendar: calendar)).font(.caption).foregroundStyle(.secondaryText)
+            }
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .selectionDisabled()
+    }
+
     private func gratitude(of note: NoteRecord) -> [String] {
         guard note.kind == .morning, let day = note.dayKey.flatMap(NoteDayKey.day) else { return [] }
         return environment.routines.value(day).gratitude
     }
 
-    /// In the trash the footer names the days left; elsewhere the usual change date or origin.
+    /// In the trash the footer names the day of the deletion and the folder; elsewhere the usual change date or origin.
     private func footerText(for note: NoteRecord) -> String {
-        guard isTrash, let deletedAt = note.deletedAt else {
-            return Self.footer(for: note, now: .now, calendar: environment.planning.calendar)
-        }
+        guard isTrash else { return Self.footer(for: note, now: .now, calendar: environment.planning.calendar) }
+        let folderName = note.folderID.flatMap { store.folder(id: $0)?.name } ?? String(localized: "Notizen")
+        return Self.trashFooter(for: note, folderName: folderName, now: .now, calendar: environment.planning.calendar)
+    }
+
+    /// "noch 3 Tage"; from the last week on with the clock and in the warning colour, so the colour is not the only sign.
+    private func trashBadge(deletedAt: Date) -> some View {
         let days = NoteFolderRules.daysLeft(deletedAt: deletedAt, now: .now, calendar: environment.planning.calendar)
-        return String(localized: "Noch \(days) Tage")
+        let isUrgent = days < Self.trashWarningDays
+        return HStack(spacing: 3) {
+            if isUrgent { Image(systemName: "clock") }
+            Text(Self.daysLeftText(days))
+        }
+        .font(.footnote)
+        .foregroundStyle(isUrgent ? Color.orangeText : Color.secondaryText)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Quick capture
@@ -473,9 +512,36 @@ extension NotesListView {
 
     /// The title of an entry in a routine folder: its day ("Do., 19. Nov.").
     static func routineTitle(_ note: NoteRecord, calendar: Calendar) -> String {
-        let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+        routineTitle(day: note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar), calendar: calendar)
+    }
+
+    /// The title of a day in a routine folder ("Do., 19. Nov.").
+    static func routineTitle(day: PlanDay, calendar: Calendar) -> String {
         let style = Date.FormatStyle(locale: .current, calendar: calendar, timeZone: calendar.timeZone)
         return day.startDate(in: calendar).formatted(style.weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    /// A note matches by its text; an entry of "Tagesstart" also by the gratitude of its day.
+    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String) -> Bool {
+        // Text and gratitude are searched together, so a query of two words may find one in each.
+        NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
+    }
+
+    /// Whether the gratitude of a day matches the search of the list; an empty search matches every day with gratitude.
+    static func matchesSearch(gratitude: [String], query: String) -> Bool {
+        !gratitude.isEmpty && NoteText.matches(gratitude.joined(separator: "\n"), query: query)
+    }
+
+    /// The entries of "Tagesstart" for the list: the notes (already filtered by the search) and the days with gratitude only
+    /// whose gratitude matches the search, days descending.
+    static func morningEntries(notes: [NoteRecord], gratitudeDays: [PlanDay: [String]], query: String) -> [RoutineFolderEntry<UUID>] {
+        let matching = Set(gratitudeDays.filter { matchesSearch(gratitude: $0.value, query: query) }.keys)
+        return RoutineFolderEntries.merge(notes: notes.map { (id: $0.id, day: $0.dayKey.flatMap(NoteDayKey.day)) }, gratitudeDays: matching)
+    }
+
+    /// "Tagesstart · 19.11. · nur Dankbarkeit".
+    static func gratitudeOnlyFooter(day: PlanDay, calendar: Calendar) -> String {
+        String(localized: "Tagesstart") + " · " + DateText.numericDay(day, calendar: calendar) + " · " + String(localized: "nur Dankbarkeit")
     }
 
     /// "Dankbar für: A · B · C"; empty without entries. Gratitude stays in the routine record, the card only shows it.
@@ -500,8 +566,24 @@ extension NotesListView {
         }
     }
 
-    static var trashFootnote: String {
-        String(localized: "Notizen bleiben hier \(NoteFolderRules.retentionDays) Tage und werden dann endgültig gelöscht.")
+    /// The days left from which a deleted note is marked as about to go.
+    static let trashWarningDays = 7
+
+    /// The hint at the top of "Zuletzt gelöscht".
+    static var trashHeader: String {
+        String(localized: "Notizen bleiben \(NoteFolderRules.retentionDays) Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.")
+    }
+
+    /// "Gelöscht am 23.10. · aus „Notizen“"; `folderName` is the folder the note lay in.
+    static func trashFooter(for note: NoteRecord, folderName: String, now: Date, calendar: Calendar) -> String {
+        guard let deletedAt = note.deletedAt else { return "" }
+        let date = DateText.numericDay(PlanDay(date: deletedAt, calendar: calendar), calendar: calendar)
+        return String(localized: "Gelöscht am \(date) · aus „\(folderName)“")
+    }
+
+    /// "noch 3 Tage", "noch 1 Tag".
+    static func daysLeftText(_ days: Int) -> String {
+        days == 1 ? String(localized: "noch 1 Tag") : String(localized: "noch \(days) Tage")
     }
 
     /// The line under "Notizen" in the task list: the note changed last, or that there is none.

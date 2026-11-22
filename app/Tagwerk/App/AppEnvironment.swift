@@ -232,11 +232,7 @@ final class AppEnvironment {
                                  calendarNames: Self.searchCalendarNames(planning: planning),
                                  completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
                                  // The only source of notes for the assistant: `NoteToolAccess` leaves private notes out.
-                                 notes: { [noteStore] in
-                                     let access = NoteToolAccess(store: noteStore)
-                                     let folderNames = Self.folderNames(noteStore)
-                                     return access.visibleNotes().map { Self.searchItem(for: $0, folderNames: folderNames) }
-                                 },
+                                 notes: { [noteStore] in Self.assistantSearchNotes(store: noteStore) },
                                  shopping: Self.searchShoppingSource(shopping: shopping),
                                  searchOnline: Self.searchOnlineSource(taskList: taskList),
                                  notesAllowed: { settings.noteAssistantConsent }),
@@ -552,6 +548,21 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
+    /// Creates an empty note in "Brain Dump" and opens it for writing from anywhere in the app (the plus button of the
+    /// folder overview). The editor removes the note again when it closes without text, so a tap that is not followed
+    /// by writing leaves nothing behind. Replaces whatever was pushed in the tab "Aufgaben".
+    func openNewBrainDumpNote() {
+        if notes.folder(role: .brainDump) == nil { notes.ensureDefaultFolders() }
+        guard let folder = notes.folder(role: .brainDump) else {
+            tasksPath = [.notes]
+            requestedTab = 1
+            return
+        }
+        let note = notes.createBlank(folderID: folder.id)
+        tasksPath = [.notes, .notesFolder(.folder(folder.id)), .note(note.id)]
+        requestedTab = 1
+    }
+
     /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
     /// A locked folder asks for Face ID in its list like at every other opening.
     func showNotes(_ scope: NotesScope) {
@@ -622,10 +633,64 @@ final class AppEnvironment {
     }
 
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
-    static func searchItem(for note: NoteRecord, folderNames: [UUID: String]) -> NoteSearchItem {
+    /// `gratitude` is the gratitude of the day of a morning note; the app search appends it to the text, the assistant never gets it.
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = []) -> NoteSearchItem {
         let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
-        return NoteSearchItem(id: note.id, text: MarkdownText.plainText(note.text), kindLabel: folderName ?? kindLabel(of: note.kind),
+        let text = ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
+        return NoteSearchItem(id: note.id, text: text, kindLabel: folderName ?? kindLabel(of: note.kind),
                               updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
+    }
+
+    /// The notes the assistant's `search` may read: only what `NoteToolAccess` shows, never the gratitude of a day.
+    static func assistantSearchNotes(store: NoteStore) -> [NoteSearchItem] {
+        let access = NoteToolAccess(store: store)
+        let folderNames = folderNames(store)
+        return access.visibleNotes().map { searchItem(for: $0, folderNames: folderNames) }
+    }
+
+    /// What the app search reads (not the assistant): the live notes, the gratitude of a day with a morning note appended to that
+    /// note's text, and every day that only has gratitude as an item of its own.
+    static func appSearchNotes(live: [NoteRecord], folderNames: [UUID: String], gratitudeDays: [PlanDay: [String]],
+                               calendar: Calendar) -> [NoteSearchItem] {
+        var morningDays = Set<PlanDay>()
+        var items = live.map { note -> NoteSearchItem in
+            var gratitude: [String] = []
+            if note.kind == .morning, let day = note.dayKey.flatMap(NoteDayKey.day) {
+                morningDays.insert(day)
+                gratitude = gratitudeDays[day] ?? []
+            }
+            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude)
+        }
+        items += gratitudeSearchItems(gratitudeDays: gratitudeDays, morningNoteDays: morningDays, calendar: calendar)
+        return items
+    }
+
+    /// The days that only have gratitude, one search item each: "Dankbar für: A · B", labelled "Tagesstart", with an id derived
+    /// from the day so it stays the same between two searches. Days with a morning note are left out (their gratitude is part of
+    /// the note's item). Only the app search uses these items.
+    static func gratitudeSearchItems(gratitudeDays: [PlanDay: [String]], morningNoteDays: Set<PlanDay>,
+                                     calendar: Calendar) -> [NoteSearchItem] {
+        gratitudeDays.filter { !morningNoteDays.contains($0.key) && !$0.value.isEmpty }
+            .sorted { $0.key > $1.key }
+            .map { day, entries in
+                NoteSearchItem(id: gratitudeItemID(for: day), text: NotesListView.gratitudeLine(entries),
+                               kindLabel: kindLabel(of: .morning), updatedAt: day.startDate(in: calendar), dayKey: day.dayKey,
+                               routineDay: day)
+            }
+    }
+
+    /// A fixed prefix plus year, month and day: the same day always gives the same id.
+    static func gratitudeItemID(for day: PlanDay) -> UUID {
+        let year = UInt16(clamping: day.year)
+        return UUID(uuid: (0x54, 0x57, 0x47, 0x52, 0x41, 0x54, 0x49, 0x54, UInt8(year >> 8), UInt8(year & 0xFF),
+                           UInt8(clamping: day.month), UInt8(clamping: day.day), 0, 0, 0, 0))
+    }
+
+    /// "Tagesstart" of the day in "Aufgaben": the page of a day that only has gratitude, on top of the folder.
+    func showMorningDay(_ day: PlanDay) {
+        guard let folder = notes.folder(role: .morningRoutine) else { return }
+        tasksPath = [.notes, .notesFolder(.folder(folder.id)), .morningDay(day)]
+        requestedTab = 1
     }
 
     /// Name of a note's kind in a search row.
@@ -679,6 +744,7 @@ final class AppEnvironment {
         let reminders = self.remindersProvider
         let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
         let notes = self.notes
+        let routines = self.routines
         let shopping = self.shopping
         var sources = SearchSources(
             openTasks: { sortedTasks(taskList.items, calendar: planning.calendar) },
@@ -686,9 +752,11 @@ final class AppEnvironment {
             calendarNames: Self.searchCalendarNames(planning: planning),
             completedTasks: Self.searchCompletedSource(reminders: reminders, taskList: taskList),
             notes: {
-                // A note in a folder shows the folder name as its label; the trash is not searched.
+                // A note in a folder shows the folder name as its label; the trash is not searched. The gratitude of the
+                // morning routine is searched here and nowhere else (never by the assistant).
                 let folderNames = Self.folderNames(notes)
-                return notes.notes().map { Self.searchItem(for: $0, folderNames: folderNames) }
+                return Self.appSearchNotes(live: notes.notes(), folderNames: folderNames, gratitudeDays: routines.gratitudeDays(),
+                                           calendar: planning.calendar)
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
             searchOnline: searchOnline)
