@@ -2353,5 +2353,9 @@
   "Gesättigte Fettsäuren": "Saturated fat",
   "Salz": "Salt",
   "mind. %@": "at least %@",
-  "%@ · %lld von %lld Mahlzeiten": "%1$@ · %2$lld of %3$lld meals"
+  "%@ · %lld von %lld Mahlzeiten": "%1$@ · %2$lld of %3$lld meals",
+  "%@ über Budget": "%@ over budget",
+  "noch %@ kcal": "%@ kcal left",
+  "%@ kcal über Budget": "%@ kcal over budget",
+  "%@ · %@ / %@": "%1$@ · %2$@ / %3$@"
 }

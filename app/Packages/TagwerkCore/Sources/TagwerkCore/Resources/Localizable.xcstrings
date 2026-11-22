@@ -95,6 +95,16 @@
         }
       }
     },
+    "%@ kcal über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
     "%@ l": {
       "localizations": {
         "en": {
@@ -121,6 +131,22 @@
         }
       }
     },
+    "%@ · %@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        }
+      }
+    },
     "%@ · %lld von %lld Mahlzeiten": {
       "localizations": {
         "de": {
@@ -133,6 +159,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · %2$lld of %3$lld meals"
+          }
+        }
+      }
+    },
+    "%@ über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over budget"
           }
         }
       }
@@ -2099,6 +2135,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ left"
+          }
+        }
+      }
+    },
+    "noch %@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal left"
           }
         }
       }
