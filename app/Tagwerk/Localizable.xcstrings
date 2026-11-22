@@ -10194,6 +10194,22 @@
         }
       }
     },
+    "Fällt in die Ruhezeit (%@–%@) und wird bis zu deren Ende zurückgehalten.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Fällt in die Ruhezeit (%1$@–%2$@) und wird bis zu deren Ende zurückgehalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falls within quiet hours (%1$@–%2$@) and is held back until they end."
+          }
+        }
+      }
+    },
     "Füge Milch zur Einkaufsliste in Tagwerk hinzu": {
       "localizations": {
         "en": {
@@ -13711,6 +13727,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Running"
+          }
+        }
+      }
+    },
+    "kommt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "arrives %@"
           }
         }
       }

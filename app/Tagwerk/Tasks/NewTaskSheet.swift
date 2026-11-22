@@ -270,12 +270,20 @@ struct NewTaskSheet: View {
         reminders?.configure(source: source, hasTime: hasTime && source != .github)
     }
 
+    /// What the hint "kommt 07:00" needs. An own list for the Reminders app becomes alarms there, which quiet hours do not hold back.
+    private func quietContext(_ reminders: NewTaskReminders) -> (anchor: Date, quietHours: QuietHours?)? {
+        if target == .reminders, !reminders.list.isUsingDefault { return nil }
+        let due = DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar)
+        return (due.startDate(in: model.calendar), environment.settings.quietHours)
+    }
+
     /// "Erinnerungen" in the section of the due date, shown once a due date is set: "Standard" until the user picks an own list.
     private func remindersRow(_ reminders: NewTaskReminders) -> some View {
         NavigationLink {
             ReminderSelectionPage(model: reminders.list, subject: .task, calendar: model.calendar,
                                   footer: target == .reminders
-                                      ? String(localized: "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.") : nil)
+                                      ? String(localized: "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.") : nil,
+                                  quietContext: quietContext(reminders))
         } label: {
             LabeledContent("Erinnerungen", value: reminders.list.rowSummary(subject: .task, calendar: model.calendar))
         }

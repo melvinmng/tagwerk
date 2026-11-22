@@ -2378,5 +2378,7 @@
   "Wird zurückgehalten": "Held back",
   "Wähle einen Fokus, zum Beispiel „Arbeiten“.": "Choose a Focus, for example “Work”.",
   "Zielschlafzeit · %@": "Target bedtime · %@",
-  "Öffne die iOS-Einstellungen und tippe auf „Fokus“.": "Open the iOS Settings and tap “Focus”."
+  "Öffne die iOS-Einstellungen und tippe auf „Fokus“.": "Open the iOS Settings and tap “Focus”.",
+  "Fällt in die Ruhezeit (%@–%@) und wird bis zu deren Ende zurückgehalten.": "Falls within quiet hours (%1$@–%2$@) and is held back until they end.",
+  "kommt %@": "arrives %@"
 }
