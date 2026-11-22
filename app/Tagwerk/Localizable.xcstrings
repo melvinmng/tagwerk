@@ -4598,6 +4598,16 @@
         }
       }
     },
+    "Anhänge oder Links haben sich geändert. Sie müssen bleiben, wie sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachments or links changed. They must stay as they are."
+          }
+        }
+      }
+    },
     "Anhänge teilen": {
       "localizations": {
         "en": {
@@ -7048,6 +7058,16 @@
         }
       }
     },
+    "Der Text passt nicht mehr zum Rezept: Abschnitte, Zutaten und Schritte müssen in denselben Zeilen stehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text no longer fits the recipe: sections, ingredients and steps must stay in the same lines."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -7264,6 +7284,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The sign-in was rejected on GitHub."
+          }
+        }
+      }
+    },
+    "Die Antwort passt nicht zur Notiz. Es wurde nichts geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The answer does not fit the note. Nothing was changed."
           }
         }
       }
@@ -8322,6 +8352,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can change this later in Settings."
+          }
+        }
+      }
+    },
+    "Du statt Sie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “du” instead of “Sie”"
           }
         }
       }
@@ -11985,6 +12025,16 @@
         }
       }
     },
+    "In den Zutaten haben sich Mengen geändert. Mengen müssen bleiben, wie sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amounts in the ingredients changed. Amounts must stay as they are."
+          }
+        }
+      }
+    },
     "In Health erlauben %@": {
       "localizations": {
         "en": {
@@ -12212,6 +12262,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every finished focus session gives you a piece. Stop early and it wilts."
+          }
+        }
+      }
+    },
+    "Jede Zeile braucht einen Text und darf keinen Zeilenumbruch enthalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every line needs a text and must not contain a line break."
           }
         }
       }
@@ -13825,6 +13885,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maximum"
+          }
+        }
+      }
+    },
+    "Maßeinheiten lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the units"
           }
         }
       }
@@ -17273,6 +17343,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send gives your description, the photo, the items with your changes and your message to ChatGPT. Data from Health, your goals and earlier entries are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt den Text dieser Notiz, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the text of this note, the translation with your changes and your message to ChatGPT."
           }
         }
       }
@@ -23433,6 +23513,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Translation"
+          }
+        }
+      }
+    },
+    "Übersetzung bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit translation"
           }
         }
       }

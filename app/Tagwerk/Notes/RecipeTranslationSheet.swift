@@ -14,6 +14,7 @@ struct RecipeTranslationSheet: View {
 
     @State private var showsConsent = false
     @State private var showsOriginal = false
+    @FocusState private var followUpFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -123,44 +124,82 @@ struct RecipeTranslationSheet: View {
     // MARK: Step 2: preview
 
     private func preview(original: String, translated: String) -> some View {
-        VStack(spacing: 0) {
-            Picker("Ansicht", selection: $showsOriginal) {
-                Text("Übersetzung").tag(false)
-                Text("Original").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            // Both texts refer to the attachments of the note; nothing in the preview can be tapped.
-            NoteMarkdownView(markdown: showsOriginal ? original : translated, attachments: store.attachments,
-                             attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: model.noteID) ?? []).map { ($0.id, $0.fileName) }),
-                             onToggleCheckbox: { _ in }, onOpenAttachment: { _ in })
+        ScrollView {
+            VStack(spacing: 0) {
+                Picker("Ansicht", selection: $showsOriginal) {
+                    Text("Übersetzung").tag(false)
+                    Text("Original").tag(true)
+                }
+                .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
-                .allowsHitTesting(false)
-            Text("Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.")
-                .font(.footnote).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16).padding(.vertical, 8)
-            VStack(spacing: 10) {
-                Button {
-                    if model.replace() { dismiss() }
-                } label: {
-                    Text("Original ersetzen").fontWeight(.semibold).frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                if showsOriginal {
+                    // The original refers to the attachments of the note; nothing in it can be tapped.
+                    NoteMarkdownView(markdown: original, attachments: store.attachments,
+                                     attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: model.noteID) ?? []).map { ($0.id, $0.fileName) }),
+                                     onToggleCheckbox: { _ in }, onOpenAttachment: { _ in })
+                        .padding(.horizontal, 16)
+                        .allowsHitTesting(false)
+                } else {
+                    // The translation is text the user can change (task D3); the check before writing keeps the recipe intact.
+                    TextEditor(text: Binding(get: { model.editedText }, set: { model.editedText = $0; model.textEdited() }))
+                        .font(.body.monospaced())
+                        .frame(minHeight: 260)
+                        .padding(.horizontal, 12)
+                        .accessibilityLabel("Übersetzung bearbeiten")
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                Button {
-                    if let copy = model.saveCopy() {
-                        onSavedCopy(copy)
-                        dismiss()
+                if let problem = model.editProblem {
+                    Label(problem, systemImage: "exclamationmark.triangle").font(.footnote).foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                }
+                Text("Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                followUp
+                VStack(spacing: 10) {
+                    Button {
+                        if model.replace() { dismiss() }
+                    } label: {
+                        Text("Original ersetzen").fontWeight(.semibold).frame(maxWidth: .infinity)
                     }
-                } label: {
-                    Text("Als Kopie sichern").frame(maxWidth: .infinity)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    Button {
+                        if let copy = model.saveCopy() {
+                            onSavedCopy(copy)
+                            dismiss()
+                        }
+                    } label: {
+                        Text("Als Kopie sichern").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .padding(16)
             }
-            .padding(16)
         }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    /// The input line below the translation: the lines of the note, the translation as it is now and the message go to ChatGPT.
+    private var followUp: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            FollowUpBar(availability: FollowUpAvailability.state(hasConsent: environment.settings.shoppingRecipeConsent,
+                                                                 isSignedIn: environment.ai.isSignedIn, isOffline: false),
+                        state: model.followUpState, place: .notes,
+                        quickReplies: [String(localized: "Du statt Sie"), String(localized: "Maßeinheiten lassen")],
+                        placeholder: "Zur Übersetzung etwas sagen …",
+                        footer: Text("Senden gibt den Text dieser Notiz, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT."),
+                        isFocused: $followUpFocused, onSend: { message in Task { await model.revise(message) } },
+                        onRetry: { Task { await model.revise(model.lastMessage) } }) {
+                if !model.followUpReply.isEmpty {
+                    FollowUpAnswerRow(reply: model.followUpReply, mark: model.previousText != nil ? .byAssistant : nil,
+                                      onUndo: model.previousText != nil ? { model.undoRevision() } : nil)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
     }
 }
