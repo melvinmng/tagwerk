@@ -47,7 +47,9 @@ final class CaptureUITests: UITestCase {
         line.tap()
         XCTAssertTrue(app.navigationBars["Aktiv heute"].waitForExistence(timeout: Self.timeout), "The breakdown did not open")
         let credited = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Angerechnet'")).firstMatch
-        XCTAssertTrue(credited.waitForExistence(timeout: Self.timeout), "The credited row is missing")
+        // The sheet opens at half height and its list builds the rows lazily, so the last section is reached by scrolling.
+        scrollTo(credited)
+        XCTAssertTrue(credited.exists, "The credited row is missing")
     }
 
     /// Decision NU3b: calories and macros are visible, the further nutrients fold out; an empty field stays unknown.
@@ -67,9 +69,15 @@ final class CaptureUITests: UITestCase {
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Weitere Nährwerte'")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row for further nutrients is missing")
         XCTAssertTrue(row.label.contains("0 von 2"), "No nutrient is known yet: \(row.label)")
+        // The decimal pad covers the lower part of the sheet, including this row: close it before the tap.
+        let hideKeyboard = app.buttons[AccessibilityID.Common.hideKeyboard].firstMatch
+        XCTAssertTrue(hideKeyboard.waitForExistence(timeout: Self.timeout), "The button above the keyboard is missing")
+        hideKeyboard.tap()
         row.tap()
         let fiber = app.textFields["Ballaststoffe"].firstMatch
-        XCTAssertTrue(fiber.waitForExistence(timeout: Self.timeout), "The fiber field did not appear")
+        // The new rows may lie below the fold of the half-height sheet.
+        scrollTo(fiber)
+        XCTAssertTrue(fiber.exists, "The fiber field did not appear")
         fiber.tap()
         fiber.typeText("6")
         eventually("The counter did not follow the typed value") { row.label.contains("1 von 2") }

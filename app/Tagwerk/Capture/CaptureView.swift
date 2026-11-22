@@ -134,12 +134,13 @@ struct CaptureView: View {
                                                      : "An diesem Tag ist nichts erfasst.")
                     }
                 }
-                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 if model.showsHealthCard {
                     Section { HealthCard(model: model) }
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
                 drinkSection(data)
                 workoutSection(data)
