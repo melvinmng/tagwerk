@@ -19,7 +19,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Gesperrte Notizen: während der Entsperrung darf der Assistent sie lesen/bearbeiten (bis Tagwerk verlassen wird) → Änderung in #284; dort zusätzlich CI-Fehler: `NoteLockDeniedUITests.testPrivateFolderShowsLockScreen` („Schalter geht nicht an“), Audit „Rezept-Notiz: Element ohne Beschreibung“.
 - Bible Study: Verstabelle vorläufig → PR #285; CI schnell rot: Verstabelle lädt unter macOS-Pakettests (#279) nicht (Ressource leer) → Fix in Job (2).
 - Merge-Treiber für Kataloge: ja → PR #286 (`ad15527`); nach Merge `scripts/setup-git-merge-drivers.sh` im Hauptordner ausführen (gilt für alle Worktrees; Branches ohne `.gitattributes` profitieren erst nach dem ersten Nachziehen).
-- Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Änderung in #280.
+- Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Folge-PR (#280 ist gemergt).
 - Brain Dump am Tab/App-Symbol: nicht nötig.
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
 - Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
@@ -116,7 +116,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | PR #275, Head `43b1ece`; Pakete/App grün, UI lokal rot (Sonntags-DT „Wochenplanung starten“, Abbrüche unter Last) → Gate GitHub. Offen: Fokus-Filter-Text „4 h“ vs. 8 h ohne Ruhezeit; seltene Doppelzustellung bei Fokus B < 1 min nach A |
 | `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
 | (Integration) | #273 `1d1165d`, #275 `826b4f7`, #276 `2229707` auf main + Texttöne, gepusht; **#278 gemergt** („+4 weitere“ primär, Render-Test ≥ 7:1; CI-Befund verschwunden). Sonntags-DT: keine Ursache im Code, Allowlist-Eintrag bleibt (Positionsartefakt vermutet) | warte auf GitHub |
-| `feat/g2-shopping-recipe` | G2 Strang EK (EK1–EK3) | PR #280, Head `6dd28fa`; Reparatur `8861e0d` gepusht: Test fand Menüeintrag über ID statt Label; DT-Befunde Rezept waren doch von EK (leerer Footer entfernt, End-Buttons in Allowlist); main eingearbeitet; lokal ShoppingUITests + Rezept-Audits grün. UX-Frage: Menge über Mengen-Knopf und über Werte-Blatt doppelt |
+| `feat/g2-shopping-recipe` | G2 Strang EK (EK1–EK3) | **gemergt (#280)**; ShoppingUITests auf CI grün; PR #280, Head `6dd28fa`; Reparatur `8861e0d` gepusht: Test fand Menüeintrag über ID statt Label; DT-Befunde Rezept waren doch von EK (leerer Footer entfernt, End-Buttons in Allowlist); main eingearbeitet; lokal ShoppingUITests + Rezept-Audits grün. UX-Frage: Menge über Mengen-Knopf und über Werte-Blatt doppelt |
 | (Kette) | #276, #273, #275 | **gemergt** (`main` = `0f0fce1`); CI schnell grün, UI nur wiederkehrende DT-/Tippflächen-Befunde |
 | `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0`; CI schnell grün, UI: eigener Test `NotesUITests.testEmptyJournalFolderOffersImport` rot („Ordner des Tagebuchs fehlt“, vermutlich NF-Abschnitte) → Reparatur zusammen mit #283 |
 | `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
