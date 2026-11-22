@@ -48,4 +48,29 @@ final class CaptureUITests: UITestCase {
         XCTAssertTrue(app.navigationBars["Aktiv heute"].waitForExistence(timeout: Self.timeout), "The breakdown did not open")
         XCTAssertTrue(app.staticTexts["Angerechnet"].exists)
     }
+
+    /// Decision NU3b: calories and macros are visible, the further nutrients fold out; an empty field stays unknown.
+    func testMealSheet_furtherNutrients_expandAndSave() {
+        tab("Erfassen")
+        XCTAssertTrue(budgetLine.waitForExistence(timeout: Self.timeout), "The budget line is missing")
+        let before = budgetLine.label
+        onScreen(label: "Essen").tap()
+        typeIn("Was hast du gegessen?", text: "Haferbrei")
+        tapButton("Weiter")
+        let kcal = app.textFields["Kalorien"].firstMatch
+        XCTAssertTrue(kcal.waitForExistence(timeout: Self.timeout), "The values form did not open")
+        kcal.tap()
+        kcal.typeText("320")
+        // Folded out on a tap; two of the four nutrients are visible by default (fiber and sugar), none is known yet.
+        let row = app.buttons["Weitere Nährwerte"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row for further nutrients is missing")
+        row.tap()
+        let fiber = app.textFields["Ballaststoffe"].firstMatch
+        XCTAssertTrue(fiber.waitForExistence(timeout: Self.timeout), "The fiber field did not appear")
+        fiber.tap()
+        fiber.typeText("6")
+        XCTAssertTrue(app.staticTexts["1 von 2"].waitForExistence(timeout: Self.timeout), "The counter did not follow the typed value")
+        tapButton("Sichern")
+        eventually("The meal was not saved: the budget did not change from \(before)") { budgetLine.label != before }
+    }
 }

@@ -15750,7 +15750,18 @@
         }
       }
     },
+    "Nur Kalorien sind nötig. Leere Felder sind unbekannt und werden nicht nach Health geschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only calories are required. Empty fields are unknown and are not written to Health."
+          }
+        }
+      }
+    },
     "Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -20440,6 +20451,16 @@
         }
       }
     },
+    "Weitere Nährwerte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Further nutrients"
+          }
+        }
+      }
+    },
     "Weitere Nährwerte nach Health": {
       "localizations": {
         "en": {
@@ -20603,11 +20624,22 @@
       }
     },
     "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Values per amount ×1. Your own values count as exact and appear without “~”."
+          }
+        }
+      }
+    },
+    "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“. Ein leeres Feld ist unbekannt, nicht 0.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Values per quantity ×1. Your own values count as exact and appear without “~”. An empty field is unknown, not 0."
           }
         }
       }

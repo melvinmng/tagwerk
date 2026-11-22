@@ -372,3 +372,16 @@ extension AppSettings {
         return sources
     }
 }
+
+extension AppSettings {
+    /// The further nutrients the screens show: fiber and sugar always, saturated fat and salt when switched on (decision NU1b).
+    var visibleNutrients: [Nutrient] {
+        Nutrient.allCases.filter { nutrient in
+            switch nutrient {
+            case .fiber, .sugar: true
+            case .saturatedFat: saturatedFatEnabled
+            case .salt: saltEnabled
+            }
+        }
+    }
+}

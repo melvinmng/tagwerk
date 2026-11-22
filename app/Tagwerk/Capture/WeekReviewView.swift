@@ -150,14 +150,7 @@ struct WeekReviewView: View {
     /// Fiber and sugar, and the optional nutrients that are switched on: the mean over the days that know the value (decision OR4b).
     @ViewBuilder
     private func nutrientsSection(_ review: WeekReview) -> some View {
-        let settings = model.settings
-        let nutrients = Nutrient.allCases.filter { nutrient in
-            switch nutrient {
-            case .fiber, .sugar: true
-            case .saturatedFat: settings.saturatedFatEnabled
-            case .salt: settings.saltEnabled
-            }
-        }
+        let nutrients = model.settings.visibleNutrients
         if nutrients.contains(where: { (review.nutrientDays[$0] ?? 0) > 0 }) {
             Section {
                 ForEach(nutrients, id: \.self) { nutrient in
