@@ -45,4 +45,71 @@ final class NoteInsertUITests: UITestCase {
         XCTAssertTrue(card.label.contains("Scan "), "The card does not show the name of the scan: \(card.label)")
         XCTAssertTrue(card.label.contains("PDF"), "The card does not name the file type: \(card.label)")
     }
+
+    // MARK: Drawing
+
+    /// A stroke across the middle of the screen, on the canvas.
+    private func drawStroke() {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.45))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.6))
+        start.press(forDuration: 0.1, thenDragTo: end)
+    }
+
+    private func occurrences(of text: String, in string: String?) -> Int {
+        (string ?? "").components(separatedBy: text).count - 1
+    }
+
+    /// Draws a stroke on a new canvas and puts the drawing into the note.
+    private func insertDrawing() {
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Zeichnung")
+        let done = app.buttons[AccessibilityID.NoteEditor.drawingDone]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "The canvas did not open")
+        drawStroke()
+        done.tap()
+        eventually("The reference of the drawing is not in the text: \(editorText ?? "nil")") { editorText?.contains("![Zeichnung](attachment:") == true }
+    }
+
+    func testDrawAndSeeDrawingInNote() {
+        openDemoNoteForWriting()
+        insertDrawing()
+        XCTAssertTrue(editorText?.contains("Gliederung überarbeiten\n![Zeichnung](") == true, "The drawing is not in its own line: \(editorText ?? "nil")")
+        tapButton("Fertig")
+        XCTAssertTrue(app.webViews.images.firstMatch.waitForExistence(timeout: 3 * Self.timeout), "The page shows no picture for the drawing")
+    }
+
+    func testEmptyDrawingInsertsNothing() {
+        openDemoNoteForWriting()
+        let before = editorText
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Zeichnung")
+        let done = app.buttons[AccessibilityID.NoteEditor.drawingDone]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "The canvas did not open")
+        done.tap()
+        eventually("The canvas did not close") { !done.exists }
+        XCTAssertEqual(editorText, before, "An empty drawing changed the text")
+    }
+
+    func testEditDrawingKeepsSingleReference() {
+        openDemoNoteForWriting()
+        insertDrawing()
+        tapButton("Fertig")
+        let picture = app.webViews.images.firstMatch
+        XCTAssertTrue(picture.waitForExistence(timeout: 3 * Self.timeout), "The page shows no picture for the drawing")
+        picture.tap()
+        let edit = app.buttons[AccessibilityID.NoteEditor.drawingEdit]
+        XCTAssertTrue(edit.waitForExistence(timeout: Self.timeout), "A tap on the drawing did not open the viewer")
+        edit.tap()
+        let done = app.buttons[AccessibilityID.NoteEditor.drawingDone]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "\"Bearbeiten\" did not open the canvas")
+        drawStroke()
+        done.tap()
+        eventually("The canvas did not close") { !done.exists }
+        // Back in the viewer; "Fertig" closes it.
+        tapButton("Fertig")
+        app.buttons["Mehr"].firstMatch.tap()
+        tapButton("Bearbeiten")
+        XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: Self.timeout))
+        XCTAssertEqual(occurrences(of: "attachment:", in: editorText), 1, "Editing the drawing changed the number of references: \(editorText ?? "nil")")
+    }
 }

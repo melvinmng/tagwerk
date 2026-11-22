@@ -7963,6 +7963,16 @@
         }
       }
     },
+    "Die Strichdaten fehlen. Die Zeichnung lässt sich nur ansehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The stroke data is missing. The drawing can only be viewed."
+          }
+        }
+      }
+    },
     "Die Suche braucht mindestens 2 Zeichen.": {
       "localizations": {
         "en": {
@@ -8059,6 +8069,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "The number shows the open items. Tap a name to change it."
+          }
+        }
+      }
+    },
+    "Die Zeichnung ließ sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drawing could not be read."
+          }
+        }
+      }
+    },
+    "Die Zeichnung ließ sich nicht sichern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drawing could not be saved."
           }
         }
       }
@@ -20894,6 +20924,16 @@
         }
       }
     },
+    "Weiter zeichnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep drawing"
+          }
+        }
+      }
+    },
     "Weitere": {
       "localizations": {
         "en": {
@@ -21589,6 +21629,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drawing"
+          }
+        }
+      }
+    },
+    "Zeichnung verwerfen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard drawing?"
           }
         }
       }

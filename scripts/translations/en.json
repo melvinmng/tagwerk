@@ -2491,5 +2491,10 @@
   "Im Scan": "In scan",
   "Text erkannt": "Text recognized",
   "Text erkennen": "Recognize text",
-  "Text wird erkannt …": "Recognizing text …"
+  "Text wird erkannt …": "Recognizing text …",
+  "Die Strichdaten fehlen. Die Zeichnung lässt sich nur ansehen.": "The stroke data is missing. The drawing can only be viewed.",
+  "Die Zeichnung ließ sich nicht lesen.": "The drawing could not be read.",
+  "Die Zeichnung ließ sich nicht sichern.": "The drawing could not be saved.",
+  "Weiter zeichnen": "Keep drawing",
+  "Zeichnung verwerfen?": "Discard drawing?"
 }

@@ -33,6 +33,10 @@ enum AccessibilityID {
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"
+        /// "Fertig" of the full-screen drawing canvas (the note editor behind it has a "Fertig" too).
+        static let drawingDone = "noteEditor.drawingDone"
+        /// "Bearbeiten" of the drawing viewer.
+        static let drawingEdit = "noteEditor.drawingEdit"
     }
 
     enum Common {

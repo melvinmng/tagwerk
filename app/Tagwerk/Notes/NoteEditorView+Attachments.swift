@@ -1,3 +1,4 @@
+import PencilKit
 import PhotosUI
 import SwiftUI
 import TagwerkCore
@@ -8,7 +9,7 @@ extension NoteEditorView {
     var insertMenu: some View {
         NoteInsertMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
                        onScanDocument: startScan, onPaste: { providers in Task { await addPasted(providers) } },
-                       onChooseFile: { isChoosingFile = true }, onDrawing: {}, onTable: {})
+                       onChooseFile: { isChoosingFile = true }, onDrawing: startDrawing, onTable: {})
     }
 
     // MARK: Scanning
@@ -18,7 +19,7 @@ extension NoteEditorView {
         if let count = UITestMode.scanPageCount {
             addScan(pages: DocumentScanner.testPages(count: count))
         } else {
-            inserts.isScanning = true
+            inserts.cover = .scan
         }
     }
 
@@ -60,10 +61,66 @@ extension NoteEditorView {
         saveText()
     }
 
-    /// The menu of a long press on a scan card in the page: open, rename, share.
+    // MARK: Drawing
+
+    /// Opens the full-screen canvas for a new drawing.
+    func startDrawing() {
+        inserts.cover = .drawing(DrawingSession(editing: nil, drawing: PKDrawing()))
+    }
+
+    /// A drawing of the canvas is finished. A new one goes into the note as a picture reference at the cursor (an empty one
+    /// inserts nothing); an edited one keeps its reference and shows the new picture.
+    func finishDrawing(editing id: UUID?, drawing: PKDrawing) {
+        guard let attachments = store.attachments else { return }
+        if let id {
+            do {
+                try DrawingAttachment.update(drawing, id: id, store: attachments)
+                inserts.revision += 1
+            } catch {
+                failureText = String(localized: "Die Zeichnung ließ sich nicht sichern.")
+            }
+        } else if !drawing.strokes.isEmpty {
+            run { () throws -> (id: UUID, reference: String) in
+                try DrawingAttachment.insert(drawing, into: noteID, store: attachments)
+            } insert: { $0.reference }
+        }
+    }
+
+    /// Removes the reference of a drawing from the text; the file goes when the page closes (`removeUnreferenced`).
+    func deleteDrawing(_ id: UUID) {
+        let updated = MarkdownText.removingReference(to: id, in: text)
+        guard updated != text else { return }
+        text = updated
+        saveText()
+        refreshShareURLs()
+    }
+
+    /// The menu of a long press on a scan card or a drawing in the page.
     func attachmentMenu(for url: URL) -> UIMenu? {
         guard url.scheme?.lowercased() == MarkdownText.attachmentScheme, let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString),
-              let record = store.attachments?.record(id: id), record.roleRaw == NoteAttachmentStore.Role.scan.rawValue else { return nil }
+              let record = store.attachments?.record(id: id) else { return nil }
+        if record.roleRaw == NoteAttachmentStore.Role.drawing.rawValue { return drawingMenu(for: id) }
+        guard record.roleRaw == NoteAttachmentStore.Role.scan.rawValue else { return nil }
+        return scanMenu(for: record)
+    }
+
+    private func drawingMenu(for id: UUID) -> UIMenu {
+        let strokes = store.attachments.flatMap { DrawingAttachment.strokes(of: id, store: $0) }
+        let edit = UIAction(title: String(localized: "Bearbeiten"), image: UIImage(systemName: "pencil.tip.crop.circle"),
+                            attributes: strokes == nil ? .disabled : []) { _ in
+            if let strokes { inserts.cover = .drawing(DrawingSession(editing: id, drawing: strokes)) }
+        }
+        let share = UIAction(title: String(localized: "Teilen"), image: UIImage(systemName: "square.and.arrow.up")) { _ in
+            if let url = store.attachments?.exportURL(for: id) { inserts.sharing = NoteInsertState.Sharing(urls: [url]) }
+        }
+        let delete = UIAction(title: String(localized: "Löschen"), image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
+            deleteDrawing(id)
+        }
+        return UIMenu(children: [edit, share, delete])
+    }
+
+    private func scanMenu(for record: NoteAttachmentRecord) -> UIMenu {
+        let id = record.id
         var actions = [UIAction(title: String(localized: "Öffnen"), image: UIImage(systemName: "doc.viewfinder")) { _ in openAttachment(id) }]
         if let recognized = record.recognizedText, !recognized.isEmpty {
             actions.append(UIAction(title: String(localized: "Erkannten Text einfügen"), image: UIImage(systemName: "text.append")) { _ in

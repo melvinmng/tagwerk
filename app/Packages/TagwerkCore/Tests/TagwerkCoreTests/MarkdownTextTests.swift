@@ -181,4 +181,16 @@ struct MarkdownTextTests {
         #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: UUID(), in: reference) == reference)
         #expect(MarkdownText.insertingParagraph("  ", belowReferenceTo: id, in: reference) == reference)
     }
+
+    @Test func removingReference_dropsTheLineOfAPictureReference() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let reference = MarkdownText.reference(for: id, name: "Zeichnung", isImage: true)
+        #expect(MarkdownText.removingReference(to: id, in: "Vor\n\(reference)\nNach") == "Vor\nNach")
+        #expect(MarkdownText.removingReference(to: id, in: reference) == "")
+        #expect(MarkdownText.removingReference(to: id, in: "Vor\n\(reference)") == "Vor")
+        // Text in the same line stays; other attachments and links stay.
+        let other = MarkdownText.reference(for: UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!, name: "Foto", isImage: true)
+        #expect(MarkdownText.removingReference(to: id, in: "Skizze: \(reference) fertig\n\(other)") == "Skizze:  fertig\n\(other)")
+        #expect(MarkdownText.removingReference(to: UUID(), in: "Vor\n\(reference)") == "Vor\n\(reference)")
+    }
 }

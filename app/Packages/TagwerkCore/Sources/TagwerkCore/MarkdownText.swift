@@ -93,6 +93,21 @@ public enum MarkdownText {
         }
     }
 
+    /// The text without the references to the attachment `id` (a deleted drawing). A line that held nothing else goes with them;
+    /// other text of the line stays.
+    public static func removingReference(to id: UUID, in markdown: String) -> String {
+        let pattern = #"!?\[(?:\\.|[^\]\\\n])*\]\(attachment:"# + id.uuidString + #"\)"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return markdown }
+        var lines: [String] = []
+        for line in markdown.split(separator: "\n", omittingEmptySubsequences: false).map(String.init) {
+            let range = NSRange(line.startIndex..., in: line)
+            guard expression.firstMatch(in: line, range: range) != nil else { lines.append(line); continue }
+            let remaining = expression.stringByReplacingMatches(in: line, range: range, withTemplate: "")
+            if !remaining.trimmingCharacters(in: .whitespaces).isEmpty { lines.append(remaining) }
+        }
+        return lines.joined(separator: "\n")
+    }
+
     /// The text with `paragraph` inserted as its own paragraph below the line that holds the reference to the attachment `id`
     /// (the recognised text of a scan). A blank line separates it from the reference and from what follows. Text without that
     /// reference, or an empty paragraph, stays as it is.

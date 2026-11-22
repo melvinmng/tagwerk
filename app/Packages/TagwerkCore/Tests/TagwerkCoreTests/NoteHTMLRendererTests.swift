@@ -404,4 +404,29 @@ struct NoteHTMLRendererTests {
                                            options: NoteHTMLRenderer.RenderOptions(attachments: [id: display]))
         #expect(output.contains("&lt;b&gt;8&lt;/b&gt;") && !output.contains("<b>8"))
     }
+
+    // MARK: Drawings
+
+    @Test func renderer_drawingGetsPaperClass() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let photo = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!
+        let options = NoteHTMLRenderer.RenderOptions(attachments: [id: NoteAttachmentDisplay(name: "Zeichnung.png", kind: .drawing),
+                                                                   photo: NoteAttachmentDisplay(name: "Foto.jpg", kind: .image)])
+        let output = NoteHTMLRenderer.html(markdown: "![Zeichnung](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n\n![Foto](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)", options: options)
+        #expect(output.contains("<a class=\"img paper\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301\">"))
+        #expect(output.contains("<a class=\"img\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302\">"))
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("a.img.paper img {") && page.contains("background: #fff"))
+    }
+
+    @Test func renderer_editedPictureHasANewAddress() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        func output(version: Int) -> String {
+            NoteHTMLRenderer.html(markdown: "![Zeichnung](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)",
+                                  options: .init(attachments: [id: NoteAttachmentDisplay(name: "Z.png", kind: .drawing, version: version)]))
+        }
+        #expect(output(version: 0).contains("src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301\""))
+        #expect(output(version: 2).contains("src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301?v=2\""))
+        #expect(output(version: 2) != output(version: 3))
+    }
 }

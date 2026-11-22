@@ -100,7 +100,8 @@ struct NoteEditorView: View {
                 if case .success(let urls) = result { for url in urls { addFile(url) } }
             }
             .quickLookPreview($previewURL)
-            .noteInsertPresentations(inserts, onScanFinished: addScan, onRename: renameAttachment)
+            .noteInsertPresentations(inserts, attachments: store.attachments,
+                                     actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment))
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -285,8 +286,13 @@ struct NoteEditorView: View {
         saveText()
     }
 
+    /// A drawing opens in its own large view, everything else in Quick Look.
     func openAttachment(_ id: UUID) {
-        previewURL = store.attachments?.exportURL(for: id)
+        if store.attachments?.record(id: id)?.roleRaw == NoteAttachmentStore.Role.drawing.rawValue {
+            inserts.cover = .drawingViewer(id)
+        } else {
+            previewURL = store.attachments?.exportURL(for: id)
+        }
     }
 
     // MARK: Texts

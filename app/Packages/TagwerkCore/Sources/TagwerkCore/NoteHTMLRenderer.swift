@@ -3,17 +3,22 @@ import Markdown
 
 /// What the page needs to know about an attachment of the note.
 public struct NoteAttachmentDisplay: Sendable, Equatable {
-    /// `scan` is a PDF with a preview of its first page; `pages` is its number of pages.
-    public enum Kind: Sendable, Equatable { case image, file, scan(pages: Int) }
+    /// `scan` is a PDF with a preview of its first page; `pages` is its number of pages. `drawing` is the picture of a drawing,
+    /// shown on a light sheet of paper.
+    public enum Kind: Sendable, Equatable { case image, file, scan(pages: Int), drawing }
     public var name: String
     /// "1,2 MB", already formatted by the app.
     public var detail: String
     public var kind: Kind
+    /// Changes when the bytes of the attachment change under the same ID (a drawing that was edited). It goes into the address
+    /// of the picture, so the page loads it again.
+    public var version: Int
 
-    public init(name: String, detail: String = "", kind: Kind = .file) {
+    public init(name: String, detail: String = "", kind: Kind = .file, version: Int = 0) {
         self.name = name
         self.detail = detail
         self.kind = kind
+        self.version = version
     }
 }
 
@@ -96,6 +101,8 @@ public enum NoteHTMLRenderer {
         a.e.block { display: block; }
         a.e.tail { display: block; min-height: 50vh; }
         a.img { display: inline-block; max-width: 100%; }
+        a.img.paper { display: block; }
+        a.img.paper img { width: 100%; background: #fff; border: 1px solid var(--line); box-sizing: border-box; }
         a.task-box { display: inline-flex; min-width:44px; min-height:44px; align-items: center; justify-content: center;
                      vertical-align: top; margin: calc((1.45em - 44px) / 2) calc(.4em + (1.1em - 44px) / 2) calc((1.45em - 44px) / 2) calc((1.1em - 44px) / 2); }
         a.task-box .box { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 1.1em; height: 1.1em;
@@ -137,6 +144,12 @@ public enum NoteHTMLRenderer {
     }
 
     private static let darkVariables = "--text: #f2f2f7; --muted: #aeaeb2; --line: #48484a; --code: #2c2c2e; --accent: #0a84ff;"
+
+    /// Where the page loads the picture of an attachment from. `version` goes into the query, which the app ignores, so an
+    /// edited picture under the same ID reaches the page as new content.
+    static func pictureAddress(of id: UUID, version: Int) -> String {
+        "\(HTMLSanitizer.imageScheme)://\(id.uuidString)" + (version > 0 ? "?v=\(version)" : "")
+    }
 
     // MARK: Escaping
 
@@ -328,7 +341,7 @@ public enum NoteHTMLRenderer {
                 if let display, case .scan(let pages) = display.kind {
                     // A scan: the first page as a preview, the name and what the app says about it (pages, size, recognition).
                     let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
-                    return "<a class=\"scan\" href=\"\(target)\" data-pages=\"\(pages)\"><img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\">"
+                    return "<a class=\"scan\" href=\"\(target)\" data-pages=\"\(pages)\"><img src=\"\(NoteHTMLRenderer.pictureAddress(of: id, version: display.version))\" alt=\"\">"
                         + "<span class=\"meta\"><span class=\"name\">\(name)</span>\(detail)</span></a>"
                 }
                 if let display, display.kind == .file {
@@ -344,10 +357,12 @@ public enum NoteHTMLRenderer {
             guard !sanitizer.isSuppressing else { return "" }
             // Only attachments are shown; a remote or any other image source is never put on the page.
             guard let id = image.source.flatMap(HTMLSanitizer.attachmentID(inReference:)) else { return "[Bild]" }
-            let picture = "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            let display = options.attachments[id]
+            let picture = "<img src=\"\(NoteHTMLRenderer.pictureAddress(of: id, version: display?.version ?? 0))\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
             if insideTable { return tableLinked(picture) }
-            // A tap opens the picture large (Quick Look); it never starts writing.
-            return anchorDepth == 0 ? "<a class=\"img\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
+            // A tap opens the picture large; it never starts writing. A drawing lies on a light sheet of paper.
+            let cssClass = display?.kind == .drawing ? "img paper" : "img"
+            return anchorDepth == 0 ? "<a class=\"\(cssClass)\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
         }
 
         private mutating func wrap(_ tag: String, _ markup: Markup) -> String {

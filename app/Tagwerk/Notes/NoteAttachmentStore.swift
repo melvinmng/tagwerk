@@ -115,6 +115,7 @@ final class NoteAttachmentStore {
         try write(data, for: record)
         record.byteCount = data.count
         thumbnails.removeAllObjects()
+        versions[id, default: 0] += 1
         save()
     }
 
@@ -194,7 +195,9 @@ final class NoteAttachmentStore {
         attachments(of: noteID).filter { !$0.isCompanion }.reduce(into: [:]) { result, record in
             let isImage = UTType(record.typeIdentifier)?.conforms(to: .image) == true
             let size = ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file)
-            if record.roleRaw == Role.scan.rawValue {
+            if record.roleRaw == Role.drawing.rawValue {
+                result[record.id] = NoteAttachmentDisplay(name: record.fileName, detail: size, kind: .drawing, version: versions[record.id] ?? 0)
+            } else if record.roleRaw == Role.scan.rawValue {
                 result[record.id] = NoteAttachmentDisplay(name: record.fileName,
                                                           detail: Self.scanDetail(pages: record.pageCount, size: size, recognizedText: record.recognizedText),
                                                           kind: .scan(pages: record.pageCount))
@@ -271,6 +274,8 @@ final class NoteAttachmentStore {
     }
 
     private let thumbnails = NSCache<NSString, UIImage>()
+    /// How often the bytes of an attachment were replaced in this session; it goes into the address of the picture on the page.
+    private var versions: [UUID: Int] = [:]
 
     /// A small picture of an attachment for a list card; read through ImageIO, so the full picture is never decoded. For a
     /// PDF it is the first page.
