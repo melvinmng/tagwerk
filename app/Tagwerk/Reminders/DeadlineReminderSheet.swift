@@ -21,12 +21,18 @@ struct DeadlineReminderSheet: View {
                     if let errorMessage {
                         Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                     }
+                    let quietContext: (anchor: Date, quietHours: QuietHours?) = (event.start, environment.settings.quietHours)
                     Section {
-                        ReminderSelectionRows(model: model.list, subject: .deadline, calendar: calendar)
+                        ReminderSelectionRows(model: model.list, subject: .deadline, calendar: calendar, quietContext: quietContext)
                     } header: {
                         Label("Tagwerk-Mitteilungen", systemImage: "bell")
                     } footer: {
-                        Text("Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.")
+                        let base = String(localized: "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.")
+                        if let note = ReminderSelectionRows.quietNote(model: model.list, quietContext: quietContext, calendar: calendar) {
+                            Text(base + " " + note)
+                        } else {
+                            Text(base)
+                        }
                     }
                     Section {
                         if model.canEditCalendarAlarms {

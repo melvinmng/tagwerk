@@ -11,7 +11,7 @@ import TagwerkCore
 /// from before the answer, until the user changes something by hand. Only "Fertig" changes the card, and the other cards and
 /// the chat stay as they are.
 struct ProposalAdjustSheet: View {
-    let assistant: AssistantModel
+    let assistant: any CardAdjusting
     let call: ToolCall
     @Environment(\.dismiss) private var dismiss
     @Environment(AppEnvironment.self) private var environment
@@ -30,7 +30,7 @@ struct ProposalAdjustSheet: View {
         var lastMessage = ""
     }
 
-    private var isMarked: Bool { assistant.conversation?.isAdjusted(call) == true }
+    private var isMarked: Bool { assistant.isAdjusted(call) }
 
     private var availability: FollowUpAvailability {
         FollowUpAvailability.state(hasConsent: assistant.cardFollowUpHasConsent, isSignedIn: environment.ai.isSignedIn, isOffline: false)

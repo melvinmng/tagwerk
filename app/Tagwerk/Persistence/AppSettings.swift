@@ -140,7 +140,7 @@ final class AppSettings {
 
     /// JSON of `ReminderDefaults` (plan P4); `nil` means the defaults that behave like the former lead time.
     var reminderDefaultsData: Data? = nil
-    /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
+    /// Focus filter "Mitteilungen zurückhalten" (runtime state, not a preference): set while a Focus with the filter is
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil

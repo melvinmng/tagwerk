@@ -83,6 +83,66 @@ final class MailSummarizer {
         return normalized
     }
 
+    // MARK: Follow-up (plan ki-vorschlaege-anpassen, task E1)
+
+    /// A second request about the proposal on the sheet: the same subject, sender name and text as the first one (cut and
+    /// without addresses), the task as it is now with the fields the user set by hand, and the message. Answered in the format
+    /// of `summarize` and checked the same way. The address of the sender is never sent, and addresses in what the user typed
+    /// or wrote are replaced like those in the mail. Without consent nothing happens, not even the model list.
+    func revise(subject: String, senderName: String?, body: String, current: MailTaskSuggestion.Normalized, fixed: [String],
+                comment: String) async throws -> MailTaskSuggestion.Normalized {
+        guard hasConsent() else { throw Failure.consentMissing }
+        let answer: String
+        do {
+            let slug = try await model()
+            let instructions = MailTaskSuggestion.instructions(language: language(), today: now(), calendar: calendar()) + "\n" + Self.revisionInstructions
+            let input: InputItem = .user(Self.input(subject: subject, senderName: senderName, body: body)
+                                         + Self.followUpText(current: current, fixed: fixed, comment: comment, calendar: calendar()))
+            answer = try await withTimeout { [responder] in
+                try await Self.collect(responder.respond(model: slug, instructions: instructions, input: [input], tools: [],
+                                                         jsonSchema: (name: "mail_task", schema: MailTaskSuggestion.schema)))
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as Failure {
+            throw error
+        } catch let error as ChatGPTError {
+            throw Self.failure(for: error)
+        } catch {
+            throw Failure.failed
+        }
+        guard let suggestion = try? MailTaskSuggestion.decode(Data(answer.utf8)),
+              let normalized = suggestion.normalized(now: now(), calendar: calendar()) else { throw Failure.notRecognized }
+        return normalized
+    }
+
+    /// What follows the mail in a follow-up: the current task as JSON, the fields the user set, and the message.
+    nonisolated static func followUpText(current: MailTaskSuggestion.Normalized, fixed: [String], comment: String, calendar: Calendar) -> String {
+        let redact = MailTaskSuggestion.redactingAddresses
+        var due: Any = NSNull()
+        if let value = current.due {
+            let day = String(format: "%04d-%02d-%02d", value.year, value.month, value.day)
+            due = value.hour.map { day + String(format: "T%02d:%02d", $0, value.minute ?? 0) } ?? day
+        }
+        let object: [String: Any] = ["title": redact(current.title), "summary": redact(current.summary), "due": due]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
+        return """
+
+
+        Current task as JSON: \(String(decoding: data, as: UTF8.self))
+        Fields the user set by hand: \(fixed.isEmpty ? "none" : fixed.joined(separator: ", "))
+        Message from the user: \(redact(comment))
+        """
+    }
+
+    static let revisionInstructions = """
+    Jetzt überarbeitest du den Vorschlag, den du schon gegeben hast. Die Eingabe enthält die Mail wie zuvor, dazu die aktuelle Aufgabe \
+    als JSON, die Felder, die die Person selbst eingestellt hat, und ihre Nachricht.
+    - Gib die vollständige Aufgabe im selben Format zurück (title, summary, due). Ändere nur, was die Nachricht verlangt; die anderen \
+    Felder gibst du unverändert zurück.
+    - Felder, die die Person selbst eingestellt hat, lässt du unverändert, außer die Nachricht betrifft sie.
+    """
+
     private static func failure(for error: ChatGPTError) -> Failure {
         switch error {
         case .network: .network
