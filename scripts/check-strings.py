@@ -2,6 +2,8 @@
 """Checks the String Catalogs of Tagwerk (plan english-app, Task 1).
 
 Default: structure checks of every catalog in app/
+  - the catalog is in the repository format (see catalog_format.py): a hand-edited entry in the wrong place or another
+    separator is reported with the first differing line, before the next sync-strings.sh run would rewrite those lines
   - placeholders (%@, %lld, %1$@ …) of the English value match the German key
   - every App Shortcuts phrase names the app (${applicationName})
   - the phrases in TagwerkIntents.swift and AppShortcuts.xcstrings match in both directions, and every phrase
@@ -17,6 +19,9 @@ import json
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import catalog_format  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
@@ -68,6 +73,19 @@ def placeholders_compatible(value, source, is_plural_form):
             return False
         remaining.remove(item)
     return True
+
+
+def shown_path(path):
+    path = Path(path).resolve()
+    return path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+
+
+def check_format(path, problems):
+    """Reports a catalog that is not in the repository format, with the first differing line."""
+    line = catalog_format.first_difference(Path(path).read_text(encoding="utf-8"))
+    if line is not None:
+        problems.append(f"{shown_path(path)}: not in the repository format (first difference at line {line}); "
+                        "run scripts/sync-strings.sh")
 
 
 def check_structure(path, data, require_english, problems):
@@ -241,7 +259,7 @@ def same(first, second):
     keys_a, keys_b = set(a.get("strings", {})), set(b.get("strings", {}))
     added = sorted(keys_b - keys_a)
     changed = sorted(k for k in keys_a & keys_b if a["strings"][k] != b["strings"][k])
-    print(f"{Path(first).relative_to(ROOT)}: {len(added)} new, {len(changed)} changed", file=sys.stderr)
+    print(f"{shown_path(first)}: {len(added)} new, {len(changed)} changed", file=sys.stderr)
     for key in (added + changed)[:20]:
         print(f"  {key!r}", file=sys.stderr)
     return 1
@@ -253,6 +271,7 @@ def main(arguments):
     require_english = "--require-english" in arguments
     problems = []
     for path in catalogs():
+        check_format(path, problems)
         check_structure(path, load(path), require_english, problems)
     check_info_plist(problems)
     check_shortcut_phrases(problems)
