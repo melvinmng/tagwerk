@@ -14,6 +14,7 @@ struct BackupTests {
     let sourceSettings: AppSettings
     let backup: BackupService
     let sourceFiles: NoteAttachmentStore
+    let sourceKeys: BackupKeyStore
     let sourceDirectory = FileManager.default.temporaryDirectory.appending(path: "backup-source-" + UUID().uuidString, directoryHint: .isDirectory)
 
     init() throws {
@@ -23,8 +24,9 @@ struct BackupTests {
         sourceSettings.migrateVoiceAnswerLanguageIfNeeded()
         let clock = self.clock
         sourceFiles = NoteAttachmentStore(context: source.mainContext, directory: sourceDirectory, now: { clock.now })
+        sourceKeys = .inMemory()
         backup = BackupService(context: source.mainContext, settings: sourceSettings, calendar: calendar, appVersion: "1.0-test",
-                               now: { clock.now }, attachments: sourceFiles)
+                               now: { clock.now }, attachments: sourceFiles, keyStore: sourceKeys)
         Self.populate(source.mainContext, settings: sourceSettings, now: clock.now)
         Self.addAttachments(sourceFiles, context: source.mainContext)
     }
@@ -37,7 +39,7 @@ struct BackupTests {
         let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
         let files = NoteAttachmentStore(context: container.mainContext, directory: directory, now: { clock.now })
         let service = BackupService(context: container.mainContext, settings: settings, calendar: calendar, appVersion: "1.0-test",
-                                    now: { clock.now }, attachments: files)
+                                    now: { clock.now }, attachments: files, keyStore: .inMemory())
         return (container, settings, service, files)
     }
 
@@ -1237,5 +1239,135 @@ struct BackupTests {
         #expect(rows.dropLast().allSatisfy { $0.file != nil })
         let with = try backup.inspect(try backup.makeBackupData(includePrivate: true))
         #expect(RestoreComparison.rows(device: device, inspection: with).last?.file == with.counts.privateNotes)
+    }
+
+    // MARK: Encryption
+
+    /// A key with few iterations: the tests do not wait for the real cost of the derivation.
+    private func cheapMaterial(_ password: String = "tagwerk password") -> BackupCrypto.KeyMaterial {
+        let salt = Data((0..<16).map { UInt8($0 + 40) })
+        return BackupCrypto.KeyMaterial(key: BackupCrypto.deriveKey(password: password, salt: salt, iterations: 1_000), salt: salt, iterations: 1_000)
+    }
+
+    @Test func encryptedBackup_restoresWithDeviceKey() throws {
+        try backup.enableEncryption(with: cheapMaterial())
+        let file = try backup.makeBackupFile()
+        #expect(file.fileName.hasSuffix(".tagwerk") && BackupCrypto.isEncrypted(file.data))
+        #expect(file.data.range(of: Data("Quellen sichten".utf8)) == nil)
+        let inspection = try backup.inspectFile(file.data)
+        #expect(inspection.tasks == backup.currentCounts().tasks)
+        let target = try makeTarget()
+        try target.service.enableEncryption(with: cheapMaterial())
+        try target.service.restore(try target.service.inspectFile(file.data))
+        #expect(entities(of: target.container.mainContext, settings: target.settings).localTasks.map(\.title) == ["Quellen sichten"])
+    }
+
+    @Test func encryptedBackup_onOtherDevice_needsPassword() throws {
+        try backup.enableEncryption(with: cheapMaterial("tagwerk password"))
+        let file = try backup.makeBackupFile().data
+        let target = try makeTarget()
+        #expect(throws: BackupService.BackupError.passwordRequired) { try target.service.inspectFile(file) }
+        #expect(throws: BackupService.BackupError.passwordRequired) { try target.service.inspectFile(file, password: "") }
+        let inspection = try target.service.inspectFile(file, password: "tagwerk password")
+        try target.service.restore(inspection)
+        #expect(entities(of: target.container.mainContext, settings: target.settings).localTasks.map(\.title) == ["Quellen sichten"])
+        // The target never learned the password: its Keychain stays empty.
+        #expect(!target.service.hasKey)
+    }
+
+    @Test func wrongPassword_changesNothing() throws {
+        try backup.enableEncryption(with: cheapMaterial("tagwerk password"))
+        let file = try backup.makeBackupFile().data
+        let target = try makeTarget()
+        let before = try canonical(entities(of: target.container.mainContext, settings: target.settings))
+        #expect(throws: BackupService.BackupError.wrongPassword) { try target.service.inspectFile(file, password: "another password") }
+        #expect(try canonical(entities(of: target.container.mainContext, settings: target.settings)) == before)
+        #expect(BackupService.message(for: .wrongPassword).contains("nichts geändert"))
+        // A damaged file is reported as unreadable, not as a wrong password.
+        var damaged = file
+        damaged[damaged.count - 20] ^= 0x01
+        #expect(throws: BackupService.BackupError.unreadable) { try target.service.inspectFile(damaged, password: "tagwerk password") }
+    }
+
+    @Test func plainBackup_stillRestores() throws {
+        let file = try backup.makeBackupFile()
+        #expect(file.fileName.hasSuffix(".json") && !BackupCrypto.isEncrypted(file.data))
+        let target = try makeTarget()
+        try target.service.enableEncryption(with: cheapMaterial())
+        // Encryption on in the target does not stop it from reading an older plain file.
+        let inspection = try target.service.inspectFile(file.data)
+        try target.service.restore(inspection)
+        #expect(entities(of: target.container.mainContext, settings: target.settings).localTasks.count == 1)
+    }
+
+    @Test func autoBackup_withoutKey_writesNothingAndReports() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try backup.chooseFolder(folder)
+        sourceSettings.autoBackupEnabled = true
+        sourceSettings.backupEncryptionEnabled = true
+        #expect(!backup.hasKey)
+        #expect(backup.runAutomaticBackup() == .failed(.keyMissing))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path).isEmpty)
+        #expect(sourceSettings.lastBackupError == BackupService.message(for: .keyMissing))
+        #expect(backup.status == .failed(message: BackupService.message(for: .keyMissing)))
+        #expect(throws: BackupService.BackupError.keyMissing) { try backup.makeBackupFile() }
+        // Setting the password again clears the message and the next run writes an encrypted file.
+        try backup.enableEncryption(with: cheapMaterial())
+        #expect(sourceSettings.lastBackupError == nil)
+        guard case .written(let name) = backup.runAutomaticBackup() else { Issue.record("expected a written backup"); return }
+        #expect(name.hasSuffix(".tagwerk"))
+        let written = try Data(contentsOf: folder.appendingPathComponent(name))
+        #expect(BackupCrypto.isEncrypted(written))
+    }
+
+    @Test func autoBackup_keepsSevenFilesAcrossBothExtensions() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        for day in 1...5 { try Data("old".utf8).write(to: folder.appendingPathComponent(String(format: "Tagwerk-Sicherung-2026-10-%02d-0800.json", day))) }
+        for day in 6...9 { try Data("old".utf8).write(to: folder.appendingPathComponent(String(format: "Tagwerk-Sicherung-2026-10-%02d-0800.tagwerk", day))) }
+        try backup.enableEncryption(with: cheapMaterial())
+        try backup.chooseFolder(folder)
+        backup.runAutomaticBackup()
+        let own = try FileManager.default.contentsOfDirectory(atPath: folder.path).filter(BackupRules.isOwnFile)
+        #expect(own.count == BackupRules.keptFiles)
+        #expect(own.contains(BackupRules.fileName(for: clock.now, calendar: calendar, encrypted: true)))
+    }
+
+    @Test func safetyCopy_isEncryptedWhenEnabled() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try backup.enableEncryption(with: cheapMaterial())
+        let url = try backup.writeSafetyCopy(into: directory)
+        #expect(url.pathExtension == "tagwerk" && !BackupRules.isOwnFile(url.lastPathComponent))
+        let data = try Data(contentsOf: url)
+        #expect(BackupCrypto.isEncrypted(data))
+        let inspection = try backup.inspectFile(data)
+        #expect(inspection.header.includesPrivateNotes && inspection.entities.bibleStudySessions.count == 1)
+        // Without the key the copy is not written in plain text either.
+        try backup.disableEncryption()
+        sourceSettings.backupEncryptionEnabled = true
+        #expect(throws: BackupService.BackupError.keyMissing) { try backup.writeSafetyCopy(into: directory) }
+    }
+
+    @Test func settingsBackup_doesNotCarryEncryptionSwitch() throws {
+        try backup.enableEncryption(with: cheapMaterial())
+        sourceSettings.backupPlainHintShown = true
+        let file = try backup.makeBackupFile().data
+        let target = try makeTarget()
+        let inspection = try target.service.inspectFile(file, password: "tagwerk password")
+        try target.service.restore(inspection)
+        #expect(!target.settings.backupEncryptionEnabled && !target.settings.backupPlainHintShown)
+        let json = String(decoding: try backup.makeBackupData(), as: UTF8.self)
+        #expect(!json.contains("backupEncryptionEnabled") && !json.contains("backupPlainHintShown"))
+    }
+
+    @Test func disableEncryption_removesTheKeyAndWritesPlainAgain() throws {
+        try backup.enableEncryption(with: cheapMaterial())
+        #expect(backup.hasKey && sourceSettings.backupEncryptionEnabled)
+        try backup.disableEncryption()
+        #expect(!backup.hasKey && !sourceSettings.backupEncryptionEnabled)
+        let file = try backup.makeBackupFile()
+        #expect(file.fileName.hasSuffix(".json") && !BackupCrypto.isEncrypted(file.data))
     }
 }

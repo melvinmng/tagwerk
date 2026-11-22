@@ -7,78 +7,42 @@ import UniformTypeIdentifiers
 struct BackupSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var document: BackupDocument?
+    @State private var exportFileName = ""
     @State private var isExporting = false
     @State private var isChoosingFile = false
     @State private var isChoosingFolder = false
     @State private var pendingRestore: BackupService.Inspection?
     @State private var alertText: String?
+    /// An encrypted file that needs a typed password, and the password field of the alert.
+    @State private var fileAwaitingPassword: Data?
+    @State private var typedPassword = ""
+    /// The one-time question when the automatic backup is switched on without a password.
+    @State private var isAskingForPassword = false
+    @State private var isShowingEncryption = false
     /// Number and size of the own files in the backup folder; read when the page opens and after a backup.
     @State private var folderSummary: (count: Int, bytes: Int)?
 
     var body: some View {
-        @Bindable var settings = environment.settings
         let service = environment.backup
-        let status = service.status
         Form {
-            Section {
-                StatusCard(status: status, folderName: service.folderName, summary: folderSummary,
-                           includesPrivate: settings.backupIncludesPrivateNotes)
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-
-            Section {
-                Button { makeBackup(service) } label: { Label("Jetzt sichern", systemImage: "square.and.arrow.up") }
-                Button { isChoosingFile = true } label: { Label("Wiederherstellen …", systemImage: "arrow.counterclockwise") }
-            }
-
-            Section {
-                Toggle(isOn: $settings.autoBackupEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Automatisch sichern")
-                        Text("Täglich beim Verlassen der App, die letzten \(BackupRules.keptFiles) bleiben")
-                            .font(.footnote).foregroundStyle(.secondaryText)
-                    }
-                }
-                Button { isChoosingFolder = true } label: {
-                    LabeledContent("Sicherungsordner", value: service.folderName ?? String(localized: "Nicht gewählt"))
-                }
-                .tint(.primary)
-            } header: {
-                Text("Automatisch")
-            } footer: {
-                Text("Andere Dateien im Ordner rührt Tagwerk nicht an. Gelöscht werden nur ältere Dateien mit dem Namen „Tagwerk-Sicherung-…“.")
-            }
-
-            Section {
-                Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
-                NavigationLink { BackupCoverageView() } label: { Text("Was wird gesichert?") }
-                if let text = Self.attachmentsText(service.attachmentSummary) {
-                    LabeledContent("Anhänge in Notizen", value: text)
-                }
-            } header: {
-                Text("Inhalt")
-            } footer: {
-                Text("Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten. Die Sicherung ist nicht verschlüsselt und liegt dort, wo du sie speicherst.")
-            }
-
-            Section {
-                EmptyView()
-            } header: {
-                Text("Vor dem Wiederherstellen")
-            } footer: {
-                Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).")
-            }
+            statusSection(service)
+            actionsSection(service)
+            automaticSection(service)
+            contentSection(service)
+            safetyCopySection
         }
         .navigationTitle("Datensicherung")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(isPresented: $isShowingEncryption) { BackupEncryptionView() }
         .task { refreshFolderSummary(service) }
-        .onChange(of: settings.backupFolderBookmark) { refreshFolderSummary(service) }
-        .onChange(of: settings.lastAutoBackupAt) { refreshFolderSummary(service) }
-        .fileExporter(isPresented: $isExporting, document: document, contentType: .json, defaultFilename: service.suggestedFileName) { result in
+        .onChange(of: environment.settings.backupFolderBookmark) { refreshFolderSummary(service) }
+        .onChange(of: environment.settings.lastAutoBackupAt) { refreshFolderSummary(service) }
+        .onChange(of: environment.settings.autoBackupEnabled) { askForPasswordOnce() }
+        .fileExporter(isPresented: $isExporting, document: document, contentType: document?.contentType ?? .json,
+                      defaultFilename: exportFileName) { result in
             if case .failure = result { alertText = BackupService.message(for: .writeFailed) }
         }
-        .fileImporter(isPresented: $isChoosingFile, allowedContentTypes: [.json]) { result in
+        .fileImporter(isPresented: $isChoosingFile, allowedContentTypes: [.json, .tagwerkBackup]) { result in
             if case .success(let url) = result { inspect(url, service: service) }
         }
         .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { result in
@@ -92,11 +56,102 @@ struct BackupSettingsView: View {
                     .presentationDetents([.large])
             }
         }
+        .alert("Passwort der Sicherung", isPresented: passwordBinding) {
+            SecureField("Passwort", text: $typedPassword)
+            Button("Öffnen") { openWithTypedPassword(service) }
+            Button("Abbrechen", role: .cancel) { fileAwaitingPassword = nil; typedPassword = "" }
+        } message: {
+            Text("Diese Sicherung ist verschlüsselt. Gib das Passwort ein, mit dem sie gesichert wurde.")
+        }
+        .alert("Passwort festlegen?", isPresented: $isAskingForPassword) {
+            Button("Passwort festlegen") { isShowingEncryption = true }
+            Button("Ohne Passwort sichern", role: .cancel) {}
+        } message: {
+            Text("Die Sicherung enthält dein Tagebuch unverschlüsselt.")
+        }
         .alert(alertText ?? "", isPresented: alertBinding) { Button("OK", role: .cancel) {} }
+    }
+
+    // MARK: Sections
+
+    private func statusSection(_ service: BackupService) -> some View {
+        Section {
+            StatusCard(status: service.status, folderName: service.folderName, summary: folderSummary,
+                       includesPrivate: environment.settings.backupIncludesPrivateNotes,
+                       encrypted: environment.settings.backupEncryptionEnabled)
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    private func actionsSection(_ service: BackupService) -> some View {
+        Section {
+            Button { makeBackup(service) } label: { Label("Jetzt sichern", systemImage: "square.and.arrow.up") }
+            Button { isChoosingFile = true } label: { Label("Wiederherstellen …", systemImage: "arrow.counterclockwise") }
+        }
+    }
+
+    private func automaticSection(_ service: BackupService) -> some View {
+        @Bindable var settings = environment.settings
+        return Section {
+            Toggle(isOn: $settings.autoBackupEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Automatisch sichern")
+                    Text("Täglich beim Verlassen der App, die letzten \(BackupRules.keptFiles) bleiben")
+                        .font(.footnote).foregroundStyle(.secondaryText)
+                }
+            }
+            Button { isChoosingFolder = true } label: {
+                LabeledContent("Sicherungsordner", value: service.folderName ?? String(localized: "Nicht gewählt"))
+            }
+            .tint(.primary)
+        } header: {
+            Text("Automatisch")
+        } footer: {
+            Text("Andere Dateien im Ordner rührt Tagwerk nicht an. Gelöscht werden nur ältere Dateien mit dem Namen „Tagwerk-Sicherung-…“.")
+        }
+    }
+
+    private func contentSection(_ service: BackupService) -> some View {
+        @Bindable var settings = environment.settings
+        return Section {
+            Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
+            NavigationLink { BackupEncryptionView() } label: {
+                LabeledContent("Mit Passwort verschlüsseln",
+                               value: settings.backupEncryptionEnabled ? String(localized: "Ein") : String(localized: "Aus"))
+            }
+            NavigationLink { BackupCoverageView() } label: { Text("Was wird gesichert?") }
+            if let text = Self.attachmentsText(service.attachmentSummary) {
+                LabeledContent("Anhänge in Notizen", value: text)
+            }
+        } header: {
+            Text("Inhalt")
+        } footer: {
+            Text("Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.")
+        }
+    }
+
+    private var safetyCopySection: some View {
+        Section {
+            EmptyView()
+        } header: {
+            Text("Vor dem Wiederherstellen")
+        } footer: {
+            Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).")
+        }
     }
 
     private func refreshFolderSummary(_ service: BackupService) {
         folderSummary = service.folderSummary()
+    }
+
+    /// Switching the automatic backup on without a password asks once whether to set one; the question never comes back.
+    private func askForPasswordOnce() {
+        let settings = environment.settings
+        guard settings.autoBackupEnabled, !settings.backupEncryptionEnabled, !settings.backupPlainHintShown,
+              settings.backupIncludesPrivateNotes else { return }
+        settings.backupPlainHintShown = true
+        isAskingForPassword = true
     }
 
     /// "12 · 34 MB"; `nil` without attachments, so the row only shows when it matters for the file size.
@@ -110,8 +165,12 @@ struct BackupSettingsView: View {
 
     private func makeBackup(_ service: BackupService) {
         do {
-            document = BackupDocument(data: try service.makeBackupData())
+            let file = try service.makeBackupFile()
+            document = BackupDocument(data: file.data, encrypted: BackupCrypto.isEncrypted(file.data))
+            exportFileName = file.fileName
             isExporting = true
+        } catch let error as BackupService.BackupError {
+            alertText = BackupService.message(for: error)
         } catch {
             alertText = BackupService.message(for: .writeFailed)
         }
@@ -125,13 +184,30 @@ struct BackupSettingsView: View {
             alertText = BackupService.message(for: .unreadable)
             return
         }
+        open(data, password: nil, service: service)
+    }
+
+    /// Decodes the file. An encrypted file from another device asks for its password; a wrong one changes nothing.
+    private func open(_ data: Data, password: String?, service: BackupService) {
         do {
-            pendingRestore = try service.inspect(data)
+            pendingRestore = try service.inspectFile(data, password: password)
+            fileAwaitingPassword = nil
+        } catch BackupService.BackupError.passwordRequired {
+            fileAwaitingPassword = data
         } catch let error as BackupService.BackupError {
+            fileAwaitingPassword = nil
             alertText = BackupService.message(for: error)
         } catch {
+            fileAwaitingPassword = nil
             alertText = BackupService.message(for: .unreadable)
         }
+    }
+
+    private func openWithTypedPassword(_ service: BackupService) {
+        guard let data = fileAwaitingPassword else { return }
+        let password = typedPassword
+        typedPassword = ""
+        open(data, password: password, service: service)
     }
 
     /// A copy of the current state goes into the app documents first, then the data is replaced.
@@ -142,6 +218,9 @@ struct BackupSettingsView: View {
         do {
             let url = try service.writeSafetyCopy(into: BackupService.safetyCopyDirectory)
             safetyCopy = try Data(contentsOf: url)
+        } catch BackupService.BackupError.keyMissing {
+            alertText = BackupService.message(for: .keyMissing) + " " + String(localized: "Es wurde nichts ersetzt.")
+            return
         } catch {
             alertText = String(localized: "Die Kopie des bisherigen Stands ließ sich nicht schreiben. Es wurde nichts ersetzt.")
             return
@@ -171,6 +250,10 @@ struct BackupSettingsView: View {
         Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } })
     }
 
+    private var passwordBinding: Binding<Bool> {
+        Binding(get: { fileAwaitingPassword != nil }, set: { if !$0 { typedPassword = "" } })
+    }
+
     private var alertBinding: Binding<Bool> {
         Binding(get: { alertText != nil }, set: { if !$0 { alertText = nil } })
     }
@@ -183,6 +266,7 @@ private struct StatusCard: View {
     let folderName: String?
     let summary: (count: Int, bytes: Int)?
     let includesPrivate: Bool
+    var encrypted = false
     private let now = Date()
 
     var body: some View {
@@ -198,7 +282,7 @@ private struct StatusCard: View {
             if let title = BackupStatusText.title(status, now: now, calendar: calendar) {
                 Text(title).font(.title3.weight(.semibold))
             }
-            Text(BackupStatusText.detail(status, folderName: folderName, summary: summary, includesPrivate: includesPrivate))
+            Text(BackupStatusText.detail(status, folderName: folderName, summary: summary, includesPrivate: includesPrivate, encrypted: encrypted))
                 .font(.footnote).foregroundStyle(.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

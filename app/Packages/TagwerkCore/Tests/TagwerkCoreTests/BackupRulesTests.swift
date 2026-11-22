@@ -35,6 +35,34 @@ struct BackupRulesTests {
         #expect(BackupRules.filesToDelete(names: []).isEmpty)
     }
 
+    @Test func fileName_encryptedExtension() {
+        let date = instant(2026, 11, 19, 14, 23)
+        #expect(BackupRules.fileName(for: date, calendar: calendar, encrypted: true) == "Tagwerk-Sicherung-2026-11-19-1423.tagwerk")
+        #expect(BackupRules.fileName(for: date, calendar: calendar, encrypted: false) == BackupRules.fileName(for: date, calendar: calendar))
+        #expect(BackupRules.safetyCopyName(for: date, calendar: calendar, encrypted: true) == "Tagwerk-Vor-Wiederherstellung-2026-11-19-1423.tagwerk")
+    }
+
+    @Test func isOwnFile_bothExtensions() {
+        #expect(BackupRules.isOwnFile("Tagwerk-Sicherung-2026-11-19-1423.tagwerk"))
+        #expect(BackupRules.isOwnFile("Tagwerk-Sicherung-2026-11-19-1423.json"))
+        for name in ["Tagwerk-Sicherung-2026-11-19-1423.tagwerk.bak", "Tagwerk-Sicherung-2026-11-19-1423.txt", "Tagwerk-Sicherung-2026-11-19-1423.TAGWERK"] {
+            #expect(!BackupRules.isOwnFile(name), "\(name)")
+        }
+    }
+
+    @Test func filesToDelete_keepsNewestSevenAcrossBoth() {
+        var names = (1...5).map { "Tagwerk-Sicherung-2026-11-\(String(format: "%02d", $0))-0800.json" }
+        names += (6...10).map { "Tagwerk-Sicherung-2026-11-\(String(format: "%02d", $0))-0800.tagwerk" }
+        let doomed = BackupRules.filesToDelete(names: names.shuffled())
+        #expect(doomed == ["Tagwerk-Sicherung-2026-11-03-0800.json", "Tagwerk-Sicherung-2026-11-02-0800.json", "Tagwerk-Sicherung-2026-11-01-0800.json"])
+    }
+
+    @Test func isOwnFile_safetyCopyNeverMatches() {
+        for encrypted in [false, true] {
+            #expect(!BackupRules.isOwnFile(BackupRules.safetyCopyName(for: instant(2026, 11, 19, 14, 23), calendar: calendar, encrypted: encrypted)))
+        }
+    }
+
     @Test func isDue_afterADayOrWithoutABackup() {
         let now = instant(2026, 11, 19, 12)
         #expect(BackupRules.isDue(lastBackup: nil, now: now))

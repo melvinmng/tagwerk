@@ -12,30 +12,38 @@ public enum BackupRules {
     /// Automatic backups kept in the folder.
     public static let keptFiles = 7
     public static let fileExtension = "json"
+    /// The extension of a password-encrypted backup, so nobody takes the file for JSON.
+    public static let encryptedFileExtension = "tagwerk"
 
-    /// "Tagwerk-Sicherung-2026-11-19-1423.json", in the time zone of `calendar`.
-    public static func fileName(for date: Date, calendar: Calendar) -> String {
+    /// "Tagwerk-Sicherung-2026-11-19-1423.json" (".tagwerk" when `encrypted`), in the time zone of `calendar`.
+    public static func fileName(for date: Date, calendar: Calendar, encrypted: Bool = false) -> String {
         let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        return String(format: "Tagwerk-Sicherung-%04d-%02d-%02d-%02d%02d.json", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1,
-                      parts.hour ?? 0, parts.minute ?? 0)
+        return String(format: "Tagwerk-Sicherung-%04d-%02d-%02d-%02d%02d.%@", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1,
+                      parts.hour ?? 0, parts.minute ?? 0, encrypted ? encryptedFileExtension : fileExtension)
     }
 
     /// The name of the safety copy made before a restore. It does not follow the pattern of `isOwnFile`, so the clean-up of
     /// automatic backups never touches it.
-    public static func safetyCopyName(for date: Date, calendar: Calendar) -> String {
-        "Tagwerk-Vor-Wiederherstellung-" + fileName(for: date, calendar: calendar).dropFirst("Tagwerk-Sicherung-".count)
+    public static func safetyCopyName(for date: Date, calendar: Calendar, encrypted: Bool = false) -> String {
+        "Tagwerk-Vor-Wiederherstellung-" + fileName(for: date, calendar: calendar, encrypted: encrypted).dropFirst("Tagwerk-Sicherung-".count)
     }
 
-    /// Whether a file name is exactly the pattern of `fileName(for:calendar:)`. Only such files are ever deleted.
+    /// Whether a file name is exactly the pattern of `fileName(for:calendar:encrypted:)`, with either extension. Only such files are
+    /// ever deleted.
     public static func isOwnFile(_ name: String) -> Bool {
-        name.range(of: #"^Tagwerk-Sicherung-\d{4}-\d{2}-\d{2}-\d{4}\.json$"#, options: .regularExpression) != nil
+        name.range(of: #"^Tagwerk-Sicherung-\d{4}-\d{2}-\d{2}-\d{4}\.(json|tagwerk)$"#, options: .regularExpression) != nil
     }
 
-    /// The own files that go when only the newest `keeping` stay. The names sort by their time stamp; files that do not follow
-    /// the pattern are never listed.
+    /// The own files that go when only the newest `keeping` stay, counted across both extensions. The names sort by their time
+    /// stamp; files that do not follow the pattern are never listed.
     public static func filesToDelete(names: [String], keeping: Int = keptFiles) -> [String] {
-        let own = names.filter(isOwnFile).sorted(by: >)
+        let own = names.filter(isOwnFile).sorted { stamp($0) == stamp($1) ? $0 > $1 : stamp($0) > stamp($1) }
         return Array(own.dropFirst(max(0, keeping)))
+    }
+
+    /// "2026-11-19-1423" of an own file name.
+    private static func stamp(_ name: String) -> Substring {
+        name.dropFirst("Tagwerk-Sicherung-".count).prefix(15)
     }
 
     /// Whether an automatic backup is due: never made, or the last one is at least a day old (a clock set back counts as due).

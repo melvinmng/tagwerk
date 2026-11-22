@@ -62,6 +62,13 @@ targets:
         NSSupportsLiveActivities: true
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: de.tagwerk.backup
+            UTTypeDescription: Tagwerk-Sicherung
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [tagwerk]
+              public.mime-type: application/x-tagwerk-backup
         CFBundleURLTypes:
           - CFBundleURLName: $(TAGWERK_BUNDLE_ID)
             CFBundleURLSchemes: [tagwerk]

@@ -26,7 +26,8 @@ enum BackupStatusText {
     }
 
     /// The small line under the title. `folderName` is only shown, never interpreted: the card does not claim where the folder lives.
-    static func detail(_ status: BackupStatus, folderName: String?, summary: (count: Int, bytes: Int)?, includesPrivate: Bool) -> String {
+    static func detail(_ status: BackupStatus, folderName: String?, summary: (count: Int, bytes: Int)?, includesPrivate: Bool,
+                       encrypted: Bool = false) -> String {
         switch status {
         case .off:
             return String(localized: "Mit „Jetzt sichern“ legst du eine Datei an, wo du willst.")
@@ -42,6 +43,7 @@ enum BackupStatusText {
                 parts.append(summary.bytes.formatted(.byteCount(style: .file)))
             }
             parts.append(includesPrivate ? String(localized: "mit Tagebuch und Bible Study") : String(localized: "ohne Tagebuch und Bible Study"))
+            if encrypted { parts.append(String(localized: "verschlüsselt")) }
             return parts.joined(separator: " · ")
         }
     }

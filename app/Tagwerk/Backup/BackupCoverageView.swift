@@ -49,6 +49,7 @@ struct BackupCoverageView: View {
     private static var deviceBound: [String] {
         [String(localized: "Anmeldung bei ChatGPT und GitHub"),
          String(localized: "Zugriff auf Kalender, Erinnerungen und Health"),
+         String(localized: "Das Passwort der Sicherung: Tagwerk speichert nur den Schlüssel im Schlüsselbund dieses iPhones, nie das Passwort"),
          String(localized: "Der Sicherungsordner dieses iPhones")]
     }
 }

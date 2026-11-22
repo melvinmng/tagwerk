@@ -5752,6 +5752,16 @@
         }
       }
     },
+    "Ausschalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off"
+          }
+        }
+      }
+    },
     "Auswählen": {
       "localizations": {
         "en": {
@@ -6866,6 +6876,36 @@
         }
       }
     },
+    "Das Passwort der Sicherung: Tagwerk speichert nur den Schlüssel im Schlüsselbund dieses iPhones, nie das Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup password: Tagwerk only stores the key in the Keychain of this iPhone, never the password"
+          }
+        }
+      }
+    },
+    "Das Passwort ist zu kurz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is too short."
+          }
+        }
+      }
+    },
+    "Das Passwort stimmt nicht. Es wurde nichts geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is wrong. Nothing was changed."
+          }
+        }
+      }
+    },
     "Das Rezept liegt als Notiz im Ordner „Rezepte“.": {
       "localizations": {
         "en": {
@@ -7442,6 +7482,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "The way home applies after the last event of the day and before breaks of more than three hours. It counts as busy time like the way there."
+          }
+        }
+      }
+    },
+    "Der Schlüssel fehlt auf diesem iPhone. Solange du das Passwort nicht erneut eingibst, sichert Tagwerk nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key is missing on this iPhone. Tagwerk does not back up anything until you enter the password again."
+          }
+        }
+      }
+    },
+    "Der Schlüssel ließ sich nicht aus dem Schlüsselbund entfernen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key could not be removed from the Keychain."
+          }
+        }
+      }
+    },
+    "Der Schlüssel ließ sich nicht im Schlüsselbund speichern. Die Verschlüsselung wurde nicht eingeschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key could not be saved in the Keychain. Encryption was not turned on."
           }
         }
       }
@@ -8218,6 +8288,16 @@
         }
       }
     },
+    "Die Sicherung enthält dein Tagebuch unverschlüsselt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup contains your journal unencrypted."
+          }
+        }
+      }
+    },
     "Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.": {
       "extractionState": "stale",
       "localizations": {
@@ -8481,6 +8561,16 @@
         }
       }
     },
+    "Die beiden Eingaben stimmen nicht überein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The two entries do not match."
+          }
+        }
+      }
+    },
     "Die bisherige Liste gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -8597,6 +8687,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "This source isn’t available."
+          }
+        }
+      }
+    },
+    "Diese Sicherung ist mit einem Passwort verschlüsselt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is encrypted with a password."
+          }
+        }
+      }
+    },
+    "Diese Sicherung ist verschlüsselt. Gib das Passwort ein, mit dem sie gesichert wurde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is encrypted. Enter the password it was backed up with."
           }
         }
       }
@@ -9068,6 +9178,16 @@
         }
       }
     },
+    "Ein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
     "Ein Artikel ließ sich nicht schreiben.": {
       "localizations": {
         "en": {
@@ -9094,6 +9214,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Ein neues Passwort gilt nur für neue Sicherungen. Ältere Dateien behalten das Passwort, mit dem sie geschrieben wurden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new password only applies to new backups. Older files keep the password they were written with."
           }
         }
       }
@@ -10111,6 +10241,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No focus session is running."
+          }
+        }
+      }
+    },
+    "Es wurde nichts ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was replaced."
           }
         }
       }
@@ -11876,22 +12016,32 @@
       }
     },
     "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applies to “Back up now” and the automatic backup. Without this content, existing entries in the journal and Bible Study are kept when restoring."
+            "value": "Applies to “Back up now” and the automatic backup. Without this content, a restore keeps the existing journal and Bible Study entries."
           }
         }
       }
     },
     "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten. Die Sicherung ist nicht verschlüsselt und liegt dort, wo du sie speicherst.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Applies to “Back up now” and the automatic backup. Without this content, a restore keeps the existing journal and Bible Study entries. The backup is not encrypted and sits where you save it."
+          }
+        }
+      }
+    },
+    "Gilt für „Jetzt sichern“, die automatische Sicherung und Sicherheitskopien. Der Schlüssel liegt im Schlüsselbund dieses iPhones, damit automatisch gesichert werden kann. Auf einem neuen iPhone wirst du beim Wiederherstellen nach dem Passwort gefragt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to “Back up now”, the automatic backup and safety copies. The key is in the Keychain of this iPhone so that backups can run automatically. On a new iPhone you are asked for the password when you restore."
           }
         }
       }
@@ -15204,6 +15354,16 @@
         }
       }
     },
+    "Mindestens %lld Zeichen. Notiere das Passwort an einem sicheren Ort: Tagwerk kennt es nicht und kann es nicht zurücksetzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least %lld characters. Write the password down in a safe place: Tagwerk does not know it and cannot reset it."
+          }
+        }
+      }
+    },
     "Minimal": {
       "localizations": {
         "en": {
@@ -15360,6 +15520,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan with AI"
+          }
+        }
+      }
+    },
+    "Mit Passwort verschlüsseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypt with a password"
           }
         }
       }
@@ -15961,6 +16131,16 @@
         }
       }
     },
+    "Neue Sicherungen sind danach unverschlüsselt. Vorhandene verschlüsselte Dateien bleiben, wie sie sind, und brauchen weiter ihr Passwort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New backups will be unencrypted afterwards. Existing encrypted files stay as they are and still need their password."
+          }
+        }
+      }
+    },
     "Neue Vorgabe": {
       "localizations": {
         "en": {
@@ -16057,6 +16237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New time block"
+          }
+        }
+      }
+    },
+    "Neues Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password"
           }
         }
       }
@@ -17097,6 +17287,36 @@
         }
       }
     },
+    "Ohne Passwort ist die Sicherung unbrauchbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without the password the backup is useless"
+          }
+        }
+      }
+    },
+    "Ohne Passwort lässt sich eine verschlüsselte Sicherung nicht öffnen. Tagwerk kann es nicht zurücksetzen. Vergisst du es, ist die Sicherung unbrauchbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An encrypted backup cannot be opened without the password. Tagwerk cannot reset it. If you forget it, the backup is useless."
+          }
+        }
+      }
+    },
+    "Ohne Passwort sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up without a password"
+          }
+        }
+      }
+    },
     "Ohne Project erscheint das Issue nicht in deinen Aufgaben.": {
       "extractionState": "stale",
       "localizations": {
@@ -17327,6 +17547,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "No longer fits: pause or delete a habit."
+          }
+        }
+      }
+    },
+    "Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Passwort der Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup password"
+          }
+        }
+      }
+    },
+    "Passwort erneut eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the password again"
+          }
+        }
+      }
+    },
+    "Passwort erneut eingeben: Der Schlüssel fehlt auf diesem iPhone. Öffne „Mit Passwort verschlüsseln“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the password again: the key is missing on this iPhone. Open “Encrypt with a password”."
+          }
+        }
+      }
+    },
+    "Passwort festlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set password"
+          }
+        }
+      }
+    },
+    "Passwort festlegen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a password?"
+          }
+        }
+      }
+    },
+    "Passwort wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat password"
+          }
+        }
+      }
+    },
+    "Passwort ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change password"
           }
         }
       }
@@ -21139,6 +21439,36 @@
         }
       }
     },
+    "Verschlüsselung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption"
+          }
+        }
+      }
+    },
+    "Verschlüsselung ausschalten?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off encryption?"
+          }
+        }
+      }
+    },
+    "Verschlüsselung einschalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on encryption"
+          }
+        }
+      }
+    },
     "Verschoben": {
       "localizations": {
         "en": {
@@ -21185,6 +21515,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Verstanden, verschlüsseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Understood, encrypt"
           }
         }
       }
@@ -25066,6 +25406,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "linked"
+          }
+        }
+      }
+    },
+    "verschlüsselt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "encrypted"
           }
         }
       }

@@ -62,6 +62,11 @@ final class BackupService {
         case folderUnavailable
         case writeFailed
         case restoreFailed
+        /// The file is encrypted and neither the key of this device nor a password is available.
+        case passwordRequired
+        case wrongPassword
+        /// Encryption is on, but the key is not in the Keychain of this iPhone (for example after a transfer to another device).
+        case keyMissing
     }
 
     /// What the last automatic run did, for the settings page.
@@ -81,10 +86,13 @@ final class BackupService {
     @ObservationIgnored private let afterRestore: @MainActor () -> Void
     /// The bytes of the notes' attachments; without it a backup holds none and a restore leaves them alone.
     @ObservationIgnored private let attachments: NoteAttachmentStore?
+    /// The key of the backup password; see `BackupKeyStore`.
+    @ObservationIgnored private let keyStore: BackupKeyStore
 
     init(context: ModelContext, settings: AppSettings, calendar: Calendar = .tagwerk, appVersion: String? = nil,
-         now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil,
+         now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil, keyStore: BackupKeyStore = BackupKeyStore(),
          afterRestore: @escaping @MainActor () -> Void = {}) {
+        self.keyStore = keyStore
         self.afterRestore = afterRestore
         self.attachments = attachments
         self.context = context
@@ -108,7 +116,43 @@ final class BackupService {
 
     // MARK: Writing a backup
 
-    var suggestedFileName: String { BackupRules.fileName(for: now(), calendar: calendar) }
+    var suggestedFileName: String { BackupRules.fileName(for: now(), calendar: calendar, encrypted: settings.backupEncryptionEnabled) }
+
+    /// Whether the key of the backup password is in the Keychain of this iPhone.
+    var hasKey: Bool { keyStore.material() != nil }
+
+    /// The password is set: the key goes into the Keychain and encryption is on from now on. Older files keep the password they
+    /// were written with.
+    func enableEncryption(with material: BackupCrypto.KeyMaterial) throws {
+        try keyStore.save(material)
+        settings.backupEncryptionEnabled = true
+        if settings.lastBackupError == Self.message(for: .keyMissing) { settings.lastBackupError = nil }
+        try? context.save()
+    }
+
+    /// Removes the key and switches encryption off; files that exist stay as they are.
+    func disableEncryption() throws {
+        try keyStore.remove()
+        settings.backupEncryptionEnabled = false
+        if settings.lastBackupError == Self.message(for: .keyMissing) { settings.lastBackupError = nil }
+        try? context.save()
+    }
+
+    /// The key for new files: `nil` while encryption is off; throws `.keyMissing` when it is on but the key is gone. A backup is
+    /// never written unencrypted while the user asked for encryption.
+    private func writingKey() throws -> BackupCrypto.KeyMaterial? {
+        guard settings.backupEncryptionEnabled else { return nil }
+        guard let material = keyStore.material() else { throw BackupError.keyMissing }
+        return material
+    }
+
+    /// JSON or, with encryption on, the encrypted file, with the name that goes with it.
+    func makeBackupFile(includePrivate: Bool? = nil) throws -> (data: Data, fileName: String) {
+        let key = try writingKey()
+        let plain = try makeBackupData(includePrivate: includePrivate)
+        guard let key else { return (plain, BackupRules.fileName(for: now(), calendar: calendar)) }
+        return (try BackupCrypto.encrypt(plain, with: key), BackupRules.fileName(for: now(), calendar: calendar, encrypted: true))
+    }
 
     /// The whole backup as JSON. `includePrivate` defaults to the setting "Tagebuch und Bible Study einschließen".
     func makeBackupData(includePrivate: Bool? = nil) throws -> Data {
@@ -138,6 +182,31 @@ final class BackupService {
         return Inspection(header: header, entities: envelope.entities)
     }
 
+    /// Like `inspect`, for a file that may be encrypted. An encrypted file opens with the key of this device when its salt matches,
+    /// otherwise with `password`; without either `.passwordRequired` is thrown. A wrong password throws `.wrongPassword`; nothing
+    /// is decrypted into the store, replaced or written then.
+    func inspectFile(_ data: Data, password: String? = nil) throws -> Inspection {
+        guard BackupCrypto.isEncrypted(data) else { return try inspect(data) }
+        guard let header = BackupCrypto.header(of: data) else { throw BackupError.unreadable }
+        let key: Data
+        if let material = keyStore.material(), material.salt == header.salt, material.iterations == header.iterations {
+            key = material.key
+        } else if let password, !password.isEmpty {
+            key = BackupCrypto.deriveKey(password: password, salt: header.salt, iterations: header.iterations)
+        } else {
+            throw BackupError.passwordRequired
+        }
+        do {
+            return try inspect(try BackupCrypto.decrypt(data, key: key))
+        } catch let error as BackupCrypto.CryptoError {
+            switch error {
+            case .wrongPassword: throw BackupError.wrongPassword
+            case .unsupportedVersion(let version): throw BackupError.newerVersion(version)
+            case .damaged, .passwordTooShort: throw BackupError.unreadable
+            }
+        }
+    }
+
     /// Replaces the data of everything in the file. Call `writeSafetyCopy` first and pass its content as `safetyCopy`:
     /// the replacement saves twice (old unique keys must be gone first), so a failure after the first save would leave
     /// the store without data. In that case the previous state comes back from the safety copy and `.restoreFailed` is thrown.
@@ -148,7 +217,7 @@ final class BackupService {
             afterRestore()
         } catch {
             context.rollback()
-            if let safetyCopy, let previous = try? inspect(safetyCopy) {
+            if let safetyCopy, let previous = try? inspectFile(safetyCopy) {
                 try? previous.entities.restore(into: context, settings: settings, replacePrivate: true, attachments: attachments)
             }
             afterRestore()
@@ -157,12 +226,14 @@ final class BackupService {
     }
 
     /// A copy of the current state in `directory` (the app documents), made before a restore replaces anything. It always holds
-    /// everything, journal and Bible Study included.
+    /// everything, journal and Bible Study included, and is encrypted while encryption is on.
     @discardableResult
     func writeSafetyCopy(into directory: URL) throws -> URL {
-        let data = try makeBackupData(includePrivate: true)
+        let key = try writingKey()
+        var data = try makeBackupData(includePrivate: true)
+        if let key { data = try BackupCrypto.encrypt(data, with: key) }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let url = directory.appendingPathComponent(BackupRules.safetyCopyName(for: now(), calendar: calendar))
+        let url = directory.appendingPathComponent(BackupRules.safetyCopyName(for: now(), calendar: calendar, encrypted: key != nil))
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         return url
     }
@@ -254,8 +325,7 @@ final class BackupService {
         }
         let scoped = folder.startAccessingSecurityScopedResource()
         defer { if scoped { folder.stopAccessingSecurityScopedResource() } }
-        let data = try makeBackupData()
-        let name = suggestedFileName
+        let (data, name) = try makeBackupFile()
         do {
             try data.write(to: folder.appendingPathComponent(name), options: .atomic)
         } catch {
@@ -282,6 +352,9 @@ final class BackupService {
         case .noFolder: String(localized: "Wähle zuerst einen Ordner für die automatische Sicherung.")
         case .folderUnavailable: String(localized: "Der gewählte Ordner ist nicht mehr erreichbar. Wähle ihn neu.")
         case .writeFailed: String(localized: "Die Sicherung ließ sich nicht schreiben. Prüfe den Ordner und den freien Speicher.")
+        case .passwordRequired: String(localized: "Diese Sicherung ist mit einem Passwort verschlüsselt.")
+        case .wrongPassword: String(localized: "Das Passwort stimmt nicht. Es wurde nichts geändert.")
+        case .keyMissing: String(localized: "Passwort erneut eingeben: Der Schlüssel fehlt auf diesem iPhone. Öffne „Mit Passwort verschlüsseln“.")
         case .restoreFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.")
         }
     }
