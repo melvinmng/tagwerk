@@ -386,7 +386,7 @@ struct MealSheet: View {
                         Spacer()
                         if followUpAvailability != .hidden {
                             Button("Mit ChatGPT zu diesem Posten schreiben", systemImage: "sparkles") { followUp.focus = item.id }
-                                .labelStyle(.iconOnly).buttonStyle(.borderless)
+                                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
                         }
                     }
                 }

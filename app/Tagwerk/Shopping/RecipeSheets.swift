@@ -625,6 +625,7 @@ struct RecipeResultView: View {
                         Button { draft.toggle(row.id) } label: {
                             Image(systemName: draft.isSelected(row.id) ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(draft.isSelected(row.id) ? Color.accentColor : Color.secondary)
+                                .minimumTapTarget()
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(candidate.listName)
@@ -634,7 +635,7 @@ struct RecipeResultView: View {
                             .accessibilityHint("Öffnet die Werte der Zutat")
                         if draft.hasFollowUp {
                             Button("Mit ChatGPT zu dieser Zutat schreiben", systemImage: "sparkles") { draft.followUp.focus = row.id }
-                                .labelStyle(.iconOnly).buttonStyle(.borderless)
+                                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
                         }
                     }
                 }

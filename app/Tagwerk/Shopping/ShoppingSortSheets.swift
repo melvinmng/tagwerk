@@ -93,7 +93,7 @@ struct ShoppingSortResultSheet: View {
                     Section("Änderungen") {
                         ForEach(draft.changes) { change in
                             let categoryOff = draft.deselectedCategories.contains(change.toCategory)
-                            HStack(spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 checkRow(isOn: !categoryOff && !draft.deselectedItems.contains(change.id)) {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(change.itemName)
@@ -104,10 +104,14 @@ struct ShoppingSortResultSheet: View {
                                     draft.toggleItem(change.id)
                                 }
                                 .disabled(categoryOff)
-                                categoryMenu(change)
-                                if draft.hasFollowUp {
-                                    Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
-                                        .labelStyle(.iconOnly).buttonStyle(.borderless)
+                                // Below the name, so the name keeps the width of the row at large text sizes.
+                                HStack(spacing: 8) {
+                                    Spacer(minLength: 0)
+                                    categoryMenu(change)
+                                    if draft.hasFollowUp {
+                                        Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
+                                            .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                                    }
                                 }
                             }
                         }
@@ -140,7 +144,7 @@ struct ShoppingSortResultSheet: View {
                 ForEach(draft.categoryChoices, id: \.self) { Text($0).tag($0) }
             }
         } label: {
-            Image(systemName: "folder")
+            Image(systemName: "folder").minimumTapTarget()
         }
         .accessibilityLabel("Kategorie wählen")
         .accessibilityValue(change.toCategory)

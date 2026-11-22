@@ -79,6 +79,16 @@ enum AuditAllowlist {
             + "78 % tone for this one header would duplicate the `TextSecondary` asset that strand K (plan g3-system-anbindungen, KO1a) "
             + "introduces for all grey texts at once. Removed with the other entries of the group in task K5 (#160)."),
 
+        Entry(auditType: .contrast, labels: [
+            "Mit ChatGPT besprechen", "Britisches Englisch", "Markennamen lassen",
+            "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",
+        ], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
+            "Header, footer and quick replies of the follow-up section of the translation preview (plan ki-vorschlaege-anpassen, task D5): "
+            + "the system grey of a grouped section header and footer, and the purple bordered buttons of the shared follow-up bar (the same "
+            + "style as the quick replies of \"Tag planen\"), on the grouped background of the half-height sheet. The audit reports them as "
+            + "\"nearly passed\" or \"failed\" depending on the run and the text size; the system draws the colours of the headers and of the "
+            + "bordered style (#188, \"Schrift auf Tönung\"), and the footer already uses the fixed grey of the other footnotes."),
+
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": text in the primary or secondary colour on the event colour at 24 % "
             + "(blue, green, red, grey). The tint is the colour code of the grid (calendar, block, deadline, break); contrast on tint is a "
@@ -122,7 +132,18 @@ enum AuditAllowlist {
             + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
 
+        Entry(auditType: .dynamicType, labels: ["Britisches Englisch", "Markennamen lassen"], screens: ["Einkaufsliste › Übersetzung"], reason:
+            "Quick replies of the follow-up of the translation preview (plan ki-vorschlaege-anpassen, task D5): bordered buttons with a text "
+            + "style in a horizontal scroll row, shared with the quick replies of \"Tag planen\" (`FollowUpBar`). The audit reports a partial "
+            + "lack of support in some runs (it does so for different texts of the screen from run to run); the buttons grow with the text size "
+            + "and are not clipped in the large text run. Stays on the device test list (large text)."),
+
         // MARK: Text clipped
+        Entry(auditType: .textClipped, labels: ["Britisches Englisch", "Markennamen lassen"], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
+            "Quick replies of the follow-up of the translation preview (plan ki-vorschlaege-anpassen, task D5): bordered buttons in a horizontal "
+            + "scroll row (`FollowUpBar`, shared with the quick replies of \"Tag planen\"). The row scrolls sideways, so a chip wider than the "
+            + "screen is reached by swiping and its text is complete; the audit reports the chip at the edge of the visible area. Large text is "
+            + "checked on the device (large text test list)."),
         Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
             + "overlapping events share the width (up to four columns). Short or narrow entries cut their text by design; the full text is "

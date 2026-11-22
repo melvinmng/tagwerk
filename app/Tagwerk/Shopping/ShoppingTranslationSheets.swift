@@ -136,7 +136,7 @@ struct ShoppingTranslationResultSheet: View {
 
     private func row(_ change: ShoppingTranslationPlan.Change) -> some View {
         let isOn = !deselected.contains(change.id)
-        return HStack(spacing: 8) { Button {
+        return VStack(alignment: .leading, spacing: 4) { Button {
             draft.toggle(change.id)
         } label: {
             HStack(spacing: 12) {
@@ -155,16 +155,20 @@ struct ShoppingTranslationResultSheet: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Self.accessibilityLabel(change, isSelected: isOn))
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
-            // The name can be typed over by hand (AN9a) and the row can be talked about with ChatGPT.
-            PreviewRowMark(mark: draft.followUp.mark(of: change.id))
-            Button("Neuen Namen eingeben", systemImage: "pencil") {
-                newName = change.newName
-                renamedID = change.id
-            }
-            .labelStyle(.iconOnly).buttonStyle(.borderless)
-            if draft.hasFollowUp {
-                Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
-                    .labelStyle(.iconOnly).buttonStyle(.borderless)
+            // The name can be typed over by hand (AN9a) and the row can be talked about with ChatGPT. The buttons sit below the
+            // name, so the name keeps the width of the row at large text sizes.
+            HStack(spacing: 8) {
+                PreviewRowMark(mark: draft.followUp.mark(of: change.id))
+                Spacer(minLength: 0)
+                Button("Neuen Namen eingeben", systemImage: "pencil") {
+                    newName = change.newName
+                    renamedID = change.id
+                }
+                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                if draft.hasFollowUp {
+                    Button("Mit ChatGPT zu diesem Artikel schreiben", systemImage: "sparkles") { draft.followUp.focus = change.id }
+                        .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                }
             }
         }
     }

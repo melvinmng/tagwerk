@@ -25,7 +25,7 @@ struct PreviewFollowUpSection<Item: Identifiable & Equatable & Sendable>: View w
     var body: some View {
         Section {
             FollowUpBar(availability: availability, state: model.state, place: place, quickReplies: quickReplies,
-                        placeholder: placeholder, footer: footer, scope: scope, isFocused: $focused,
+                        placeholder: placeholder, scope: scope, isFocused: $focused,
                         sendIdentity: model.focus.map { AnyHashable("\($0)") } ?? AnyHashable("all"), onSend: onSend,
                         onRetry: { onSend(model.lastMessage) }) {
                 if !model.reply.isEmpty || model.canUndo {
@@ -38,7 +38,10 @@ struct PreviewFollowUpSection<Item: Identifiable & Equatable & Sendable>: View w
                 }
             }
         } header: {
-            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles") }
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles").foregroundStyle(Color.secondary) }
+        } footer: {
+            // The footer of the section, not a row: the system footer style passes the contrast audit at the largest text size.
+            if availability != .hidden { footer }
         }
     }
 }
