@@ -9,3 +9,7 @@ AccessibilityAuditRecipesLargeTextUITests
 
 # The evening variant of the AX5 audit is a nightly-only check as well (introduced with the evening audit work).
 AccessibilityAuditEveningLargeTextUITests
+
+# The title of the plan header next to the bar buttons: the pull request set checks the rule with PlanHeaderLayoutTests (a render
+# test, no app launch); this test measures the real navigation bar and keeps the numbers of that render test honest.
+PlanHeaderLayoutUITests
