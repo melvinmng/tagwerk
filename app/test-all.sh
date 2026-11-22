@@ -70,6 +70,34 @@ PACKAGE_TEST_PLATFORM=(
 )
 MACOS_DESTINATION="platform=macOS"
 
+# Xcode embeds a copy of every SwiftPM resource bundle (<Package>_<Target>.bundle) in the test bundles and apps that use it,
+# and Bundle.module looks at that copy first. With a DerivedData folder restored from the CI build cache, the copy step is
+# not repeated when a resource file was added to the package after the cached build, so a test run reads the stale copy
+# and does not find the new file (the Bible verse table was reported missing this way). Deleting the embedded copies before
+# the build forces Xcode to copy the current bundle again; the cost is one small copy per bundle.
+# Usage: remove_embedded_resource_bundles PRODUCTS_FOLDER
+remove_embedded_resource_bundles() {
+  local products_folder="$1"
+  [[ -d "$products_folder" ]] || return 0
+  find "$products_folder" -mindepth 2 -type d -name "*_*.bundle" \( -path "*.xctest/*" -o -path "*.app/*" \) -prune \
+    -exec rm -rf {} + 2> /dev/null || true
+}
+
+# Prints the DerivedData folder Xcode uses for the package or project at the given path (xcodebuild without
+# -derivedDataPath keeps one folder per path, named <Name>-<hash>, and records the path in its info.plist); nothing when
+# there is none yet.
+# Usage: default_derived_data_folder WORKSPACE_PATH
+default_derived_data_folder() {
+  local workspace_path="$1" info_plist recorded_path
+  for info_plist in "$HOME"/Library/Developer/Xcode/DerivedData/*/info.plist(N); do
+    recorded_path=$(/usr/bin/plutil -extract WorkspacePath raw -o - "$info_plist" 2> /dev/null) || continue
+    if [[ "$recorded_path" == "$workspace_path" ]]; then
+      print -r -- "${info_plist:h}"
+      return 0
+    fi
+  done
+}
+
 # Fills UI_SELECTION_ARGS with the xcodebuild arguments that select and retry UI tests from the environment
 # (TAGWERK_UI_ONLY, TAGWERK_UI_TEST_SET, TAGWERK_UI_TEST_RETRIES). Prints a one-line summary on stdout.
 # Without any of these variables the array stays empty, so the UI stage runs every UI test once.
@@ -338,6 +366,8 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
       ;;
   esac
   scheme=$(resolve_package_scheme "$package_name") || stage_failed
+  package_derived_data=$(default_derived_data_folder "$package_dir")
+  [[ -z "$package_derived_data" ]] || remove_embedded_resource_bundles "$package_derived_data/Build/Products"
   run_stage -scheme "$scheme" -destination "$package_destination" || stage_failed
 done
 
@@ -353,6 +383,7 @@ if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
 else
   # The scheme also runs the tests of the packages that need the simulator (AIKit). One build, then the tests.
   APP_ARGS=(-project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED")
+  remove_embedded_resource_bundles "$DERIVED/Build/Products"
   build_for_testing "${APP_ARGS[@]}" || stage_failed
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
     run_tests test-without-building "${APP_ARGS[@]}" || stage_failed
@@ -370,6 +401,7 @@ else
   UI_ARGS=(-project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED")
   # An invalid selection is reported before the build, not after it.
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then build_ui_selection_args || stage_failed; fi
+  remove_embedded_resource_bundles "$DERIVED/Build/Products"
   build_for_testing "${UI_ARGS[@]}" || stage_failed
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
     # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).

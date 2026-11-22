@@ -4,6 +4,10 @@ import XCTest
 /// touches the buttons. Runs the header in German and English at Standard, XXXL and AX1 and prints the measurements that
 /// set `PlanHeaderMetrics.trailingReserve` (lines starting with "HEADER"). The AX5 size is left out to keep the run short.
 ///
+/// Nightly only (`nightly-only.txt`): the pull request set checks the same rule with `PlanHeaderLayoutTests`, which renders the title
+/// and takes the geometry of the bar from these measurements. This test is the proof that those numbers still match the real navigation
+/// bar; when it fails or its "HEADER" lines differ from `PlanHeaderLayoutTests.RealBar`, update that enum.
+///
 /// The run is kept short on purpose (every variant needs its own app launch): the first variant uses the launch of `setUp`,
 /// and every day is measured with one snapshot of the bar instead of one query per button.
 final class PlanHeaderLayoutUITests: UITestCase {

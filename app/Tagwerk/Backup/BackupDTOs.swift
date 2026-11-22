@@ -784,6 +784,11 @@ struct BibleStudySessionBackup: BackupEntity {
     var noteID: UUID
     var startedAt: Date
     var completedAt: Date?
+    /// The passage as numbers (BS2). Optional so backups written before still read; missing means unknown (0).
+    var startChapter: Int?
+    var startVerse: Int?
+    var endChapter: Int?
+    var endVerse: Int?
 
     init(_ record: BibleStudySessionRecord) {
         id = record.id
@@ -793,6 +798,10 @@ struct BibleStudySessionBackup: BackupEntity {
         noteID = record.noteID
         startedAt = record.startedAt
         completedAt = record.completedAt
+        startChapter = record.startChapter
+        startVerse = record.startVerse
+        endChapter = record.endChapter
+        endVerse = record.endVerse
     }
 
     func makeRecord() -> BibleStudySessionRecord {
@@ -804,6 +813,10 @@ struct BibleStudySessionBackup: BackupEntity {
         record.noteID = noteID
         record.startedAt = startedAt
         record.completedAt = completedAt
+        record.startChapter = startChapter ?? 0
+        record.startVerse = startVerse ?? 0
+        record.endChapter = endChapter ?? 0
+        record.endVerse = endVerse ?? 0
         return record
     }
 }

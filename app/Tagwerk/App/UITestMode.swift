@@ -9,12 +9,14 @@ import SwiftUI
 ///
 /// Two more arguments serve the accessibility audit: `-TagwerkUITestTextSize <size>` forces a Dynamic Type size
 /// (e.g. `accessibility5`) and `-TagwerkUITestDark` forces dark mode, both only for the app, not for the simulator.
+/// `-TagwerkUITestScreen <name>` opens a screen directly at launch (see `UITestScreen`).
 enum UITestMode {
     static let launchArgument = "-TagwerkUITest"
     static let textSizeArgument = "-TagwerkUITestTextSize"
     static let darkArgument = "-TagwerkUITestDark"
     static let clockArgument = "-TagwerkUITestNow"
     static let lockAuthenticationArgument = "-TagwerkUITestLockAuthentication"
+    static let screenArgument = "-TagwerkUITestScreen"
     /// `-TagwerkUITestScan <pages>`: "Dokument scannen" delivers that many test pages instead of opening the document camera.
     static let scanArgument = "-TagwerkUITestScan"
 
@@ -60,6 +62,11 @@ enum UITestMode {
         isActive && ProcessInfo.processInfo.arguments.contains(darkArgument) ? .dark : nil
     }
 
+    /// The screen to open at launch; `nil` without the argument or with a name that is not known.
+    static var screen: UITestScreen? {
+        isActive ? UITestScreen.named(in: ProcessInfo.processInfo.arguments) : nil
+    }
+
     /// The number of test pages that stand in for the document camera, or `nil` for the real camera.
     static var scanPageCount: Int? {
         let arguments = ProcessInfo.processInfo.arguments
@@ -72,6 +79,7 @@ enum UITestMode {
     static var lockAuthentication: [Bool]? { nil }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
+    static var screen: UITestScreen? { nil }
     static var scanPageCount: Int? { nil }
     #endif
 }

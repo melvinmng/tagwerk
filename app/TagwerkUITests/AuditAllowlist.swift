@@ -308,9 +308,12 @@ enum AuditAllowlist {
             // between the passes and after the last one, so that the switch back does not run into the next test step.
             try waitForStableScreen(app, screen: screen, file: file, line: line)
             var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+            let auditStarted = Date()
             try runAudit(app, for: pass) { issue in
                 findings.append((issue, issue.element))
             }
+            stats.auditSeconds += Date().timeIntervalSince(auditStarted)
+            stats.findings += findings.count
             for finding in findings where !isAccepted(finding.issue, element: finding.element) {
                 let element = finding.element
                 XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
@@ -318,6 +321,7 @@ enum AuditAllowlist {
             }
         }
         try waitForStableScreen(app, screen: screen, file: file, line: line)
+        recordStats(screen: screen)
     }
 
     /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
@@ -381,6 +385,8 @@ enum AuditAllowlist {
     }
 
     private static func coverage(of issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Coverage {
+        let started = Date()
+        defer { stats.matchSeconds += Date().timeIntervalSince(started) }
         guard let element else { return acceptsFindingWithoutElement(issue) ? .elementlessRule : .none }
         guard let match = matchingEntry(issue, element: element) else { return .none }
         return .entry(index: match.index, pattern: match.pattern)
@@ -416,15 +422,28 @@ enum AuditAllowlist {
         // "Planen (Tag)" at the default size: once the screen has settled, the hour grid has scrolled to "now" (realign on "Heute") and the
         // suggestion card above it ("Derselbe Termin?") lies partly behind the bar. The audit reports the cut card text as "may be clipped"
         // without an element (frame 0×0); the screenshot of the run shows the text only scrolled under the bar, not cut in its own frame.
+        // "Einstellungen › KI › Sprache" in the largest text size: the one clipped text of this page is the toggle label "Mikrofon in Gesprächen"
+        // (entry above: the label wraps completely, the audit counts the height of the row as clipped). When the page is opened directly
+        // with `-TagwerkUITestScreen` the audit reports it without its element; reached through the settings list it came with the element
+        // (frame 36, 276, 236 × 187 in both cases, the same single finding on the page).
         return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
+            || currentScreen == "AX5/dark Einstellungen › KI › Sprache"
             || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
     }
 
     /// The first entry of the list that covers a finding with an element, with the pattern that matched.
     private static func matchingEntry(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement) -> (index: Int, pattern: String)? {
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
-        // Every read of an element property is a query of its own and slow, so each is read once per finding.
-        let label = element.label, identifier = element.identifier, elementType = element.elementType
+        // Every read of an element property is a query of its own and slow, so the properties come from one snapshot of the element
+        // (one query). When the element cannot be snapshotted, the three reads run as before and fail the same way.
+        let label: String, identifier: String, elementType: XCUIElement.ElementType
+        if let snapshot = try? element.snapshot() {
+            (label, identifier, elementType) = (snapshot.label, snapshot.identifier, snapshot.elementType)
+            stats.elementQueries += 1
+        } else {
+            (label, identifier, elementType) = (element.label, element.identifier, element.elementType)
+            stats.elementQueries += 3
+        }
         let index = entries.firstIndex { entry in
             guard entry.auditType == issue.auditType, entry.screens == nil || entry.screens?.contains(currentScreen) == true,
                   entry.elementType == nil || entry.elementType == elementType else { return false }
@@ -472,6 +491,32 @@ enum AuditAllowlist {
     static var collectsFindings: Bool { collectFile != nil }
 
     static var currentScreen = ""
+
+    /// Cost of judging the findings of one `audit` call, written to `<collect file>.stats` in collect mode (one line per audit call):
+    /// the time of `performAccessibilityAudit`, the time of matching the findings against the allowlist (`coverage(of:element:)`,
+    /// which includes the queries of the element) and the number of queries of the element. Measurement only; it does not change a result.
+    private struct Stats {
+        var auditSeconds = 0.0
+        var matchSeconds = 0.0
+        var findings = 0
+        var elementQueries = 0
+    }
+    private static var stats = Stats()
+
+    private static func recordStats(screen: String) {
+        defer { stats = Stats() }
+        guard let path = collectFile else { return }
+        let line = String(format: "%@ | findings=%d auditSeconds=%.2f matchSeconds=%.2f elementQueries=%d\n", screen, stats.findings,
+                          stats.auditSeconds, stats.matchSeconds, stats.elementQueries)
+        let statsPath = path + ".stats"
+        if let handle = FileHandle(forWritingAtPath: statsPath) {
+            handle.seekToEndOfFile()
+            handle.write(Data(line.utf8))
+            try? handle.close()
+        } else {
+            try? line.write(toFile: statsPath, atomically: true, encoding: .utf8)
+        }
+    }
 
     private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?, coverage: Coverage) {
         var accepted = ""

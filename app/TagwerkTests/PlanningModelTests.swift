@@ -2598,6 +2598,16 @@ struct PlanningModelTests {
         #expect(model.runningRemaining(of: timedEvent(from: at(18, 9), to: at(18, 10)), on: today) == nil)
     }
 
+    /// The running seminar of the demo data in the UI test mode (10:00–12:30, clock at 10:30), moved to the clock of this model (10:00):
+    /// the time left and the texts the grid puts on the running entry. Replaces `NowMarkerUITests.testRunningEntryShowsTheTimeLeftAndTheNowCapsule`.
+    @Test func runningRemaining_longEvent_saysHowMuchTimeIsLeftInBothTexts() async throws {
+        let model = await model()   // now is 10:00
+        let remaining = try #require(model.runningRemaining(of: timedEvent(from: at(18, 8), to: at(18, 12)), on: today))
+        #expect(remaining == 120)
+        #expect(NowText.runningAccessibility(remainingMinutes: remaining) == "läuft, noch 120 Minuten")
+        #expect(NowText.runningDetail(remainingMinutes: remaining) == "läuft · noch 120 min")
+    }
+
     @Test func runningRemaining_otherDay_isNil() async {
         let model = await model()
         let event = timedEvent(from: at(18, 9, 30), to: at(18, 10, 30))
