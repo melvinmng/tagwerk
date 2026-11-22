@@ -67,6 +67,9 @@ final class RecipeImporter {
         var keepsNoteLanguage = false
         /// The language of the note a local read came from (`RecipeNote.headingLanguage`); `nil` for every other source.
         var noteLanguage: VoiceLanguage? = nil
+        /// The text read from the page of a link; a follow-up sends it again instead of loading the page a second time.
+        /// `nil` for every other source.
+        var sourceText: String? = nil
     }
 
     /// One ingredient of the proposal.
@@ -142,6 +145,7 @@ final class RecipeImporter {
         guard hasConsent() else { throw Failure.consentMissing }
         let message: InputItem
         var sourceURL: URL?
+        var pageContent: String?
         switch input {
         case .text(let text), .note(_, let text):
             let recipe = RecipeText.limited(text.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -152,9 +156,10 @@ final class RecipeImporter {
             guard RecipePhotos.isSendable(byteCounts: jpegs.map(\.count)) else { throw Failure.photosTooLarge }
             message = Self.photoMessage(jpegs, categories: names, language: language, shoppingLanguage: shoppingLanguage)
         case .link(let url):
-            message = .user(Self.inputText(recipe: try await pageText(of: url), categories: names, language: language,
-                                           shoppingLanguage: shoppingLanguage))
+            let page = try await pageText(of: url)
+            message = .user(Self.inputText(recipe: page, categories: names, language: language, shoppingLanguage: shoppingLanguage))
             sourceURL = url
+            pageContent = page
         }
         let answer: String
         do {
@@ -172,9 +177,97 @@ final class RecipeImporter {
         } catch {
             throw Failure.failed
         }
-        return try Self.validate(Data(answer.utf8), categoryNames: names, openItemKeys: openItemKeys, language: language,
-                                 shoppingLanguage: shoppingLanguage, sourceURL: sourceURL)
+        var result = try Self.validate(Data(answer.utf8), categoryNames: names, openItemKeys: openItemKeys, language: language,
+                                       shoppingLanguage: shoppingLanguage, sourceURL: sourceURL)
+        result.sourceText = pageContent
+        return result
     }
+
+    // MARK: Follow-up (plan ki-vorschlaege-anpassen, task D2)
+
+    /// A second request about the result on the sheet (AN7b): the source while the sheet holds it, the current result with the
+    /// ingredients the user set by hand, and the message; answered in the format of `read` and checked the same way. A link
+    /// sends the text that was read from the page, not the address, and loads nothing again. Without consent nothing happens,
+    /// not even the model list. `pinned` and `focus` are names of the list.
+    func revise(_ input: Input, current: Result, pinned: [String], focus: String?, comment: String, language: VoiceLanguage,
+                shoppingLanguage: VoiceLanguage? = nil, categoryNames: [String], openItemKeys: Set<String>) async throws -> Result {
+        guard hasConsent() else { throw Failure.consentMissing }
+        let names = categoryNames + [ShoppingSorter.otherName]
+        let tail = Self.followUpText(current: current, pinned: pinned, focus: focus, comment: comment)
+        let message: InputItem
+        switch input {
+        case .text(let text), .note(_, let text):
+            let recipe = RecipeText.limited(text.trimmingCharacters(in: .whitespacesAndNewlines))
+            guard !recipe.isEmpty else { throw Failure.nothingFound }
+            message = .user(Self.inputText(recipe: recipe, categories: names, language: language, shoppingLanguage: shoppingLanguage) + tail)
+        case .photos(let jpegs):
+            guard !jpegs.isEmpty else { throw Failure.nothingFound }
+            guard RecipePhotos.isSendable(byteCounts: jpegs.map(\.count)) else { throw Failure.photosTooLarge }
+            let text = Self.inputText(recipe: nil, categories: names, language: language, shoppingLanguage: shoppingLanguage,
+                                      photoCount: jpegs.count) + tail
+            message = jpegs.count == 1 ? .userImage(text: text, jpeg: jpegs[0]) : .userImages(text: text, jpegs: jpegs)
+        case .link:
+            guard let page = current.sourceText, !page.isEmpty else { throw Failure.linkUnreadable }
+            message = .user(Self.inputText(recipe: page, categories: names, language: language, shoppingLanguage: shoppingLanguage) + tail)
+        }
+        let answer: String
+        do {
+            let slug = try await model()
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions + "\n" + Self.revisionInstructions,
+                                                                  input: [message], tools: [],
+                                                                  jsonSchema: (name: "recipe_ingredients", schema: Self.schema)))
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as Failure {
+            throw error
+        } catch let error as ChatGPTError {
+            throw Self.failure(for: error)
+        } catch {
+            throw Failure.failed
+        }
+        var result = try Self.validate(Data(answer.utf8), categoryNames: names, openItemKeys: openItemKeys, language: language,
+                                       shoppingLanguage: shoppingLanguage, sourceURL: current.sourceURL)
+        result.sourceText = current.sourceText
+        return result
+    }
+
+    /// What follows the source in a follow-up: the current result as JSON (each ingredient flagged when the user set it), what the
+    /// message is about, and the message.
+    static func followUpText(current: Result, pinned: [String], focus: String?, comment: String) -> String {
+        let fixed = Set(pinned.map(ShoppingName.key))
+        let items: [[String: Any]] = current.candidates.map { candidate in
+            var entry: [String: Any] = ["name": candidate.name, "category": candidate.category,
+                                        "fixed_by_user": fixed.contains(ShoppingName.key(candidate.listName))]
+            entry["quantity"] = candidate.quantity as Any? ?? NSNull()
+            entry["amount"] = candidate.line?.amount.map { NSDecimalNumber(decimal: $0).doubleValue } as Any? ?? NSNull()
+            entry["unit"] = candidate.line?.unit as Any? ?? NSNull()
+            entry["shopping_name"] = candidate.shoppingName as Any? ?? NSNull()
+            entry["shopping_unit"] = candidate.shoppingUnit as Any? ?? NSNull()
+            return entry
+        }
+        let object: [String: Any] = ["title": current.title, "servings": current.servings as Any? ?? NSNull(), "steps": current.steps, "items": items]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
+        return """
+
+
+        Current result as JSON:
+        \(String(decoding: data, as: UTF8.self))
+        The message is about: \(focus ?? "all ingredients")
+        Message from the user: \(comment)
+        """
+    }
+
+    static let revisionInstructions = """
+    Jetzt überarbeitest du ein Ergebnis, das du schon gegeben hast. Die Eingabe enthält das Rezept (Text oder Foto) wie zuvor und dazu \
+    das aktuelle Ergebnis als JSON und eine Nachricht der Person.
+    - Gib das vollständige Ergebnis im selben Format zurück. Ändere nur, was die Nachricht verlangt; alle anderen Zutaten, den Titel, \
+    die Portionen und die Schritte gibst du unverändert zurück.
+    - Zutaten mit fixed_by_user true hat die Person selbst eingestellt: lass sie unverändert, außer die Nachricht betrifft sie.
+    - Betrifft die Nachricht eine einzelne Zutat ("The message is about"), ändere nur diese.
+    - Wähle Kategorien nur aus der Liste der Eingabe. Gib keine Zutaten zurück, die nicht im Rezept stehen oder von der Person verlangt wurden.
+    """
 
     /// A structured recipe note as a result, read on the device.
     static func result(for note: RecipeNote, language: VoiceLanguage, categoryNames: [String], openItemKeys: Set<String>,
@@ -355,11 +448,12 @@ final class RecipeImporter {
 
     /// Puts the selected ingredients on the list and remembers each one's category as an automatic assignment, so a choice
     /// the user makes later by hand takes precedence. Returns what the list reported. The items carry the names and units of
-    /// the shopping list (`listItem`), formatted for `locale`, and their category is remembered under that name.
+    /// the shopping list (`listItem`), formatted for `locale`, and their category is remembered under that name. An ingredient
+    /// that is on the list already raises its quantity when the two can be added and otherwise gets a second entry (EK4b).
     @discardableResult
     static func apply(_ selected: [Candidate], model: ShoppingModel, categories: ShoppingCategoryStore,
                       locale: Locale = .current) async -> ShoppingModel.AddReport {
-        let report = await model.add(selected.map { listItem(for: $0, locale: locale) })
+        let report = await model.add(selected.map { listItem(for: $0, locale: locale) }, existing: .raiseOrAppend(locale: locale))
         let all = categories.categories()
         let other = ShoppingSorter.otherName.lowercased()
         let failed = Set(report.failed.map(ShoppingName.key))

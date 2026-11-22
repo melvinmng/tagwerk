@@ -41,6 +41,43 @@ struct RecipeTranslationPlanTests {
         return Dictionary(uniqueKeysWithValues: plan.request.map { ($0.index, table[$0.text] ?? $0.text) })
     }
 
+    // MARK: Edited translation
+
+    private func german(_ plan: RecipeTranslationPlan) throws -> String {
+        try plan.assembled(translations: germanTranslations(for: plan), language: .german)
+    }
+
+    @Test func edited_readsTheLinesBackByTheIndicesOfTheRequest() throws {
+        let plan = RecipeTranslationPlan(markdown: english)
+        let text = try german(plan)
+        let lines = try plan.translations(fromEdited: text)
+        #expect(Set(lines.keys) == Set(plan.request.map(\.index)))
+        #expect(lines.values.contains("250 g rote Linsen") && lines.values.contains("Zwiebeln würfeln."))
+        // The prefix stays out of the line, like in the request.
+        #expect(lines.values.contains("1 Dose Kokosmilch (400 ml)"))
+    }
+
+    @Test func edited_aChangeOfWordsIsAccepted() throws {
+        let plan = RecipeTranslationPlan(markdown: english)
+        let text = try german(plan).replacingOccurrences(of: "Zwiebeln würfeln.", with: "Die Zwiebeln fein würfeln.")
+        try plan.validateEdited(text, language: .german)
+    }
+
+    @Test func edited_aLostLine_aChangedAmount_aChangedLink_andABrokenSection_areRefused() throws {
+        let plan = RecipeTranslationPlan(markdown: english)
+        let text = try german(plan)
+        func failure(_ edited: String) -> RecipeTranslationPlan.Failure? {
+            do { try plan.validateEdited(edited, language: .german); return nil } catch { return error }
+        }
+        #expect(failure(text.replacingOccurrences(of: "Zwiebeln würfeln.\n", with: "")) == .structureChanged)
+        #expect(failure(text.replacingOccurrences(of: "250 g rote Linsen", with: "300 g rote Linsen")) == .amountsChanged)
+        #expect(failure(text.replacingOccurrences(of: "chefkoch.de/rezepte/123", with: "chefkoch.de/rezepte/999")) == .structureChanged
+                || failure(text.replacingOccurrences(of: "chefkoch.de/rezepte/123", with: "chefkoch.de/rezepte/999")) == .linksChanged)
+        #expect(failure(text.replacingOccurrences(of: "## Zutaten", with: "Zutaten")) == .structureChanged)
+        #expect(failure(text.replacingOccurrences(of: "250 g rote Linsen", with: "")) != nil)
+        #expect(failure(text.replacingOccurrences(of: "- 250 g rote Linsen", with: "250 g rote Linsen")) == .structureChanged)
+    }
+
     // MARK: Segments
 
     @Test func segments_headingsAndLabelsStayLocal() {

@@ -2,9 +2,10 @@ import PhotosUI
 import SwiftUI
 import TagwerkCore
 
-/// "Rezept hinzufügen": one sheet with its own navigation. First the input (text, photo, link or a note), then the
-/// ingredients found, to select and put on the list. Nothing is sent before the user taps "Zutaten holen"; the consent
-/// (once) is asked at that tap, and only when the chosen source needs ChatGPT.
+/// "Rezept hinzufügen": one sheet with its own navigation. First the input (text, photo, link or a note), and with the last
+/// tap the purpose: "Zutaten auf die Einkaufsliste" shows the ingredients found, to select and put on the list, "Nur als Rezept
+/// speichern" saves the recipe as a note (EK3b). Nothing is sent before one of these taps; the consent (once) is asked at that
+/// tap, and only when the chosen source needs ChatGPT.
 struct RecipeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppEnvironment.self) private var environment
@@ -15,17 +16,18 @@ struct RecipeSheet: View {
     var start: RecipeStart?
     /// Offered by shared items: "Verwerfen" removes the item instead of only closing the sheet.
     var onDiscard: (() -> Void)?
-    /// Shared items: the sheet first asks what happens with the recipe, "Zutaten auf die Einkaufsliste" or "Nur als Rezept
-    /// speichern". Without it the recipe always goes to the shopping list (the "Rezept hinzufügen" button).
-    var offersSaveOnly = false
+    /// The sheet ends in two buttons, "Zutaten auf die Einkaufsliste" and "Nur als Rezept speichern". Without it only the
+    /// first one is there and the recipe always goes to the shopping list.
+    var offersSaveOnly = true
 
     @State private var result: RecipeResult?
-    @State private var purpose: RecipePurpose = .shopping
 
     /// The recipe found, identifiable for the navigation.
     struct RecipeResult: Identifiable, Hashable {
         let id = UUID()
         let recipe: RecipeImporter.Result
+        /// Asks ChatGPT about the recipe again while the sheet holds its source; `nil` for a recipe read on the device.
+        var reviser: RecipeReviser? = nil
         /// The recipe came from a note of the user: it is not saved as a second recipe note.
         let fromNote: Bool
         /// The user chose "Nur als Rezept speichern": the result is saved as a note, the shopping list stays untouched.
@@ -34,16 +36,16 @@ struct RecipeSheet: View {
         func hash(into hasher: inout Hasher) { hasher.combine(id) }
     }
 
-    /// Whether a recipe read now is only saved: the choice exists and "Nur als Rezept speichern" is on.
+    /// Whether a recipe read with this button is only saved: the button exists and it is "Nur als Rezept speichern".
     static func savesOnly(offersSaveOnly: Bool, purpose: RecipePurpose) -> Bool {
         offersSaveOnly && purpose == .saveOnly
     }
 
     var body: some View {
         NavigationStack {
-            RecipeInputView(purpose: Self.savesOnly(offersSaveOnly: offersSaveOnly, purpose: purpose) ? .saveOnly : .shopping,
-                            model: model, start: start, purposeChoice: offersSaveOnly ? $purpose : nil) { recipe, fromNote in
-                result = RecipeResult(recipe: recipe, fromNote: fromNote,
+            RecipeInputView(purpose: .shopping, model: model, start: start,
+                            choice: RecipeInputView.Choice(offersSaveOnly: offersSaveOnly)) { recipe, fromNote, purpose, reviser in
+                result = RecipeResult(recipe: recipe, reviser: reviser, fromNote: fromNote,
                                       savesOnly: Self.savesOnly(offersSaveOnly: offersSaveOnly, purpose: purpose))
             }
             .navigationTitle("Rezept hinzufügen")
@@ -62,14 +64,14 @@ struct RecipeSheet: View {
             .navigationDestination(item: $result) { found in
                 if found.savesOnly {
                     // The same confirmation as "Rezept mit ChatGPT anlegen"; the shopping list is not touched.
-                    RecipeNoteSaveView(result: found.recipe, store: environment.notes) { _ in
+                    RecipeNoteSaveView(result: found.recipe, reviser: found.reviser, store: environment.notes) { _ in
                         onFinished(String(localized: "Das Rezept liegt als Notiz im Ordner „Rezepte“."))
                         dismiss()
                     } onDiscard: {
                         dismiss()
                     }
                 } else {
-                    RecipeResultView(result: found.recipe, fromNote: found.fromNote, model: model) { line in
+                    RecipeResultView(result: found.recipe, reviser: found.reviser, fromNote: found.fromNote, model: model) { line in
                         onFinished(line)
                         dismiss()
                     } onDiscard: {
@@ -97,7 +99,7 @@ struct RecipeConsentView: View {
                 Text("Um ein Rezept zu lesen oder zu übersetzen, sendet Tagwerk den Rezepttext oder die Fotos und die Namen deiner Kategorien an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.")
                 point("paperplane", "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse. Beim Übersetzen der Text der einen Rezept-Notiz, ohne Anhänge.")
                 point("eye.slash", "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, andere Notizen, Daten aus Health. Eine Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone, und private Notizen stehen nie zur Auswahl.")
-                point("hand.tap", "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.")
+                point("hand.tap", "**Nur auf dein Tippen:** Ohne dein Tippen auf „Zutaten auf die Einkaufsliste“, „Nur als Rezept speichern“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.")
                 ConsentFollowUpPoint()
                 VStack(spacing: 10) {
                     Button(action: onAgree) {
@@ -170,24 +172,34 @@ enum RecipePurpose {
 
 /// Text, photo, link or note, and the button that reads the recipe. Both ways to a recipe (the shopping list and the recipe
 /// note) read through this one view and `RecipeImporter.read`; only what follows the result differs.
+///
+/// Without `choice` there is one button for the fixed `purpose` ("Rezept holen" of "Rezept mit ChatGPT anlegen"). With it the
+/// source comes first and the purpose is chosen by the last tap (EK3b): one button per purpose. The purpose of a read is the
+/// one of the tapped button, also when the consent sheet comes in between.
 struct RecipeInputView: View {
     @Environment(AppEnvironment.self) private var environment
+    /// The fixed purpose without `choice`; with it the sources of the shopping list are offered.
     let purpose: RecipePurpose
     /// The shopping list, to mark the ingredients that are on it already; `nil` when the recipe is only saved.
     let model: ShoppingModel?
     var start: RecipeStart?
-    /// Shared items: shows the choice between the shopping list and "Nur als Rezept speichern" above the source. The caller
-    /// passes the same value as `purpose`, so the request, the button and the consent text follow the choice.
-    var purposeChoice: Binding<RecipePurpose>?
-    /// Called with the recipe and whether it came from a note of the user.
-    let onResult: (RecipeImporter.Result, Bool) -> Void
+    var choice: Choice?
+    /// Called with the recipe, whether it came from a note of the user, the purpose of the button that was tapped and what asks
+    /// ChatGPT about the recipe again (`nil` for a recipe read on the device).
+    let onResult: (RecipeImporter.Result, Bool, RecipePurpose, RecipeReviser?) -> Void
 
-    init(purpose: RecipePurpose, model: ShoppingModel?, start: RecipeStart? = nil, purposeChoice: Binding<RecipePurpose>? = nil,
-         onResult: @escaping (RecipeImporter.Result, Bool) -> Void) {
+    /// The input ends in one button per purpose instead of one button.
+    struct Choice {
+        /// "Nur als Rezept speichern" next to "Zutaten auf die Einkaufsliste".
+        var offersSaveOnly = true
+    }
+
+    init(purpose: RecipePurpose, model: ShoppingModel?, start: RecipeStart? = nil, choice: Choice? = nil,
+         onResult: @escaping (RecipeImporter.Result, Bool, RecipePurpose, RecipeReviser?) -> Void) {
         self.purpose = purpose
         self.model = model
         self.start = start
-        self.purposeChoice = purposeChoice
+        self.choice = choice
         self.onResult = onResult
         switch start {
         case .link(let text): _source = State(initialValue: .link); _linkText = State(initialValue: text)
@@ -218,8 +230,18 @@ struct RecipeInputView: View {
     @State private var reading: Task<Void, Never>?
     @State private var readingID: UUID?
     @State private var errorText: String?
+    /// The purpose of the button that started the read; the consent sheet and the read itself use it.
+    @State private var requestedPurpose: RecipePurpose = .shopping
 
-    private var sources: [Source] { purpose == .shopping ? Source.allCases : [.text, .photo, .link] }
+    private var sources: [Source] { choice != nil || purpose == .shopping ? Source.allCases : [.text, .photo, .link] }
+
+    /// The source is set already (shared item, recipe note): only the buttons stay.
+    private var hasPresetSource: Bool { !RecipeInputRules.showsSourceInput(hasStart: start != nil, hasChoice: choice != nil) }
+
+    private var purposeButtons: [RecipeInputRules.PurposeButton] {
+        RecipeInputRules.purposeButtons(offersSaveOnly: choice?.offersSaveOnly ?? false, sourceIsNote: source == .note,
+                                        hasInput: canRead, isReading: reading != nil)
+    }
 
     private var canRead: Bool {
         switch source {
@@ -244,39 +266,35 @@ struct RecipeInputView: View {
 
     var body: some View {
         Form {
-            if let purposeChoice { purposeSection(purposeChoice) }
-            Section {
-                Picker("Quelle", selection: $source) {
-                    ForEach(sources) { source in
-                        switch source {
-                        case .text: Text("Text").tag(source)
-                        case .photo: Text("Foto").tag(source)
-                        case .link: Text("Link").tag(source)
-                        case .note: Text("Notiz").tag(source)
+            if hasPresetSource {
+                presetSourceSection
+            } else {
+                Section {
+                    Picker("Quelle", selection: $source) {
+                        ForEach(sources) { source in
+                            switch source {
+                            case .text: Text("Text").tag(source)
+                            case .photo: Text("Foto").tag(source)
+                            case .link: Text("Link").tag(source)
+                            case .note: Text("Notiz").tag(source)
+                            }
                         }
                     }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
                 }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-            }
-            switch source {
-            case .text: textSection
-            case .photo: photoSection
-            case .link: linkSection
-            case .note: RecipeNoteSection(store: environment.notes, selectedID: $noteID, showsOthers: $showsOtherNotes)
+                switch source {
+                case .text: textSection
+                case .photo: photoSection
+                case .link: linkSection
+                case .note: RecipeNoteSection(store: environment.notes, selectedID: $noteID, showsOthers: $showsOtherNotes)
+                }
             }
             if let errorText {
                 Section { Text(errorText).foregroundStyle(.redText) }
             }
-            Section {
-                Button(action: tapRead) {
-                    Text(readTitle).fontWeight(.semibold).frame(maxWidth: .infinity)
-                }
-                .disabled(!canRead || reading != nil)
-            } footer: {
-                if !readsLocally, !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
-            }
+            readSection
         }
         .scrollDismissesKeyboard(.interactively)
         .overlay {
@@ -293,7 +311,7 @@ struct RecipeInputView: View {
             RecipeConsentView {
                 environment.settings.shoppingRecipeConsent = true
                 showsConsent = false
-                read()
+                read(for: requestedPurpose)
             } onDecline: {
                 showsConsent = false
             }
@@ -316,29 +334,83 @@ struct RecipeInputView: View {
         .onDisappear { cancel() }
     }
 
-    /// "Was soll mit dem Rezept geschehen?" for shared items. Both ways read once; the shopping way can also keep the recipe
-    /// as a note ("Auch als Rezept-Notiz sichern" on the next page), so both together are possible there.
-    private func purposeSection(_ choice: Binding<RecipePurpose>) -> some View {
+    /// The buttons that end the input: one per purpose, or the single "Rezept holen" of the fixed purpose. Both are greyed out
+    /// until there is an input; the text of a button never changes.
+    private var readSection: some View {
         Section {
-            Picker("Was soll mit dem Rezept geschehen?", selection: choice) {
-                Text("Zutaten auf die Einkaufsliste").tag(RecipePurpose.shopping)
-                Text("Nur als Rezept speichern").tag(RecipePurpose.saveOnly)
+            if choice != nil {
+                VStack(spacing: 12) {
+                    ForEach(purposeButtons) { button in
+                        purposeButton(button)
+                    }
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+            } else {
+                Button { tapRead(purpose) } label: {
+                    Text("Rezept holen").fontWeight(.semibold).frame(maxWidth: .infinity)
+                }
+                .disabled(!canRead || reading != nil)
             }
-            .pickerStyle(.inline)
-            .labelsHidden()
-        } header: {
-            Text("Was soll mit dem Rezept geschehen?")
         } footer: {
-            switch choice.wrappedValue {
-            case .shopping: Text("Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.")
-            case .saveOnly: Text("Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert. Die Einkaufsliste bleibt unverändert.")
+            // Without a line there is no footer at all: an empty stack would be an element without a description for VoiceOver.
+            let hint = choice != nil && purposeButtons.contains(where: { $0.purpose == .saveOnly })
+            let signIn = !readsLocally && !environment.ai.isSignedIn
+            if hint || signIn {
+                VStack(alignment: .leading, spacing: 6) {
+                    if hint { Text("Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.") }
+                    if signIn { Text("Anmeldung unter Einstellungen › KI") }
+                }
             }
         }
     }
 
-    private var readTitle: LocalizedStringKey {
-        if purpose == .saveOnly { return "Rezept holen" }
-        return readsLocally ? "Zutaten übernehmen" : "Zutaten holen"
+    @ViewBuilder private func purposeButton(_ button: RecipeInputRules.PurposeButton) -> some View {
+        switch button.purpose {
+        case .shopping:
+            Button { tapRead(.shopping) } label: {
+                Text("Zutaten auf die Einkaufsliste").fontWeight(.semibold).frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!button.isEnabled)
+            .accessibilityIdentifier(AccessibilityID.Shopping.recipeToList)
+        case .saveOnly:
+            Button { tapRead(.saveOnly) } label: {
+                Text("Nur als Rezept speichern").fontWeight(.semibold).frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .disabled(!button.isEnabled)
+            .accessibilityIdentifier(AccessibilityID.Shopping.recipeSaveOnly)
+        }
+    }
+
+    /// The line that names the source when it is set already: a shared link, text or photos, or a recipe note.
+    private var presetSourceSection: some View {
+        Section {
+            Label(presetSourceText, systemImage: presetSourceSymbol)
+        }
+    }
+
+    private var presetSourceSymbol: String {
+        switch source {
+        case .text: "text.alignleft"
+        case .photo: "photo.on.rectangle"
+        case .link: "link"
+        case .note: "note.text"
+        }
+    }
+
+    private var presetSourceText: String {
+        switch source {
+        case .text: String(localized: "Quelle: geteilter Text")
+        case .photo: String(localized: "Quelle: Fotos (\(photos.count))")
+        case .link:
+            if let host = RecipeImporter.url(from: linkText)?.host { String(localized: "Quelle: Link, \(host)") } else { String(localized: "Quelle: Link") }
+        case .note:
+            if let noteID, let note = environment.notes.note(id: noteID) { String(localized: "Quelle: Notiz „\(NoteText.title(note.text))“") } else { String(localized: "Quelle: Notiz") }
+        }
     }
 
     // MARK: Sources
@@ -416,8 +488,8 @@ struct RecipeInputView: View {
         } header: {
             Text("Link zum Rezept")
         } footer: {
-            if purpose == .shopping {
-                Text("Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.")
+            if choice != nil {
+                Text("Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.")
             } else {
                 Text("Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.")
             }
@@ -437,16 +509,18 @@ struct RecipeInputView: View {
 
     /// The tap on the button: a source that needs ChatGPT asks for the consent first (once); a recipe note on the device
     /// needs none.
-    private func tapRead() {
+    private func tapRead(_ tapped: RecipePurpose) {
         guard reading == nil, canRead else { return }
+        // The purpose is the one of this button, kept for the consent sheet: it decides what the request sends.
+        requestedPurpose = tapped
         if !readsLocally, !environment.settings.shoppingRecipeConsent {
             showsConsent = true
             return
         }
-        read()
+        read(for: tapped)
     }
 
-    private func read() {
+    private func read(for purpose: RecipePurpose) {
         guard reading == nil, let input = makeInput() else {
             if source == .link, reading == nil { errorText = RecipeImporter.Failure.linkUnreadable.message }
             return
@@ -457,13 +531,15 @@ struct RecipeInputView: View {
         }
         errorText = nil
         let language = environment.settings.resolvedRecipeLanguage
-        // Only the shopping list knows categories and open items; a recipe that is only saved sends neither.
-        let openKeys = purpose == .shopping ? Set((model?.openItems ?? []).map { ShoppingName.key($0.name) }) : []
-        let names = purpose == .shopping ? environment.shoppingCategories.categories().map(\.name) : []
+        // Only the shopping list knows categories and open items; a recipe that is only saved sends neither. The list's own
+        // language only matters when ingredients go onto the list, and only when it differs from the recipe's.
+        let context = RecipeInputRules.requestContext(
+            for: purpose, openItemKeys: Set((model?.openItems ?? []).map { ShoppingName.key($0.name) }),
+            categoryNames: environment.shoppingCategories.categories().map(\.name),
+            shoppingLanguage: environment.settings.contentLanguages.shoppingLanguageIfDifferent())
+        let openKeys = context.openItemKeys, names = context.categoryNames, shoppingLanguage = context.shoppingLanguage
         let classifier = RecipeImporter.localClassifier(assignments: environment.shoppingCategories.assignments(),
                                                         categories: environment.shoppingCategories.categories())
-        // The list's own language only matters when ingredients go onto the list, and only when it differs from the recipe's.
-        let shoppingLanguage = purpose == .shopping ? environment.settings.contentLanguages.shoppingLanguageIfDifferent() : nil
         let fromNote = source == .note
         let id = UUID()
         readingID = id
@@ -475,7 +551,16 @@ struct RecipeInputView: View {
                                                                       localClassifier: classifier)
                 // A cancelled request must not show a late answer.
                 guard !Task.isCancelled else { return }
-                onResult(found, fromNote)
+                // The follow-up sends the source again while the sheet holds it (AN7b); a link sends the text read from the page.
+                let importer = environment.recipeImporter
+                var reviser: RecipeReviser?
+                if !found.readLocally {
+                    reviser = { current, pinned, focus, comment in
+                        try await importer.revise(input, current: current, pinned: pinned, focus: focus, comment: comment, language: language,
+                                                  shoppingLanguage: shoppingLanguage, categoryNames: names, openItemKeys: openKeys)
+                    }
+                }
+                onResult(found, fromNote, purpose, reviser)
             } catch let failure as RecipeImporter.Failure {
                 if !Task.isCancelled { errorText = failure.message }
             } catch {
@@ -502,8 +587,9 @@ struct RecipeInputView: View {
 
 // MARK: Result
 
-/// The ingredients found: a checkmark per row, items that are on the list already start unselected. At the top the question
-/// for how many servings to buy; the amounts follow it.
+/// The ingredients found: a checkmark per row. New items come first and start selected; items that are on the list already stand
+/// in their own section, start unselected and say what checking them does (EK4b). At the top the question for how many servings
+/// to buy; the amounts follow it, and each amount can be changed with a tap.
 struct RecipeResultView: View {
     @Environment(AppEnvironment.self) private var environment
     let result: RecipeImporter.Result
@@ -512,32 +598,45 @@ struct RecipeResultView: View {
     let onAdded: (String) -> Void
     let onDiscard: () -> Void
 
-    @State private var deselected: Set<String>
+    /// The rows with their marks, the checkmarks and the follow-up (plan ki-vorschlaege-anpassen, task D2).
+    @State private var draft: RecipeDraftModel
+    /// The row whose small sheet "Zutat" is open.
+    @State private var editedRowID: UUID?
     /// "Rezept für": the servings the recipe is written for; `nil` when the recipe names none, then it has to be set.
     @State private var baseServings: Int?
     /// "Ich koche für"; `nil` follows "Rezept für".
     @State private var cookingServings: Int?
     @State private var savesNote: Bool
     @State private var isAdding = false
+    /// Amounts the user typed instead of the scaled ones, by candidate id. They stay when the servings change afterwards.
+    @State private var quantityOverrides: [String: String] = [:]
+    /// The ingredient whose amount the small field changes, and the text in it.
+    @State private var quantityEditID: String?
+    @State private var quantityDraft = ""
 
-    init(result: RecipeImporter.Result, fromNote: Bool, model: ShoppingModel, onAdded: @escaping (String) -> Void,
-         onDiscard: @escaping () -> Void) {
+    init(result: RecipeImporter.Result, reviser: RecipeReviser? = nil, fromNote: Bool, model: ShoppingModel,
+         onAdded: @escaping (String) -> Void, onDiscard: @escaping () -> Void) {
         self.result = result
         self.fromNote = fromNote
         self.model = model
         self.onAdded = onAdded
         self.onDiscard = onDiscard
-        _deselected = State(initialValue: Set(result.candidates.filter(\.alreadyOnList).map(\.id)))
+        _draft = State(initialValue: RecipeDraftModel(result: result, reviser: reviser))
         _baseServings = State(initialValue: result.servings)
         _savesNote = State(initialValue: Self.defaultSavesNote(fromNote: fromNote))
     }
 
-    private var candidates: [RecipeImporter.Candidate] { result.candidates }
-    private var selected: [RecipeImporter.Candidate] { Self.selection(candidates, deselected: deselected) }
+    private var candidates: [RecipeImporter.Candidate] { draft.candidates }
+    private var selected: [RecipeImporter.Candidate] { draft.selectedCandidates }
     private var target: Int? { Self.targetServings(base: baseServings, cooking: cookingServings) }
     private var locale: Locale { result.language.locale }
     /// The language the items go on the list in: the second language of the import, else the recipe's.
     private var listLocale: Locale { (result.shoppingLanguage ?? result.language).locale }
+
+    /// Items that are on the list already start unselected: checking one is a decision (raise or second entry), not a default.
+    static func initiallyDeselected(_ candidates: [RecipeImporter.Candidate]) -> Set<String> {
+        Set(candidates.filter(\.alreadyOnList).map(\.id))
+    }
 
     /// What "hinzufügen" puts on the list.
     static func selection(_ candidates: [RecipeImporter.Candidate], deselected: Set<String>) -> [RecipeImporter.Candidate] {
@@ -575,6 +674,47 @@ struct RecipeResultView: View {
         }
     }
 
+    /// The candidates as they go on the list: scaled for the servings, with the amounts the user typed instead (a typed amount
+    /// is free text: the amount in numbers and the unit of the shopping language are dropped, so it goes on the list as typed).
+    static func effective(_ candidates: [RecipeImporter.Candidate], base: Int?, target: Int?, locale: Locale,
+                          overrides: [String: String]) -> [RecipeImporter.Candidate] {
+        scaled(candidates: candidates, base: base, target: target, locale: locale).map { candidate in
+            guard let typed = overrides[candidate.id] else { return candidate }
+            var changed = candidate
+            let text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+            changed.quantity = text.isEmpty ? nil : text
+            changed.line = nil
+            changed.shoppingUnit = nil
+            return changed
+        }
+    }
+
+    // MARK: Items that are on the list
+
+    /// The line under an item that is on the list already: what is there and what checking it does.
+    static func existingLine(listed: ShoppingItem?, added: String?, locale: Locale) -> String {
+        guard let listed else { return String(localized: "schon auf der Liste") }
+        let current = listed.quantity
+        let merge = ShoppingQuantity.merge(existing: current, added: added, hasLongNotes: listed.hasLongNotes, locale: locale)
+        switch (merge, current) {
+        case (.raise(let total), let current?): return String(localized: "auf der Liste: \(current) · anhaken erhöht auf \(total)")
+        case (.raise(let total), nil): return String(localized: "auf der Liste: ohne Menge · anhaken setzt \(total)")
+        case (.secondEntry, let current?): return String(localized: "auf der Liste: \(current) · anhaken legt einen zweiten Eintrag an")
+        case (.secondEntry, nil): return String(localized: "auf der Liste: ohne Menge · anhaken legt einen zweiten Eintrag an")
+        case (.keep, let current?): return String(localized: "auf der Liste: \(current) · bleibt unverändert")
+        case (.keep, nil): return String(localized: "schon auf der Liste · bleibt unverändert")
+        }
+    }
+
+    /// "Neu · 3" and "Schon auf der Liste · 1": the headers of the two sections.
+    static func newHeader(count: Int) -> String { String(localized: "Neu · \(count)") }
+    static func listedHeader(count: Int) -> String { String(localized: "Schon auf der Liste · \(count)") }
+
+    /// "Portionen · 4 im Rezept": the header of the servings, which names the number the recipe is written for.
+    static func servingsHeader(recipeServings: Int?) -> String {
+        recipeServings.map { String(localized: "Portionen · \($0) im Rezept") } ?? String(localized: "Portionen")
+    }
+
     // MARK: Recipe note
 
     /// Whether "Auch als Rezept-Notiz sichern" starts on: not for a recipe that came from a note.
@@ -590,38 +730,31 @@ struct RecipeResultView: View {
     // MARK: Body
 
     var body: some View {
-        let shown = Self.scaled(candidates: candidates, base: baseServings, target: target, locale: locale)
+        let shown = Array(zip(draft.rows, Self.effective(candidates, base: baseServings, target: target, locale: locale,
+                                                          overrides: quantityOverrides)))
+        let fresh = shown.filter { !$0.1.alreadyOnList }
+        let listed = shown.filter(\.1.alreadyOnList)
         List {
-            Section {
-                ValueStepper("Rezept für", value: $baseServings, start: Self.startServings, in: Self.servingsRange)
-                ValueStepper("Ich koche für", value: Binding(get: { target }, set: { cookingServings = $0 }),
-                             start: Self.startServings, in: Self.servingsRange)
-            } header: {
-                Text("Portionen")
-            } footer: {
-                if baseServings == nil {
-                    Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
+            servingsSection
+            if !fresh.isEmpty {
+                Section {
+                    ForEach(fresh, id: \.0.id) { row, candidate in self.row(row, candidate) }
+                } header: {
+                    Text(Self.newHeader(count: fresh.count))
+                } footer: {
+                    if listed.isEmpty { categoryFooter }
                 }
             }
-            Section {
-                ForEach(shown) { candidate in
-                    Button {
-                        if deselected.contains(candidate.id) { deselected.remove(candidate.id) } else { deselected.insert(candidate.id) }
-                    } label: {
-                        row(candidate, isOn: !deselected.contains(candidate.id))
-                    }
-                    .accessibilityAddTraits(deselected.contains(candidate.id) ? [] : .isSelected)
-                }
-            } footer: {
-                if result.readLocally {
-                    Text("Die Kategorien kommen aus deiner Einkaufsliste.")
-                    if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
-                        Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
-                    }
-                } else {
-                    Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
+            if !listed.isEmpty {
+                Section {
+                    ForEach(listed, id: \.0.id) { row, candidate in self.row(row, candidate) }
+                } header: {
+                    Text(Self.listedHeader(count: listed.count))
+                } footer: {
+                    categoryFooter
                 }
             }
+            if draft.hasFollowUp { recipeFollowUp }
             if !fromNote {
                 Section {
                     Toggle("Auch als Rezept-Notiz sichern", isOn: $savesNote)
@@ -630,8 +763,23 @@ struct RecipeResultView: View {
                 }
             }
         }
+        .alert(quantityEditTitle, isPresented: Binding(get: { quantityEditID != nil }, set: { if !$0 { quantityEditID = nil } })) {
+            TextField("Menge", text: $quantityDraft)
+            Button("Übernehmen") {
+                if let id = quantityEditID { quantityOverrides[id] = quantityDraft }
+                quantityEditID = nil
+            }
+            Button("Abbrechen", role: .cancel) { quantityEditID = nil }
+        }
         .navigationTitle("Zutaten")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: Binding(get: { editedRowID.flatMap { id in draft.rows.first { $0.id == id } } }, set: { editedRowID = $0?.id })) { row in
+            RecipeRowEditor(row: row, categories: categoryChoices) {
+                // The values of the sheet replace an amount typed into the small field before.
+                quantityOverrides[row.candidate.id] = nil
+                draft.edit($0)
+            }
+        }
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Verwerfen", action: onDiscard) }
@@ -648,26 +796,115 @@ struct RecipeResultView: View {
         }
     }
 
-    private func row(_ candidate: RecipeImporter.Candidate, isOn: Bool) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(candidate.listName).foregroundStyle(.primary)
-                    // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
-                    if let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity {
-                        Text(quantity).foregroundStyle(Color.secondaryText)
-                    }
-                }
-                if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
-                    Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
-                }
-                Text(candidate.alreadyOnList ? candidate.category + " · " + String(localized: "schon auf der Liste") : candidate.category)
-                    .font(.subheadline).foregroundStyle(Color.secondaryText)
+    /// One row for the servings when the recipe names them: "Ich koche für" with the recipe's number in the header. Without a
+    /// number in the recipe there are two rows, because "Rezept für" has to be set first.
+    private var servingsSection: some View {
+        Section {
+            if result.servings == nil {
+                ValueStepper("Rezept für", value: $baseServings, start: Self.startServings, in: Self.servingsRange)
             }
-            Spacer(minLength: 0)
+            ValueStepper("Ich koche für", value: Binding(get: { target }, set: { cookingServings = $0 }),
+                         start: Self.startServings, in: Self.servingsRange)
+        } header: {
+            Text(Self.servingsHeader(recipeServings: result.servings))
+        } footer: {
+            if baseServings == nil {
+                Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
+            }
         }
+    }
+
+    /// The names of the list's categories and the fixed section, for the small sheet of an ingredient.
+    private var categoryChoices: [String] {
+        environment.shoppingCategories.categories().map(\.name) + [ShoppingSorter.otherName]
+    }
+
+    /// The input line below the ingredients: the source (while the sheet holds it), the ingredients with the changes of the
+    /// user and the message go out; the shopping list and everything else stay on the device.
+    private var recipeFollowUp: some View {
+        PreviewFollowUpSection(
+            model: draft.followUp,
+            availability: FollowUpAvailability.state(hasConsent: environment.settings.shoppingRecipeConsent,
+                                                     isSignedIn: environment.ai.isSignedIn, isOffline: false),
+            place: .shopping,
+            quickReplies: [String(localized: "Ohne Gewürze"), String(localized: "Mengen runden"), String(localized: "Fehlt etwas?")],
+            placeholder: "Zum Rezept etwas sagen …",
+            footer: Text("Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT. Deine Liste und Mengen darauf gehen nicht mit."),
+            focusLabel: { String(localized: "Zu: \($0.candidate.listName)") }, onSend: { message in Task { await draft.send(message) } })
+    }
+
+    @ViewBuilder private var categoryFooter: some View {
+        if result.readLocally {
+            Text("Die Kategorien kommen aus deiner Einkaufsliste.")
+            if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
+                Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
+            }
+        } else {
+            Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
+        }
+    }
+
+    /// The row: a checkmark that chooses, the name with its second line (a tap on it opens the values of the ingredient, AN9a), the
+    /// amount as a button of its own that opens the small field (EK4b) and, with the follow-up, a button to write about this one.
+    private func row(_ row: RecipeRow, _ candidate: RecipeImporter.Candidate) -> some View {
+        let isOn = draft.isSelected(row.id)
+        let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity
+        return HStack(alignment: .top, spacing: 0) {
+            Button { draft.toggle(row.id) } label: {
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
+                    .minimumTapTarget()
+            }
+            .buttonStyle(.borderless)  // inside a list row, default buttons all fire together
+            .accessibilityLabel(candidate.listName)
+            .accessibilityAddTraits(isOn ? .isSelected : [])
+            Button { editedRowID = row.id } label: { rowText(candidate, mark: draft.followUp.mark(of: row.id)) }
+                .buttonStyle(.borderless)
+                .accessibilityHint("Öffnet die Werte der Zutat")
+            Button {
+                quantityDraft = quantity ?? ""
+                quantityEditID = candidate.id
+            } label: {
+                Text(quantity ?? String(localized: "Menge"))
+                    .foregroundStyle(quantity == nil ? AnyShapeStyle(Color.secondaryText) : AnyShapeStyle(.tint))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(String(localized: "Menge ändern, \(candidate.listName)"))
+            .accessibilityValue(quantity ?? String(localized: "ohne Menge"))
+            if draft.hasFollowUp {
+                Button("Mit ChatGPT zu dieser Zutat schreiben", systemImage: "sparkles") { draft.followUp.focus = row.id }
+                    .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+            }
+        }
+    }
+
+    private func rowText(_ candidate: RecipeImporter.Candidate, mark: ProposalMark?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(candidate.listName).foregroundStyle(.primary)
+            if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
+                Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
+            }
+            // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
+            Text(secondLine(candidate, quantity: RecipeImporter.listItem(for: candidate, locale: listLocale).quantity))
+                .font(.subheadline).foregroundStyle(Color.secondaryText)
+            PreviewRowMark(mark: mark)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    /// Under the name: the category, or for an item on the list what is there and what checking it does.
+    private func secondLine(_ candidate: RecipeImporter.Candidate, quantity: String?) -> String {
+        guard candidate.alreadyOnList else { return candidate.category }
+        let listed = model.openItems.first { ShoppingName.key($0.name) == candidate.id }
+        return Self.existingLine(listed: listed, added: quantity, locale: listLocale)
+    }
+
+    private var quantityEditTitle: String {
+        let name = candidates.first { $0.id == quantityEditID }?.listName ?? ""
+        return String(localized: "Menge von \(name)")
     }
 
     static func addTitle(count: Int) -> String {
@@ -677,9 +914,9 @@ struct RecipeResultView: View {
     private func add() {
         guard Self.canAdd(base: baseServings, selectedCount: selected.count) else { return }
         isAdding = true
-        let chosen = Self.scaled(candidates: selected, base: baseServings, target: target, locale: locale)
+        let chosen = Self.effective(selected, base: baseServings, target: target, locale: locale, overrides: quantityOverrides)
         // The note keeps the title, the servings and the amounts of the recipe, not the scaled ones.
-        let note = Self.noteToSave(result, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
+        let note = Self.noteToSave(draft.current, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
         Task {
             let report = await RecipeImporter.apply(chosen, model: model, categories: environment.shoppingCategories, locale: listLocale)
             var line = Self.resultLine(report)
@@ -692,7 +929,7 @@ struct RecipeResultView: View {
 
     /// The line on the shopping page afterwards: how many went on the list, or the first error.
     static func resultLine(_ report: ShoppingModel.AddReport) -> String {
-        let count = report.added.count + report.reopened.count
+        let count = report.added.count + report.reopened.count + report.raised.count
         if let error = report.errorMessage, count == 0 { return error }
         return String(localized: "\(count) Artikel aus dem Rezept hinzugefügt.")
     }

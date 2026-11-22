@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "GitHubKit",
     defaultLocalization: "de",
-    platforms: [.iOS("27.0")],
+    platforms: [.iOS("27.0"), .macOS("27.0")],
     products: [
         .library(name: "GitHubKit", targets: ["GitHubKit"])
     ],

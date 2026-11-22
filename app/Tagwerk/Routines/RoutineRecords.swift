@@ -194,6 +194,18 @@ final class RoutineStore {
         return Set(records.map { PlanDay(year: $0.year, month: $0.month, day: $0.day) }.filter { range.contains($0) })
     }
 
+    /// Every day with at least one gratitude entry, with its entries (blank ones are left out). Days without any are not listed.
+    func gratitudeDays() -> [PlanDay: [String]] {
+        _ = revision
+        let records = (try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.gratitudeData != nil }))) ?? []
+        var result: [PlanDay: [String]] = [:]
+        for record in records {
+            let entries = record.value.gratitude.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !entries.isEmpty { result[PlanDay(year: record.year, month: record.month, day: record.day)] = entries }
+        }
+        return result
+    }
+
     private func dayRecord(_ day: PlanDay) -> RoutineDayRecord? {
         let key = day.dayKey
         return try? context.fetch(FetchDescriptor<RoutineDayRecord>(predicate: #Predicate { $0.dayKey == key })).first

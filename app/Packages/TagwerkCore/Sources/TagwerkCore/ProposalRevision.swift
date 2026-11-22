@@ -24,6 +24,10 @@ public struct ProposalRevision<Item: Identifiable & Equatable & Sendable>: Senda
         public var overwritten: [Item.ID] = []
         /// Answer entries that were not applied: unknown items, items outside the scope, pinned items of a single-item answer.
         public var ignored: [Item.ID] = []
+        /// Items only `replaceAll` adds: the answer holds them, the proposal did not.
+        public var added: [Item.ID] = []
+        /// Items only `replaceAll` removes: the proposal held them, the answer does not.
+        public var removed: [Item.ID] = []
     }
 
     public private(set) var items: [Item]
@@ -75,6 +79,24 @@ public struct ProposalRevision<Item: Identifiable & Equatable & Sendable>: Senda
         undoState = nil
     }
 
+    /// The items as the screen holds them after the user worked on the list directly (steppers, swipe to delete, "Posten
+    /// hinzufügen"): items that differ are edited, items that are new join the list marked `byUser`, items that are gone leave
+    /// it. For a screen that edits its own copy of the list and hands it over before it sends a message. Drops the undo step
+    /// when anything changed, like `edit`.
+    public mutating func syncByHand(_ screenItems: [Item]) {
+        guard screenItems != items else { return }
+        let ids = Set(screenItems.map(\.id))
+        for item in screenItems {
+            if items.contains(where: { $0.id == item.id }) { edit(item) } else { marks[item.id] = .byUser }
+        }
+        for item in items where !ids.contains(item.id) {
+            marks[item.id] = nil
+            proposals[item.id] = nil
+        }
+        items = screenItems
+        undoState = nil
+    }
+
     /// "Zurück zum Vorschlag der KI": the item as the AI last proposed it, without a mark.
     public mutating func resetToProposal(_ id: Item.ID) {
         guard let original = proposals[id], let index = items.firstIndex(where: { $0.id == id }) else { return }
@@ -119,6 +141,51 @@ public struct ProposalRevision<Item: Identifiable & Equatable & Sendable>: Senda
         outcome.changed = items.map(\.id).filter { changedIDs.contains($0) }
         outcome.overwritten = items.map(\.id).filter { overwrittenIDs.contains($0) }
         undoState = changedIDs.isEmpty ? undoState : before
+        return outcome
+    }
+
+    /// Replaces the whole set of items by the answer: items of the answer that are new are added (mark `byAssistant`), items it
+    /// changes get the mark `byAssistant`, items it no longer holds are removed, and items it repeats unchanged keep their
+    /// mark. The order is the order of the answer. A pinned item the answer changes or removes is reported as overwritten, so
+    /// the screen can say so; "Rückgängig" brings everything back. An answer that equals the items does nothing.
+    @discardableResult
+    public mutating func replaceAll(with answer: [Item]) -> Outcome {
+        var outcome = Outcome()
+        let before = State(items: items, marks: marks, proposals: proposals)
+        var result: [Item] = []
+        var newMarks = marks
+        var newProposals = proposals
+        var seen = Set<Item.ID>()
+        for entry in answer {
+            let id = entry.id
+            guard seen.insert(id).inserted else {
+                outcome.ignored.append(id)
+                continue
+            }
+            result.append(entry)
+            if let index = items.firstIndex(where: { $0.id == id }) {
+                guard items[index] != entry else { continue }
+                if marks[id] == .byUser { outcome.overwritten.append(id) }
+                outcome.changed.append(id)
+            } else {
+                outcome.added.append(id)
+            }
+            newMarks[id] = .byAssistant
+            newProposals[id] = nil
+        }
+        for item in items where !seen.contains(item.id) {
+            outcome.removed.append(item.id)
+            if marks[item.id] == .byUser { outcome.overwritten.append(item.id) }
+            newMarks[item.id] = nil
+            newProposals[item.id] = nil
+        }
+        guard !outcome.changed.isEmpty || !outcome.added.isEmpty || !outcome.removed.isEmpty || result.map(\.id) != items.map(\.id) else {
+            return outcome
+        }
+        items = result
+        marks = newMarks
+        proposals = newProposals
+        undoState = before
         return outcome
     }
 

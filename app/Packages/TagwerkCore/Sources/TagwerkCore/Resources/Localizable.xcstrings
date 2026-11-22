@@ -95,6 +95,16 @@
         }
       }
     },
+    "%@ kcal über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
     "%@ l": {
       "localizations": {
         "en": {
@@ -117,6 +127,48 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld von %lld Mahlzeiten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$lld von %3$lld Mahlzeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld of %3$lld meals"
+          }
+        }
+      }
+    },
+    "%@ über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over budget"
           }
         }
       }
@@ -709,6 +761,16 @@
         }
       }
     },
+    "Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber"
+          }
+        }
+      }
+    },
     "Bett machen": {
       "localizations": {
         "en": {
@@ -799,22 +861,28 @@
         }
       }
     },
-    "Deadline war %@": {
+    "Deadline seit %@ abgelaufen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@"
+            "value": "Deadline passed %@"
           }
         }
       }
     },
-    "Deadline war %@, ganztägig": {
+    "Deadline seit %@, %@ abgelaufen": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Deadline seit %1$@, %2$@ abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@, all day"
+            "value": "Deadline passed %1$@, %2$@"
           }
         }
       }
@@ -1171,6 +1239,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "General thoughts"
+          }
+        }
+      }
+    },
+    "Gesättigte Fettsäuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturated fat"
           }
         }
       }
@@ -1629,6 +1707,16 @@
         }
       }
     },
+    "Salz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salt"
+          }
+        }
+      }
+    },
     "Schlafzeit (%@)": {
       "localizations": {
         "en": {
@@ -1645,6 +1733,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Swimming"
+          }
+        }
+      }
+    },
+    "Seit %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@ fällig · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Seit %@, %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@, %2$@ fällig · %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@, %2$@ · %3$@"
           }
         }
       }
@@ -1755,22 +1875,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hiking"
-          }
-        }
-      }
-    },
-    "War fällig %@ · %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "new",
-            "value": "War fällig %1$@ · %2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was due %1$@ · %2$@"
           }
         }
       }
@@ -1921,6 +2025,16 @@
         }
       }
     },
+    "Zucker": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugar"
+          }
+        }
+      }
+    },
     "Zum Beginn": {
       "localizations": {
         "en": {
@@ -2017,6 +2131,16 @@
         }
       }
     },
+    "mind. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -2033,6 +2157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ left"
+          }
+        }
+      }
+    },
+    "noch %@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal left"
           }
         }
       }

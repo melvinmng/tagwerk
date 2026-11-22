@@ -73,6 +73,65 @@ final class RecipeTranslator {
         return try Self.checked(Data(answer.utf8), plan: plan, language: language)
     }
 
+    // MARK: Follow-up (plan ki-vorschlaege-anpassen, task D3)
+
+    /// A second request about the translation on the sheet: the same lines as the first request, the translation as it is now
+    /// (with the words the user typed over) and the message. Answered in the format of `translate` and checked by the same plan,
+    /// so every index is answered once and amounts, links and attachments stay. The caller makes sure the note is one that may be
+    /// translated. Without consent nothing is sent, not even the model list.
+    func revise(_ text: String, to language: VoiceLanguage, current: String, comment: String) async throws -> String {
+        guard RecipeNote.parse(text) != nil else { throw Failure.notARecipe }
+        guard hasConsent() else { throw Failure.consentMissing }
+        let plan = RecipeTranslationPlan(markdown: text)
+        guard plan.isWithinLimits else { throw Failure.tooLong }
+        // An edited text that lost its structure cannot be sent as lines; the sheet shows why.
+        guard let now = try? plan.translations(fromEdited: current) else { throw Failure.mismatch }
+        let message = InputItem.user(Self.revisionText(for: plan, language: language, current: now, comment: comment))
+        let answer: String
+        do {
+            let slug = try await model()
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions + "\n" + Self.revisionInstructions,
+                                                                  input: [message], tools: [],
+                                                                  jsonSchema: (name: "recipe_translation", schema: Self.schema)))
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as ChatGPTError {
+            throw Self.failure(for: error)
+        } catch {
+            throw Failure.failed
+        }
+        return try Self.checked(Data(answer.utf8), plan: plan, language: language)
+    }
+
+    /// `{"target":…,"lines":[the lines of the note],"current":[the translated lines as they are now],"message":…}`.
+    static func revisionText(for plan: RecipeTranslationPlan, language: VoiceLanguage, current: [Int: String], comment: String) -> String {
+        let lines = plan.request.map { ["i": $0.index, "text": $0.text] as [String: Any] }
+        let now = plan.request.map { ["i": $0.index, "text": current[$0.index] ?? $0.text] as [String: Any] }
+        let object: [String: Any] = ["target": RecipeLanguage.promptName(language), "lines": lines, "current": now, "message": comment]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    static let revisionInstructions = """
+    The user now writes about your translation. The input also holds "current" (the translated lines as they are now, with the \
+    same indices) and "message" (the message of the user).
+    - Return all lines of "lines" again, each index once, in the same format. Change only what the message asks for; return every \
+    other line exactly as it is in "current", including words the user typed.
+    - All other rules stay: keep numbers, units, links and "attachment:" references exactly as written.
+    """
+
+    /// The text for a translation the user edited and that no longer fits the note.
+    static func editedMessage(for failure: RecipeTranslationPlan.Failure) -> String {
+        switch failure {
+        case .amountsChanged: String(localized: "In den Zutaten haben sich Mengen geändert. Mengen müssen bleiben, wie sie sind.")
+        case .attachmentsChanged, .linksChanged: String(localized: "Anhänge oder Links haben sich geändert. Sie müssen bleiben, wie sie sind.")
+        case .emptyLine, .lineBreak: String(localized: "Jede Zeile braucht einen Text und darf keinen Zeilenumbruch enthalten.")
+        case .indexMismatch, .structureChanged, .notARecipe: String(localized: "Der Text passt nicht mehr zum Rezept: Abschnitte, Zutaten und Schritte müssen in denselben Zeilen stehen.")
+        }
+    }
+
     // MARK: Checking
 
     private struct Answer: Decodable {
