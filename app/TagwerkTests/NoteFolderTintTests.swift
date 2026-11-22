@@ -32,6 +32,16 @@ struct NoteFolderTintTests {
         }
     }
 
+    @Test(arguments: [UIUserInterfaceStyle.light, .dark])
+    func expiryText_hasFourPointFiveToOneAgainstTheRowBackground(style: UIUserInterfaceStyle) throws {
+        let traits = UITraitCollection(userInterfaceStyle: style)
+        let colour = try #require(ContrastMath.color(named: NoteFolderTint.expiryTextName, style: style))
+        // The note card sits on the elevated row background of the grouped list.
+        let background = UIColor.secondarySystemGroupedBackground.resolvedColor(with: traits)
+        let ratio = ContrastMath.ratio(colour, background)
+        #expect(ratio >= 4.5, "expiry text has \(ratio):1 in style \(style.rawValue)")
+    }
+
     @Test func roles_mapToTheirColours() {
         #expect(NoteFolderTint.assetName(for: .brainDump) == NoteFolderTint.brainDumpName)
         #expect(NoteFolderTint.assetName(for: .morningRoutine) == NoteFolderTint.morningName)

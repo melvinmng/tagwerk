@@ -2175,6 +2175,16 @@
         }
       }
     },
+    "%lld ausgewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected"
+          }
+        }
+      }
+    },
     "%lld ausgewählt · %@": {
       "localizations": {
         "de": {
@@ -3498,6 +3508,16 @@
         }
       }
     },
+    "A bis Z": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A to Z"
+          }
+        }
+      }
+    },
     "Ab %@, vor der Fälligkeit, ohne Überschneidung": {
       "localizations": {
         "en": {
@@ -4089,6 +4109,16 @@
         }
       }
     },
+    "Alle auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select all"
+          }
+        }
+      }
+    },
     "Alle bestätigen (%lld)": {
       "localizations": {
         "en": {
@@ -4461,11 +4491,22 @@
       }
     },
     "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pinned notes always stay on top. The choice applies to all folders."
+          }
+        }
+      }
+    },
+    "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned notes always stay on top. The choice applies to all folders. The entries of Tagesstart and Tagesabschluss and the Dream Log stay sorted by day."
           }
         }
       }
@@ -10517,6 +10558,22 @@
         }
       }
     },
+    "Gelöscht am %@ · aus „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gelöscht am %1$@ · aus „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted on %@ · from “%@”"
+          }
+        }
+      }
+    },
     "Gemessen über Zeitblöcke; Fokus-Timer zählt nur außerhalb der Blöcke, letzte 8 Wochen.": {
       "localizations": {
         "en": {
@@ -12730,6 +12787,16 @@
         }
       }
     },
+    "Keine auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select none"
+          }
+        }
+      }
+    },
     "Keine gelöschten Notizen.": {
       "localizations": {
         "en": {
@@ -13145,6 +13212,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
+    "Letzte 7 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
           }
         }
       }
@@ -14325,6 +14402,16 @@
         }
       }
     },
+    "Nach Datum gruppieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by date"
+          }
+        }
+      }
+    },
     "Nach Hause · %@": {
       "localizations": {
         "en": {
@@ -14675,6 +14762,16 @@
         }
       }
     },
+    "Neueste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest first"
+          }
+        }
+      }
+    },
     "Nicht alles konnte angehängt werden": {
       "localizations": {
         "en": {
@@ -14866,6 +14963,7 @@
       }
     },
     "Noch %lld Tage": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15098,7 +15196,28 @@
         }
       }
     },
+    "Notizen auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select notes"
+          }
+        }
+      }
+    },
+    "Notizen bleiben %lld Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay here for %lld days and are then deleted for good, together with their attachments."
+          }
+        }
+      }
+    },
     "Notizen bleiben hier %lld Tage und werden dann endgültig gelöscht.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16543,6 +16662,16 @@
         }
       }
     },
+    "Richtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direction"
+          }
+        }
+      }
+    },
     "Risiken": {
       "localizations": {
         "en": {
@@ -17279,6 +17408,7 @@
       }
     },
     "Sortieren": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -20464,6 +20594,16 @@
         }
       }
     },
+    "Z bis A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z to A"
+          }
+        }
+      }
+    },
     "Zeigt Details": {
       "localizations": {
         "en": {
@@ -22178,6 +22318,26 @@
         }
       }
     },
+    "noch %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
+    "noch 1 Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day left"
+          }
+        }
+      }
+    },
     "noch nicht eingeplant": {
       "localizations": {
         "en": {
@@ -22666,6 +22826,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search older events"
+          }
+        }
+      }
+    },
+    "Älteste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldest first"
           }
         }
       }

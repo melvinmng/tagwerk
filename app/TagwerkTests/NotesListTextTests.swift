@@ -106,6 +106,71 @@ struct NotesListTextTests {
         #expect(Set(symbols).count == symbols.count)
     }
 
+    // MARK: Sorting, groups, selection and the trash (NF3)
+
+    @Test func trashFooter_namesDateAndFolder() {
+        let trashed = note(updated: at(10, 9))
+        trashed.deletedAt = at(15, 23, 30)
+        #expect(NotesListView.trashFooter(for: trashed, folderName: "Notizen", now: now, calendar: calendar) == "Gelöscht am 15.11. · aus „Notizen“")
+    }
+
+    @Test func trashFooter_deletedFolderFallsBackToNotizen() {
+        // The view passes "Notizen" when the folder of the note is gone; the text keeps its shape.
+        let trashed = note(updated: at(10, 9))
+        trashed.deletedAt = at(2, 8)
+        #expect(NotesListView.trashFooter(for: trashed, folderName: "Notizen", now: now, calendar: calendar).hasSuffix("aus „Notizen“"))
+        #expect(NotesListView.trashFooter(for: note(updated: at(10, 9)), folderName: "Notizen", now: now, calendar: calendar).isEmpty)
+    }
+
+    @Test func daysLeft_singularAndPlural() {
+        #expect(NotesListView.daysLeftText(1) == "noch 1 Tag")
+        #expect(NotesListView.daysLeftText(3) == "noch 3 Tage")
+        #expect(NotesListView.daysLeftText(0) == "noch 0 Tage")
+    }
+
+    @Test func selectionTitle_counts() {
+        #expect(NotesListView.selectionTitle(2) == "2 ausgewählt")
+        #expect(NotesListView.selectionTitle(1) == "1 ausgewählt")
+        #expect(NotesListView.selectionTitle(0) == "Notizen auswählen")
+    }
+
+    @Test func shouldPin_whenOneChosenNoteIsNotPinned() {
+        let pinned = note(updated: at(10, 9)); pinned.isPinned = true
+        let loose = note(updated: at(10, 9))
+        #expect(NotesListView.shouldPin([pinned, loose]))
+        #expect(NotesListView.shouldPin([loose]))
+        #expect(!NotesListView.shouldPin([pinned]))
+    }
+
+    @Test func groupTitle_namesTheGroups() {
+        let german = Locale(identifier: "de_DE")
+        #expect(NotesListView.groupTitle(.pinned, calendar: calendar, locale: german) == "Angeheftet")
+        #expect(NotesListView.groupTitle(.today, calendar: calendar, locale: german) == "Heute")
+        #expect(NotesListView.groupTitle(.lastSevenDays, calendar: calendar, locale: german) == "Letzte 7 Tage")
+        #expect(NotesListView.groupTitle(.month(year: 2026, month: 10), calendar: calendar, locale: german) == "Oktober 2026")
+    }
+
+    @Test func directionNames_followTheOrder() {
+        #expect(NotesListView.directionNames(for: .modified) == ("Neueste zuerst", "Älteste zuerst"))
+        #expect(NotesListView.directionNames(for: .created) == ("Neueste zuerst", "Älteste zuerst"))
+        #expect(NotesListView.directionNames(for: .title) == ("A bis Z", "Z bis A"))
+    }
+
+    @Test func sections_groupByTheSortDate() {
+        let pinned = note("Angeheftet", updated: at(1, 8)); pinned.isPinned = true
+        let today = note("Heute", updated: at(19, 8))
+        let week = note("Woche", updated: at(15, 8))
+        let old = note("Alt", updated: at(3, 8))
+        let notes = [pinned, today, week, old]
+        let grouped = NotesListView.sections(of: notes, order: .modified, groupsByDate: true, now: now, calendar: calendar)
+        #expect(grouped.map(\.group) == [.pinned, .today, .lastSevenDays, .month(year: 2026, month: 11)])
+        #expect(grouped.map { $0.notes.map(\.text) } == [["Angeheftet"], ["Heute"], ["Woche"], ["Alt"]])
+        // The title order and a switched-off grouping give one block.
+        #expect(NotesListView.sections(of: notes, order: .title, groupsByDate: true, now: now, calendar: calendar).count == 1)
+        let flat = NotesListView.sections(of: notes, order: .modified, groupsByDate: false, now: now, calendar: calendar)
+        #expect(flat.count == 1 && flat[0].group == nil && flat[0].notes.count == 4)
+    }
+
     // MARK: Markdown and attachments (P5)
 
     @Test func card_previewUsesPlainText() {

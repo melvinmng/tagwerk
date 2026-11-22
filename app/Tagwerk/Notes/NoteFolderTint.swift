@@ -9,6 +9,8 @@ enum NoteFolderTint {
     static let brainDumpName = "FolderBrainDump"
     static let morningName = "FolderMorning"
     static let eveningName = "FolderEvening"
+    /// Catalog name of the text colour of "noch 3 Tage" in "Zuletzt gelöscht" for the last week before a note goes for good.
+    static let expiryTextName = "TrashExpiryText"
 
     /// The catalog name of a role's colour; `nil` for the roles that use the accent colour.
     static func assetName(for role: NoteFolderRole?) -> String? {
@@ -19,6 +21,9 @@ enum NoteFolderTint {
         case .journal, .bibleStudy, .recipes, nil: nil
         }
     }
+
+    /// Warning colour as text: at least 4.5:1 against the row background in both appearances (`NoteFolderTintTests`).
+    static var expiryText: Color { Color(expiryTextName) }
 
     static func color(for role: NoteFolderRole?) -> Color {
         assetName(for: role).map { Color($0) } ?? .accentColor

@@ -12,8 +12,15 @@ struct NotesSettingsView: View {
                 Picker("Sortieren nach", selection: $settings.noteSortOrder) {
                     ForEach(NoteSortOrder.allCases, id: \.self) { Text(Self.sortName($0)).tag($0) }
                 }
+                Picker("Richtung", selection: $settings.noteSortAscending) {
+                    let names = NotesListView.directionNames(for: settings.noteSortOrder)
+                    Text(names.standard).tag(false)
+                    Text(names.reversed).tag(true)
+                }
+                Toggle("Nach Datum gruppieren", isOn: $settings.noteGroupsByDate)
+                    .disabled(settings.noteSortOrder == .title)
             } footer: {
-                Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.")
+                Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.")
             }
             Section {
                 NavigationLink("Aus Notion importieren") { NotionImportView() }

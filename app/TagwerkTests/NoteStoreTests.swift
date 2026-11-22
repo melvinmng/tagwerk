@@ -45,6 +45,20 @@ struct NoteStoreTests {
         _ = b
     }
 
+    @Test func notes_ascendingReversesWithinPinnedAndUnpinned() throws {
+        let a = try #require(store.create(text: "a")); advance()
+        let b = try #require(store.create(text: "b")); advance()
+        let c = try #require(store.create(text: "c")); advance()
+        let d = try #require(store.create(text: "d"))
+        store.setPinned(b.id, true)
+        store.setPinned(d.id, true)
+        #expect(store.notes(sortedBy: .created).map(\.text) == ["d", "b", "c", "a"])
+        // Oldest first: still pinned first, but each block turned around.
+        #expect(store.notes(sortedBy: .created, ascending: true).map(\.text) == ["b", "d", "a", "c"])
+        #expect(store.notes(sortedBy: .title, ascending: true).map(\.text) == ["d", "b", "c", "a"])
+        _ = (a, c)
+    }
+
     @Test func updateText_changesUpdatedAtOnlyForNewText() throws {
         let note = try #require(store.create(text: "a"))
         let created = note.updatedAt

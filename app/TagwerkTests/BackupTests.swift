@@ -651,6 +651,37 @@ struct BackupTests {
         #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
     }
 
+    // MARK: Note list order
+
+    @Test func settings_roundTripSortDirectionAndGrouping() throws {
+        let origin = try makeTarget()
+        origin.settings.noteSortAscending = true
+        origin.settings.noteGroupsByDate = false
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        #expect(!target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.noteSortAscending && !target.settings.noteGroupsByDate)
+    }
+
+    @Test func settings_olderFileKeepsDefaults() throws {
+        let data = try backup.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var settings = try #require(entities["settings"] as? [String: Any])
+        settings.removeValue(forKey: "noteSortAscending")
+        settings.removeValue(forKey: "noteGroupsByDate")
+        entities["settings"] = settings
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        target.settings.noteSortAscending = true
+        try target.container.mainContext.save()
+        try target.service.restore(try target.service.inspect(old))
+        // A missing value keeps what the device has.
+        #expect(target.settings.noteSortAscending && target.settings.noteGroupsByDate)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {
