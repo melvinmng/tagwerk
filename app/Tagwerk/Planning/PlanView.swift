@@ -104,7 +104,8 @@ struct PlanView: View {
                 switch model.scope {
                 case .day: DayView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, onOpenEvent: onOpenEvent,
                                    onEditRecurring: onEditRecurring, menuActions: menuActions, deadlineActions: deadlineActions)
-                case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions, deadlineActions: deadlineActions)
+                case .week: WeekView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, menuActions: menuActions,
+                                     deadlineActions: deadlineActions)
                 case .month:
                     MonthView(model: model, onSelectDay: { day in
                         model.scope = .day

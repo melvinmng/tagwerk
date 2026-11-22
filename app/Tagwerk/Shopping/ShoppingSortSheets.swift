@@ -26,6 +26,7 @@ struct ShoppingSortConsentSheet: View {
                         point("eye.slash", "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.")
                         point("hand.tap", "**Nur auf dein Tippen:** Ohne „Übersetzen“ verlässt nichts das iPhone.")
                     }
+                    ConsentFollowUpPoint()
                     VStack(spacing: 10) {
                         Button(action: onAgree) {
                             Text(purpose == .sort ? "Einverstanden und sortieren" : "Einverstanden und übersetzen")

@@ -69,7 +69,7 @@ enum AuditAllowlist {
             "„Seminar“ aus „Demo Freigabe“ liegt zur selben Zeit wie „Seminar“\\.", "Künftig immer bei „Seminar“ aus „Demo Freigabe“",
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten",
             "Deadlines", "in 3 Tagen", "P1",
-            "\\d+:\\d+–\\d+:\\d+ · .* eingeplant", "Tagesabschluss", "morgen", "Klausur Statistik", "Anmeldung Abschlussarbeit", "\\d+ h \\d+ noch frei",
+            "\\d+:\\d+–\\d+:\\d+ · .*", "Tagesabschluss", "morgen", "Klausur Statistik", "Anmeldung Abschlussarbeit", "\\d+ h \\d+ noch frei",
         ], reason: "Text on tinted cards (red deadline card, pink suggestion card), on the translucent bar of the day view and on the capacity line and "
             + "the \"Tagesabschluss\" line of the day card (#268; \"9:00–18:00 · 1 h Pause · …\"), in the tones "
             + "`redText`, `orangeText`, `purpleText` or `secondaryText`. Part of the overdue/deadline texts pass since strand K "
@@ -230,7 +230,7 @@ enum AuditAllowlist {
             + "grows and wraps."),
         Entry(auditType: .textClipped, labels: [
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
-            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
+            "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Wenn du zu einem Vorschlag etwas zurückschreibst|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
             "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
             "Rezepte mit ChatGPT lesen und übersetzen", "Mit ChatGPT sortieren und übersetzen", "(?s)Sendet auf dein Tippen die Namen .*",
             "Einkaufsliste jetzt auf (Englisch|Deutsch)", "Neue Artikel kommen auf (Englisch|Deutsch)\\. .*", "Mit ChatGPT übersetzen", "Übersetzung",

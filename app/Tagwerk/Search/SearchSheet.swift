@@ -447,7 +447,8 @@ struct SearchSheet: View {
                 .accessibilityAction(named: Text("Im Plan zeigen")) { showInPlan(event) }
         case .task(let item, let match):
             SearchTaskRow(item: item, match: match, now: now, calendar: calendar,
-                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true) { complete(item) }
+                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true,
+                          reminderMark: environment.taskList.reminderMarks[item.id.key]) { complete(item) }
                 .onTapGesture { open(item) }
                 .contextMenu { taskMenu(item) }
                 .accessibilityAddTraits(.isButton)

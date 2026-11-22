@@ -7,5 +7,5 @@
 
 AccessibilityAuditRecipesLargeTextUITests
 
-# Add AccessibilityAuditEveningLargeTextUITests as soon as PR #261 (which introduces it) is merged into main.
-# It is not listed yet because the class does not exist on main.
+# The evening variant of the AX5 audit is a nightly-only check as well (introduced with the evening audit work).
+AccessibilityAuditEveningLargeTextUITests

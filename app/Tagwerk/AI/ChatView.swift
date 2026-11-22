@@ -15,6 +15,10 @@ struct ChatView: View {
     /// Sheet height; the voice mode uses half height so the calendar stays visible (SP5a).
     @State private var detent: PresentationDetent = .large
     @State private var explainingVoiceMode = false
+    /// The note card whose proposal is shown in `NoteChangeSheet`.
+    @State private var noteDetail: NoteDetailRequest?
+    /// The card whose sheet "Vorschlag anpassen" is open; set by "Anpassen" on a card with an editor.
+    @State private var adjusting: ToolCall?
 
     private var conversation: Conversation? { assistant.conversation }
 
@@ -43,6 +47,8 @@ struct ChatView: View {
                 environment.voiceOutput.stop()
             }
             .onChange(of: draft) { _, text in if text.isEmpty { voice?.draftConsumed() } }
+            // Nothing left to revise: the reference of the next message goes away with the cards.
+            .onChange(of: conversation?.pendingActions.isEmpty) { _, isEmpty in if isEmpty == true { assistant.composesRevision = false } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Label("ChatGPT", systemImage: "sparkles").labelStyle(.titleAndIcon).font(.headline)
@@ -59,7 +65,19 @@ struct ChatView: View {
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
             }
+            .sheet(item: $adjusting) { call in
+                ProposalAdjustSheet(assistant: assistant, call: call)
+            }
+            .sheet(item: $noteDetail) { request in
+                if let detail = request.card.detail {
+                    NoteChangeSheet(card: request.card, detail: detail,
+                                    onDecline: { Task { await assistant.decline(request.call) } },
+                                    onConfirm: { Task { await assistant.confirm(request.call) } })
+                }
+            }
         }
+        // A sheet does not take the forced text size of the UI test mode from the window; no effect outside that mode.
+        .modifier(UITestAppearance())
     }
 
     // MARK: Voice
@@ -107,13 +125,21 @@ struct ChatView: View {
     // MARK: Parts
 
     private var contextChip: some View {
-        Label(contextText, systemImage: "scope")
+        Label(contextText, systemImage: isNotesContext ? "lock" : "scope")
             .font(.caption)
             .foregroundStyle(.secondaryText)
             .padding(.horizontal, 12).padding(.vertical, 6)
             .background(.thinMaterial, in: Capsule())
             .padding(.vertical, 6)
-            .accessibilityLabel("Kontext: \(contextText)")
+            .accessibilityLabel(Self.contextAccessibilityLabel(for: contextText))
+    }
+
+    /// The chip text already starts with "Kontext:" in most contexts; only the bare planning text lacks it.
+    /// Prefixing blindly made VoiceOver read "Kontext: Kontext: …".
+    static func contextAccessibilityLabel(for text: String) -> String {
+        // Reuses the "Kontext: %@" key, so the prefix follows the language and no extra catalog entry is needed.
+        let prefix = String(localized: "Kontext: \("")")
+        return text.hasPrefix(prefix) ? text : String(localized: "Kontext: \(text)")
     }
 
     private var contextText: String {
@@ -129,6 +155,24 @@ struct ChatView: View {
         case .settings: return String(localized: "Kontext: allgemein")
         case .capture: return String(localized: "Kontext: Erfassen")
         case .task: return assistant.task.map { String(localized: "Kontext: \($0.title)") } ?? String(localized: "Kontext: Aufgabe")
+        case .notes(let folderID):
+            // The line says what stays out, so the user sees why the assistant does not find the private folders.
+            let excluded = NoteToolAccess.listText(assistant.privateFolderNames)
+            if let folderID, let name = assistant.noteFolderName(folderID) {
+                return String(localized: "Kontext: Notizen in „\(name)“ · ohne \(excluded)")
+            }
+            return String(localized: "Kontext: Notizen · ohne \(excluded)")
+        case .note(let id):
+            let excluded = NoteToolAccess.listText(assistant.privateFolderNames)
+            guard let title = assistant.noteTitle(id) else { return String(localized: "Kontext: Notizen · ohne \(excluded)") }
+            return String(localized: "Kontext: Notiz „\(title)“ · ohne \(excluded)")
+        }
+    }
+
+    private var isNotesContext: Bool {
+        switch assistant.context {
+        case .notes, .note: true
+        default: false
         }
     }
 
@@ -145,8 +189,14 @@ struct ChatView: View {
                               systemImage: "person.crop.circle.badge.exclamationmark")
                             .font(.subheadline).foregroundStyle(.secondaryText)
                     } else if conversation?.history.isEmpty != false {
-                        Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
-                            .font(.subheadline).foregroundStyle(.secondaryText)
+                        if isNotesContext {
+                            Text("Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.")
+                                .font(.subheadline).foregroundStyle(.secondaryText)
+                        } else {
+                            Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
+                                .font(.subheadline).foregroundStyle(.secondaryText)
+                        }
+
                     }
                     ForEach(conversation?.messages ?? []) { message in
                         row(message).id(message.id)
@@ -202,9 +252,13 @@ struct ChatView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .action(let call, let status):
-            ActionCardView(card: assistant.describe(call), status: status, time: assistant.actionTimes[call.id],
+            let card = assistant.describe(call, isOpen: status == .pending)
+            ActionCardView(card: card, status: status, time: assistant.actionTimes[call.id],
                            onConfirm: { Task { await assistant.confirm(call) } },
-                           onDecline: { Task { await assistant.decline(call) } })
+                           onDecline: { Task { await assistant.decline(call) } },
+                           proposal: proposalPosition(of: call),
+                           onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) },
+                           onAdjust: status == .pending && card.canAdjust ? { adjusting = call } : nil)
         case .activity(let call, let output):
             // A read call the user should see ("Gelesen: „Titel“"); small and grey, not an answer.
             if let text = assistant.activityText(call, output: output) {
@@ -214,22 +268,77 @@ struct ChatView: View {
         }
     }
 
+    /// "Vorschlag i von n" while several note cards are open; `nil` for one card and for other cards.
+    private func proposalPosition(of call: ToolCall) -> (index: Int, count: Int)? {
+        let open = (conversation?.pendingActions ?? []).filter { NoteChatTools.noteWriteTools.contains($0.name) }
+        guard open.count > 1, let index = open.firstIndex(where: { $0.id == call.id }) else { return nil }
+        return (index + 1, open.count)
+    }
+
+    /// "Alle anpassen …": the next message goes out together with the state of all open cards (AN5a).
+    private func reviseAllButton(count: Int) -> some View {
+        Button {
+            assistant.composesRevision = true
+            composing = true
+        } label: {
+            Text("Alle anpassen …").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .disabled(!canSend)
+    }
+
+    private func confirmAllButton(_ batch: Int) -> some View {
+        Button {
+            Task { await assistant.confirmAll() }
+        } label: {
+            Text("Alle bestätigen (\(batch))").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
+    /// The reference of the next message, above the input: "Zu allen 3 Vorschlägen ✕", with what "Senden" sends below.
+    private func revisionChip(count: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Text(count == 1 ? String(localized: "Zum offenen Vorschlag") : String(localized: "Zu allen \(count) Vorschlägen"))
+                    .font(.caption.weight(.semibold))
+                Button { assistant.composesRevision = false } label: { Image(systemName: "xmark.circle.fill") }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Bezug entfernen")
+            }
+            .foregroundStyle(.purple)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(Color.purple.opacity(0.15), in: Capsule())
+            Text("Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.")
+                .font(.footnote).foregroundStyle(.secondaryText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var composer: some View {
         VStack(spacing: 6) {
-            if let pending = conversation?.pendingActions, pending.count > 1 {
+            if let pending = conversation?.pendingActions, !pending.isEmpty {
                 // Guarded cards (assignments) are confirmed one by one and are not part of the count.
                 let batch = assistant.batchConfirmable.count
-                if batch > 1 {
-                    Button {
-                        Task { await assistant.confirmAll() }
-                    } label: {
-                        Text("Alle bestätigen (\(batch))").frame(maxWidth: .infinity)
+                let confirmsAll = pending.count > 1 && batch > 1
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        reviseAllButton(count: pending.count)
+                        if confirmsAll { confirmAllButton(batch) }
                     }
-                    .buttonStyle(.borderedProminent)
+                    VStack(spacing: 8) {
+                        reviseAllButton(count: pending.count)
+                        if confirmsAll { confirmAllButton(batch) }
+                    }
                 }
-                if let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
+                // As before: the note under the buttons names the cards that are confirmed alone, from two open cards on.
+                if pending.count > 1,
+                   let notice = AssistantModel.singleConfirmationNotice(for: pending, me: assistant.gitHubDirectory()?.login) {
                     Text(notice).font(.footnote).foregroundStyle(.secondaryText).frame(maxWidth: .infinity, alignment: .leading)
                 }
+            }
+            if assistant.composesRevision, let pending = conversation?.pendingActions, !pending.isEmpty {
+                revisionChip(count: pending.count)
             }
             if explainingVoiceMode {
                 VoiceModeExplanation(onStart: startVoiceMode, onCancel: { explainingVoiceMode = false })
@@ -292,31 +401,33 @@ struct ActionCardView: View {
     var canConfirm = true
     /// A row below the change text, e.g. the target of an issue suggested from a note.
     var accessory: AnyView? = nil
+    /// The place of a note card among several open ones: "Vorschlag 2 von 3 · noch nicht ausgeführt".
+    var proposal: (index: Int, count: Int)? = nil
+    /// Opens the sheet "Änderung ansehen"; `nil` for cards without a proposal to look at.
+    var onShowDetail: (() -> Void)? = nil
+    /// Opens the sheet "Vorschlag anpassen"; `nil` for cards without an editor (no third button, AN11a).
+    var onAdjust: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             header
             Text(card.title).font(.subheadline.weight(.semibold))
-            Text(card.change).font(.subheadline).foregroundStyle(.secondaryText)
+            if let mark = card.mark, status == .pending { ProposalMarkLabel(mark: mark) }
+            changeText
             if let accessory { accessory }
+            if let onShowDetail {
+                Button(action: onShowDetail) {
+                    Label(detailTitle, systemImage: "doc.text.magnifyingglass").font(.subheadline)
+                }
+                .buttonStyle(.borderless)
+            }
             if let warning = card.warning {
                 Label(warning, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.redText)
             }
             if case .done(let output) = status, let error = Self.error(in: output) {
                 Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
             }
-            if status == .pending {
-                HStack {
-                    Button("Verwerfen", action: onDecline).buttonStyle(.bordered)
-                    Spacer()
-                    Button(role: card.isDestructive ? .destructive : nil, action: onConfirm) {
-                        Text(card.confirmTitle ?? String(localized: "Bestätigen"))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(card.isDestructive ? .red : nil)
-                    .disabled(!canConfirm)
-                }
-            }
+            if status == .pending { buttons }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -326,25 +437,105 @@ struct ActionCardView: View {
                 RoundedRectangle(cornerRadius: 14).strokeBorder(Color.purple, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
             }
         }
+        .accessibilityActions {
+            if status == .pending, let onAdjust { Button("Anpassen", action: onAdjust) }
+        }
+    }
+
+    /// What the card changes. An adjusted card shows the old value of each changed part struck through before the new one
+    /// (AN2a); when the two texts do not have the same parts, the whole proposal of the model follows below.
+    @ViewBuilder
+    private var changeText: some View {
+        if let proposed = card.proposedChange, status == .pending {
+            if let parts = ProposalChangeText.parts(current: card.change, proposed: proposed) {
+                Text(ProposalChangeText.attributed(parts)).font(.subheadline).foregroundStyle(.secondaryText)
+                    .accessibilityLabel(Text(ProposalChangeText.spoken(parts)))
+            } else {
+                Text(card.change).font(.subheadline).foregroundStyle(.secondaryText)
+                Text("Vorschlag der KI: \(proposed)").font(.caption).foregroundStyle(.secondaryText).strikethrough()
+                    .accessibilityLabel(Text("Vorschlag der KI: \(proposed)"))
+            }
+        } else {
+            Text(card.change).font(.subheadline).foregroundStyle(.secondaryText)
+        }
+    }
+
+    /// "Verwerfen", "Bestätigen" and, for a card with an editor, "Anpassen" in between. With large text the three
+    /// buttons do not fit in a row: "Bestätigen" then gets its own full-width row below the other two.
+    @ViewBuilder
+    private var buttons: some View {
+        if let onAdjust {
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    declineButton
+                    Spacer()
+                    adjustButton(onAdjust)
+                    confirmButton
+                }
+                VStack(spacing: 8) {
+                    HStack {
+                        declineButton
+                        Spacer()
+                        adjustButton(onAdjust)
+                    }
+                    confirmButton.frame(maxWidth: .infinity)
+                }
+            }
+        } else {
+            HStack {
+                declineButton
+                Spacer()
+                confirmButton
+            }
+        }
+    }
+
+    private var declineButton: some View {
+        Button("Verwerfen", action: onDecline).buttonStyle(.bordered)
+    }
+
+    private func adjustButton(_ action: @escaping () -> Void) -> some View {
+        Button("Anpassen", action: action).buttonStyle(.bordered)
+    }
+
+    private var confirmButton: some View {
+        Button(role: card.isDestructive ? .destructive : nil, action: onConfirm) {
+            Text(card.confirmTitle ?? String(localized: "Bestätigen"))
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(card.isDestructive ? .red : nil)
+        .disabled(!canConfirm)
     }
 
     @ViewBuilder
     private var header: some View {
         switch status {
         case .pending:
-            Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purpleText)
+            if let proposal {
+                Text("Vorschlag \(proposal.index) von \(proposal.count) · noch nicht ausgeführt").font(.caption).foregroundStyle(.purpleText)
+            } else {
+                Text("Vorgeschlagene Änderung · noch nicht ausgeführt").font(.caption).foregroundStyle(.purpleText)
+            }
         case .running:
             HStack(spacing: 6) { ProgressView(); Text("Wird ausgeführt …").font(.caption).foregroundStyle(.secondaryText) }
         case .done(let output):
             if Self.error(in: output) != nil {
                 Text("Nicht ausgeführt").font(.caption).foregroundStyle(.orangeText)
             } else {
-                Text(time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt"))
-                    .font(.caption).foregroundStyle(.greenText)
+                let done = time.map { String(localized: "✓ Ausgeführt · \($0.formatted(date: .omitted, time: .shortened))") } ?? String(localized: "✓ Ausgeführt")
+                Text(card.doneNote.map { done + " · " + $0 } ?? done).font(.caption).foregroundStyle(.greenText)
             }
         case .declined:
             Text("Verworfen").font(.caption).foregroundStyle(.secondaryText)
+        case .revised:
+            Text("Überarbeitet").font(.caption).foregroundStyle(.secondaryText)
         }
+    }
+
+    /// "Notiz ansehen" for a new note and a deletion, "Änderung ansehen" for a revision.
+    private var detailTitle: LocalizedStringKey {
+        if case .update = card.detail { return "Änderung ansehen" }
+        return "Notiz ansehen"
     }
 
     /// The `error` of a function output, if it reports one.

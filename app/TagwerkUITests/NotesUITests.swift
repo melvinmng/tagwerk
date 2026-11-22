@@ -43,4 +43,18 @@ final class NotesUITests: UITestCase {
             .waitForExistence(timeout: Self.timeout), "The folder list with the note did not open")
         XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
     }
+
+    /// The assistant button of the notes: without the consent it shows the sheet first, "Einverstanden" opens the chat with its
+    /// context line (#233; the chat runs on the demo transport, nothing is sent).
+    func testNotesAssistantConsentThenChat() {
+        openNotes()
+        let assistant = app.buttons["Assistent"].firstMatch
+        XCTAssertTrue(assistant.waitForExistence(timeout: Self.timeout), "The notes overview has no assistant button")
+        assistant.tap()
+        XCTAssertTrue(app.staticTexts["Notizen mit ChatGPT"].waitForExistence(timeout: Self.timeout), "The consent sheet did not show")
+        tapButton("Einverstanden")
+        let context = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Notizen · ohne")).firstMatch
+        XCTAssertTrue(context.waitForExistence(timeout: Self.timeout), "The notes chat did not open with its context line")
+        XCTAssertTrue(context.label.contains("Tagebuch mit Gott"), "The context line does not name the private folders: \(context.label)")
+    }
 }

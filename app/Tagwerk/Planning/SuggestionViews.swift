@@ -506,16 +506,14 @@ struct SuggestionMoveSection: View {
 }
 
 /// Talking about the suggestion (mockups VK1, VA1): the exchange of this planning, the change card of the
-/// last answer with "Rückgängig" and "Als Vorgabe merken", quick replies and the input line.
+/// last answer with "Rückgängig" and "Als Vorgabe merken", quick replies and the input line (`FollowUpBar`).
 struct SuggestionConversation: View {
     @Environment(AppEnvironment.self) private var environment
     let suggestion: PlanSuggestion
     var isFocused: FocusState<Bool>.Binding
     /// Recording hides the decision bar like typing does (mockup SP6b).
     var isRecording: Binding<Bool> = .constant(false)
-    @State private var text = ""
     @State private var rule: String?
-    @State private var voice: VoiceInputModel?
 
     static var quickReplies: [String] { [String(localized: "Früher am Tag"), String(localized: "Anderer Tag"), String(localized: "Kürzer")] }
 
@@ -525,79 +523,32 @@ struct SuggestionConversation: View {
     }
     private var isSending: Bool { planner.revisingID == suggestion.id }
 
+    private var state: FollowUpState {
+        if isSending { return .sending }
+        if let error = planner.revisionError { return .failed(error) }
+        return .ready
+    }
+
     var body: some View {
         Section {
-            ForEach(batch?.conversation ?? []) { message in
-                if message.role == .user {
-                    Text(message.text)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .foregroundStyle(.secondaryText)
-                } else {
-                    answer(message, isLast: message.id == batch?.conversation?.last?.id)
-                }
-            }
-            if isSending {
-                HStack(spacing: 8) {
-                    ProgressView()
-                    Text("ChatGPT antwortet …").foregroundStyle(.secondaryText)
-                }
-            } else if let error = planner.revisionError {
-                Label(error, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
-            }
-            if let voice { VoiceNoticeRow(voice: voice) }
-            if let voice, voice.isRecording {
-                VoiceRecordingBar(voice: voice, compact: true, canSend: !isSending, tint: .purple)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Self.quickReplies, id: \.self) { reply in
-                            Button(reply) { send(reply) }
-                                .buttonStyle(.bordered)
-                                .tint(.purple)
-                                .disabled(isSending)
-                        }
+            FollowUpBar(availability: .available, state: state, place: .planning, quickReplies: Self.quickReplies,
+                        placeholder: "Zum Vorschlag etwas sagen …", isFocused: isFocused, isRecording: isRecording,
+                        sendIdentity: suggestion, onSend: { send($0) }) {
+                ForEach(batch?.conversation ?? []) { message in
+                    if message.role == .user {
+                        Text(message.text)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .foregroundStyle(.secondaryText)
+                    } else {
+                        answer(message, isLast: message.id == batch?.conversation?.last?.id)
                     }
                 }
-                .keepsKeyboardOnTap()
-                HStack(spacing: 8) {
-                    TextField("Zum Vorschlag etwas sagen …", text: $text)
-                        .focused(isFocused)
-                        .submitLabel(.send)
-                        .onSubmit { send(text) }
-                    if environment.settings.voiceInputEnabled, let voice {
-                        VoiceMicrophoneButton(voice: voice, isEnabled: environment.ai.isSignedIn,
-                                              language: environment.settings.dictationLanguage(at: .planning))
-                    }
-                    Button {
-                        send(text)
-                    } label: {
-                        Image(systemName: "arrow.up.circle.fill").font(.title2)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.purple)
-                    .disabled(isSending || text.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .accessibilityLabel("Senden")
-                }
-                .keepsKeyboardOnTap()
             }
         } header: {
             Label("Mit ChatGPT besprechen", systemImage: "sparkles")
         } footer: {
             Text("Senden gibt diesen Vorschlag, die übrigen der Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.")
         }
-        .onAppear {
-            if voice == nil {
-                let model = VoiceInputFactory.make(environment, place: .planning)
-                model.readDraft = { text }
-                model.writeDraft = { text = $0 }
-                voice = model
-            }
-            voice?.onSend = { comment in send(comment) }
-        }
-        // `send` uses this view's suggestion; keep the closure on the current one after moves and revisions.
-        .onChange(of: suggestion) { _, _ in voice?.onSend = { comment in send(comment) } }
-        .onDisappear { voice?.cancel() }
-        .onChange(of: voice?.isRecording ?? false) { _, recording in isRecording.wrappedValue = recording }
         .alert("Als Vorgabe merken", isPresented: Binding(get: { rule != nil }, set: { if !$0 { rule = nil } })) {
             TextField("Vorgabe", text: Binding(get: { rule ?? "" }, set: { rule = $0 }))
             Button("Merken") { remember() }
@@ -651,8 +602,6 @@ struct SuggestionConversation: View {
     private func send(_ comment: String) {
         let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !comment.isEmpty, !isSending else { return }
-        text = ""
-        isFocused.wrappedValue = false
         Task { await planner.revise(suggestion, comment: comment) }
     }
 

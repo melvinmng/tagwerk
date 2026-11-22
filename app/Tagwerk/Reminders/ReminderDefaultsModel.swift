@@ -34,4 +34,29 @@ final class ReminderDefaultsModel {
         for slot in Self.slots { result.set(list(slot).offsets, for: slot.kind, isAllDay: slot.isAllDay) }
         return result
     }
+
+    /// The name of a kind on the overview page.
+    static func kindTitle(_ kind: ReminderKind) -> String {
+        switch kind {
+        case .event: String(localized: "Kalendertermine")
+        case .appleReminder: String(localized: "Apple Erinnerungen")
+        case .githubIssue: String(localized: "GitHub-Issues")
+        case .localTask: String(localized: "Lokale Aufgaben")
+        case .deadline: String(localized: "Deadline-Termine")
+        }
+    }
+
+    /// The name of a list on the page of its kind. Events and deadlines say "Ganztägig", the others "Ohne Uhrzeit".
+    static func slotTitle(_ slot: Slot) -> String {
+        guard slot.isAllDay else { return String(localized: "Mit Uhrzeit") }
+        switch slot.kind {
+        case .event, .deadline: return String(localized: "Ganztägig")
+        case .appleReminder, .githubIssue, .localTask: return String(localized: "Ohne Uhrzeit")
+        }
+    }
+
+    /// The short form of a list, worded for what the kind counts from.
+    func rowSummary(for slot: Slot, locale: Locale = .current, calendar: Calendar = .tagwerk) -> String {
+        ReminderText.summary(list(slot).offsets, subject: slot.kind.subject, isAllDay: slot.isAllDay, locale: locale, calendar: calendar)
+    }
 }

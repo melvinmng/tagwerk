@@ -40,6 +40,20 @@ final class PlanUITests: UITestCase {
         XCTAssertTrue(dayTitle(startingWith: "Heute").waitForExistence(timeout: Self.timeout), "The swipe did not return to today")
     }
 
+    /// The week lists the events of its days (#259) in the rows of the day list; a tap opens the sheet of the event as in the
+    /// day view.
+    func testWeekListsEventsAndOpensThem() {
+        waitFor("Sprechstunde")
+        tapButton("Woche")
+        // Today can lie further down in the list; the rows exist only while they are on screen.
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Sprechstunde")).firstMatch
+        scrollTo(row)
+        row.tap()
+        XCTAssertTrue(app.buttons["Fertig"].firstMatch.waitForExistence(timeout: Self.timeout), "The sheet of the event did not open")
+        tapButton("Fertig")
+        waitUntilGone(app.buttons["Fertig"].firstMatch)
+    }
+
     /// The month pages by dragging sideways over the grid (PL7b): the title moves on to the next month.
     func testMonthPagesBySwiping() {
         waitFor("Sprechstunde")

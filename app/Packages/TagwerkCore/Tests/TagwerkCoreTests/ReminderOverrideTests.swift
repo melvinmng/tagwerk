@@ -79,4 +79,64 @@ struct ReminderOverrideTests {
         #expect(ReminderOverride.key(task: TaskID(source: .github, rawValue: "o/r#4")) == "task:github:o/r#4")
         #expect(ReminderOverride.key(deadlineSeries: "abc") == "deadline:abc")
     }
+
+    // MARK: Mark in the task row (plan g1, ER4b)
+
+    private func task(source: TaskSource = .local, due: DueDate? = DueDate(year: 2026, month: 11, day: 27, hour: 12)) -> TaskItem {
+        TaskItem(id: TaskID(source: source, rawValue: "t1"), title: "Bericht", notes: nil, due: due, priority: nil,
+                 estimateMinutes: nil, isCompleted: false, container: TaskContainer(id: "l", name: "Liste", colorHex: nil),
+                 url: nil, version: "1", editableFields: [])
+    }
+
+    private func overrides(for task: TaskItem, _ offsets: [ReminderOffset], storage: ReminderOverride.Storage = .tagwerk)
+        -> [String: [ReminderOverride]] {
+        let itemKey = ReminderOverride.key(task: task.id)
+        return [itemKey: [ReminderOverride(itemKey: itemKey, scope: .always, storage: storage, offsets: offsets)]]
+    }
+
+    @Test func mark_default_isNil() {
+        #expect(ReminderMark.of(task: task(), overrides: [:]) == nil)
+    }
+
+    @Test func mark_ownList_countsIt() {
+        let item = task()
+        let own = overrides(for: item, [.before(amount: 1, unit: .days), .before(amount: 2, unit: .hours), .before(amount: 1, unit: .weeks)])
+        #expect(ReminderMark.of(task: item, overrides: own) == .custom(count: 3))
+    }
+
+    @Test func mark_emptyOwnList_isNone() {
+        let item = task()
+        #expect(ReminderMark.of(task: item, overrides: overrides(for: item, [])) == ReminderMark.none)
+    }
+
+    @Test func mark_withoutDue_isNil() {
+        let item = task(due: nil)
+        #expect(ReminderMark.of(task: item, overrides: overrides(for: item, [.before(amount: 1, unit: .days)])) == nil)
+    }
+
+    @Test func mark_appleReminderWithOwnAlarms_counts() {
+        let item = task(source: .reminders)
+        let own = overrides(for: item, [.before(amount: 15, unit: .minutes)], storage: .eventKit)
+        #expect(ReminderMark.of(task: item, overrides: own) == .custom(count: 1))
+    }
+
+    @Test func mark_ownListEqualToTheDefault_isNil() {
+        let item = task()
+        var defaults = ReminderDefaults()
+        defaults.set([.before(amount: 1, unit: .days)], for: .localTask, isAllDay: false)
+        let same = overrides(for: item, [.before(amount: 24, unit: .hours)])
+        #expect(ReminderMark.of(task: item, overrides: same, defaults: defaults) == nil)
+        let other = overrides(for: item, [.before(amount: 1, unit: .weeks)])
+        #expect(ReminderMark.of(task: item, overrides: other, defaults: defaults) == .custom(count: 1))
+    }
+
+    @Test func mark_onlyThisDueDate_endsWithTheDueDate() {
+        let item = task()
+        let itemKey = ReminderOverride.key(task: item.id)
+        let onlyThis = [itemKey: [ReminderOverride(itemKey: itemKey, scope: .onlyDue(item.due!), offsets: [])]]
+        #expect(ReminderMark.of(task: item, overrides: onlyThis) == ReminderMark.none)
+        var moved = item
+        moved.due = DueDate(year: 2026, month: 12, day: 4, hour: 12)
+        #expect(ReminderMark.of(task: moved, overrides: onlyThis) == nil)
+    }
 }

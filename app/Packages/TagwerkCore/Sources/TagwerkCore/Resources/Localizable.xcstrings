@@ -579,6 +579,16 @@
         }
       }
     },
+    "Ab %@ für alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@ on, for all following"
+          }
+        }
+      }
+    },
     "Abendessen": {
       "localizations": {
         "en": {
@@ -669,12 +679,22 @@
         }
       }
     },
-    "Am selben Tag um %@": {
+    "Am Tag selbst": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On the same day at %@"
+            "value": "On the day"
+          }
+        }
+      }
+    },
+    "Am Tag selbst um %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the day at %@"
           }
         }
       }
@@ -999,6 +1019,16 @@
         }
       }
     },
+    "Doppelt: „%@“ – Tagwerk und Kalender erinnern beide am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate: “%1$@” – Tagwerk and the calendar both remind you on %2$@"
+          }
+        }
+      }
+    },
     "Drogerie": {
       "localizations": {
         "en": {
@@ -1055,6 +1085,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go to bed half an hour before sleep"
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Fälligkeiten ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which due dates?"
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Termine ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which events?"
           }
         }
       }
@@ -1499,6 +1549,16 @@
         }
       }
     },
+    "Nur am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on %@"
+          }
+        }
+      }
+    },
     "Nächste Woche": {
       "localizations": {
         "en": {
@@ -1625,6 +1685,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Later"
+          }
+        }
+      }
+    },
+    "Standard · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default · %@"
           }
         }
       }
@@ -1851,12 +1921,32 @@
         }
       }
     },
-    "Zum Zeitpunkt": {
+    "Zum Beginn": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "At time of event"
+            "value": "At start"
+          }
+        }
+      }
+    },
+    "Zur Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the deadline"
+          }
+        }
+      }
+    },
+    "Zur Fälligkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At due time"
           }
         }
       }

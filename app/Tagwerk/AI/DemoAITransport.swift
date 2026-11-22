@@ -31,6 +31,10 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": meal]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let revision = Self.cardRevisionAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": revision]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let recipe = Self.recipeAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": recipe]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
@@ -109,6 +113,26 @@ final class DemoAITransport: AIHTTPTransport {
             return #"{"title":"","items":[]}"#
         }
         return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+    }
+
+    /// Follow-up about one action card (task B4): the same arguments with "(später)" behind the title, and a sentence about it.
+    /// A request without a title in the arguments changes nothing and says so.
+    static func cardRevisionAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "card_revision" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined()
+        let prefix = "Current arguments (JSON): "
+        guard let line = text.split(separator: "\n").first(where: { $0.hasPrefix(prefix) }),
+              var arguments = (try? JSONSerialization.jsonObject(with: Data(line.dropFirst(prefix.count).utf8))) as? [String: Any] else { return nil }
+        var answer: [String: Any] = ["arguments": arguments, "message": "Dazu kann ich nichts ändern.", "changed": false]
+        if let title = arguments["title"] as? String {
+            arguments["title"] = title + " (später)"
+            answer = ["arguments": arguments, "message": "Titel ergänzt.", "changed": true]
+        }
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
     }
 
     /// Shopping demo: every item goes to the first category of the request, the first item into a new "Demo" category.

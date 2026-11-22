@@ -43,11 +43,15 @@ public struct OpenCards: Equatable, Sendable {
     public var deletes: Int
     /// Cards that a spoken "alle bestätigen" must not confirm; a single one is confirmed by a plain "ja".
     public var guarded: Int
+    /// Cards that create or revise a note. A spoken "alle bestätigen" must not confirm them; they do not count as `guarded`
+    /// because the answer differs. A card that deletes a note counts in `deletes`.
+    public var notes: Int
 
-    public init(ids: [String], deletes: Int, guarded: Int = 0) {
+    public init(ids: [String], deletes: Int, guarded: Int = 0, notes: Int = 0) {
         self.ids = ids
         self.deletes = deletes
         self.guarded = guarded
+        self.notes = notes
     }
 
     public static let none = OpenCards(ids: [], deletes: 0)
