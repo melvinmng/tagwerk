@@ -21,6 +21,8 @@ struct BackupSettingsView: View {
     @State private var isShowingEncryption = false
     /// Number and size of the own files in the backup folder; read when the page opens and after a backup.
     @State private var folderSummary: (count: Int, bytes: Int)?
+    /// Number of safety copies, for the row; read when the page opens and after a restore.
+    @State private var safetyCopyCount: Int?
 
     var body: some View {
         let service = environment.backup
@@ -29,7 +31,7 @@ struct BackupSettingsView: View {
             actionsSection(service)
             automaticSection(service)
             contentSection(service)
-            safetyCopySection
+            safetyCopySection(service)
         }
         .navigationTitle("Datensicherung")
         .navigationBarTitleDisplayMode(.inline)
@@ -131,18 +133,23 @@ struct BackupSettingsView: View {
         }
     }
 
-    private var safetyCopySection: some View {
+    private func safetyCopySection(_ service: BackupService) -> some View {
         Section {
-            EmptyView()
+            NavigationLink {
+                SafetyCopiesView(onRestore: { data in open(data, password: nil, service: service) })
+            } label: {
+                LabeledContent("Sicherheitskopien", value: safetyCopyCount.map { "\($0)" } ?? "")
+            }
         } header: {
             Text("Vor dem Wiederherstellen")
         } footer: {
-            Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).")
+            Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie liegt verborgen im Sicherungsordner, sonst nur auf diesem iPhone.")
         }
     }
 
     private func refreshFolderSummary(_ service: BackupService) {
         folderSummary = service.folderSummary()
+        safetyCopyCount = service.safetyCopies().count
     }
 
     /// Switching the automatic backup on without a password asks once whether to set one; the question never comes back.
@@ -207,7 +214,18 @@ struct BackupSettingsView: View {
         guard let data = fileAwaitingPassword else { return }
         let password = typedPassword
         typedPassword = ""
-        open(data, password: password, service: service)
+        Task {
+            do {
+                pendingRestore = try await service.inspectFile(data, typedPassword: password)
+                fileAwaitingPassword = nil
+            } catch let error as BackupService.BackupError {
+                fileAwaitingPassword = nil
+                alertText = BackupService.message(for: error)
+            } catch {
+                fileAwaitingPassword = nil
+                alertText = BackupService.message(for: .unreadable)
+            }
+        }
     }
 
     /// A copy of the current state goes into the app documents first, then the data is replaced.
@@ -216,8 +234,7 @@ struct BackupSettingsView: View {
         pendingRestore = nil
         let safetyCopy: Data
         do {
-            let url = try service.writeSafetyCopy(into: BackupService.safetyCopyDirectory)
-            safetyCopy = try Data(contentsOf: url)
+            safetyCopy = try service.saveSafetyCopy()
         } catch BackupService.BackupError.keyMissing {
             alertText = BackupService.message(for: .keyMissing) + " " + String(localized: "Es wurde nichts ersetzt.")
             return
@@ -236,7 +253,8 @@ struct BackupSettingsView: View {
         }
         Task {
             await environment.reloadAfterRestore()
-            alertText = String(localized: "Wiederhergestellt. Eine Kopie des vorherigen Stands liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.")
+            refreshFolderSummary(service)
+            alertText = String(localized: "Wiederhergestellt. Eine Kopie des vorherigen Stands steht unter „Sicherheitskopien“ in der Datensicherung.")
         }
     }
 

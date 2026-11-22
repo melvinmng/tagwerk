@@ -42,8 +42,49 @@ public enum BackupRules {
     }
 
     /// "2026-11-19-1423" of an own file name.
-    private static func stamp(_ name: String) -> Substring {
-        name.dropFirst("Tagwerk-Sicherung-".count).prefix(15)
+    private static func stamp(_ name: String, prefix: String = "Tagwerk-Sicherung-") -> Substring {
+        name.dropFirst(prefix.count).prefix(15)
+    }
+
+    // MARK: Safety copies
+
+    /// Safety copies kept: the newest three, none older than `safetyCopyRetentionDays`.
+    public static let keptSafetyCopies = 3
+    public static let safetyCopyRetentionDays = 30
+
+    /// Whether a file name is exactly the pattern of `safetyCopyName(for:calendar:encrypted:)`, with either extension.
+    public static func isSafetyCopy(_ name: String) -> Bool {
+        name.range(of: #"^Tagwerk-Vor-Wiederherstellung-\d{4}-\d{2}-\d{2}-\d{4}\.(json|tagwerk)$"#, options: .regularExpression) != nil
+    }
+
+    /// The minute a safety copy was made, read from its name in the time zone of `calendar`; `nil` for other names.
+    public static func safetyCopyDate(_ name: String, calendar: Calendar) -> Date? {
+        guard isSafetyCopy(name) else { return nil }
+        let digits = name.dropFirst("Tagwerk-Vor-Wiederherstellung-".count).prefix(15).split(separator: "-").compactMap { Int($0) }
+        guard digits.count == 4, digits[3] / 100 < 24, digits[3] % 100 < 60 else { return nil }
+        return calendar.date(from: DateComponents(year: digits[0], month: digits[1], day: digits[2], hour: digits[3] / 100, minute: digits[3] % 100))
+    }
+
+    /// Days a safety copy stays: 30 for a new one, 0 once it is due for deletion. A date in the future (clock set back) counts as new.
+    public static func safetyCopyDaysLeft(createdAt: Date, now: Date) -> Int {
+        let age = max(0, now.timeIntervalSince(createdAt))
+        let left = Double(safetyCopyRetentionDays) - age / 86_400
+        return max(0, Int(left.rounded(.up)))
+    }
+
+    /// The safety copies to delete: everything beyond the newest `keptSafetyCopies` and everything that has stayed its 30 days.
+    /// Names that are not safety copies are never listed.
+    public static func safetyCopiesToDelete(names: [String], now: Date, calendar: Calendar) -> [String] {
+        let prefix = "Tagwerk-Vor-Wiederherstellung-"
+        let newestFirst: (String, String) -> Bool = { lhs, rhs in
+            let (left, right) = (stamp(lhs, prefix: prefix), stamp(rhs, prefix: prefix))
+            return left == right ? lhs > rhs : left > right
+        }
+        let copies = Set(names.filter(isSafetyCopy)).sorted(by: newestFirst)
+        return copies.enumerated().compactMap { index, name in
+            let expired = safetyCopyDate(name, calendar: calendar).map { safetyCopyDaysLeft(createdAt: $0, now: now) == 0 } ?? false
+            return index >= keptSafetyCopies || expired ? name : nil
+        }
     }
 
     /// Whether an automatic backup is due: never made, or the last one is at least a day old (a clock set back counts as due).

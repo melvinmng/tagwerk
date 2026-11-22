@@ -15,6 +15,7 @@ struct BackupTests {
     let backup: BackupService
     let sourceFiles: NoteAttachmentStore
     let sourceKeys: BackupKeyStore
+    let sourceSafetyDirectory = FileManager.default.temporaryDirectory.appending(path: "backup-safety-" + UUID().uuidString, directoryHint: .isDirectory)
     let sourceDirectory = FileManager.default.temporaryDirectory.appending(path: "backup-source-" + UUID().uuidString, directoryHint: .isDirectory)
 
     init() throws {
@@ -26,7 +27,8 @@ struct BackupTests {
         sourceFiles = NoteAttachmentStore(context: source.mainContext, directory: sourceDirectory, now: { clock.now })
         sourceKeys = .inMemory()
         backup = BackupService(context: source.mainContext, settings: sourceSettings, calendar: calendar, appVersion: "1.0-test",
-                               now: { clock.now }, attachments: sourceFiles, keyStore: sourceKeys)
+                               now: { clock.now }, attachments: sourceFiles, keyStore: sourceKeys,
+                               safetyCopyDirectory: sourceSafetyDirectory)
         Self.populate(source.mainContext, settings: sourceSettings, now: clock.now)
         Self.addAttachments(sourceFiles, context: source.mainContext)
     }
@@ -39,7 +41,8 @@ struct BackupTests {
         let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
         let files = NoteAttachmentStore(context: container.mainContext, directory: directory, now: { clock.now })
         let service = BackupService(context: container.mainContext, settings: settings, calendar: calendar, appVersion: "1.0-test",
-                                    now: { clock.now }, attachments: files, keyStore: .inMemory())
+                                    now: { clock.now }, attachments: files, keyStore: .inMemory(),
+                                    safetyCopyDirectory: directory.appending(path: "safety", directoryHint: .isDirectory))
         return (container, settings, service, files)
     }
 
@@ -1289,6 +1292,16 @@ struct BackupTests {
         #expect(throws: BackupService.BackupError.unreadable) { try target.service.inspectFile(damaged, password: "tagwerk password") }
     }
 
+    @Test func typedPassword_opensAFileOffTheMainActor() async throws {
+        try backup.enableEncryption(with: cheapMaterial("tagwerk password"))
+        let file = try backup.makeBackupFile().data
+        let target = try makeTarget()
+        let inspection = try await target.service.inspectFile(file, typedPassword: "tagwerk password")
+        #expect(inspection.tasks == 1)
+        await #expect(throws: BackupService.BackupError.wrongPassword) { try await target.service.inspectFile(file, typedPassword: "wrong password") }
+        await #expect(throws: BackupService.BackupError.passwordRequired) { try await target.service.inspectFile(file, typedPassword: "") }
+    }
+
     @Test func plainBackup_stillRestores() throws {
         let file = try backup.makeBackupFile()
         #expect(file.fileName.hasSuffix(".json") && !BackupCrypto.isEncrypted(file.data))
@@ -1369,5 +1382,75 @@ struct BackupTests {
         #expect(!backup.hasKey && !sourceSettings.backupEncryptionEnabled)
         let file = try backup.makeBackupFile()
         #expect(file.fileName.hasSuffix(".json") && !BackupCrypto.isEncrypted(file.data))
+    }
+
+    // MARK: Safety copies in the backup folder
+
+    @Test func safetyCopy_withAFolder_isHiddenInIt_andNoOwnFile() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder); try? FileManager.default.removeItem(at: sourceSafetyDirectory) }
+        try backup.chooseFolder(folder)
+        #expect(backup.safetyCopiesAreInBackupFolder)
+        let data = try backup.saveSafetyCopy()
+        let hidden = folder.appendingPathComponent(SafetyCopyStore.hiddenFolderName)
+        let inHidden = try FileManager.default.contentsOfDirectory(atPath: hidden.path)
+        #expect(inHidden.count == 1 && BackupRules.isSafetyCopy(inHidden[0]))
+        #expect(!FileManager.default.fileExists(atPath: sourceSafetyDirectory.path))
+        // The listing of the page and the daily clean-up of the folder see no safety copy among the own files.
+        #expect(try #require(backup.folderSummary()).count == 0)
+        let copies = backup.safetyCopies()
+        #expect(copies.count == 1 && copies[0].isInBackupFolder)
+        #expect(try backup.safetyCopyData(copies[0]) == data)
+        // What the copy holds is everything, journal and Bible Study included.
+        sourceSettings.backupIncludesPrivateNotes = false
+        let inspection = try backup.inspectFile(try backup.safetyCopyData(copies[0]))
+        #expect(inspection.header.includesPrivateNotes)
+        backup.deleteSafetyCopy(copies[0])
+        #expect(backup.safetyCopies().isEmpty)
+    }
+
+    @Test func safetyCopy_withoutAFolder_staysOnThisPhone() throws {
+        defer { try? FileManager.default.removeItem(at: sourceSafetyDirectory) }
+        backup.clearFolder()
+        #expect(!backup.safetyCopiesAreInBackupFolder)
+        _ = try backup.saveSafetyCopy()
+        #expect(try FileManager.default.contentsOfDirectory(atPath: sourceSafetyDirectory.path).count == 1)
+        #expect(backup.safetyCopies().count == 1 && backup.safetyCopies()[0].isInBackupFolder == false)
+    }
+
+    @Test func safetyCopy_oldVisibleCopies_moveIntoTheBackupFolder() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder); try? FileManager.default.removeItem(at: sourceSafetyDirectory) }
+        backup.clearFolder()
+        let legacy = BackupRules.safetyCopyName(for: clock.now.addingTimeInterval(-86_400), calendar: calendar)
+        try FileManager.default.createDirectory(at: sourceSafetyDirectory, withIntermediateDirectories: true)
+        try Data("old".utf8).write(to: sourceSafetyDirectory.appendingPathComponent(legacy))
+        #expect(backup.safetyCopies().map(\.id) == [legacy])
+        try backup.chooseFolder(folder)
+        let moved = backup.safetyCopies()
+        #expect(moved.map(\.id) == [legacy] && moved[0].isInBackupFolder)
+        #expect(!FileManager.default.fileExists(atPath: sourceSafetyDirectory.path))
+    }
+
+    @Test func safetyCopy_withoutAFolder_isNeverDeleted() throws {
+        defer { try? FileManager.default.removeItem(at: sourceSafetyDirectory) }
+        backup.clearFolder()
+        for _ in 1...5 {
+            _ = try backup.saveSafetyCopy()
+            clock.now = clock.now.addingTimeInterval(3600)
+        }
+        clock.now = clock.now.addingTimeInterval(90 * 86_400)
+        #expect(backup.safetyCopies().count == 5)
+    }
+
+    @Test func safetyCopy_keepsTheNewestThree() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try backup.chooseFolder(folder)
+        for _ in 1...5 {
+            _ = try backup.saveSafetyCopy()
+            clock.now = clock.now.addingTimeInterval(3600)
+        }
+        #expect(backup.safetyCopies().count == BackupRules.keptSafetyCopies)
     }
 }

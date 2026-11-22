@@ -3899,6 +3899,16 @@
         }
       }
     },
+    "Aktionen für die Kopie vom %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions for the copy from %@"
+          }
+        }
+      }
+    },
     "Aktiv": {
       "localizations": {
         "en": {
@@ -4388,6 +4398,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create as task"
+          }
+        }
+      }
+    },
+    "Als Datei sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as file"
           }
         }
       }
@@ -8098,6 +8118,16 @@
         }
       }
     },
+    "Die Kopien liegen verborgen im Sicherungsordner, im Unterordner „.Sicherheitskopien“. Die Dateien-App zeigt ihn nicht an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The copies are hidden in the backup folder, in the subfolder “.Sicherheitskopien”. The Files app does not show it."
+          }
+        }
+      }
+    },
     "Die Liste ist leer. Füge unten Artikel hinzu.": {
       "localizations": {
         "en": {
@@ -8288,6 +8318,16 @@
         }
       }
     },
+    "Die Sicherheitskopie ließ sich nicht lesen. Der Sicherungsordner ist vielleicht nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The safety copy could not be read. The backup folder may not be reachable."
+          }
+        }
+      }
+    },
     "Die Sicherung enthält dein Tagebuch unverschlüsselt.": {
       "localizations": {
         "en": {
@@ -8331,11 +8371,22 @@
       }
     },
     "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The backup could not be restored. The previous state was brought back; a copy is in the “Sicherungen” folder in Tagwerk's documents."
+          }
+        }
+      }
+    },
+    "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie steht unter „Sicherheitskopien“ in der Datensicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be restored. The previous state was brought back; a copy is under “Safety copies” in the data backup."
           }
         }
       }
@@ -8797,6 +8848,16 @@
         }
       }
     },
+    "Diesen Stand zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore this state"
+          }
+        }
+      }
+    },
     "Diesen Termin gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -8853,6 +8914,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This folder has a fixed purpose and can’t be deleted or moved."
+          }
+        }
+      }
+    },
+    "Dieser Stand lässt sich danach nicht mehr zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This state can no longer be restored afterwards."
           }
         }
       }
@@ -13631,6 +13702,16 @@
         }
       }
     },
+    "Kein Sicherungsordner gewählt. Die Kopien liegen nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup folder chosen. The copies are only on this iPhone."
+          }
+        }
+      }
+    },
     "Kein Wasser erfasst": {
       "localizations": {
         "en": {
@@ -16566,6 +16647,16 @@
     "Noch keine Planung protokolliert.": {
       "shouldTranslate": false
     },
+    "Noch keine Sicherheitskopien.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No safety copies yet."
+          }
+        }
+      }
+    },
     "Noch keine automatische Sicherung": {
       "localizations": {
         "en": {
@@ -19269,6 +19360,26 @@
         }
       }
     },
+    "Sicherheitskopie löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete safety copy?"
+          }
+        }
+      }
+    },
+    "Sicherheitskopien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety copies"
+          }
+        }
+      }
+    },
     "Sichern": {
       "localizations": {
         "en": {
@@ -19763,6 +19874,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loaded as of %@"
+          }
+        }
+      }
+    },
+    "Stand vor dem Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State before the restore"
           }
         }
       }
@@ -21293,6 +21414,16 @@
         }
       }
     },
+    "Verbleibende Tage: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days left: %lld"
+          }
+        }
+      }
+    },
     "Vergangen": {
       "localizations": {
         "en": {
@@ -21699,7 +21830,44 @@
         }
       }
     },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Die letzten %lld bleiben, höchstens %lld Tage. Sie enthalten immer auch Tagebuch und Bible Study.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Die letzten %1$lld bleiben, höchstens %2$lld Tage. Sie enthalten immer auch Tagebuch und Bible Study."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. The last %lld are kept, for %lld days at most. They always include the journal and Bible Study."
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie bleiben, bis du sie löschst, und enthalten immer auch Tagebuch und Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. They stay until you delete them and always include the journal and Bible Study."
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie liegt verborgen im Sicherungsordner, sonst nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. It is hidden in the backup folder, otherwise only on this iPhone."
+          }
+        }
+      }
+    },
     "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22601,11 +22769,22 @@
       }
     },
     "Wiederhergestellt. Eine Kopie des vorherigen Stands liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Restored. A copy of the previous state is in the “Sicherungen” folder in the Tagwerk documents."
+          }
+        }
+      }
+    },
+    "Wiederhergestellt. Eine Kopie des vorherigen Stands steht unter „Sicherheitskopien“ in der Datensicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored. A copy of the previous state is under “Safety copies” in the data backup."
           }
         }
       }

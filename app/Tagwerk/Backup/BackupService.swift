@@ -88,11 +88,14 @@ final class BackupService {
     @ObservationIgnored private let attachments: NoteAttachmentStore?
     /// The key of the backup password; see `BackupKeyStore`.
     @ObservationIgnored private let keyStore: BackupKeyStore
+    /// Where safety copies go when no backup folder is reachable: the app documents, as before.
+    @ObservationIgnored private let localSafetyCopyDirectory: URL
 
     init(context: ModelContext, settings: AppSettings, calendar: Calendar = .tagwerk, appVersion: String? = nil,
          now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil, keyStore: BackupKeyStore = BackupKeyStore(),
-         afterRestore: @escaping @MainActor () -> Void = {}) {
+         safetyCopyDirectory: URL = BackupService.safetyCopyDirectory, afterRestore: @escaping @MainActor () -> Void = {}) {
         self.keyStore = keyStore
+        self.localSafetyCopyDirectory = safetyCopyDirectory
         self.afterRestore = afterRestore
         self.attachments = attachments
         self.context = context
@@ -188,14 +191,29 @@ final class BackupService {
     func inspectFile(_ data: Data, password: String? = nil) throws -> Inspection {
         guard BackupCrypto.isEncrypted(data) else { return try inspect(data) }
         guard let header = BackupCrypto.header(of: data) else { throw BackupError.unreadable }
-        let key: Data
-        if let material = keyStore.material(), material.salt == header.salt, material.iterations == header.iterations {
-            key = material.key
-        } else if let password, !password.isEmpty {
-            key = BackupCrypto.deriveKey(password: password, salt: header.salt, iterations: header.iterations)
-        } else {
-            throw BackupError.passwordRequired
+        if let key = deviceKey(for: header) { return try inspectEncrypted(data, key: key) }
+        guard let password, !password.isEmpty else { throw BackupError.passwordRequired }
+        return try inspectEncrypted(data, key: BackupCrypto.deriveKey(password: password, salt: header.salt, iterations: header.iterations))
+    }
+
+    /// Like `inspectFile(_:password:)` for a typed password, but the slow key derivation runs off the main actor.
+    func inspectFile(_ data: Data, typedPassword: String) async throws -> Inspection {
+        guard BackupCrypto.isEncrypted(data), let header = BackupCrypto.header(of: data), deviceKey(for: header) == nil, !typedPassword.isEmpty else {
+            return try inspectFile(data, password: typedPassword)
         }
+        let key = await Task.detached(priority: .userInitiated) {
+            BackupCrypto.deriveKey(password: typedPassword, salt: header.salt, iterations: header.iterations)
+        }.value
+        return try inspectEncrypted(data, key: key)
+    }
+
+    /// The key of this device when its salt and iteration count are the ones of the file.
+    private func deviceKey(for header: (salt: Data, iterations: Int)) -> Data? {
+        guard let material = keyStore.material(), material.salt == header.salt, material.iterations == header.iterations else { return nil }
+        return material.key
+    }
+
+    private func inspectEncrypted(_ data: Data, key: Data) throws -> Inspection {
         do {
             return try inspect(try BackupCrypto.decrypt(data, key: key))
         } catch let error as BackupCrypto.CryptoError {
@@ -225,17 +243,72 @@ final class BackupService {
         }
     }
 
-    /// A copy of the current state in `directory` (the app documents), made before a restore replaces anything. It always holds
-    /// everything, journal and Bible Study included, and is encrypted while encryption is on.
+    /// The whole current state for a safety copy: journal and Bible Study included, encrypted while encryption is on. Throws
+    /// `.keyMissing` when encryption is on but the key is gone: a copy is never written in plain text then.
+    func makeSafetyCopyData() throws -> Data {
+        let key = try writingKey()
+        let data = try makeBackupData(includePrivate: true)
+        return try key.map { try BackupCrypto.encrypt(data, with: $0) } ?? data
+    }
+
+    /// A copy of the current state in `directory`, made before a restore replaces anything.
     @discardableResult
     func writeSafetyCopy(into directory: URL) throws -> URL {
-        let key = try writingKey()
-        var data = try makeBackupData(includePrivate: true)
-        if let key { data = try BackupCrypto.encrypt(data, with: key) }
+        let data = try makeSafetyCopyData()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let url = directory.appendingPathComponent(BackupRules.safetyCopyName(for: now(), calendar: calendar, encrypted: key != nil))
+        let url = directory.appendingPathComponent(BackupRules.safetyCopyName(for: now(), calendar: calendar, encrypted: BackupCrypto.isEncrypted(data)))
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         return url
+    }
+
+    /// Writes the safety copy of the current state into the hidden folder of the backup folder (or, without one, the app documents)
+    /// and returns its content, so a failed restore can put the previous state back.
+    func saveSafetyCopy() throws -> Data {
+        let data = try makeSafetyCopyData()
+        _ = try withSafetyCopies { try $0.write(data) }
+        return data
+    }
+
+    func safetyCopies() -> [SafetyCopy] {
+        withSafetyCopies { store in
+            store.prune()
+            return store.list()
+        }
+    }
+
+    func safetyCopyData(_ copy: SafetyCopy) throws -> Data {
+        try withSafetyCopies { try $0.data(of: copy) }
+    }
+
+    func deleteSafetyCopy(_ copy: SafetyCopy) {
+        withSafetyCopies { $0.delete(copy) }
+    }
+
+    /// Whether safety copies go into the backup folder right now (otherwise they stay on this iPhone).
+    var safetyCopiesAreInBackupFolder: Bool {
+        withSafetyCopies { $0.storesInBackupFolder }
+    }
+
+    /// Runs `body` with a store for the safety copies. The hidden folder is `.Sicherheitskopien` in the backup folder; its security
+    /// scope is open while `body` runs. Copies of the old visible folder move over as soon as the backup folder is reachable.
+    private func withSafetyCopies<T>(_ body: (SafetyCopyStore) throws -> T) rethrows -> T {
+        var folder: URL?
+        var scopedURL: URL?
+        if let bookmark = settings.backupFolderBookmark {
+            var stale = false
+            if let url = try? URL(resolvingBookmarkData: bookmark, options: [], relativeTo: nil, bookmarkDataIsStale: &stale) {
+                // The scope is stopped on this URL even when the folder turns out to be gone.
+                if url.startAccessingSecurityScopedResource() { scopedURL = url }
+                var isDirectory: ObjCBool = false
+                if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue { folder = url }
+            }
+        }
+        defer { scopedURL?.stopAccessingSecurityScopedResource() }
+        let store = SafetyCopyStore(localDirectory: localSafetyCopyDirectory,
+                                    hiddenDirectory: folder?.appendingPathComponent(SafetyCopyStore.hiddenFolderName, isDirectory: true),
+                                    now: now, calendar: calendar)
+        store.adoptLegacyCopies(from: localSafetyCopyDirectory)
+        return try body(store)
     }
 
     /// The folder for safety copies: "Sicherungen" in the app documents.
@@ -355,7 +428,7 @@ final class BackupService {
         case .passwordRequired: String(localized: "Diese Sicherung ist mit einem Passwort verschlüsselt.")
         case .wrongPassword: String(localized: "Das Passwort stimmt nicht. Es wurde nichts geändert.")
         case .keyMissing: String(localized: "Passwort erneut eingeben: Der Schlüssel fehlt auf diesem iPhone. Öffne „Mit Passwort verschlüsseln“.")
-        case .restoreFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.")
+        case .restoreFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie steht unter „Sicherheitskopien“ in der Datensicherung.")
         }
     }
 }
