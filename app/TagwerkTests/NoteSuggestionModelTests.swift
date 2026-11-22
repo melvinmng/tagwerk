@@ -29,7 +29,22 @@ final class NoteSuggestionResponder: ResponseStreaming, @unchecked Sendable {
         }
     }
 
+    /// An answer with a sentence of text before the calls.
+    func enqueue(_ calls: [(String, String)], text: String) {
+        lock.withLock {
+            script.append([.textDelta(text)]
+                          + calls.map { .functionCall(callID: $0.0, name: $0.1.components(separatedBy: "|").first!, arguments: $0.1.components(separatedBy: "|").last!) }
+                          + [.completed(usage: nil)])
+        }
+    }
+
+    /// An answer with text only, e.g. the JSON of a single-card follow-up.
+    func enqueue(text: String) {
+        lock.withLock { script.append([.textDelta(text), .completed(usage: nil)]) }
+    }
+
     func fail(_ error: ChatGPTError) { lock.withLock { failure = error } }
+    func clearFailure() { lock.withLock { failure = nil } }
     var sent: [Request] { lock.withLock { requests } }
     var calls: Int { sent.count }
 

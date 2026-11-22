@@ -72,6 +72,69 @@ final class ShoppingTranslator {
         }
     }
 
+    /// A second request about the proposal on the sheet (plan ki-vorschlaege-anpassen, task D5): the same names as the first
+    /// request, the names as they are now with the ones the user typed, what the message is about, and the message. Answered in
+    /// the format of `translate` and checked by the same plan, so quantities stay and every index is answered once. `pinned` are
+    /// item ids of the rows the user set, `focus` is the item id of the row the message is about. Without the consent of the sort
+    /// feature nothing happens, not even the model list.
+    func revise(_ plan: ShoppingTranslationPlan, to language: VoiceLanguage, current: [ShoppingTranslationPlan.Change], pinned: Set<String>,
+                focus: String?, comment: String) async throws -> [ShoppingTranslationPlan.Change] {
+        guard hasConsent() else { throw Failure.consentMissing }
+        guard !plan.entries.isEmpty else { return [] }
+        let answer: String
+        do {
+            let slug = try await model()
+            let input = InputItem.user(Self.revisionText(plan, language: language, current: current, pinned: pinned, focus: focus, comment: comment))
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions + "\n" + Self.revisionInstructions,
+                                                                  input: [input], tools: [],
+                                                                  jsonSchema: (name: "shopping_translation", schema: Self.schema)))
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as ChatGPTError {
+            if Task.isCancelled { throw CancellationError() }
+            throw Self.failure(for: error)
+        } catch {
+            if Task.isCancelled { throw CancellationError() }
+            throw Failure.failed
+        }
+        guard let decoded = try? JSONDecoder().decode(Answer.self, from: Data(answer.utf8)) else { throw Failure.failed }
+        do {
+            return try plan.changes(translations: decoded.items.map { (index: $0.i, text: $0.text) })
+        } catch {
+            throw Failure.mismatch
+        }
+    }
+
+    /// The message of a follow-up as JSON: the target, the names of the first request, the names as they are now (an item
+    /// without a change keeps its name), which of them the user set, the index the message is about, and the message.
+    static func revisionText(_ plan: ShoppingTranslationPlan, language: VoiceLanguage, current: [ShoppingTranslationPlan.Change],
+                             pinned: Set<String>, focus: String?, comment: String) -> String {
+        var now: [[String: Any]] = []
+        var about: Any = NSNull()
+        for entry in plan.entries {
+            let change = current.first { entry.itemIDs.contains($0.itemID) }
+            now.append(["i": entry.index, "text": change?.newName ?? entry.name,
+                        "fixed_by_user": entry.itemIDs.contains { pinned.contains($0) }])
+            if let focus, entry.itemIDs.contains(focus) { about = entry.index }
+        }
+        let object: [String: Any] = ["target": RecipeLanguage.promptName(language),
+                                     "items": plan.request.map { ["i": $0.index, "text": $0.text] as [String: Any] },
+                                     "current": now, "about": about, "message": comment]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    static let revisionInstructions = """
+    The user now writes about your translation. The input also holds "current" (the names as they are now, each with fixed_by_user), \
+    "about" (the index the message is about, or null) and "message" (the message of the user).
+    - Return all indices of "items" again, each once, in the same format. Change only what the message asks for; return every other \
+    name exactly as it is in "current".
+    - A name with fixed_by_user true was typed by the user: return it unchanged unless the message is about it.
+    - If "about" is set, change only that item.
+    """
+
     private struct Answer: Decodable {
         struct Entry: Decodable {
             var i: Int
