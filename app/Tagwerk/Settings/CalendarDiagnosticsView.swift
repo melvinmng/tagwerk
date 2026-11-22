@@ -20,9 +20,9 @@ struct CalendarDiagnosticsView: View {
                             Spacer()
                             Text(row.isRead ? "wird gelesen" : "nicht ausgewählt")
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(row.isRead ? Color.green : Color.orange)
+                                .foregroundStyle(row.isRead ? Color.greenText : Color.orangeText)
                         }
-                        Text(details(row)).font(.caption).foregroundStyle(.secondary)
+                        Text(details(row)).font(.caption).foregroundStyle(.secondaryText)
                     }
                     .accessibilityElement(children: .combine)
                 }

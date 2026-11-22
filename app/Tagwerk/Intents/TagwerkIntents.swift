@@ -259,7 +259,7 @@ struct TodayOverviewSnippet: View {
             ForEach(entries) { entry in
                 HStack(spacing: 8) {
                     Text(DateText.time(entry.start, calendar: .tagwerk))
-                        .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.subheadline.monospacedDigit()).foregroundStyle(.secondaryText)
                     Text(entry.title).font(.subheadline).lineLimit(1)
                 }
             }

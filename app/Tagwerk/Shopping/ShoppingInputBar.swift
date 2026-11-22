@@ -67,7 +67,7 @@ struct ShoppingInputBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let notice {
-                Text(notice).font(.footnote).foregroundStyle(.secondary)
+                Text(notice).font(.footnote).foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityAddTraits(.updatesFrequently)
             }

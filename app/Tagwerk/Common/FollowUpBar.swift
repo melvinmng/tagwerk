@@ -66,7 +66,7 @@ struct FollowUpBar<Exchange: View>: View {
                 inputRow
             }
             if let footer {
-                footer.font(.footnote).foregroundStyle(.secondary)
+                footer.font(.footnote).foregroundStyle(.secondaryText)
             }
         }
     }
@@ -77,15 +77,15 @@ struct FollowUpBar<Exchange: View>: View {
     private var statusRow: some View {
         if availability == .offline {
             Label("Keine Verbindung. Ändern von Hand geht weiter.", systemImage: "wifi.slash")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
         } else if isSending {
             HStack(spacing: 8) {
                 ProgressView()
-                Text("ChatGPT antwortet …").foregroundStyle(.secondary)
+                Text("ChatGPT antwortet …").foregroundStyle(.secondaryText)
             }
         } else if case .failed(let message) = state {
             HStack {
-                Label(message, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+                Label(message, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orangeText)
                 if let onRetry {
                     Spacer()
                     Button("Erneut versuchen", action: onRetry).font(.caption)
@@ -181,7 +181,7 @@ struct FollowUpAnswerRow: View {
         VStack(alignment: .leading, spacing: 6) {
             if let mark { ProposalMarkLabel(mark: mark) }
             if !reply.isEmpty {
-                Text("„\(reply)“").font(.caption).foregroundStyle(.purple)
+                Text("„\(reply)“").font(.caption).foregroundStyle(.purpleText)
             }
             if let onUndo {
                 Button("Rückgängig", action: onUndo).buttonStyle(.borderless).font(.caption)

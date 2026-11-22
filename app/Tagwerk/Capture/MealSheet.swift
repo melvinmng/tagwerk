@@ -147,7 +147,7 @@ struct MealSheet: View {
                         }
                         .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
             } footer: {
@@ -160,7 +160,7 @@ struct MealSheet: View {
                 if phase == .estimating {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Schätze …").foregroundStyle(.secondary)
+                        Text("Schätze …").foregroundStyle(.secondaryText)
                         Spacer()
                         Button("Stopp") {
                             estimateTask?.cancel()
@@ -170,7 +170,7 @@ struct MealSheet: View {
                     }
                 } else if isSignedIn {
                     if let errorText {
-                        Text(errorText).foregroundStyle(.orange).font(.subheadline)
+                        Text(errorText).foregroundStyle(.orangeText).font(.subheadline)
                     }
                     Button(errorText == nil ? "Schätzen" : "Erneut versuchen") { requestEstimate() }
                         .disabled(!hasInput)
@@ -178,7 +178,7 @@ struct MealSheet: View {
                     Button("Ohne Schätzung eintragen") { startManual() }
                 } else {
                     Text("Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                     Button("Weiter") { startManual() }.fontWeight(.semibold)
                     Button("Zu den KI-Einstellungen") {
                         environment.requestedTab = 2
@@ -217,7 +217,7 @@ struct MealSheet: View {
         Section {
             if suggestions.isEmpty {
                 Text("Hier erscheinen Mahlzeiten, die du schon einmal erfasst hast.")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
             }
             ForEach(suggestions) { meal in
                 HStack {
@@ -225,12 +225,12 @@ struct MealSheet: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(meal.title).lineLimit(1)
                             Text(String(localized: "zuletzt \(CaptureText.lastUsedDay(PlanDay(date: meal.date, calendar: model.calendar), today: model.today, calendar: model.calendar))"))
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondaryText)
                         }
                     }
                     .tint(.primary)
                     Spacer()
-                    Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).font(.subheadline).foregroundStyle(.secondary)
+                    Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).font(.subheadline).foregroundStyle(.secondaryText)
                     Button {
                         Task {
                             await model.repeatMeal(meal)
@@ -273,7 +273,7 @@ struct MealSheet: View {
 
             if let existing {
                 Section {
-                    Text(provenance).font(.footnote).foregroundStyle(.secondary)
+                    Text(provenance).font(.footnote).foregroundStyle(.secondaryText)
                     Button("Mahlzeit löschen", role: .destructive) {
                         Task {
                             await model.delete(existing.id)
@@ -327,7 +327,7 @@ struct MealSheet: View {
             Text(title)
             Spacer()
             DecimalField(value: value).accessibilityLabel(Text(title))
-            Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
+            Text(unit).foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
         }
     }
 
@@ -341,14 +341,14 @@ struct MealSheet: View {
                 Text(IntakeFormat.kcal(meal.kcal, estimated: estimated)).fontWeight(.semibold).monospacedDigit()
             }
             if estimated, let range = IntakeFormat.rangeIfEstimated(min: meal.kcalMin, max: meal.kcalMax) {
-                Text(range).font(.subheadline).foregroundStyle(.secondary)
+                Text(range).font(.subheadline).foregroundStyle(.secondaryText)
             }
             let protein = IntakeFormat.grams(meal.protein, estimated: estimated)
             let carbs = IntakeFormat.grams(meal.carbs, estimated: estimated)
             let fat = IntakeFormat.grams(meal.fat, estimated: estimated)
             Text([String(localized: "\(protein) Eiweiß"), String(localized: "\(carbs) Kohlenhydrate"),
                   String(localized: "\(fat) Fett")].joined(separator: " · "))
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
         } header: {
             Text(draft.origin == .estimated ? "Schätzung von ChatGPT" : "Werte")
         }
@@ -363,7 +363,7 @@ struct MealSheet: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name)
                                 if !item.amount.isEmpty {
-                                    Text(item.amount).font(.caption).foregroundStyle(.secondary)
+                                    Text(item.amount).font(.caption).foregroundStyle(.secondaryText)
                                 }
                             }
                             Spacer()
@@ -623,7 +623,7 @@ private struct MealItemEditor: View {
             Text(title)
             Spacer()
             DecimalField(value: value).accessibilityLabel(Text(title))
-            Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
+            Text(unit).foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
         }
     }
 }

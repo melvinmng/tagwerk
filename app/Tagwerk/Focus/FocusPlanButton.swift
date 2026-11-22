@@ -16,7 +16,7 @@ struct FocusPlanButton: View {
 
     var body: some View {
         if environment.focus.isRunning(forBlockID: event.id) {
-            Image(systemName: "timer").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Image(systemName: "timer").font(.caption.weight(.semibold)).foregroundStyle(.secondaryText)
                 .frame(minWidth: Self.minimumSize.width, minHeight: Self.minimumSize.height)
                 .accessibilityLabel("Fokus läuft")
         } else if !environment.focus.isRunning {

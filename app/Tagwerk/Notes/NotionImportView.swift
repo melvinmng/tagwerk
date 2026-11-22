@@ -34,7 +34,7 @@ struct NotionImportView: View {
             case .done(let summary):
                 doneSection(summary, model: model)
             case .failed(let message):
-                Section { Text(message).foregroundStyle(.red) }
+                Section { Text(message).foregroundStyle(.redText) }
                 instructions(model)
             }
         }
@@ -66,7 +66,7 @@ struct NotionImportView: View {
                         Text("Importiert werden die Seiten, die in Notion zu „Bible Studies“ gehören, je Bibelbuch eine Notiz. Sitzungen lassen sich daraus nicht ableiten. Der Text bleibt auf deinem iPhone.")
                     }
                 }
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
             }
         }
     }
@@ -111,7 +111,7 @@ struct NotionImportView: View {
 
     private func doneSection(_ summary: NotionImportModel.Summary, model: NotionImportModel) -> some View {
         Section {
-            Label(Self.summary(summary), systemImage: "checkmark.circle").foregroundStyle(.green)
+            Label(Self.summary(summary), systemImage: "checkmark.circle").foregroundStyle(.greenText)
             Button("Weiteren Export importieren") { model.reset() }
         }
     }

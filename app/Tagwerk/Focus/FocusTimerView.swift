@@ -58,7 +58,7 @@ struct FocusTimerView: View {
                         .multilineTextAlignment(.center)
                     Text(FocusTimerText.phaseLine(phase: snapshot.phase, settings: session.state.settings))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 if snapshot.phase == .finished {
                     Text(FocusTimerText.focusedText(seconds: snapshot.focusedSeconds))
@@ -148,7 +148,7 @@ struct FocusTimerView: View {
                         HStack(alignment: .firstTextBaseline, spacing: 12) {
                             Text(DateText.time(minutes: row.startMinutes, calendar: calendar))
                                 .monospacedDigit()
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                             rowText(row, calendar: calendar)
                             Spacer(minLength: 0)
                         }
@@ -167,7 +167,7 @@ struct FocusTimerView: View {
         case .blockEnd(let title):
             VStack(alignment: .leading, spacing: 2) {
                 Text("Blockende")
-                Text(title).font(.caption).foregroundStyle(.secondary)
+                Text(title).font(.caption).foregroundStyle(.secondaryText)
             }
         case .departure(let minutes):
             Label("Losfahren · \(minutes) min", systemImage: "car.fill")
@@ -175,7 +175,7 @@ struct FocusTimerView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                 Text("\(DateText.time(minutes: row.startMinutes, calendar: calendar))–\(DateText.time(minutes: endMinutes, calendar: calendar))")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
         }
     }
@@ -231,9 +231,9 @@ struct FocusRing: View {
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                 if isPaused {
-                    Text("Pausiert").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Pausiert").font(.subheadline).foregroundStyle(.secondaryText)
                 } else if let endsAt {
-                    Text(endsAt).font(.subheadline).foregroundStyle(.secondary)
+                    Text(endsAt).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             .padding(.horizontal, 24)

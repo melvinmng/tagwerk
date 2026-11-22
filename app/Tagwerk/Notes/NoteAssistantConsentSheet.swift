@@ -29,7 +29,7 @@ struct NoteAssistantConsentSheet: View {
                     }
                     .padding(.top, 4)
                     Text("Du kannst das in den Einstellungen unter „KI“ widerrufen.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()

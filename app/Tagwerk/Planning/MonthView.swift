@@ -77,7 +77,7 @@ struct MonthView: View {
     /// Weekday header and the days of the shown month, with load bars and marks.
     private var monthGrid: some View {
         LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
+            ForEach(DateText.shortStandaloneWeekdaySymbols(calendar: model.calendar), id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondaryText) }
             ForEach(model.days) { plan in
                 // First tap selects the day (mockup E1); a second tap opens it in "Tag".
                 Button {
@@ -116,7 +116,7 @@ struct MonthView: View {
         return VStack(spacing: 4) {
             Text("\(plan.day.day)")
                 .font(.callout.weight(plan.day == model.today ? .bold : .regular))
-                .foregroundStyle(hasDeadline ? .white : (inMonth ? .primary : .secondary))
+                .foregroundStyle(hasDeadline ? .white : (inMonth ? Color.primary : Color.secondaryText))
             CapacityBar(capacity: plan.capacity).frame(width: 28)
                 .overlay(alignment: .topTrailing) {
                     // Open AI suggestions on this day (mockup X2).
@@ -156,7 +156,7 @@ private struct MonthDayDetail: View {
                 Text(plan.day.startDate(in: model.calendar).formatted(.dateTime.weekday(.wide).day().month(.wide)))
                     .font(.headline)
                 Spacer()
-                Text(CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondary)
+                Text(CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondaryText)
             }
             ForEach(plan.deadlines) { deadline in
                 DeadlineLine(deadline: deadline)
@@ -168,7 +168,7 @@ private struct MonthDayDetail: View {
                 Button { onOpenEvent(event) } label: {
                     HStack(alignment: .firstTextBaseline) {
                         Text(event.isAllDay ? String(localized: "ganztägig") : event.start.formatted(date: .omitted, time: .shortened))
-                            .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 64, alignment: .leading)
+                            .font(.caption.monospacedDigit()).foregroundStyle(.secondaryText).frame(width: 64, alignment: .leading)
                         Text(event.title).lineLimit(1)
                     }
                 }
@@ -181,7 +181,7 @@ private struct MonthDayDetail: View {
             ForEach(plan.suggestions) { suggestion in SuggestionRow(suggestion: suggestion) }
             if plan.events.isEmpty && plan.blocks.isEmpty && plan.assigned.isEmpty && plan.deadlines.isEmpty
                 && plan.suggestions.isEmpty {
-                Text("Nichts geplant").font(.subheadline).foregroundStyle(.secondary)
+                Text("Nichts geplant").font(.subheadline).foregroundStyle(.secondaryText)
             }
             Button("Tag öffnen ›", action: onOpenDay).font(.subheadline.weight(.semibold))
         }

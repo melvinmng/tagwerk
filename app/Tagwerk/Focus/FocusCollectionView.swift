@@ -50,7 +50,7 @@ struct FocusCollectionView: View {
                     stack(of: week.days[index])
                     Text(names.short[index])
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }

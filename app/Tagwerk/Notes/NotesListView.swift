@@ -87,7 +87,7 @@ struct NotesListView: View {
             }
             if notes.isEmpty, morningEntries.isEmpty {
                 Text(emptyText)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
             }
@@ -195,7 +195,7 @@ struct NotesListView: View {
                     Button { environment.tasksPath.append(.note(session.noteID)) } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Self.sessionTitle(session)).foregroundStyle(.primary)
-                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondary)
+                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondaryText)
                         }
                     }
                     .buttonStyle(.plain)
@@ -276,19 +276,19 @@ struct NotesListView: View {
                         if isTrash, let deletedAt = note.deletedAt { trashBadge(deletedAt: deletedAt) }
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
-                                .font(.footnote).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                                .font(.footnote).foregroundStyle(.secondaryText).labelStyle(.titleAndIcon)
                                 .accessibilityLabel("Dateien angehängt: \(attachmentInfo.fileCount)")
                         }
                         if note.isPinned {
-                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)
+                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondaryText)
                                 .accessibilityLabel("Angeheftet")
                         }
                     }
                     if !preview.isEmpty {
-                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                        Text(preview).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     }
                     Text(footerText(for: note))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 if let imageID = attachmentInfo.firstImageID, let thumbnail = store.attachments?.thumbnail(for: imageID) {
                     Image(uiImage: thumbnail).resizable().scaledToFill().frame(width: 48, height: 48)
@@ -352,9 +352,9 @@ struct NotesListView: View {
         } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Self.routineTitle(day: day, calendar: calendar)).font(.body.weight(.semibold)).foregroundStyle(.primary)
-                Text(Self.gratitudeLine(gratitude)).font(.subheadline).foregroundStyle(.secondary)
+                Text(Self.gratitudeLine(gratitude)).font(.subheadline).foregroundStyle(.secondaryText)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                Text(Self.gratitudeOnlyFooter(day: day, calendar: calendar)).font(.caption).foregroundStyle(.secondary)
+                Text(Self.gratitudeOnlyFooter(day: day, calendar: calendar)).font(.caption).foregroundStyle(.secondaryText)
             }
             .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -385,7 +385,7 @@ struct NotesListView: View {
             Text(Self.daysLeftText(days))
         }
         .font(.footnote)
-        .foregroundStyle(isUrgent ? NoteFolderTint.expiryText : Color.secondary)
+        .foregroundStyle(isUrgent ? Color.orangeText : Color.secondaryText)
         .accessibilityElement(children: .combine)
     }
 

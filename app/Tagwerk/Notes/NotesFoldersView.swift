@@ -228,7 +228,7 @@ struct NotesFoldersView: View {
             Image(systemName: symbol).font(.title3).foregroundStyle(NoteFolderTint.color(for: role)).frame(width: 28)
             title.foregroundStyle(.primary)
             Spacer(minLength: 8)
-            Text("\(count)").monospacedDigit().foregroundStyle(.secondary)
+            Text("\(count)").monospacedDigit().foregroundStyle(.secondaryText)
             if showsChevron {
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
             }

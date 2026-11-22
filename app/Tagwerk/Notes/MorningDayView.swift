@@ -12,11 +12,11 @@ struct MorningDayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if gratitude.isEmpty {
-                    Text("Für diesen Tag ist keine Dankbarkeit eingetragen.").foregroundStyle(.secondary)
+                    Text("Für diesen Tag ist keine Dankbarkeit eingetragen.").foregroundStyle(.secondaryText)
                 } else {
                     GratitudeCard(entries: gratitude) { environment.routines.openStart(day) }
                 }
-                Text("Kein Brain Dump an diesem Tag.").foregroundStyle(.secondary)
+                Text("Kein Brain Dump an diesem Tag.").foregroundStyle(.secondaryText)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)

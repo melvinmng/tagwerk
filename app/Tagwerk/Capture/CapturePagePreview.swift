@@ -10,7 +10,7 @@ struct WeekReviewPagePreview: View {
         let range = weekStart...weekStart.adding(days: 6, calendar: model.calendar)
         VStack(alignment: .leading, spacing: 0) {
             Text(PlanHeaderText.caption(scope: .week, anchor: weekStart, today: model.today, range: range, calendar: model.calendar))
-                .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                .font(.caption2.weight(.semibold)).foregroundStyle(.secondaryText)
             Text(PlanHeaderText.title(scope: .week, anchor: weekStart, range: range, calendar: model.calendar)).font(.title3.bold())
             Spacer()
         }
