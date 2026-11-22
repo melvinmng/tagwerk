@@ -22,7 +22,7 @@ struct RecipeNoteSaveSheet: View {
 
     var body: some View {
         NavigationStack {
-            RecipeInputView(purpose: .saveOnly, model: nil) { recipe, _ in result = Found(recipe: recipe) }
+            RecipeInputView(purpose: .saveOnly, model: nil) { recipe, _, _ in result = Found(recipe: recipe) }
                 .navigationTitle("Rezept mit ChatGPT anlegen")
                 .modifier(LargeTitleAtAccessibilitySizes())
                 .toolbar {

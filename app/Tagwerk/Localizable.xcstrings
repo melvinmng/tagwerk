@@ -3221,6 +3221,16 @@
         }
       }
     },
+    "**Nur auf dein Tippen:** Ohne dein Tippen auf „Zutaten auf die Einkaufsliste“, „Nur als Rezept speichern“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without your tap on “Add ingredients to the shopping list”, “Save as recipe only”, “Get recipe” or “Translate”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Mit ChatGPT zusammenfassen“ verlässt nichts das iPhone. Die Vorschläge übernimmst du erst, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -3284,6 +3294,7 @@
       }
     },
     "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5625,6 +5636,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For deadlines and P1"
+          }
+        }
+      }
+    },
+    "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Either one can also create a note in the “Recipes” folder, if you like."
           }
         }
       }
@@ -8309,6 +8330,7 @@
       }
     },
     "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16292,6 +16314,66 @@
         }
       }
     },
+    "Quelle: Fotos (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: photos (%lld)"
+          }
+        }
+      }
+    },
+    "Quelle: Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: link"
+          }
+        }
+      }
+    },
+    "Quelle: Link, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: link, %@"
+          }
+        }
+      }
+    },
+    "Quelle: Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: note"
+          }
+        }
+      }
+    },
+    "Quelle: Notiz „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: note “%@”"
+          }
+        }
+      }
+    },
+    "Quelle: geteilter Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: shared text"
+          }
+        }
+      }
+    },
     "Quellen": {
       "localizations": {
         "en": {
@@ -18089,6 +18171,16 @@
         }
       }
     },
+    "Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk loads the page only when you tap one of the buttons, and sends only the text it read, not the address."
+          }
+        }
+      }
+    },
     "Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
       "localizations": {
         "en": {
@@ -18100,6 +18192,7 @@
       }
     },
     "Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19715,6 +19808,7 @@
       }
     },
     "Was soll mit dem Rezept geschehen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -21110,6 +21204,7 @@
       }
     },
     "Zutaten holen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -21120,6 +21215,7 @@
       }
     },
     "Zutaten übernehmen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
