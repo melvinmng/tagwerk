@@ -61,8 +61,21 @@ fast_calls=$(run_script TAGWERK_BUILD_ONLY=1 TAGWERK_SKIP_UI_TESTS=1)
 check "fast: only build-for-testing calls" "0" "$(print -r -- "$fast_calls" | grep -vcE '^(build-for-testing |rc=)')"
 check "fast: app scheme as the test run builds it" "1" \
   "$(print -r -- "$fast_calls" | grep -cxF "build-for-testing -project Tagwerk.xcodeproj -scheme Tagwerk -destination $DESTINATION -derivedDataPath $DERIVED_DIR")"
-check "fast: package stages use the destination without derived data path" "0" \
-  "$(print -r -- "$fast_calls" | grep -E '^build-for-testing -scheme ' | grep -vcxE "build-for-testing -scheme [A-Za-z0-9_-]+ -destination ${DESTINATION//\//\\/}")"
+# Package stages: a package that declares a macOS platform is built for the Mac, every other package for the simulator.
+# Neither passes a derived data path (the packages build in the default DerivedData folder).
+for package_dir in "$ROOT"/app/Packages/*(/N); do
+  [[ -d "$package_dir/Tests" ]] || continue
+  package_name="${package_dir:t}"
+  if grep -q '\.macOS(' "$package_dir/Package.swift"; then
+    expected_destination="platform=macOS"
+  else
+    expected_destination="$DESTINATION"
+  fi
+  check "fast: $package_name is built for ${expected_destination%%,*}, without derived data path" "1" \
+    "$(print -r -- "$fast_calls" | grep -cxF "build-for-testing -scheme $package_name-Package -destination $expected_destination")"
+done
+check "fast: packages that need UIKit stay on the simulator" "1" \
+  "$(print -r -- "$fast_calls" | grep -cxF "build-for-testing -scheme AIKit-Package -destination $DESTINATION")"
 check "fast: one call per package with tests plus the app" \
   "$(( $(ls -d "$ROOT"/app/Packages/*/Tests 2>/dev/null | wc -l) + 1 ))" \
   "$(print -r -- "$fast_calls" | grep -c '^build-for-testing ')"

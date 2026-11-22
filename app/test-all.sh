@@ -2,6 +2,10 @@
 # Runs all test stages: every local Swift package under app/Packages, the app scheme and the UI tests.
 # Stops at the first failing stage and reports which one failed.
 #
+# Package tests run on the Mac (destination platform=macOS) where the package builds for macOS without conditional code,
+# and in the iOS simulator otherwise; PACKAGE_TEST_PLATFORM below lists the choice per package. The app stage builds all
+# packages for iOS in any case, so they stay compilable for the phone.
+#
 # Gate rule: CI (GitHub Actions, jobs "Tests (fast)" and "Tests (ui)") is the gate before a merge.
 # Locally, run the fast stages after every commit (TAGWERK_SKIP_UI_TESTS=1) and, while working on a screen, only the
 # UI test classes the change touches (TAGWERK_UI_ONLY). The full local UI run is only the fallback when CI is
@@ -41,6 +45,20 @@ CURRENT_STAGE="setup"
 
 # Test target that contains the UI tests; -only-testing and -skip-testing entries are prefixed with it.
 UI_TEST_TARGET="TagwerkUITests"
+
+# Where the tests of each package run. "macos": xcodebuild test with the destination platform=macOS, no simulator needed;
+# the package must declare .macOS(...) in its Package.swift and build without conditional code for it. "simulator" (also
+# the default for packages that are not listed): the iOS simulator of the run.
+#   AIKit stays on the simulator: Sources/AIKit/ChatGPTLogin.swift imports UIKit (ASWebAuthenticationSession presentation).
+typeset -A PACKAGE_TEST_PLATFORM
+PACKAGE_TEST_PLATFORM=(
+  TagwerkCore macos
+  GitHubKit macos
+  RemindersKit macos
+  HealthBridge macos
+  AIKit simulator
+)
+MACOS_DESTINATION="platform=macOS"
 
 # Fills UI_SELECTION_ARGS with the xcodebuild arguments that select and retry UI tests from the environment
 # (TAGWERK_UI_ONLY, TAGWERK_UI_TEST_SET, TAGWERK_UI_TEST_RETRIES). Prints a one-line summary on stdout.
@@ -264,8 +282,17 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
     continue
   fi
   cd "$package_dir"
+  package_destination="$DESTINATION"
+  if [[ "${PACKAGE_TEST_PLATFORM[$package_name]:-simulator}" == "macos" ]]; then
+    if ! grep -q '\.macOS(' "$package_dir/Package.swift"; then
+      echo "    $package_name is listed for macOS in PACKAGE_TEST_PLATFORM but Package.swift declares no macOS platform" >&2
+      stage_failed
+    fi
+    package_destination="$MACOS_DESTINATION"
+    echo "    tests run on macOS (no simulator)"
+  fi
   scheme=$(resolve_package_scheme "$package_name") || stage_failed
-  run_stage -scheme "$scheme" -destination "$DESTINATION" || stage_failed
+  run_stage -scheme "$scheme" -destination "$package_destination" || stage_failed
 done
 
 CURRENT_STAGE="app (xcodegen)"
