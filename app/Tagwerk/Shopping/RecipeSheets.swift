@@ -353,11 +353,14 @@ struct RecipeInputView: View {
                 .disabled(!canRead || reading != nil)
             }
         } footer: {
-            VStack(alignment: .leading, spacing: 6) {
-                if choice != nil, purposeButtons.contains(where: { $0.purpose == .saveOnly }) {
-                    Text("Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.")
+            // Without a line there is no footer at all: an empty stack would be an element without a description for VoiceOver.
+            let hint = choice != nil && purposeButtons.contains(where: { $0.purpose == .saveOnly })
+            let signIn = !readsLocally && !environment.ai.isSignedIn
+            if hint || signIn {
+                VStack(alignment: .leading, spacing: 6) {
+                    if hint { Text("Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.") }
+                    if signIn { Text("Anmeldung unter Einstellungen › KI") }
                 }
-                if !readsLocally, !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
             }
         }
     }

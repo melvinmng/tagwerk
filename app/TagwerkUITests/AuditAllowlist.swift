@@ -266,9 +266,11 @@ enum AuditAllowlist {
             "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen und übersetzen", "ChatGPT",
             "(?s)Notizen liegen nur auf diesem iPhone\\..*", "Stimme", "Sprachchat-Antwort", "Einkaufsliste",
             "Stimme (Deutsch|English)", "Tempo", "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus\\.", "Übernehmen",
-        ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
-            + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
-            + "grows and wraps."),
+            "Rezept holen", "Zutaten auf die Einkaufsliste", "Nur als Rezept speichern",
+        ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers, steps and the buttons that end the recipe input (EK3b) use text "
+            + "styles; the audit still reports a partial lack of support, for the last button of the input on each of the two input screens "
+            + "(a text style with `fontWeight(.semibold)`, as before EK3b; the allowlist names the buttons because the audit picks one of them). "
+            + "In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`) every one of these texts grows and wraps."),
         Entry(auditType: .textClipped, labels: [
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
             "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Wenn du zu einem Vorschlag etwas zurückschreibst|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
