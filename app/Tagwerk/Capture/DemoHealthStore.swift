@@ -38,6 +38,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
         }
         return demo.filter { interval.contains($0.start) && $0.start < interval.end }
     }
+    func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition] { [] }
     func save(_ meal: HealthMeal) async throws -> Bool { true }
     func save(_ drink: HealthDrink) async throws -> Bool { true }
     func save(_ workout: HealthWorkout) async throws -> Bool { true }

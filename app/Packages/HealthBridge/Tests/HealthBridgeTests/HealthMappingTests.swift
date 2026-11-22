@@ -290,3 +290,63 @@ struct WeightMappingTests {
         #expect(result.map(\.sourceName) == ["com.apple.health", "com.withings"])
     }
 }
+
+struct ForeignNutritionMappingTests {
+    private let monday = Date(timeIntervalSince1970: 1_800_000_000)
+    private var tuesday: Date { monday.addingTimeInterval(86_400) }
+
+    private func series(_ type: HealthMapping.ForeignType, _ days: [(Date, Double?, [String])]) -> HealthMapping.ForeignSeries {
+        HealthMapping.ForeignSeries(type: type, days: days.map { (start: $0.0, value: $0.1, sources: $0.2) })
+    }
+
+    @Test func foreignPredicate_excludesMarkerAndOwnSource() {
+        // HKSource.default() needs a host app, so a stand-in predicate takes the place of the own source.
+        let format = HealthMapping.foreignPredicate(ownSource: NSPredicate(format: "TRUEPREDICATE")).predicateFormat
+        #expect(format.contains("NOT"), "the exclusion is part of the predicate: a statistics query cannot filter afterwards")
+        #expect(format.contains(HealthMapping.markerKey), "samples with Tagwerk's marker are excluded")
+        #expect(format.components(separatedBy: "NOT").count - 1 >= 2, "both the marker and the own source are negated")
+    }
+
+    @Test func dailyForeignNutrition_perNutrientNilWhenNoSamples() {
+        let days = HealthMapping.foreignDays([series(.energy, [(monday, 340, ["Yazio"])]), series(.protein, [(monday, nil, [])]),
+                                              series(.fiber, [(monday, 12, ["Yazio"])])])
+        #expect(days.count == 1)
+        let intake = days[0].intake
+        #expect(intake.kcal == 340 && intake.nutrients.fiber == 12)
+        #expect(intake.protein == nil, "no sample is not 0")
+        #expect(intake.carbs == nil && intake.fat == nil && intake.waterMilliliters == nil)
+        #expect(intake.nutrients.sugar == nil && intake.nutrients.salt == nil)
+    }
+
+    @Test func dailyForeignNutrition_dropsDaysWithoutAnyValue() {
+        let days = HealthMapping.foreignDays([series(.energy, [(monday, nil, []), (tuesday, 100, ["Lifesum"])])])
+        #expect(days.map(\.start) == [tuesday])
+    }
+
+    @Test func dailyForeignNutrition_sodiumToSalt() {
+        let days = HealthMapping.foreignDays([series(.sodium, [(monday, 1000, ["Yazio"])])])
+        #expect(days.first?.intake.nutrients.salt == 2.5, "1000 mg sodium are 2.5 g salt")
+    }
+
+    @Test func dailyForeignNutrition_waterStaysInMilliliters() {
+        let days = HealthMapping.foreignDays([series(.water, [(monday, 750, ["Wasser-App"])])])
+        #expect(days.first?.intake.waterMilliliters == 750)
+        #expect(HealthMapping.ForeignType.water.unit == .literUnit(with: .milli))
+    }
+
+    @Test func dailyForeignNutrition_namesSources() {
+        let days = HealthMapping.foreignDays([series(.energy, [(monday, 300, ["Yazio", "Lifesum"])]),
+                                              series(.protein, [(monday, 20, ["Lifesum", "FDDB"])])])
+        #expect(days.first?.intake.sources == ["FDDB", "Lifesum", "Yazio"])
+    }
+
+    @Test func dailyForeignNutrition_daysAreOldestFirst() {
+        let days = HealthMapping.foreignDays([series(.energy, [(tuesday, 1, ["A"]), (monday, 2, ["A"])])])
+        #expect(days.map(\.start) == [monday, tuesday])
+    }
+
+    @Test func foreignTypes_coverAllNutritionTypesOfTheGroup() {
+        let types = Set(HealthMapping.ForeignType.allCases.map { HKQuantityType($0.identifier).identifier })
+        #expect(types == Set(HealthKitStore.readTypes(of: .foreignNutrition).map(\.identifier)))
+    }
+}

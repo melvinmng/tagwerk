@@ -1,5 +1,14 @@
 import Foundation
 import HealthBridge
+import TagwerkCore
+
+/// A nutrition sample in the fake Health database: own samples come from Tagwerk's mirror, the others from "other apps".
+struct FakeNutritionSample: Sendable {
+    var day: Date
+    var kilocalories: Double
+    var isOwn: Bool
+    var sourceName: String
+}
 
 /// Records Health writes in memory. Saves suspend once, so concurrent runs can interleave in tests.
 final class FakeHealthStore: HealthStoring, @unchecked Sendable {
@@ -12,6 +21,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _deleted: [UUID] = []
     private var _foreign: [ForeignWorkout] = []
     private var _steps: [DailySteps] = []
+    private var _nutritionSamples: [FakeNutritionSample] = []
     private var _weights: [HealthWeight] = []
     private var _foreignWeights: [ForeignWeight] = []
     private var _activeEnergy: [DailyActiveEnergy] = []
@@ -47,6 +57,10 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     var workouts: [HealthWorkout] { lock.withLock { _workouts } }
     var deleted: [UUID] { lock.withLock { _deleted } }
     var weights: [HealthWeight] { lock.withLock { _weights } }
+    /// Nutrition samples of other apps; own samples come in through `save(_ meal:)`.
+    func addForeignNutrition(day: Date, kilocalories: Double, source: String) {
+        lock.withLock { _nutritionSamples.append(FakeNutritionSample(day: day, kilocalories: kilocalories, isOwn: false, sourceName: source)) }
+    }
     var foreignWeights: [ForeignWeight] {
         get { lock.withLock { _foreignWeights } }
         set { lock.withLock { _foreignWeights = newValue } }
@@ -82,7 +96,13 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
         return !incompleteWrites
     }
 
-    func save(_ meal: HealthMeal) async throws -> Bool { try await write { _meals.append(meal) } }
+    /// A mirrored meal is a sample of Tagwerk itself, like in Health: it must never come back as a foreign entry.
+    func save(_ meal: HealthMeal) async throws -> Bool {
+        try await write {
+            _meals.append(meal)
+            _nutritionSamples.append(FakeNutritionSample(day: meal.date, kilocalories: meal.kcal, isOwn: true, sourceName: "Tagwerk"))
+        }
+    }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
     func save(_ weight: HealthWeight) async throws -> Bool { try await write { _weights.append(weight) } }
@@ -96,6 +116,19 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func stepsAccess() async -> StepsAccess { currentStepsAccess }
+
+    func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition] {
+        lock.withLock {
+            guard (_groupAccess[.foreignNutrition] ?? .notAsked) == .asked else { return [] }
+            let foreign = _nutritionSamples.filter { !$0.isOwn && $0.day >= interval.start && $0.day < interval.end }
+            let byDay = Dictionary(grouping: foreign) { calendar.startOfDay(for: $0.day) }
+            return byDay.keys.sorted().map { start in
+                let samples = byDay[start] ?? []
+                return DailyForeignNutrition(start: start, intake: ForeignIntake(kcal: samples.reduce(0) { $0 + $1.kilocalories },
+                                                                                  sources: Set(samples.map(\.sourceName)).sorted()))
+            }
+        }
+    }
 
     func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] {
         lock.withLock {

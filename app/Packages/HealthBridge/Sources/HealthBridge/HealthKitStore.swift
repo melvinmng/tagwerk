@@ -292,6 +292,39 @@ extension HealthKitStore {
         return sums
     }
 
+    /// One statistics query per nutrition type, without Tagwerk's own samples (see `HealthMapping.foreignPredicate`). The merged sum
+    /// is read first; if it is missing for a day with sources, the sum over the single sources is the fallback. Needs the group
+    /// `foreignNutrition` to be asked, otherwise nothing is queried.
+    public func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition] {
+        guard Self.isAvailable, await groupAccess(.foreignNutrition) == .asked else { return [] }
+        let foreign = HealthMapping.foreignPredicate(ownSource: HealthMapping.ownSourcePredicate())
+        let time = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [time, foreign])
+        var series: [HealthMapping.ForeignSeries] = []
+        for type in HealthMapping.ForeignType.allCases {
+            let descriptor = HKStatisticsCollectionQueryDescriptor(
+                predicate: .quantitySample(type: HKQuantityType(type.identifier), predicate: predicate),
+                options: [.cumulativeSum, .separateBySource], anchorDate: calendar.startOfDay(for: interval.start),
+                intervalComponents: DateComponents(day: 1))
+            let collection: HKStatisticsCollection
+            do {
+                collection = try await descriptor.result(for: store)
+            } catch let error as HKError where error.code == .errorNoData || error.code == .errorAuthorizationNotDetermined {
+                continue
+            }
+            var days: [(start: Date, value: Double?, sources: [String])] = []
+            collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+                let sources = statistics.sources ?? []
+                let merged = statistics.sumQuantity()?.doubleValue(for: type.unit)
+                let bySource = sources.compactMap { statistics.sumQuantity(for: $0)?.doubleValue(for: type.unit) }
+                let value = merged ?? (bySource.isEmpty ? nil : bySource.reduce(0, +))
+                days.append((statistics.startDate, value, sources.map(\.name)))
+            }
+            series.append(HealthMapping.ForeignSeries(type: type, days: days))
+        }
+        return HealthMapping.foreignDays(series)
+    }
+
     /// Steps typed in the Health app count as Health counts them.
     public func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
         let sums = try await dailySums(of: .stepCount, unit: .count(), in: interval, calendar: calendar)

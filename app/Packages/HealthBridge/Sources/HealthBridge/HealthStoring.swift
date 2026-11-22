@@ -28,6 +28,11 @@ public protocol HealthStoring: Sendable {
     /// does not tell apart from "no measurement".
     func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight]
 
+    /// Day totals of the nutrition entries of other apps for the days of `interval`, by `calendar`; days without a foreign value are
+    /// missing, and so is everything while the group `foreignNutrition` was not asked. A denied read looks like "no entries": the
+    /// result is then empty or holds `nil` values, and callers must not show an error for it.
+    func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition]
+
     /// Day sums of the active energy for the days of `interval`, by `calendar`; days without statistics are missing.
     /// Health merges overlapping sources itself, so Tagwerk never adds single samples and never removes own workouts.
     /// Empty when reading is not allowed: iOS reports that as "no data", so callers treat empty as unknown, never as 0.

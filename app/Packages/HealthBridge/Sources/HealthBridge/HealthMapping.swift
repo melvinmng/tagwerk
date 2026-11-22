@@ -138,6 +138,86 @@ public enum HealthMapping {
         return (writes, removals, mayWrite(.mass))
     }
 
+    /// The nutrition types read from other apps, with the unit the value is read in.
+    enum ForeignType: CaseIterable, Sendable {
+        case energy, protein, carbs, fat, fiber, sugar, saturatedFat, sodium, water
+
+        var identifier: HKQuantityTypeIdentifier {
+            switch self {
+            case .energy: .dietaryEnergyConsumed
+            case .protein: .dietaryProtein
+            case .carbs: .dietaryCarbohydrates
+            case .fat: .dietaryFatTotal
+            case .fiber: .dietaryFiber
+            case .sugar: .dietarySugar
+            case .saturatedFat: .dietaryFatSaturated
+            case .sodium: .dietarySodium
+            case .water: .dietaryWater
+            }
+        }
+
+        /// Sodium in milligrams (converted to salt), water in millilitres, energy in kilocalories, the rest in grams.
+        var unit: HKUnit {
+            switch self {
+            case .energy: .kilocalorie()
+            case .sodium: .gramUnit(with: .milli)
+            case .water: .literUnit(with: .milli)
+            default: .gram()
+            }
+        }
+    }
+
+    /// Everything but Tagwerk's own samples: no marker in the metadata and not from the own source. A statistics query cannot filter
+    /// afterwards, so the exclusion is part of its predicate. Whether HealthKit accepts the negation inside a statistics query is
+    /// checked on a device; the fallback is `separateBySource` and a sum over all sources except the own one.
+    static func foreignPredicate(ownSource: NSPredicate) -> NSPredicate {
+        let marked = HKQuery.predicateForObjects(withMetadataKey: markerKey)
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [NSCompoundPredicate(notPredicateWithSubpredicate: marked),
+                                                                   NSCompoundPredicate(notPredicateWithSubpredicate: ownSource)])
+    }
+
+    /// Matches samples of this app's own source. `HKSource.default()` needs a host app with a bundle identifier, so the predicate
+    /// is passed to `foreignPredicate(ownSource:)` and a test can stand in for it.
+    static func ownSourcePredicate() -> NSPredicate {
+        HKQuery.predicateForObjects(from: [HKSource.default()])
+    }
+
+    /// The day sums of one nutrition type with the names of the sources that contributed.
+    struct ForeignSeries {
+        var type: ForeignType
+        var days: [(start: Date, value: Double?, sources: [String])]
+    }
+
+    /// Joins the series of all nutrition types into day totals. A type without a value on a day stays `nil` there (no entry is
+    /// not 0); a day without any value is dropped. Sodium becomes salt.
+    static func foreignDays(_ series: [ForeignSeries]) -> [DailyForeignNutrition] {
+        var days: [Date: (intake: ForeignIntake, sources: Set<String>)] = [:]
+        for entry in series {
+            for day in entry.days {
+                guard let value = day.value else { continue }
+                var current = days[day.start] ?? (ForeignIntake(), [])
+                switch entry.type {
+                case .energy: current.intake.kcal = value
+                case .protein: current.intake.protein = value
+                case .carbs: current.intake.carbs = value
+                case .fat: current.intake.fat = value
+                case .fiber: current.intake.nutrients.fiber = value
+                case .sugar: current.intake.nutrients.sugar = value
+                case .saturatedFat: current.intake.nutrients.saturatedFat = value
+                case .sodium: current.intake.nutrients.salt = NutrientValues.salt(fromSodiumGrams: value / 1000)
+                case .water: current.intake.waterMilliliters = value
+                }
+                current.sources.formUnion(day.sources)
+                days[day.start] = current
+            }
+        }
+        return days.keys.sorted().compactMap { start in
+            guard var entry = days[start] else { return nil }
+            entry.intake.sources = entry.sources.sorted()
+            return DailyForeignNutrition(start: start, intake: entry.intake)
+        }
+    }
+
     /// A weight sample as read from Health, before the own ones are filtered out.
     struct WeightSample {
         var id: UUID

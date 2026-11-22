@@ -213,6 +213,19 @@ public struct DailyActiveEnergy: Sendable, Hashable {
     }
 }
 
+/// The nutrition other apps wrote to Health for one day, as day totals (never single entries). Tagwerk's own entries are not in
+/// it. A missing value means "no foreign entry or reading not allowed": iOS does not tell those apart, and neither does this type.
+public struct DailyForeignNutrition: Sendable, Hashable {
+    /// Start of the day in the calendar of the query.
+    public var start: Date
+    public var intake: ForeignIntake
+
+    public init(start: Date, intake: ForeignIntake) {
+        self.start = start
+        self.intake = intake
+    }
+}
+
 /// What the "Health" access row shows. Only write access is visible; iOS hides whether reading was denied.
 public enum HealthAccess: Sendable, Hashable {
     case unavailable
