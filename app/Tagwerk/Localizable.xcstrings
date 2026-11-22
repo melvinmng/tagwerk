@@ -13689,6 +13689,16 @@
         }
       }
     },
+    "Meine Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My folders"
+          }
+        }
+      }
+    },
     "Melde dich in Einstellungen › KI mit ChatGPT an, um den Assistenten zu nutzen.": {
       "localizations": {
         "en": {
@@ -14365,6 +14375,16 @@
         }
       }
     },
+    "Namen zurücksetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset name"
+          }
+        }
+      }
+    },
     "Nein": {
       "localizations": {
         "en": {
@@ -14535,6 +14555,16 @@
         }
       }
     },
+    "Neue Notiz in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note in %@"
+          }
+        }
+      }
+    },
     "Neue Notiz „%@“": {
       "localizations": {
         "en": {
@@ -14561,6 +14591,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan the new week"
+          }
+        }
+      }
+    },
+    "Neuen Ordner anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add folder"
           }
         }
       }
@@ -15631,6 +15671,7 @@
       }
     },
     "Ordner": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15905,6 +15946,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loading people …"
+          }
+        }
+      }
+    },
+    "Persönlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal"
           }
         }
       }

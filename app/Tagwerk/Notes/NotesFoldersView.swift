@@ -1,9 +1,9 @@
 import SwiftUI
 import TagwerkCore
 
-/// The notes entry page: "Alle Notizen", the default folder, "Brain Dump", "Rezepte", the user's folders as a tree, the system
-/// folders (Tagesstart, Tagesabschluss, Dream Log, journal, Bible Study) and "Zuletzt gelöscht". It has no navigation
-/// stack of its own.
+/// The notes entry page: "Alle Notizen", the default folder and "Rezepte", then the named sections "Meine Ordner" (the
+/// user's folders as a tree), "Routinen" (Brain Dump, Tagesstart, Tagesabschluss, Dream Log) and "Persönlich" (journal,
+/// Bible Study), and "Zuletzt gelöscht". It has no navigation stack of its own.
 struct NotesFoldersView: View {
     @Environment(AppEnvironment.self) private var environment
     let store: NoteStore
@@ -23,38 +23,18 @@ struct NotesFoldersView: View {
     var body: some View {
         let counts = store.folderCounts()
         let tree = store.folderTree()
-        let own = tree.filter { $0.folder.role == nil }.flatMap(\.flattened)
-        let system = Self.systemFolders(tree)
+        let sections = NoteFolderSections.sections(tree)
         List {
             Section {
                 scopeRow(.all, symbol: "tray.full", title: "Alle Notizen", count: store.count)
                 scopeRow(.standard, symbol: "note.text", title: "Notizen", count: store.notes(.own).count)
-                if let brainDump = store.folder(role: .brainDump) {
-                    brainDumpRow(brainDump, count: counts[brainDump.id] ?? 0)
-                }
-                if let recipes = tree.first(where: { $0.folder.role == .recipes }) {
-                    folderRow(recipes, count: counts[recipes.id] ?? 0)
-                }
+                ForEach(NoteFolderSections.pinned(tree)) { folderRow($0, count: counts[$0.id] ?? 0) }
             }
-            if !own.isEmpty {
-                Section("Ordner") {
-                    ForEach(own) { folderRow($0, count: counts[$0.id] ?? 0) }
-                }
-            }
-            Section {
-                ForEach(system) { folderRow($0, count: counts[$0.id] ?? 0) }
-                // The journal folder is created when it is first opened.
-                if store.folder(role: .journal) == nil {
-                    Button { openJournal() } label: {
-                        rowLabel(symbol: Self.symbol(for: .journal), title: Text("Tagebuch mit Gott"), count: 0, depth: 1)
-                    }
-                    .buttonStyle(.plain)
-                }
-                if store.folder(role: .bibleStudy) == nil {
-                    Button { openBibleStudy() } label: {
-                        rowLabel(symbol: Self.symbol(for: .bibleStudy), title: Text("Bible Study"), count: 0, depth: 1)
-                    }
-                    .buttonStyle(.plain)
+            ForEach(sections, id: \.kind) { section in
+                switch section.kind {
+                case .own: ownSection(section.folders, counts: counts)
+                case .routines: routinesSection(section.folders, counts: counts)
+                case .personal: personalSection(section.folders, counts: counts)
                 }
             }
             Section {
@@ -101,6 +81,59 @@ struct NotesFoldersView: View {
         }
     }
 
+    // MARK: Sections
+
+    /// "Meine Ordner": the heading carries the plus button, so a new folder is one tap away even without a folder.
+    private func ownSection(_ folders: [NoteFolderNode], counts: [UUID: Int]) -> some View {
+        Section {
+            ForEach(folders) { folderRow($0, count: counts[$0.id] ?? 0) }
+        } header: {
+            HStack {
+                Text("Meine Ordner")
+                Spacer()
+                Button { startCreating(under: nil) } label: {
+                    Image(systemName: "plus")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Neuen Ordner anlegen")
+                .accessibilityIdentifier("notes.newFolderInHeader")
+            }
+        }
+    }
+
+    /// "Routinen": Brain Dump, Tagesstart, Tagesabschluss and Dream Log in the order of their roles.
+    private func routinesSection(_ folders: [NoteFolderNode], counts: [UUID: Int]) -> some View {
+        Section("Routinen") {
+            ForEach(folders) { node in
+                if node.folder.role == .brainDump, let record = store.folder(id: node.id) {
+                    brainDumpRow(record, count: counts[node.id] ?? 0)
+                } else {
+                    folderRow(node, count: counts[node.id] ?? 0)
+                }
+            }
+        }
+    }
+
+    /// "Persönlich": journal and Bible Study; a folder that does not exist yet is created when it is first opened.
+    private func personalSection(_ folders: [NoteFolderNode], counts: [UUID: Int]) -> some View {
+        Section("Persönlich") {
+            ForEach(folders) { folderRow($0, count: counts[$0.id] ?? 0) }
+            if store.folder(role: .journal) == nil {
+                Button { openJournal() } label: {
+                    rowLabel(symbol: Self.symbol(for: .journal), title: Text("Tagebuch mit Gott"), count: 0, depth: 1, role: .journal)
+                }
+                .buttonStyle(.plain)
+            }
+            if store.folder(role: .bibleStudy) == nil {
+                Button { openBibleStudy() } label: {
+                    rowLabel(symbol: Self.symbol(for: .bibleStudy), title: Text("Bible Study"), count: 0, depth: 1, role: .bibleStudy)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     // MARK: Rows
 
     private func scopeRow(_ scope: NotesScope, symbol: String, title: LocalizedStringKey, count: Int) -> some View {
@@ -117,7 +150,7 @@ struct NotesFoldersView: View {
         Button {
             environment.tasksPath.append(.notesFolder(.folder(folder.id)))
         } label: {
-            rowLabel(symbol: Self.symbol(for: .brainDump), title: Text(folder.name), count: count, depth: 1)
+            rowLabel(symbol: Self.symbol(for: .brainDump), title: Text(folder.name), count: count, depth: 1, role: .brainDump)
         }
         .buttonStyle(.plain)
         .swipeActions(edge: .leading) {
@@ -126,6 +159,9 @@ struct NotesFoldersView: View {
         .contextMenu {
             Button { newBrainDumpNote(in: folder) } label: { Label("Neu", systemImage: "square.and.pencil") }
             Button { startRenaming(folder.id) } label: { Label("Umbenennen", systemImage: "pencil") }
+            if NoteStore.isRenamed(folder) {
+                Button { run { try store.resetFolderName(folder.id) } } label: { Label("Namen zurücksetzen", systemImage: "arrow.uturn.backward") }
+            }
         }
         .swipeActions(edge: .trailing) {
             Button { startRenaming(folder.id) } label: { Label("Umbenennen", systemImage: "pencil") }.tint(.indigo)
@@ -137,7 +173,7 @@ struct NotesFoldersView: View {
         return Button {
             environment.tasksPath.append(.notesFolder(.folder(folder.id)))
         } label: {
-            rowLabel(symbol: folder.role == nil ? "folder" : Self.symbol(for: folder.role), title: Text(folder.name), count: count, depth: node.depth)
+            rowLabel(symbol: folder.role == nil ? "folder" : Self.symbol(for: folder.role), title: Text(folder.name), count: count, depth: node.depth, role: folder.role)
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -145,6 +181,9 @@ struct NotesFoldersView: View {
                 Button { startCreating(under: folder.id) } label: { Label("Neuer Unterordner", systemImage: "folder.badge.plus") }
             }
             Button { startRenaming(folder.id) } label: { Label("Umbenennen", systemImage: "pencil") }
+            if let record = store.folder(id: folder.id), NoteStore.isRenamed(record) {
+                Button { run { try store.resetFolderName(folder.id) } } label: { Label("Namen zurücksetzen", systemImage: "arrow.uturn.backward") }
+            }
             if folder.role == nil {
                 Button { movingFolder = store.folder(id: folder.id) } label: { Label("Bewegen", systemImage: "folder") }
                 Button(role: .destructive) { deleting = store.folder(id: folder.id) } label: { Label("Löschen", systemImage: "trash") }
@@ -158,13 +197,16 @@ struct NotesFoldersView: View {
         }
     }
 
-    private func rowLabel(symbol: String, title: Text, count: Int, depth: Int) -> some View {
+    private func rowLabel(symbol: String, title: Text, count: Int, depth: Int, role: NoteFolderRole? = nil,
+                          showsChevron: Bool = true) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol).font(.title3).foregroundStyle(.tint).frame(width: 28)
+            Image(systemName: symbol).font(.title3).foregroundStyle(NoteFolderTint.color(for: role)).frame(width: 28)
             title.foregroundStyle(.primary)
             Spacer(minLength: 8)
             Text("\(count)").monospacedDigit().foregroundStyle(.secondary)
-            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+            if showsChevron {
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+            }
         }
         .padding(.leading, CGFloat(depth - 1) * 18)
         .contentShape(Rectangle())
@@ -177,19 +219,10 @@ struct NotesFoldersView: View {
         case .brainDump: "brain.head.profile"
         case .morningRoutine: "sun.horizon"
         case .eveningRoutine: "moon.stars"
-        case .dreamLog: "moon.zzz"
+        case .dreamLog: "cloud.moon"
         case .recipes: "fork.knife"
         case nil: "folder"
         }
-    }
-
-    /// The system folders of the second section in display order: the routine folders and the Dream Log first, then
-    /// journal and Bible Study. "Brain Dump" and "Rezepte" have their own rows in the first section.
-    static func systemFolders(_ tree: [NoteFolderNode]) -> [NoteFolderNode] {
-        let rank: [NoteFolderRole: Int] = [.morningRoutine: 0, .eveningRoutine: 1, .dreamLog: 2, .journal: 3, .bibleStudy: 4]
-        return tree.filter { $0.folder.role != nil && $0.folder.role != .brainDump && $0.folder.role != .recipes }
-            .flatMap(\.flattened)
-            .sorted { (rank[$0.folder.role ?? .journal] ?? 9) < (rank[$1.folder.role ?? .journal] ?? 9) }
     }
 
     // MARK: Texts

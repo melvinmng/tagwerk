@@ -254,6 +254,36 @@ struct NoteStoreTests {
         #expect(store.folder(role: .brainDump)?.name == "Kopf leeren" && store.folders().count == 5)
     }
 
+    @Test func resetFolderName_restoresDefault() throws {
+        store.ensureDefaultFolders()
+        let folder = try #require(store.folder(role: .morningRoutine))
+        #expect(!NoteStore.isRenamed(folder))
+        try store.renameFolder(folder.id, to: "Morgen")
+        #expect(NoteStore.isRenamed(folder))
+        try store.resetFolderName(folder.id)
+        #expect(folder.name == "Tagesstart" && !NoteStore.isRenamed(folder))
+        // Resetting an unchanged name changes nothing and writes nothing.
+        let revision = store.revision
+        try store.resetFolderName(folder.id)
+        #expect(store.revision == revision)
+    }
+
+    @Test func resetFolderName_onOwnFolder_throwsSystemFolderError() throws {
+        let own = try store.createFolder(name: "Arbeit")
+        #expect(throws: NoteStore.FolderResetError.notASystemFolder) { try store.resetFolderName(own.id) }
+        #expect(!NoteStore.isRenamed(own))
+        #expect(own.name == "Arbeit")
+    }
+
+    @Test func resetFolderName_whenAnotherFolderUsesTheName_throwsDuplicate() throws {
+        store.ensureDefaultFolders()
+        let folder = try #require(store.folder(role: .brainDump))
+        try store.renameFolder(folder.id, to: "Kopf leeren")
+        try store.createFolder(name: "Brain Dump")
+        #expect(throws: NoteFolderRules.NameError.duplicate) { try store.resetFolderName(folder.id) }
+        #expect(folder.name == "Kopf leeren")
+    }
+
     @Test func ensureDefaultFolders_createsRecipesOnce_keepsRename() throws {
         // A user of an older version has the four folders already; the recipes folder is added without a migration.
         for role in [NoteFolderRole.brainDump, .morningRoutine, .eveningRoutine, .dreamLog] {

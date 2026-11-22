@@ -98,6 +98,14 @@ struct NotesListTextTests {
         #expect(footer(note(kind: .dream, dayKey: "2026-11-18", updated: at(19, 7))) == "Dream Log · 18.11.")
     }
 
+    @Test func symbol_dreamLogDiffersFromEvening() {
+        #expect(NotesFoldersView.symbol(for: .dreamLog) == "cloud.moon")
+        #expect(NotesFoldersView.symbol(for: .dreamLog) != NotesFoldersView.symbol(for: .eveningRoutine))
+        // Every role keeps its own symbol, so the sections stay readable at a glance.
+        let symbols = NoteFolderRole.allCases.map { NotesFoldersView.symbol(for: $0) }
+        #expect(Set(symbols).count == symbols.count)
+    }
+
     // MARK: Markdown and attachments (P5)
 
     @Test func card_previewUsesPlainText() {
