@@ -2635,5 +2635,7 @@
   "Sitzung abgeschlossen ✓": "Session completed ✓",
   "Sitzung läuft · %@": "Session running · %@",
   "Sitzung läuft · %@ %@": "Session running · %1$@ %2$@",
-  "Sitzung läuft · %@ ab %@": "Session running · %1$@ from %2$@"
+  "Sitzung läuft · %@ ab %@": "Session running · %1$@ from %2$@",
+  "Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent).": "The title becomes an ordinary task and is then no longer private (Reminders, assistant).",
+  "Haken entfernen": "Remove tick"
 }

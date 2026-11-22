@@ -165,6 +165,75 @@ public enum MarkdownText {
         return markdown
     }
 
+    /// The mark behind a checkbox line of a Bible Study note whose text became a task (BS5b). "→ Task" is read as well, so a line
+    /// stays marked when the note was written in the other language.
+    public static let taskMarker = "→ Aufgabe"
+    private static let taskMarkers = ["→ Aufgabe", "→ Task"]
+
+    /// The text of the checkbox line at `index` (position among all checkboxes, as in `togglingCheckbox`) without the box and
+    /// without the task marker; `nil` for a position that does not exist.
+    public static func checkboxTitle(at index: Int, in markdown: String) -> String? {
+        guard let line = checkboxLine(at: index, in: markdown) else { return nil }
+        let withoutBox = line.text.replacingOccurrences(of: #"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+"#, with: "", options: .regularExpression)
+        return withoutTaskMarker(withoutBox).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Appends the task marker to the checkbox line at `index`. A line that already has it, and a position that does not exist,
+    /// leave the text unchanged; no other line changes.
+    public static func markingCheckboxAsTask(at index: Int, in markdown: String) -> String {
+        guard let line = checkboxLine(at: index, in: markdown), !hasTaskMarker(line.text) else { return markdown }
+        var lines = markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
+        let withoutTrailingSpace = line.text.replacingOccurrences(of: #"\s+$"#, with: "", options: .regularExpression)
+        lines[line.offset] = withoutTrailingSpace + " " + taskMarker
+        return lines.joined(separator: lineBreak(of: markdown))
+    }
+
+    /// Whether the line ends with the task marker.
+    public static func hasTaskMarker(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return taskMarkers.contains { trimmed.hasSuffix($0) }
+    }
+
+    /// Whether the checkbox at `index` is ticked; `nil` for a position that does not exist.
+    public static func isCheckboxChecked(at index: Int, in markdown: String) -> Bool? {
+        guard let line = checkboxLine(at: index, in: markdown),
+              let match = checkbox.firstMatch(in: line.text, range: NSRange(line.text.startIndex..., in: line.text)),
+              let markRange = Range(match.range(at: 1), in: line.text) else { return nil }
+        return line.text[markRange] != " "
+    }
+
+    /// The position among all checkboxes of the checkbox on the 1-based source `line`; `nil` when that line is no checkbox.
+    public static func checkboxIndex(atLine line: Int, in markdown: String) -> Int? {
+        var inFence = false
+        var position = 0
+        for (offset, text) in markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init).enumerated() {
+            if isFence(text) { inFence.toggle(); continue }
+            guard !inFence, matches(checkbox, text) else { continue }
+            if offset + 1 == line { return position }
+            position += 1
+        }
+        return nil
+    }
+
+    private static func checkboxLine(at index: Int, in markdown: String) -> (offset: Int, text: String)? {
+        guard index >= 0 else { return nil }
+        var inFence = false
+        var position = 0
+        for (offset, text) in markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init).enumerated() {
+            if isFence(text) { inFence.toggle(); continue }
+            guard !inFence, matches(checkbox, text) else { continue }
+            if position == index { return (offset, text) }
+            position += 1
+        }
+        return nil
+    }
+
+    private static func withoutTaskMarker(_ line: String) -> String {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard let marker = taskMarkers.first(where: { trimmed.hasSuffix($0) }) else { return trimmed }
+        return String(trimmed.dropLast(marker.count))
+    }
+
     /// The number of checkboxes in the text (same rules as `togglingCheckbox`).
     public static func checkboxCount(in markdown: String) -> Int {
         var inFence = false

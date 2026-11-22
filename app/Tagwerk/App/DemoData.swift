@@ -155,7 +155,8 @@ enum DemoData {
         if let romans = BibleBooks.book(number: 45) {
             let started = notes.startSession(book: romans, passage: "3,21-31", dayKey: NoteDayKey.string(yesterday),
                                              dateText: BibleStudyStartSheet.dateText(yesterday))
-            notes.updateText(started.note.id, text: started.note.text + "3,24: ohne Verdienst gerecht gemacht, aus seiner Gnade.\n")
+            notes.updateText(started.note.id, text: started.note.text
+                + "3,24: ohne Verdienst gerecht gemacht, aus seiner Gnade.\n\n- [ ] Römer 3,24 nochmal lesen\n")
             notes.completeSession(started.session.id)
         }
         if let discarded = notes.create(text: "Alte Einkaufsidee\nNicht mehr nötig") {

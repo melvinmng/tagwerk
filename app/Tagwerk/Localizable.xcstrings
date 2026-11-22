@@ -7493,6 +7493,16 @@
         }
       }
     },
+    "Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The title becomes an ordinary task and is then no longer private (Reminders, assistant)."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -12188,6 +12198,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "HIIT"
+          }
+        }
+      }
+    },
+    "Haken entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove tick"
           }
         }
       }
