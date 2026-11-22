@@ -113,16 +113,16 @@ enum AuditAllowlist {
             "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",
         ], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
             "Header, footer and quick replies of the follow-up section of the translation preview (plan ki-vorschlaege-anpassen, task D5): "
-            + "the header and footer in `secondaryText` (the tone of strand K, so the grey of the system is no longer the cause), and the purple bordered buttons of the shared follow-up bar (the same "
+            + "the header in `secondaryText` (the tone of strand K) and the footer in the system footer style, and the purple bordered buttons of the shared follow-up bar (the same "
             + "style as the quick replies of \"Tag planen\"), on the grouped background of the half-height sheet. The audit reports them as "
             + "\"nearly passed\" or \"failed\" depending on the run and the text size; the system draws the colour of the "
-            + "bordered style (#188, \"Schrift auf Tönung\"), and the footer already uses `secondaryText` like the other footnotes."),
+            + "bordered style and of the footer (#188, \"Schrift auf Tönung\")."),
 
         Entry(auditType: .contrast, labels: [
             "Mit ChatGPT besprechen", "Senden gibt das Rezept .*", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
         ], screens: recipeScreens + recipeScreensLargeText, reason:
             "Header, footer and quick replies of the follow-up section of the recipe sheets (plan ki-vorschlaege-anpassen, task D2): the "
-            + "header and footer in `secondaryText` (no longer the system grey), and the purple bordered buttons of the shared follow-up bar (the same style "
+            + "header in `secondaryText` (no longer the system grey) and footer in the system footer style, and the purple bordered buttons of the shared follow-up bar (the same style "
             + "as the quick replies of \"Tag planen\"), on the grouped background (\"nearly passed\" in some runs, not in others on the same "
             + "screen). Same group as the other section headers and the tinted buttons above; the system draws the colours (#188, "
             + "\"Sekundärtexte\", \"Schrift auf Tönung\")."),
