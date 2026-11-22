@@ -6055,6 +6055,16 @@
         }
       }
     },
+    "Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on the iPhone: locked notes never go to ChatGPT, not even when unlocked."
+          }
+        }
+      }
+    },
     "Bleibt unverändert": {
       "localizations": {
         "en": {
@@ -8868,6 +8878,16 @@
         }
       }
     },
+    "Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocking once opens everything locked until you leave Tagwerk. Private folders: %@."
+          }
+        }
+      }
+    },
     "Einplanen": {
       "localizations": {
         "en": {
@@ -11342,6 +11362,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to everything without reminders of its own. For calendar events only when created in Tagwerk."
+          }
+        }
+      }
+    },
+    "Gilt für gesperrte Notizen und private Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to locked notes and private folders."
           }
         }
       }
@@ -14597,6 +14627,26 @@
         }
       }
     },
+    "Mit Face ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Face ID"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with device passcode"
+          }
+        }
+      }
+    },
     "Mit GitHub anmelden": {
       "localizations": {
         "en": {
@@ -14613,6 +14663,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan with AI"
+          }
+        }
+      }
+    },
+    "Mit Optic ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Optic ID"
           }
         }
       }
@@ -14643,6 +14703,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Talk to Tagwerk"
+          }
+        }
+      }
+    },
+    "Mit Touch ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Touch ID"
           }
         }
       }
@@ -16853,6 +16923,16 @@
         }
       }
     },
+    "Private Ordner sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock private folders"
+          }
+        }
+      }
+    },
     "Probe hören": {
       "localizations": {
         "en": {
@@ -17239,6 +17319,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recipe text"
+          }
+        }
+      }
+    },
+    "Richte zuerst einen Code für dein iPhone ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up a passcode for your iPhone first."
           }
         }
       }
@@ -18185,6 +18275,16 @@
         }
       }
     },
+    "Sperre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
+          }
+        }
+      }
+    },
     "Sprachchat-Antwort": {
       "localizations": {
         "en": {
@@ -18922,6 +19022,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk isn’t allowed to write to Health. Your entries stay in Tagwerk. You can change this in the Health app under Profile › Apps › Tagwerk."
+          }
+        }
+      }
+    },
+    "Tagwerk entsperrt damit gesperrte Notizen und private Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk uses this to unlock locked notes and private folders."
           }
         }
       }
@@ -19829,6 +19939,16 @@
         }
       }
     },
+    "Verbirgt den Inhalt gesperrter Notizen und privater Ordner in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides the content of locked notes and private folders in Tagwerk."
+          }
+        }
+      }
+    },
     "Vergangen": {
       "localizations": {
         "en": {
@@ -19971,6 +20091,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move: %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does not encrypt: the database and backups hold locked notes as plain text."
           }
         }
       }
@@ -20608,6 +20738,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for confirmation …"
+          }
+        }
+      }
+    },
+    "Was die Sperre tut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the lock does"
           }
         }
       }

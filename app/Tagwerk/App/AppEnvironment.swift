@@ -34,6 +34,8 @@ final class AppEnvironment {
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
     let backup: BackupService
+    /// The lock session of the notes (NL1a): hides locked notes and private folders until the device owner is checked.
+    let noteLock: NoteLock
     let taskList: TaskListModel
     let planning: PlanningModel
     /// Travel times before events with a place; asks Apple Maps only for addresses (#168).
@@ -133,6 +135,14 @@ final class AppEnvironment {
         return TravelTimeService()
     }
 
+    /// The device check of the note lock; the UI tests can fix its answer.
+    private static func makeDeviceOwnerAuthenticator() -> any DeviceOwnerAuthenticating {
+        #if DEBUG && targetEnvironment(simulator)
+        if let succeeds = UITestMode.lockAuthentication { return FixedDeviceOwnerAuthenticator(succeeds: succeeds) }
+        #endif
+        return SystemDeviceOwnerAuthenticator()
+    }
+
     private static func makeAddressSuggester() -> any AddressSuggesting {
         #if DEBUG && targetEnvironment(simulator)
         if DemoTravelEstimator.isRequested { return DemoAddressSuggester() }
@@ -145,7 +155,8 @@ final class AppEnvironment {
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
          travelTimes: TravelTimeService? = nil, addressSuggester: (any AddressSuggesting)? = nil, shareInbox: ShareInbox? = nil,
-         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) throws {
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil,
+         deviceOwnerAuthenticator: (any DeviceOwnerAuthenticating)? = nil) throws {
         self.modelContainer = modelContainer
         self.controlState = controlState
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
@@ -170,7 +181,10 @@ final class AppEnvironment {
         noteStore.ensureDefaultFolders()
         attachments.purgeOrphans(existingNoteIDs: Set(noteStore.allNotes().map(\.id)))
         self.notes = noteStore
-        self.backup = BackupService(context: context, settings: settings, attachments: attachments, afterRestore: { [noteStore] in
+        let authenticator: any DeviceOwnerAuthenticating = deviceOwnerAuthenticator ?? Self.makeDeviceOwnerAuthenticator()
+        self.noteLock = NoteLock(settings: settings, authenticator: authenticator)
+        self.backup = BackupService(context: context, settings: settings, attachments: attachments,
+                                    canProtectNotes: { authenticator.canAuthenticate() }, afterRestore: { [noteStore] in
             noteStore.ensureDefaultFolders()
             noteStore.save()
         })

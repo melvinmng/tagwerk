@@ -1,7 +1,7 @@
 import SwiftUI
 import TagwerkCore
 
-/// Settings → Notizen: the order of the note lists and the import from Notion.
+/// Settings → Notizen: the order of the note lists, the lock of notes and private folders, and the import from Notion.
 struct NotesSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
 
@@ -22,6 +22,7 @@ struct NotesSettingsView: View {
             } footer: {
                 Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.")
             }
+            lockSection
             Section {
                 NavigationLink("Aus Notion importieren") { NotionImportView() }
             } header: {
@@ -32,6 +33,58 @@ struct NotesSettingsView: View {
         }
         .navigationTitle("Notizen")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: Lock
+
+    private var lock: NoteLock { environment.noteLock }
+
+    /// "Mit Face ID schützen" and its sibling for the private folders (NL1a).
+    @ViewBuilder private var lockSection: some View {
+        let enabled = Binding(get: { environment.settings.noteLockEnabled },
+                              set: { value in Task { _ = await lock.setEnabled(value) } })
+        let privateFolders = Binding(get: { environment.settings.noteLockPrivateFolders },
+                                     set: { value in Task { _ = await lock.setLocksPrivateFolders(value) } })
+        Section {
+            Toggle(Self.protectTitle(lock.biometry), isOn: enabled)
+                .disabled(!lock.canAuthenticate && !environment.settings.noteLockEnabled)
+                .accessibilityIdentifier("notes.lock.enabled")
+            Toggle("Private Ordner sperren", isOn: privateFolders)
+                .disabled(!environment.settings.noteLockEnabled)
+                .accessibilityIdentifier("notes.lock.privateFolders")
+        } header: {
+            Text("Sperre")
+        } footer: {
+            VStack(alignment: .leading, spacing: 6) {
+                if !lock.canAuthenticate {
+                    Text("Richte zuerst einen Code für dein iPhone ein.")
+                } else {
+                    Text("Gilt für gesperrte Notizen und private Ordner.")
+                }
+                Text("Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: \(privateFolderList).")
+            }
+        }
+        Section {
+            Label("Verbirgt den Inhalt gesperrter Notizen und privater Ordner in Tagwerk.", systemImage: "eye.slash")
+            Label("Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.", systemImage: "iphone")
+            Label("Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.", systemImage: "lock.open")
+        } header: {
+            Text("Was die Sperre tut")
+        }
+    }
+
+    private var privateFolderList: String {
+        NoteToolAccess.listText(NoteToolAccess(store: environment.notes).privateFolderNames())
+    }
+
+    /// The wording follows what the device offers first.
+    static func protectTitle(_ biometry: DeviceBiometry) -> LocalizedStringKey {
+        switch biometry {
+        case .faceID: "Mit Face ID schützen"
+        case .touchID: "Mit Touch ID schützen"
+        case .opticID: "Mit Optic ID schützen"
+        case .none: "Mit Gerätecode schützen"
+        }
     }
 
     static func sortName(_ order: NoteSortOrder) -> String {

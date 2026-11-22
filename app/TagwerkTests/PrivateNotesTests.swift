@@ -90,6 +90,18 @@ struct PrivateNotesTests {
         #expect(!core(.free, nil, [], true))
     }
 
+    @Test func lockSwitchOff_stillPrivate() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let notes = NoteStore(context: container.mainContext)
+        let settings = try AppSettings.current(in: container.mainContext)
+        let note = try #require(notes.create(text: "Geheim"))
+        notes.setLocked([note.id], true)
+        settings.noteLockEnabled = false
+        settings.noteLockPrivateFolders = false
+        #expect(notes.isPrivate(note))
+        #expect(!NoteToolAccess(store: notes).visibleNotes().contains { $0.id == note.id })
+    }
+
     @Test func recipeSource_neverOffersALockedNote() throws {
         let container = try ModelContainerFactory.make(inMemory: true)
         let notes = NoteStore(context: container.mainContext)

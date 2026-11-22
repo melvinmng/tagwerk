@@ -122,6 +122,14 @@ final class AppSettings {
     /// Date groups ("Heute", "Letzte 7 Tage", months) in the note lists; has no effect on the title order.
     var noteGroupsByDate: Bool = true
 
+    /// The lock of the notes (NL1a). "Mit Face ID schützen": locked notes (and, with the next switch, private folders) stay
+    /// hidden until the device owner is checked. These three values belong to this device and are not part of a backup.
+    var noteLockEnabled: Bool = false
+    /// "Private Ordner sperren": journal, Bible Study and Dream Log are protected like locked notes.
+    var noteLockPrivateFolders: Bool = false
+    /// The explanation before the first lock was shown (`NoteLockIntroSheet`).
+    var noteLockExplained: Bool = false
+
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
     var autoBackupEnabled: Bool = false

@@ -2468,5 +2468,19 @@
   "Für diesen Tag ist keine Dankbarkeit eingetragen.": "No gratitude is entered for this day.",
   "Kein Brain Dump an diesem Tag.": "No Brain Dump on this day.",
   "nur Dankbarkeit": "gratitude only",
-  "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it."
+  "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it.",
+  "Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.": "Stays on the iPhone: locked notes never go to ChatGPT, not even when unlocked.",
+  "Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: %@.": "Unlocking once opens everything locked until you leave Tagwerk. Private folders: %@.",
+  "Gilt für gesperrte Notizen und private Ordner.": "Applies to locked notes and private folders.",
+  "Mit Face ID schützen": "Protect with Face ID",
+  "Mit Gerätecode schützen": "Protect with device passcode",
+  "Mit Optic ID schützen": "Protect with Optic ID",
+  "Mit Touch ID schützen": "Protect with Touch ID",
+  "Private Ordner sperren": "Lock private folders",
+  "Richte zuerst einen Code für dein iPhone ein.": "Set up a passcode for your iPhone first.",
+  "Sperre": "Lock",
+  "Tagwerk entsperrt damit gesperrte Notizen und private Ordner.": "Tagwerk uses this to unlock locked notes and private folders.",
+  "Verbirgt den Inhalt gesperrter Notizen und privater Ordner in Tagwerk.": "Hides the content of locked notes and private folders in Tagwerk.",
+  "Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.": "Does not encrypt: the database and backups hold locked notes as plain text.",
+  "Was die Sperre tut": "What the lock does"
 }

@@ -14,6 +14,7 @@ enum UITestMode {
     static let textSizeArgument = "-TagwerkUITestTextSize"
     static let darkArgument = "-TagwerkUITestDark"
     static let clockArgument = "-TagwerkUITestNow"
+    static let lockAuthenticationArgument = "-TagwerkUITestLockAuthentication"
 
     #if DEBUG && targetEnvironment(simulator)
     static var isActive: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
@@ -27,6 +28,17 @@ enum UITestMode {
         let parts = arguments[index + 1].split(separator: ":").compactMap { Int($0) }
         guard parts.count == 2 else { return Date() }
         return Calendar.tagwerk.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) ?? Date()
+    }
+
+    /// The fixed answer of the device check for the note lock: `succeed` or `fail`; `nil` uses the system check.
+    static var lockAuthentication: Bool? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isActive, let index = arguments.firstIndex(of: lockAuthenticationArgument), index + 1 < arguments.count else { return nil }
+        switch arguments[index + 1] {
+        case "succeed": return true
+        case "fail": return false
+        default: return nil
+        }
     }
 
     static var dynamicTypeSize: DynamicTypeSize? {
@@ -44,6 +56,7 @@ enum UITestMode {
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
+    static var lockAuthentication: Bool? { nil }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
     #endif

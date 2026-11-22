@@ -727,6 +727,56 @@ struct BackupTests {
         #expect(!restored.isLocked)
     }
 
+    @Test func restoreWithLockedNotes_turnsProtectionOn() throws {
+        let origin = try makeTarget()
+        let note = try #require(NoteStore(context: origin.container.mainContext).create(text: "Geheimes"))
+        note.isLocked = true
+        try origin.container.mainContext.save()
+        let target = try makeProtectableTarget(canProtect: true)
+        #expect(!target.settings.noteLockEnabled)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(target.settings.noteLockEnabled)
+    }
+
+    @Test func restoreWithLockedNotes_withoutPasscode_leavesItOff() throws {
+        let origin = try makeTarget()
+        let note = try #require(NoteStore(context: origin.container.mainContext).create(text: "Geheimes"))
+        note.isLocked = true
+        try origin.container.mainContext.save()
+        let target = try makeProtectableTarget(canProtect: false)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(!target.settings.noteLockEnabled)
+    }
+
+    @Test func restoreWithoutLockedNotes_leavesProtectionAlone() throws {
+        let origin = try makeTarget()
+        _ = NoteStore(context: origin.container.mainContext).create(text: "Frei")
+        try origin.container.mainContext.save()
+        let target = try makeProtectableTarget(canProtect: true)
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(!target.settings.noteLockEnabled)
+    }
+
+    @Test func lockSettings_areNotPartOfABackup() throws {
+        let origin = try makeTarget()
+        origin.settings.noteLockEnabled = true
+        origin.settings.noteLockPrivateFolders = true
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        #expect(!target.settings.noteLockEnabled && !target.settings.noteLockPrivateFolders)
+    }
+
+    /// A target whose device can or cannot check its owner.
+    private func makeProtectableTarget(canProtect: Bool) throws -> (container: ModelContainer, settings: AppSettings, service: BackupService) {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let settings = try AppSettings.current(in: container.mainContext)
+        let clock = self.clock
+        let service = BackupService(context: container.mainContext, settings: settings, calendar: calendar, appVersion: "1.0-test",
+                                    now: { clock.now }, canProtectNotes: { canProtect })
+        return (container, settings, service)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {
