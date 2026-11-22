@@ -107,7 +107,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-shopping-recipe` | G2 Strang EK (EK1–EK3) | PR #280, Head `6dd28fa`; CI: 2 eigene UI-Tests rot („Erledigte entfernen“ fehlt im Menü) → Reparatur läuft |
 | (Kette) | #276, #273, #275 | **gemergt** (`main` = `0f0fce1`); CI schnell grün, UI nur wiederkehrende DT-/Tippflächen-Befunde |
 | `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0` (main `0f0fce1` eingearbeitet), schnell grün, gepusht → GitHub |
-| (G2 NS) | G2 Welle 2, Strang NS (Sperren u. a.) | läuft (Sonnet) |
+| `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
+| (G2 RO) | G2 Welle 2, Strang RO (Routinen) inkl. Sperre in Tagesstart/-abschluss und DT-Ursache im Tagesabschluss | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundations` | #254 Stränge A und B | PR #281, Head `62bef72`; schnell grün; Offen für C: Zielstände nur vorwärts gespiegelt, `furtherNutrientsGranted()` nie aufgerufen, Schreiberlaubnis beim Spiegeln; `en.json` „%lld Mal“ falsch |
