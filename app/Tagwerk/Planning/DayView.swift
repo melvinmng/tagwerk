@@ -208,32 +208,11 @@ struct DayView: View {
     private func timelineRow(_ row: TimelineRow, plan: DayPlan, marks: DayPageExtras) -> some View {
         switch row {
         case .event(let event):
-            let isDeadline = marks.deadlineEventIDs.contains(event.id)
-            let remaining = model.runningRemaining(of: event, on: plan.day)
-            Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title,
-                             detail: eventDetail(event, marks: marks, remaining: remaining),
-                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray), isRunning: remaining != nil)
-            }
-            .foregroundStyle(.primary)
-            .contextMenu { eventMenu(event, taskID: nil) }
+            EventEntryRow(model: model, day: plan.day, event: event, marks: marks) { sheetEntry = .event(event, nil) }
+                .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
-            let remaining = model.runningRemaining(of: event, on: plan.day)
-            let trimmed = marks.trimmedBlocks[event.id]
-            HStack(spacing: 8) {
-                Button { sheetEntry = .event(event, taskID) } label: {
-                    TimelineLine(time: event.start,
-                                 title: (trimmed != nil ? "✓ " : "")
-                                     + (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                                 detail: trimmed.map { FocusTimerText.trimDetail($0) }
-                                     ?? ((remaining.map { NowText.runningDetail(remainingMinutes: $0) }
-                                         ?? CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60))) + " · "
-                                         + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft"))),
-                                 color: .green, isRunning: remaining != nil)
-                }
-                .foregroundStyle(.primary)
-                // The button of the focus (FO4b) next to the row, not inside its button.
-                if model.focusBlockID(in: plan) == event.id { FocusPlanButton(event: event, model: model) }
+            BlockEntryRow(model: model, plan: plan, event: event, taskID: taskID, marks: marks) {
+                sheetEntry = .event(event, taskID)
             }
         case .lunch(let start, let minutes):
             let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
@@ -263,22 +242,6 @@ struct DayView: View {
         EventDeadlineMenu(event: event, model: model, onOpen: { sheetEntry = .event(event, taskID) },
                           onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
                           onConfirmUnmark: { unmarking = event })
-    }
-
-    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras, remaining: Int? = nil) -> String {
-        // A running entry shows what is left instead of its end (PL3c).
-        var parts = [remaining.map { NowText.runningDetail(remainingMinutes: $0) }
-            ?? String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
-        if !event.isBusy { parts.append(String(localized: "Frei")) }
-        if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
-        let text = DeadlineText(calendar: model.calendar)
-        if marks.deadlineEventIDs.contains(event.id) {
-            parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event)))
-        }
-        if let target = marks.preparationTargets[event.id] {
-            parts.append(text.preparationMark(target, today: model.today))
-        }
-        return parts.joined(separator: " · ")
     }
 
     private func clock(_ minutes: Int, on day: PlanDay) -> String {
@@ -532,28 +495,6 @@ private struct GapLine: View {
         }
         .frame(minHeight: 24)
         .accessibilityLabel(String(localized: "\(text), Aufgabe hier ablegen"))
-    }
-}
-
-private struct TimelineLine: View {
-    let time: Date
-    let title: String
-    let detail: String
-    let color: Color
-    /// The entry runs now: the colour bar is wider (PL3c).
-    var isRunning = false
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(time.formatted(date: .omitted, time: .shortened))
-                .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: isRunning ? 6 : 4)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

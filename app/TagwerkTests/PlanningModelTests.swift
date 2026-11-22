@@ -2729,5 +2729,127 @@ struct PlanningModelTests {
         #expect(model.anchor.month == next.month)
         #expect(model.days.map(\.day) == PlanningModel.monthGridDays(anchor: next, calendar: calendar))
     }
-}
 
+    // MARK: Week content (#259)
+
+    private func weekModel() async -> PlanningModel {
+        let model = await model()
+        model.scope = .week
+        await model.reload()
+        return model
+    }
+
+    private func weekPlan(_ model: PlanningModel, day: Int) throws -> DayPlan {
+        try #require(model.days.first { $0.day == PlanDay(year: 2026, month: 11, day: day) })
+    }
+
+    private func timedEvent(_ id: String, _ start: Date, _ end: Date, busy: Bool = true) -> CalendarEvent {
+        CalendarEvent(id: id, externalID: nil, calendarID: "work", title: id, start: start, end: end, isAllDay: false, url: nil,
+                      isBusy: busy, version: "1")
+    }
+
+    @Test func weekContent_allDayEventsComeFirstAndTimedEntriesFollowChronologically() async throws {
+        calendarStore.storedEvents = [
+            timedEvent("afternoon", at(18, 14), at(18, 15)),
+            timedEvent("morning", at(18, 9), at(18, 10)),
+            CalendarEvent(id: "trip", externalID: nil, calendarID: "work", title: "Dienstreise", start: at(18, 0), end: at(19, 0),
+                          isAllDay: true, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await weekModel()
+        let content = model.weekContent(for: try weekPlan(model, day: 18))
+        #expect(content.allDay.map(\.title) == ["Dienstreise"])
+        #expect(content.timed.map(\.event.title) == ["morning", "afternoon"])
+        #expect(content.hasEntries)
+    }
+
+    @Test func weekContent_overlappingEventsStayAndAreOrderedByStart() async throws {
+        calendarStore.storedEvents = [
+            timedEvent("late", at(18, 10, 30), at(18, 12)),
+            timedEvent("long", at(18, 10), at(18, 13)),
+            timedEvent("short", at(18, 10), at(18, 10, 30)),
+        ]
+        let model = await weekModel()
+        let content = model.weekContent(for: try weekPlan(model, day: 18))
+        // All three stay; the two that start together keep the order of the day plan.
+        #expect(content.timed.map(\.event.title) == ["long", "short", "late"])
+    }
+
+    @Test func weekContent_freeEventsAreListed() async throws {
+        calendarStore.storedEvents = [timedEvent("Geburtstag", at(18, 9), at(18, 10), busy: false)]
+        let model = await weekModel()
+        let content = model.weekContent(for: try weekPlan(model, day: 18))
+        #expect(content.timed.map(\.event.title) == ["Geburtstag"])
+    }
+
+    @Test func weekContent_eventCrossingMidnightAppearsOnBothDaysAndLeadsTheSecond() async throws {
+        calendarStore.storedEvents = [
+            timedEvent("Nachtschicht", at(17, 22), at(18, 2)),
+            timedEvent("Frühstück", at(18, 7), at(18, 8)),
+        ]
+        let model = await weekModel()
+        let before = model.weekContent(for: try weekPlan(model, day: 17))
+        let after = model.weekContent(for: try weekPlan(model, day: 18))
+        #expect(before.timed.map(\.event.title) == ["Nachtschicht"])
+        #expect(after.timed.map(\.event.title) == ["Nachtschicht", "Frühstück"])
+    }
+
+    @Test func weekContent_taskWithBlockIsAnEntryWhileTaskWithoutBlockStaysPlannedWithoutTime() async throws {
+        await taskList.reload()
+        let withBlock = try #require(taskList.items.first { $0.title == "Fahrrad" })
+        let without = try #require(taskList.items.first { $0.title == "Abgabe" })
+        _ = try blocks.createBlock(for: withBlock, start: at(18, 11), minutes: 60)
+        planStore.assign(without.id, to: today)
+        let model = await weekModel()
+        let plan = try weekPlan(model, day: 18)
+        let content = model.weekContent(for: plan)
+        let entry = try #require(content.timed.first)
+        #expect(content.timed.count == 1)
+        #expect(entry.taskID == withBlock.id)
+        #expect(entry.isBlock)
+        // The task without a block is not part of the entries; the week lists it as "planned without time".
+        #expect(plan.assigned.map(\.title) == ["Abgabe"])
+        #expect(plan.assigned.contains { $0.id == withBlock.id } == false)
+    }
+
+    @Test func weekContent_timedDeadlineEventIsOneEntryWithItsDeadlineAndNoSeparateLine() async throws {
+        settings.deadlineCalendarIDs = ["uni"]
+        calendarStore.storedEvents = [
+            CalendarEvent(id: "klausur", externalID: nil, calendarID: "uni", title: "Klausur", start: at(18, 10), end: at(18, 12),
+                          isAllDay: false, url: nil, isBusy: true, version: "1"),
+            CalendarEvent(id: "anmeldung", externalID: nil, calendarID: "uni", title: "Anmeldung", start: at(18, 0), end: at(19, 0),
+                          isAllDay: true, url: nil, isBusy: true, version: "1"),
+        ]
+        let model = await weekModel()
+        let plan = try weekPlan(model, day: 18)
+        #expect(plan.deadlines.map(\.title).sorted() == ["Anmeldung", "Klausur"])
+        let content = model.weekContent(for: plan)
+        #expect(content.timed.map(\.event.title) == ["Klausur"])
+        #expect(content.timed.first?.deadline?.title == "Klausur")
+        // The all-day deadline is no all-day entry; it stays a deadline line, the timed one does not repeat.
+        #expect(content.allDay.isEmpty)
+        #expect(content.deadlines.map(\.title) == ["Anmeldung"])
+    }
+
+    @Test func weekContent_emptyDayHasNoEntries() async throws {
+        let model = await weekModel()
+        let content = model.weekContent(for: try weekPlan(model, day: 20))
+        #expect(content.hasEntries == false)
+    }
+
+    @Test func weekContent_tripsBelongToTheirEventAndKeepTheDayCapacity() async throws {
+        calendarStore.storedEvents = [meeting("a", hour: 11, location: "Büro, Berlin"), meeting("b", hour: 13, minute: 30, location: "Kunde, Potsdam")]
+        let (model, _) = await travelModel()
+        model.scope = .week
+        await model.reload()
+        await model.refreshTravelTimes()
+        let plan = try weekPlan(model, day: 18)
+        let content = model.weekContent(for: plan)
+        #expect(content.timed.map(\.event.id) == ["a", "b"])
+        #expect(content.timed.allSatisfy { $0.trips.contains { $0.direction == .toEvent } })
+        #expect(content.timed.flatMap(\.trips).allSatisfy { trip in content.timed.contains { $0.event.id == trip.eventID } })
+        // The week shows the numbers of the day: both come from the same plan.
+        model.scope = .day
+        await model.reload()
+        #expect(model.days.first?.capacity == plan.capacity)
+    }
+}

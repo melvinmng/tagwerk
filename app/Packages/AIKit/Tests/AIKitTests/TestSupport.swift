@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Synchronization
+import Testing
 @testable import AIKit
 
 let fixedNow = Date(timeIntervalSince1970: 1_800_000_000)
@@ -132,12 +133,6 @@ func makeJWT(_ claims: [String: Any]) -> String {
     return "\(encode(["alg": "none"])).\(encode(claims)).signature"
 }
 
-/// Hands out distinct loopback ports so parallel tests never share one.
-enum TestPorts {
-    private static let next = Mutex<UInt16>(UInt16.random(in: 30_000...50_000))
-    static func make() -> UInt16 { next.withLock { value in value += 1; return value } }
-}
-
 /// Minimal raw TCP client for driving the loopback server, so requests can be split into chunks.
 enum RawHTTPClient {
     /// Sends `chunks` with a short pause between them and returns the full response text.
@@ -185,5 +180,16 @@ enum RawHTTPClient {
 
     static func get(_ pathAndQuery: String, port: UInt16) async throws -> String {
         try await send(["GET \(pathAndQuery) HTTP/1.1\r\nHost: 127.0.0.1:\(port)\r\n\r\n"], port: port)
+    }
+}
+
+extension LoopbackServer {
+    /// Starts a server on a port the system picks, so no test depends on a fixed or guessed port, and returns
+    /// the port it is bound to.
+    static func startOnFreePort(expectedState: String) async throws -> (server: LoopbackServer, port: UInt16) {
+        let server = LoopbackServer(port: 0, expectedState: expectedState)
+        try await server.start()
+        let port = try #require(server.listeningPort, "A ready server reports its port")
+        return (server, port)
     }
 }
