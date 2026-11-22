@@ -2363,5 +2363,9 @@
   "Richtung": "Direction",
   "noch %lld Tage": "%lld days left",
   "noch 1 Tag": "1 day left",
-  "Gelöscht am %@ · aus „%@“": "Deleted on %@ · from “%@”"
+  "Gelöscht am %@ · aus „%@“": "Deleted on %@ · from “%@”",
+  "Für diesen Tag ist keine Dankbarkeit eingetragen.": "No gratitude is entered for this day.",
+  "Kein Brain Dump an diesem Tag.": "No Brain Dump on this day.",
+  "nur Dankbarkeit": "gratitude only",
+  "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it."
 }

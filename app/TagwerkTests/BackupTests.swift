@@ -651,6 +651,20 @@ struct BackupTests {
         #expect(target.settings.shoppingSortConsent && !target.settings.hasShoppingSortConsent)
     }
 
+    @Test func gratitudeOnlyDay_survivesRestore() throws {
+        let origin = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 17)
+        let record = RoutineDayRecord(day: day)
+        record.gratitudeData = try JSONEncoder().encode(["Sonne", "Ruhe"])
+        origin.container.mainContext.insert(record)
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        // No note was created for the day; the entry of "Tagesstart" comes from the routine record alone.
+        #expect(RoutineStore(context: target.container.mainContext).gratitudeDays() == [day: ["Sonne", "Ruhe"]])
+        #expect(try target.container.mainContext.fetchCount(FetchDescriptor<NoteRecord>()) == 0)
+    }
+
     // MARK: Note list order
 
     @Test func settings_roundTripSortDirectionAndGrouping() throws {

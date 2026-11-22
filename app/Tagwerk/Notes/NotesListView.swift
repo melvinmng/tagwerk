@@ -51,6 +51,11 @@ struct NotesListView: View {
 
     var body: some View {
         let notes = visibleNotes
+        // "Tagesstart" also lists the days that only have gratitude (NO14); they are display entries, not notes.
+        let gratitudeDays = folderRole == .morningRoutine && !isTrash ? environment.routines.gratitudeDays() : [:]
+        let morningEntries = folderRole == .morningRoutine && !isTrash
+            ? Self.morningEntries(notes: notes, gratitudeDays: gratitudeDays, query: searchText) : []
+        let notesByID = Dictionary(uniqueKeysWithValues: notes.map { ($0.id, $0) })
         let settings = environment.settings
         let sections = Self.sections(of: notes, order: settings.noteSortOrder,
                                      groupsByDate: settings.noteGroupsByDate && !isTrash && folderRole?.noteKind == nil,
@@ -80,7 +85,7 @@ struct NotesListView: View {
                     .buttonStyle(.plain)
                 }
             }
-            if notes.isEmpty {
+            if notes.isEmpty, morningEntries.isEmpty {
                 Text(emptyText)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -88,7 +93,18 @@ struct NotesListView: View {
             }
             ForEach(sections) { section in
                 Section {
-                    ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
+                    if folderRole == .morningRoutine, !isTrash {
+                        ForEach(morningEntries, id: \.self) { entry in
+                            switch entry {
+                            case .note(let id, _):
+                                if let note = notesByID[id] { card(note, attachmentIndex: attachmentIndex) }
+                            case .gratitudeOnly(let day):
+                                gratitudeOnlyCard(day, gratitude: gratitudeDays[day] ?? [])
+                            }
+                        }
+                    } else {
+                        ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
+                    }
                 } header: {
                     if let group = section.group {
                         Text(Self.groupTitle(group, calendar: environment.planning.calendar)).textCase(nil)
@@ -213,7 +229,7 @@ struct NotesListView: View {
     var visibleNotes: [NoteRecord] {
         let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder,
                                 ascending: environment.settings.noteSortAscending)
-            .filter { NoteText.matches($0.text, query: searchText) }
+            .filter { Self.matchesSearch($0, gratitude: gratitude(of: $0), query: searchText) }
         // The entries of a routine folder are days: newest day first, not by change date.
         return folderRole?.noteKind == nil ? notes : Self.byDayDescending(notes)
     }
@@ -324,6 +340,28 @@ struct NotesListView: View {
                 Button(role: .destructive) { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }
             }
         }
+    }
+
+    /// The card of a day that only has gratitude: the day, the gratitude and where it comes from. A tap opens its page;
+    /// the entry cannot be pinned, moved, selected or deleted (the gratitude is cleared in the morning routine).
+    private func gratitudeOnlyCard(_ day: PlanDay, gratitude: [String]) -> some View {
+        let calendar = environment.planning.calendar
+        return Button {
+            guard !editMode.isEditing else { return }
+            environment.tasksPath.append(.morningDay(day))
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Self.routineTitle(day: day, calendar: calendar)).font(.body.weight(.semibold)).foregroundStyle(.primary)
+                Text(Self.gratitudeLine(gratitude)).font(.subheadline).foregroundStyle(.secondary)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                Text(Self.gratitudeOnlyFooter(day: day, calendar: calendar)).font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .selectionDisabled()
     }
 
     private func gratitude(of note: NoteRecord) -> [String] {
@@ -474,9 +512,36 @@ extension NotesListView {
 
     /// The title of an entry in a routine folder: its day ("Do., 19. Nov.").
     static func routineTitle(_ note: NoteRecord, calendar: Calendar) -> String {
-        let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+        routineTitle(day: note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar), calendar: calendar)
+    }
+
+    /// The title of a day in a routine folder ("Do., 19. Nov.").
+    static func routineTitle(day: PlanDay, calendar: Calendar) -> String {
         let style = Date.FormatStyle(locale: .current, calendar: calendar, timeZone: calendar.timeZone)
         return day.startDate(in: calendar).formatted(style.weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    /// A note matches by its text; an entry of "Tagesstart" also by the gratitude of its day.
+    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String) -> Bool {
+        // Text and gratitude are searched together, so a query of two words may find one in each.
+        NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
+    }
+
+    /// Whether the gratitude of a day matches the search of the list; an empty search matches every day with gratitude.
+    static func matchesSearch(gratitude: [String], query: String) -> Bool {
+        !gratitude.isEmpty && NoteText.matches(gratitude.joined(separator: "\n"), query: query)
+    }
+
+    /// The entries of "Tagesstart" for the list: the notes (already filtered by the search) and the days with gratitude only
+    /// whose gratitude matches the search, days descending.
+    static func morningEntries(notes: [NoteRecord], gratitudeDays: [PlanDay: [String]], query: String) -> [RoutineFolderEntry<UUID>] {
+        let matching = Set(gratitudeDays.filter { matchesSearch(gratitude: $0.value, query: query) }.keys)
+        return RoutineFolderEntries.merge(notes: notes.map { (id: $0.id, day: $0.dayKey.flatMap(NoteDayKey.day)) }, gratitudeDays: matching)
+    }
+
+    /// "Tagesstart · 19.11. · nur Dankbarkeit".
+    static func gratitudeOnlyFooter(day: PlanDay, calendar: Calendar) -> String {
+        String(localized: "Tagesstart") + " · " + DateText.numericDay(day, calendar: calendar) + " · " + String(localized: "nur Dankbarkeit")
     }
 
     /// "Dankbar für: A · B · C"; empty without entries. Gratitude stays in the routine record, the card only shows it.

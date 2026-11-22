@@ -122,6 +122,7 @@ struct TaskListView: View {
                 case .notes: NotesFoldersView(store: environment.notes)
                 case .notesFolder(let scope): NotesListView(store: environment.notes, scope: scope)
                 case .note(let id): NoteEditorView(noteID: id, store: environment.notes)
+                case .morningDay(let day): MorningDayView(day: day)
                 }
             }
             .toolbar {

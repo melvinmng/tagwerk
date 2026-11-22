@@ -171,6 +171,37 @@ struct NotesListTextTests {
         #expect(flat.count == 1 && flat[0].group == nil && flat[0].notes.count == 4)
     }
 
+    // MARK: Gratitude in "Tagesstart" (NF4)
+
+    @Test func listSearch_matchesGratitude() {
+        let entry = note("Heute steht die Abgabe an", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "kaffee"))
+        #expect(NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "abgabe"))
+        #expect(!NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "zebra"))
+        #expect(NotesListView.matchesSearch(gratitude: ["Sonne"], query: "sonne"))
+        #expect(!NotesListView.matchesSearch(gratitude: [], query: "sonne"))
+        #expect(NotesListView.matchesSearch(gratitude: ["Sonne"], query: ""))
+    }
+
+    @Test func morningEntries_listGratitudeOnlyDaysBetweenTheNotes() {
+        let first = note("Alt", kind: .morning, dayKey: "2026-11-17", updated: at(17, 7))
+        let second = note("Neu", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        let days: [PlanDay: [String]] = [PlanDay(year: 2026, month: 11, day: 18): ["Ruhe"], PlanDay(year: 2026, month: 11, day: 19): ["Sonne"]]
+        let entries = NotesListView.morningEntries(notes: [second, first], gratitudeDays: days, query: "")
+        #expect(entries == [.note(id: second.id, day: PlanDay(year: 2026, month: 11, day: 19)),
+                            .gratitudeOnly(day: PlanDay(year: 2026, month: 11, day: 18)),
+                            .note(id: first.id, day: PlanDay(year: 2026, month: 11, day: 17))])
+        // The search keeps only the days whose gratitude matches.
+        #expect(NotesListView.morningEntries(notes: [], gratitudeDays: days, query: "ruhe")
+            == [.gratitudeOnly(day: PlanDay(year: 2026, month: 11, day: 18))])
+    }
+
+    @Test func gratitudeOnlyFooter_namesTheOriginAndDay() {
+        #expect(NotesListView.gratitudeOnlyFooter(day: PlanDay(year: 2026, month: 11, day: 19), calendar: calendar)
+            == "Tagesstart · 19.11. · nur Dankbarkeit")
+        #expect(NotesListView.routineTitle(day: PlanDay(year: 2026, month: 11, day: 19), calendar: calendar) == "Do. 19. Nov.")
+    }
+
     // MARK: Markdown and attachments (P5)
 
     @Test func card_previewUsesPlainText() {

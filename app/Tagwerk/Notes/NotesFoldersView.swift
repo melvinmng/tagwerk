@@ -21,7 +21,7 @@ struct NotesFoldersView: View {
     }
 
     var body: some View {
-        let counts = store.folderCounts()
+        let counts = displayedCounts()
         let tree = store.folderTree()
         let sections = NoteFolderSections.sections(tree)
         List {
@@ -79,6 +79,17 @@ struct NotesFoldersView: View {
                 run { try store.moveFolder(folder.id, to: target) }
             }
         }
+    }
+
+    /// The counts of the rows. "Tagesstart" counts the days that only have gratitude as well (NO14); "Alle Notizen" counts notes only.
+    private func displayedCounts() -> [UUID: Int] {
+        var counts = store.folderCounts()
+        if let morning = store.folder(role: .morningRoutine) {
+            counts[morning.id] = RoutineFolderEntries.count(
+                noteDays: store.notes(.folder(morning.id)).map { $0.dayKey.flatMap(NoteDayKey.day) },
+                gratitudeDays: Set(environment.routines.gratitudeDays().keys))
+        }
+        return counts
     }
 
     // MARK: Sections
