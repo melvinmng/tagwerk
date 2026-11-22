@@ -219,3 +219,18 @@ struct HealthAccessGroupTests {
         #expect(identifiers(HealthKitStore.readTypes(of: .foreignNutrition)).count == 9)
     }
 }
+
+struct DailyActiveEnergyMappingTests {
+    @Test func dailyActiveEnergy_dropsDaysWithoutStatistics() {
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        let sums: [(start: Date, value: Double?)] = [(start, 512.4), (start.addingTimeInterval(86_400), nil),
+                                                       (start.addingTimeInterval(172_800), 0)]
+        let days = HealthMapping.dailyActiveEnergy(sums)
+        #expect(days.map(\.start) == [start, start.addingTimeInterval(172_800)])
+        #expect(days.map(\.kilocalories) == [512.4, 0])
+    }
+
+    @Test func dailyActiveEnergy_neverNegative() {
+        #expect(HealthMapping.dailyActiveEnergy([(Date(timeIntervalSince1970: 0), -3)]).first?.kilocalories == 0)
+    }
+}

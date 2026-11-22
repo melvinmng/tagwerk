@@ -12,6 +12,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _deleted: [UUID] = []
     private var _foreign: [ForeignWorkout] = []
     private var _steps: [DailySteps] = []
+    private var _activeEnergy: [DailyActiveEnergy] = []
+    private var _activeEnergyReads: [DateInterval] = []
     private var _groupAccess: [HealthAccessGroup: HealthGroupAccess] = [:]
     private var _groupRequests: [HealthAccessGroup: Int] = [:]
     private var _authorizationRequests = 0
@@ -86,6 +88,21 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func stepsAccess() async -> StepsAccess { currentStepsAccess }
+
+    var activeEnergy: [DailyActiveEnergy] {
+        get { lock.withLock { _activeEnergy } }
+        set { lock.withLock { _activeEnergy = newValue } }
+    }
+    var activeEnergyReads: [DateInterval] { lock.withLock { _activeEnergyReads } }
+
+    /// Like HealthKit, a group that was not asked (or denied) gives no data instead of an error.
+    func dailyActiveEnergy(in interval: DateInterval, calendar: Calendar) async throws -> [DailyActiveEnergy] {
+        lock.withLock {
+            _activeEnergyReads.append(interval)
+            guard (_groupAccess[.activeEnergy] ?? .notAsked) == .asked else { return [] }
+            return _activeEnergy.filter { $0.start >= interval.start && $0.start < interval.end }
+        }
+    }
 
     /// Groups start as not asked, like on a device that has never shown their sheet.
     func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess { lock.withLock { _groupAccess[group] ?? .notAsked } }

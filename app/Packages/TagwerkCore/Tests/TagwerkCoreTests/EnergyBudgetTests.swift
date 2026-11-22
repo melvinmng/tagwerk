@@ -142,3 +142,35 @@ struct EnergyBudgetTests {
         #expect(IntakeFormat.planHeaderLine(budget: result, waterMilliliters: 0, goalWaterMilliliters: 2000, hasEntries: false) == nil)
     }
 }
+
+struct ActiveEnergyMakeTests {
+    private func own(_ kcal: Double?, mirrored: Bool) -> OwnWorkoutEnergy { OwnWorkoutEnergy(kilocalories: kcal, isMirrored: mirrored) }
+
+    @Test func ownWorkoutEnergy_countedOnce() {
+        // Mirrored with calories: inside the Health sum already, so the sum alone counts.
+        let mirrored = ActiveEnergy.make(healthKcal: 520, ownWorkouts: [own(310, mirrored: true)], healthAcceptsEnergy: true)
+        #expect(mirrored.total == 520)
+        // Not mirrored yet: the Health sum plus the own workout.
+        let pending = ActiveEnergy.make(healthKcal: 520, ownWorkouts: [own(310, mirrored: false)], healthAcceptsEnergy: true)
+        #expect(pending.total == 830)
+        // The same workout after the mirror run: still counted once, now through Health.
+        let after = ActiveEnergy.make(healthKcal: 830, ownWorkouts: [own(310, mirrored: true)], healthAcceptsEnergy: true)
+        #expect(after.total == 830)
+    }
+
+    @Test func ownWorkoutEnergy_healthRefusedTheCalories_staysAGapFiller() {
+        let result = ActiveEnergy.make(healthKcal: 520, ownWorkouts: [own(310, mirrored: true)], healthAcceptsEnergy: false)
+        #expect(result.total == 830)
+    }
+
+    @Test func ownWorkoutEnergy_withoutHealthSum_allCount() {
+        let result = ActiveEnergy.make(healthKcal: nil, ownWorkouts: [own(310, mirrored: true), own(100, mirrored: false), own(nil, mirrored: false)],
+                                       healthAcceptsEnergy: true)
+        #expect(result.total == 410)
+        #expect(!result.isFromHealth)
+    }
+
+    @Test func ownWorkoutEnergy_withoutCalories_addsNothing() {
+        #expect(ActiveEnergy.make(healthKcal: 400, ownWorkouts: [own(nil, mirrored: false)], healthAcceptsEnergy: true).total == 400)
+    }
+}

@@ -165,6 +165,18 @@ public struct DailySteps: Sendable, Hashable {
     }
 }
 
+/// The active energy of one day as Health reports it (own workouts, Apple Watch and the iPhone, merged by Health's source order).
+public struct DailyActiveEnergy: Sendable, Hashable {
+    /// Start of the day in the calendar of the query.
+    public var start: Date
+    public var kilocalories: Double
+
+    public init(start: Date, kilocalories: Double) {
+        self.start = start
+        self.kilocalories = kilocalories
+    }
+}
+
 /// What the "Health" access row shows. Only write access is visible; iOS hides whether reading was denied.
 public enum HealthAccess: Sendable, Hashable {
     case unavailable

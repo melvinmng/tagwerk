@@ -22,6 +22,11 @@ public protocol HealthStoring: Sendable {
     /// Shows the system sheet for `group` only. Call only after a user tap.
     func requestAuthorization(for group: HealthAccessGroup) async throws
 
+    /// Day sums of the active energy for the days of `interval`, by `calendar`; days without statistics are missing.
+    /// Health merges overlapping sources itself, so Tagwerk never adds single samples and never removes own workouts.
+    /// Empty when reading is not allowed: iOS reports that as "no data", so callers treat empty as unknown, never as 0.
+    func dailyActiveEnergy(in interval: DateInterval, calendar: Calendar) async throws -> [DailyActiveEnergy]
+
     /// Whether the step sheet was shown; independent of `access()`, which never looks at the step type.
     func stepsAccess() async -> StepsAccess
     /// Shows the system sheet for steps only. Call only after a user tap.

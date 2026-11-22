@@ -228,12 +228,13 @@ public final class HealthKitStore: HealthStoring, Sendable {
 }
 
 extension HealthKitStore {
-    /// Day sums from a statistics collection: Health merges overlapping sources (iPhone, Apple Watch) by its source
-    /// order, so Tagwerk never adds up single samples. Steps typed in the Health app count as Health counts them.
-    public func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
+    /// Day sums of a quantity type from a statistics collection: Health merges overlapping sources (iPhone, Apple Watch) by its
+    /// source order, so Tagwerk never adds up single samples. A denied read gives no statistics, like a day without data.
+    private func dailySums(of identifier: HKQuantityTypeIdentifier, unit: HKUnit, in interval: DateInterval,
+                           calendar: Calendar) async throws -> [(start: Date, value: Double?)] {
         guard Self.isAvailable else { return [] }
         let predicate = HKSamplePredicate.quantitySample(
-            type: HKQuantityType(.stepCount),
+            type: HKQuantityType(identifier),
             predicate: HKQuery.predicateForSamples(withStart: interval.start, end: interval.end))
         let descriptor = HKStatisticsCollectionQueryDescriptor(predicate: predicate, options: .cumulativeSum,
                                                                anchorDate: calendar.startOfDay(for: interval.start),
@@ -244,11 +245,22 @@ extension HealthKitStore {
         } catch let error as HKError where error.code == .errorNoData || error.code == .errorAuthorizationNotDetermined {
             return []
         }
-        var sums: [(start: Date, count: Double?)] = []
+        var sums: [(start: Date, value: Double?)] = []
         collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
-            sums.append((statistics.startDate, statistics.sumQuantity()?.doubleValue(for: .count())))
+            sums.append((statistics.startDate, statistics.sumQuantity()?.doubleValue(for: unit)))
         }
-        return HealthMapping.dailySteps(sums)
+        return sums
+    }
+
+    /// Steps typed in the Health app count as Health counts them.
+    public func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
+        let sums = try await dailySums(of: .stepCount, unit: .count(), in: interval, calendar: calendar)
+        return HealthMapping.dailySteps(sums.map { (start: $0.start, count: $0.value) })
+    }
+
+    public func dailyActiveEnergy(in interval: DateInterval, calendar: Calendar) async throws -> [DailyActiveEnergy] {
+        HealthMapping.dailyActiveEnergy(try await dailySums(of: .activeEnergyBurned, unit: .kilocalorie(), in: interval,
+                                                            calendar: calendar))
     }
 }
 

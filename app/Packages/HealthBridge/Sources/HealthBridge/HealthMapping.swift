@@ -186,6 +186,11 @@ public enum HealthMapping {
         status == .shouldRequest ? .notAsked : .asked
     }
 
+    /// Day sums of the active energy; days without statistics are dropped (no value, not 0).
+    static func dailyActiveEnergy(_ sums: [(start: Date, value: Double?)]) -> [DailyActiveEnergy] {
+        sums.compactMap { sum in sum.value.map { DailyActiveEnergy(start: sum.start, kilocalories: max(0, $0)) } }
+    }
+
     /// Day sums rounded to whole steps; days without statistics are dropped (no value, not 0).
     static func dailySteps(_ sums: [(start: Date, count: Double?)]) -> [DailySteps] {
         sums.compactMap { sum in sum.count.map { DailySteps(start: sum.start, count: Int($0.rounded())) } }

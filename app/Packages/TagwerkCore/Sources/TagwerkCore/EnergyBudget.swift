@@ -20,6 +20,30 @@ public struct ActiveEnergy: Sendable, Hashable {
     public var isFromHealth: Bool { healthKcal != nil }
 }
 
+/// An own workout as the active energy needs it.
+public struct OwnWorkoutEnergy: Sendable, Hashable {
+    public var kilocalories: Double?
+    /// The workout was written to Health (`healthSynced`).
+    public var isMirrored: Bool
+
+    public init(kilocalories: Double?, isMirrored: Bool) {
+        self.kilocalories = kilocalories
+        self.isMirrored = isMirrored
+    }
+}
+
+extension ActiveEnergy {
+    /// The active energy of a day from the Health sum and the own workouts of that day.
+    ///
+    /// An own workout is inside the Health sum only when it was mirrored with its calories (`healthAcceptsEnergy`: the energy
+    /// type may be written). Such a workout is not added again; the others are the gap filler. Without a Health sum nothing
+    /// contains the own workouts, so all of them count.
+    public static func make(healthKcal: Double?, ownWorkouts: [OwnWorkoutEnergy], healthAcceptsEnergy: Bool) -> ActiveEnergy {
+        let missingInHealth = ownWorkouts.filter { healthKcal == nil || !$0.isMirrored || !healthAcceptsEnergy }
+        return ActiveEnergy(healthKcal: healthKcal, unsyncedOwnKcal: missingInHealth.compactMap(\.kilocalories).reduce(0, +))
+    }
+}
+
 /// The daily energy budget: base goal plus the credited share of the active energy, minus what was eaten.
 public struct EnergyBudget: Sendable, Hashable {
     /// Credit shares offered in the settings, in percent.
