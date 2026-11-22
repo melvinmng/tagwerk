@@ -316,4 +316,68 @@ struct NoteHTMLRendererTests {
         #expect(NoteHTMLRenderer.page(body: "", textScale: 2).contains("34.00px"))
         #expect(NoteHTMLRenderer.page(body: "", textScale: 100).contains("68.00px"))
     }
+
+    // MARK: Tables
+
+    private func tableHTML(_ markdown: String, editLinks: Bool = false) -> String {
+        NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(editLinks: editLinks, tableLinks: true))
+    }
+
+    @Test func table_cellsLinkToTableIndex() {
+        let output = tableHTML("| A | B |\n|---|---|\n| 1 | **2** |\n")
+        let link = { (text: String) in "<a class=\"t\" href=\"tagwerk-table:0\">\(text)</a>" }
+        #expect(output.contains("<th>\(link("A"))</th>"))
+        #expect(output.contains("<td>\(link("1"))</td>"))
+        #expect(output.contains("<strong>\(link("2"))</strong>"))
+        #expect(output.contains("<div class=\"table\">") && output.contains("</table>\n</div>"))
+    }
+
+    @Test func table_withoutOptionHasNoLinks() {
+        let output = NoteHTMLRenderer.html(markdown: "| A |\n|---|\n| 1 |\n", options: .init())
+        #expect(!output.contains("tagwerk-table") && output.contains("<td>1</td>"))
+    }
+
+    @Test func table_emptyCellStaysTappable() {
+        let output = tableHTML("| A | B |\n|---|---|\n|   | x |\n")
+        #expect(output.contains("<td><a class=\"t\" href=\"tagwerk-table:0\">&nbsp;</a></td>"))
+    }
+
+    @Test func table_numberingMatchesBlocks() {
+        let text = "> | Q |\n> |---|\n> | 0 |\n\n| A |\n|---|\n| 1 |\n\n```\n| C |\n|---|\n```\n\n- | L |\n  |---|\n  | 2 |\n\nText\n| B |\n|---|\n| 3 |\n"
+        let output = tableHTML(text)
+        let indices = output.components(separatedBy: "href=\"tagwerk-table:").dropFirst().compactMap { $0.prefix { $0.isNumber } }.map(String.init)
+        #expect(Set(indices) == ["0", "1"])
+        #expect(MarkdownTable.blocks(in: text).count == 2)
+        #expect(output.contains("tagwerk-table:0\">A</a>") && output.contains("tagwerk-table:1\">B</a>"))
+        // The tables in the quote and in the list are shown, without a link.
+        #expect(output.contains("<td>0</td>") && output.contains("<td>2</td>"))
+    }
+
+    @Test func table_realLinkInCellStaysLink() {
+        let output = tableHTML("| A |\n|---|\n| [Seite](https://example.com) text |\n")
+        #expect(output.contains("<a href=\"https://example.com\">Seite</a>"))
+        #expect(output.contains("tagwerk-table:0\"> text</a>"))
+        // No anchor inside an anchor.
+        #expect(!output.contains("<a class=\"t\" href=\"tagwerk-table:0\"><a "))
+    }
+
+    @Test func table_hasNoEditLinks_evenWithEditLinksOn() {
+        let output = tableHTML("Davor\n\n| A |\n|---|\n| 1 |\n", editLinks: true)
+        let table = output.components(separatedBy: "<table>")[1].components(separatedBy: "</table>")[0]
+        #expect(!table.contains("tagwerk-edit"))
+        #expect(output.contains("tagwerk-edit:1"))
+    }
+
+    @Test func table_typedLinkToTableSchemeIsNotALink() {
+        let output = tableHTML("[x](tagwerk-table:0)\n\n<a href=\"tagwerk-table:0\">y</a>\n")
+        #expect(!output.contains("href=\"tagwerk-table:0\""))
+    }
+
+    @Test func page_tableWrapsAt200pt() {
+        let page = NoteHTMLRenderer.page(body: "")
+        let rule = page.components(separatedBy: "th, td {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(rule.contains("max-width: 200pt") && rule.contains("white-space: normal"))
+        #expect(page.contains("div.table {") && page.contains("overflow-x: auto") && page.contains("mask-image"))
+        #expect(page.contains("th { background: var(--code); font-weight: 600; }"))
+    }
 }

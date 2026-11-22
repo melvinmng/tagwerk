@@ -32,10 +32,14 @@ public enum NoteHTMLRenderer {
         public var attachments: [UUID: NoteAttachmentDisplay] = [:]
         /// Wraps the text of the page in links that open the editor at that source line.
         public var editLinks = false
+        /// Wraps the text of every table cell in a link `tagwerk-table:<index>` that opens the table editor. The index is the
+        /// position among `MarkdownTable.blocks(in:)`; tables inside quotes and lists have no link.
+        public var tableLinks = false
 
-        public init(attachments: [UUID: NoteAttachmentDisplay] = [:], editLinks: Bool = false) {
+        public init(attachments: [UUID: NoteAttachmentDisplay] = [:], editLinks: Bool = false, tableLinks: Bool = false) {
             self.attachments = attachments
             self.editLinks = editLinks
+            self.tableLinks = tableLinks
         }
     }
 
@@ -107,9 +111,13 @@ public enum NoteHTMLRenderer {
         pre { background: var(--code); border-radius: 8px; padding: .6em .8em; overflow-x: auto; }
         pre code { background: none; padding: 0; }
         hr { border: 0; border-top: 1px solid var(--line); margin: 1em 0; }
-        table { border-collapse: collapse; margin: .6em 0; max-width: 100%; display: block; overflow-x: auto; }
-        th, td { border: 1px solid var(--line); padding: .3em .6em; vertical-align: top; }
-        th { background: var(--code); }
+        div.table { margin: .6em 0; overflow-x: auto; padding-right: 16px;
+                    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+                    mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent); }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid var(--line); padding: .3em .6em; vertical-align: top; max-width: 200pt; white-space: normal; }
+        th { background: var(--code); font-weight: 600; }
+        a.t { color: inherit; -webkit-touch-callout: none; }
         td.right, th.right { text-align: right; } td.center, th.center { text-align: center; }
         img { max-width:100%; max-height:40vh; width: auto; height: auto; object-fit:contain; border-radius: 8px; }
         mark { background: #ffe66d; color: #1c1c1e; }
@@ -147,8 +155,14 @@ public enum NoteHTMLRenderer {
         /// The checkboxes are numbered in document order, like `MarkdownText.togglingCheckbox` counts them.
         var checkboxIndex = 0
         var sanitizer = HTMLSanitizer()
-        /// Greater than zero inside a real link or a table: no edit link there (no anchor inside an anchor).
+        /// Greater than zero inside a real link: no other link there (no anchor inside an anchor).
         var anchorDepth = 0
+        /// Inside a table: no edit link there; a table is edited in its own sheet.
+        var insideTable = false
+        /// The number of the next table that gets a link; tables are numbered in document order like `MarkdownTable.blocks`.
+        var tableIndex = 0
+        /// The link number of the table whose cells are being written, `nil` without links.
+        var tableLink: Int?
 
         init(options: RenderOptions) { self.options = options }
 
@@ -194,10 +208,17 @@ public enum NoteHTMLRenderer {
         }
 
         /// Whether the next piece of text may become an edit link.
-        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !sanitizer.isSuppressing }
+        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !insideTable && !sanitizer.isSuppressing }
 
-        /// Wraps an inline piece in the edit link of the source line of `markup`.
+        /// The link of a piece of a table cell: it opens the table editor.
+        private func tableLinked(_ html: String) -> String {
+            guard let index = tableLink, anchorDepth == 0, !sanitizer.isSuppressing, !html.isEmpty else { return html }
+            return "<a class=\"t\" href=\"\(MarkdownTable.scheme):\(index)\">\(html)</a>"
+        }
+
+        /// Wraps an inline piece in the edit link of the source line of `markup`, or in the table link inside a table.
         private func editLinked(_ html: String, for markup: Markup) -> String {
+            if insideTable { return tableLinked(html) }
             guard canLinkForEditing, !html.isEmpty, let line = markup.range?.lowerBound.line else { return html }
             return "<a class=\"e\" href=\"\(NoteEditTarget.scheme):\(line)\">\(html)</a>"
         }
@@ -234,9 +255,14 @@ public enum NoteHTMLRenderer {
         }
 
         mutating func visitTable(_ table: Table) -> String {
-            // A table is edited in its own sheet (NX); there is no edit link inside.
-            anchorDepth += 1
-            defer { anchorDepth -= 1 }
+            // Only a table that stands on its own is numbered, as `MarkdownTable.blocks(in:)` finds it.
+            let isBlock = table.parent is Document
+            if isBlock {
+                if options.tableLinks { tableLink = tableIndex }
+                tableIndex += 1
+            }
+            insideTable = true
+            defer { insideTable = false; tableLink = nil }
             let alignments = table.columnAlignments
             func row(_ cells: some Sequence<Table.Cell>, tag: String) -> String {
                 var output = "<tr>"
@@ -249,13 +275,15 @@ public enum NoteHTMLRenderer {
                     }
                     var inner = ""
                     for child in cell.children { inner += visit(child) }
+                    // An empty cell still needs something to tap.
+                    if inner.isEmpty { inner = tableLinked("&nbsp;") }
                     output += "<\(tag)\(cssClass)>\(inner)</\(tag)>"
                 }
                 return output + "</tr>\n"
             }
-            var output = "<table>\n<thead>\n\(row(table.head.cells, tag: "th"))</thead>\n<tbody>\n"
+            var output = "<div class=\"table\">\n<table>\n<thead>\n\(row(table.head.cells, tag: "th"))</thead>\n<tbody>\n"
             for bodyRow in table.body.rows { output += row(bodyRow.cells, tag: "td") }
-            return output + "</tbody>\n</table>\n"
+            return output + "</tbody>\n</table>\n</div>\n"
         }
 
         // Inlines
@@ -304,6 +332,7 @@ public enum NoteHTMLRenderer {
             // Only attachments are shown; a remote or any other image source is never put on the page.
             guard let id = image.source.flatMap(HTMLSanitizer.attachmentID(inReference:)) else { return "[Bild]" }
             let picture = "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            if insideTable { return tableLinked(picture) }
             // A tap opens the picture large (Quick Look); it never starts writing.
             return anchorDepth == 0 ? "<a class=\"img\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
         }

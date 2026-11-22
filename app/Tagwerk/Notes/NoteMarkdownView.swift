@@ -9,7 +9,8 @@ import WebKit
 /// - The page carries a Content Security Policy (`NoteHTMLRenderer.contentSecurityPolicy`).
 /// - A content rule list blocks every load over http, https, ws, wss, ftp, data and blob.
 /// - The page has no base URL and the web view only follows the links this view lets through: web, mail and phone
-///   links open outside the app, attachments open in Quick Look, checkbox links flip the checkbox.
+///   links open outside the app, attachments open in Quick Look, checkbox links flip the checkbox, table links open
+///   the table editor.
 /// - Images come from `tagwerk-attachment://<id>`, answered from `NoteAttachmentStore` and nowhere else.
 struct NoteMarkdownView: UIViewRepresentable {
     let markdown: String
@@ -22,6 +23,8 @@ struct NoteMarkdownView: UIViewRepresentable {
     var onEdit: ((_ line: Int?) -> Void)?
     /// A tap the page did not answer: the fraction of the page height (stage B of the line mapping).
     var onUnansweredTap: ((_ fraction: Double) -> Void)?
+    /// A tap on a table: its number among the tables of the note (`MarkdownTable.blocks`). Without it the tables have no links.
+    var onEditTable: ((_ index: Int) -> Void)?
     /// Native context menu for a long press on a link of the page (attachments, checkboxes); `nil` shows none.
     var contextMenu: ((_ url: URL) -> UIMenu?)?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -30,6 +33,7 @@ struct NoteMarkdownView: UIViewRepresentable {
         let coordinator = Coordinator(onToggleCheckbox: onToggleCheckbox, onOpenAttachment: onOpenAttachment)
         coordinator.onEdit = onEdit
         coordinator.onUnansweredTap = onUnansweredTap
+        coordinator.onEditTable = onEditTable
         coordinator.contextMenu = contextMenu
         return coordinator
     }
@@ -68,8 +72,9 @@ struct NoteMarkdownView: UIViewRepresentable {
         context.coordinator.onOpenAttachment = onOpenAttachment
         context.coordinator.onEdit = onEdit
         context.coordinator.onUnansweredTap = onUnansweredTap
+        context.coordinator.onEditTable = onEditTable
         context.coordinator.contextMenu = contextMenu
-        let options = NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays, editLinks: onEdit != nil)
+        let options = NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays, editLinks: onEdit != nil, tableLinks: onEditTable != nil)
         let body = NoteHTMLRenderer.html(markdown: markdown, options: options)
         context.coordinator.show(NoteHTMLRenderer.page(body: body, textScale: Self.textScale(for: dynamicTypeSize)))
     }
@@ -118,6 +123,7 @@ struct NoteMarkdownView: UIViewRepresentable {
         var onOpenAttachment: (UUID) -> Void
         var onEdit: ((Int?) -> Void)?
         var onUnansweredTap: ((Double) -> Void)?
+        var onEditTable: ((Int) -> Void)?
         var contextMenu: ((URL) -> UIMenu?)?
         weak var webView: WKWebView?
         private var rulesReady = false
@@ -234,6 +240,8 @@ struct NoteMarkdownView: UIViewRepresentable {
                 if let index = Int(url.absoluteString.dropFirst(NoteHTMLRenderer.toggleScheme.count + 1)) { onToggleCheckbox(index) }
             case NoteEditTarget.scheme:
                 if let target = NoteEditTarget.parse(url.absoluteString) { onEdit?(target.isEnd ? nil : target.line) }
+            case MarkdownTable.scheme:
+                if let index = MarkdownTable.index(inLink: url.absoluteString) { onEditTable?(index) }
             case MarkdownText.attachmentScheme:
                 if let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString) { onOpenAttachment(id) }
             case "http", "https", "mailto", "tel":

@@ -136,6 +136,19 @@ struct NoteMarkdownViewTests {
         #expect(toggled == [3] && edits == 0)
     }
 
+    @Test func coordinator_tableLink_callsOnEditTableWithIndex() async {
+        let coordinator = makeCoordinator()
+        var tables: [Int] = []
+        var edits = 0
+        coordinator.onEditTable = { tables.append($0) }
+        coordinator.onEdit = { _ in edits += 1 }
+        await coordinator.activate(URL(string: "tagwerk-table:2")!)
+        #expect(tables == [2] && edits == 0)
+        // A malformed table link does nothing.
+        await coordinator.activate(URL(string: "tagwerk-table:x")!)
+        #expect(tables == [2])
+    }
+
     @Test func coordinator_unansweredTap_firesAfterDelay() async {
         let coordinator = makeCoordinator()
         var fractions: [Double] = []
