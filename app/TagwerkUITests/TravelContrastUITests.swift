@@ -56,8 +56,10 @@ final class TravelContrastUITests: UITestCase {
         try checkGridAndList()
     }
 
-    /// The attachment sits flush above its event, in the column of the event (beside the call it overlaps in time): the
-    /// capsule lies above one of the seminar buttons and within its column.
+    /// The attachment sits flush above its event (beside the call it overlaps in time): the capsule lies right above one of the seminar
+    /// buttons and over its column. Once the screen has settled the grid has narrow columns (the seminar and its copy, the call, the deadline,
+    /// the break: 78 pt each), and the capsule is wider than one column, so it may reach into the next one; before the settle wait of the
+    /// UI test mode the seminar had a column of its own and the capsule fitted into it.
     func testAttachmentSitsAboveItsEventInTheGrid() {
         let capsule = capsules.firstMatch
         XCTAssertTrue(capsule.waitForExistence(timeout: Self.timeout), "No capsule on screen")
@@ -65,7 +67,7 @@ final class TravelContrastUITests: UITestCase {
         XCTAssertFalse(seminars.isEmpty, "The seminar is not on screen")
         let frame = capsule.frame
         let below = seminars.filter { frame.maxY <= $0.frame.minY + 2 && $0.frame.minY - frame.maxY < 30
-            && frame.minX >= $0.frame.minX - 2 && frame.maxX <= $0.frame.maxX + 2 }
+            && frame.minX < $0.frame.maxX && frame.maxX > $0.frame.minX }
         XCTAssertFalse(below.isEmpty, "No seminar sits right below the capsule \(frame): \(seminars.map(\.frame))")
     }
 }

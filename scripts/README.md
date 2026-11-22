@@ -89,3 +89,16 @@ zsh scripts/tests/refresh-decisions.zsh
 Debug-Builds im Simulator legen mit dem Startargument `-TagwerkDemoData` Beispieldaten an (`app/Tagwerk/App/DemoData.swift`): Kalender „Demo Termine“, „Demo Freigabe“, „Demo Uni“ (Deadline-Kalender), Plan-Kalender „Demo Tagwerk“ und die Erinnerungsliste „Demo Aufgaben“ mit wiederkehrenden Erinnerungen. Bei jedem Start mit dem Argument werden genau diese Kalender gelöscht und neu angelegt; die Einrichtung gilt danach als abgeschlossen. Auf einem echten Gerät ist der Code nicht enthalten.
 
 Kalender- und Erinnerungszugriff vorher im Simulator erteilen, dann mit dem Argument starten (z. B. über die T3-Geräte-Tools: `settings permission grant calendar full`, `settings permission grant reminders`, `open local.tagwerk.app --relaunch --launch-args=-TagwerkDemoData`; ohne lokale Konfiguration nutzt der Simulator-Build die Standard-Bundle-ID `local.tagwerk.app`).
+
+## UI-Audits auf Stabilität prüfen
+
+`scripts/stress-audits.sh [--collect] [Wiederholungen] [Testauswahl …]` wiederholt die sechs Audit-Klassen der UI-Tests (Standard, AX5, Rezepte, Rezepte AX5, Abend, Abend AX5) (jede Wiederholung ein eigener Lauf, ohne Wiederholen bei Fehlschlag) und gibt je Test die Zahl der Läufe und Fehlschläge, die gruppierten Fehlermeldungen und die Zahl der Audit-Timeout-Wiederholungen aus. Mit `--collect` schlagen die Audits nicht fehl; stattdessen steht jeder Befund, der nicht auf der Allowlist steht, mit der Zahl der Wiederholungen im Bericht, in denen er auftrat (nicht in jeder Wiederholung = flackernd). Das Skript nimmt dieselbe Sperre wie `app/test-all.sh`: je Arbeitskopie läuft nur ein Testlauf. Ohne künstliche Last: Die Läufe der anderen Arbeitskopien sind die natürliche Last. Nötig bei Änderungen an den Audits, an `UITestMode`, an `DemoData` oder am Start-Task, nicht vor jedem Merge.
+
+## String-Kataloge
+
+Die elf `.xcstrings`-Kataloge sind JSON im festen Format `json.dumps(…, ensure_ascii=False, indent=2, sort_keys=True)`: Schlüssel auf jeder Ebene nach Codepunkt sortiert, leere Objekte als `{}`. Je Datei unterscheiden sich nur der Trenner nach dem Schlüssel (`": "` oder `" : "`) und das Zeilenende am Dateiende. `scripts/catalog_format.py` erkennt das und schreibt Kataloge in genau dem Stil der Datei, sodass sich nur die Zeilen der geänderten Einträge ändern.
+
+- `scripts/sync-strings.sh [--check] [--no-build]` gleicht die Kataloge mit dem Quelltext ab. `xcstringstool` schreibt nur in eine Kopie, übernommen wird der Inhalt im Stil des Katalogs; ohne inhaltliche Änderung bleibt die Datei unberührt.
+- `scripts/apply-translations.py` schreibt Übersetzungen aus `scripts/translations/en.json` ebenso im Stil der Datei.
+- `scripts/check-strings.py` (Stufe „string catalogs“ von `app/test-all.sh`) meldet einen Katalog, der nicht im Repository-Format steht, mit der ersten abweichenden Zeile. Das passiert zum Beispiel, wenn ein Eintrag von Hand an der falschen Stelle eingefügt wurde oder Xcode die Datei in der Oberfläche neu geschrieben hat; `scripts/sync-strings.sh` stellt das Format wieder her.
+- Tests: `/usr/bin/python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v` und `zsh scripts/tests/sync-strings-format.zsh` (braucht `xcrun xcstringstool`, aber keinen Build und keinen Simulator).
