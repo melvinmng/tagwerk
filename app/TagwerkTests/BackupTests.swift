@@ -179,6 +179,16 @@ struct BackupTests {
         reflection.goalsProgress = "Projekt läuft"
         reflection.gratitudeTaken = true
         context.insert(reflection)
+        context.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 512.5, creditPercent: 75,
+                                                 foreign: ForeignIntake(kcal: 340, protein: 12, carbs: 40, fat: 9,
+                                                                        nutrients: NutrientValues(fiber: 5, sugar: 11, saturatedFat: 3, salt: 1.5),
+                                                                        waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
+        settings.activityCreditPercent = 75
+        settings.goalPlansMigrated = true
+        context.insert(GoalPlanRecord(GoalPlan(validFrom: day, kcal: 2100, proteinGrams: 110, carbsGrams: 240, fatGrams: 70,
+                                               fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2500, stepsPerDay: 9000,
+                                               workoutMinutesPerWeek: 180, activeKcalPerDay: 450, targetWeightKg: 72.5,
+                                               paceKgPerWeek: -0.4, origin: .assistant, note: "Cut")))
         try? context.save()
     }
 
@@ -321,6 +331,63 @@ struct BackupTests {
         }
         let missing = BackupEntities.modelNames.subtracting(counts.keys).subtracting(["AppSettings"])
         #expect(missing.isEmpty, "no test record for: \(missing.sorted())")
+    }
+
+    @Test func goalPlanBackup_roundTripsEveryField() throws {
+        let plan = try #require(try source.mainContext.fetch(FetchDescriptor<GoalPlanRecord>()).first)
+        let decoded = try JSONDecoder().decode(GoalPlanBackup.self, from: JSONEncoder().encode(GoalPlanBackup(plan)))
+        #expect(decoded.makeRecord().value == plan.value)
+        #expect(plan.value.fiberGrams == 30 && plan.value.targetWeightKg == 72.5 && plan.value.origin == .assistant)
+    }
+
+    @Test func settingsBackup_withoutGoalPlanFields_keepsTheDeviceValues() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["goalPlansMigrated", "activityCreditPercent"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let target = try makeTarget()
+        older.apply(to: target.settings)
+        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated)
+    }
+
+    @Test func restore_oldFileWithoutGoalPlans_rebuildsTheFirstPlanFromTheRestoredGoals() throws {
+        // A file from before the goal plans has no list; its single goals become the plan instead of the plans of the device.
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["goalPlans"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        target.container.mainContext.insert(GoalPlanRecord(GoalPlan(validFrom: PlanDay(year: 2026, month: 1, day: 1), kcal: 1500,
+                                                                    waterMilliliters: 1000, stepsPerDay: 1, workoutMinutesPerWeek: 1)))
+        let inspection = try target.service.inspect(JSONSerialization.data(withJSONObject: object))
+        try target.service.restore(inspection)
+        let plans = try target.container.mainContext.fetch(FetchDescriptor<GoalPlanRecord>())
+        #expect(plans.count == 1)
+        #expect(plans.first?.kcal == 2100, "the plan is built from the restored goalKilocalories")
+        #expect(target.settings.goalPlansMigrated)
+    }
+
+    @Test func restore_oldFileWithoutDayHealth_keepsTheStoredValuesOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["dayHealth"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 1)
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 300, creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-01"])
+    }
+
+    @Test func restore_withDayHealth_replacesTheStoredValues() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: PlanDay(year: 2026, month: 11, day: 1), activeKcal: 300,
+                                                                      creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-18"])
+        #expect(stored.first?.value.foreign.sources == ["Yazio"])
     }
 
     // MARK: Round trip

@@ -44,11 +44,17 @@ public struct MealItem: Sendable, Hashable, Codable, Identifiable {
     public var protein: Double
     public var carbs: Double
     public var fat: Double
+    /// Further nutrients per portion in grams; `nil` is unknown, never 0. Items stored before they existed decode as unknown.
+    public var fiber: Double?
+    public var sugar: Double?
+    public var saturatedFat: Double?
+    public var salt: Double?
     /// `true` while the values come from the AI; typing over them makes the item exact (shown without "~").
     public var isEstimated: Bool
 
     public init(name: String, amount: String, factor: Double = 1, kcalMin: Double, kcal: Double, kcalMax: Double,
-                protein: Double, carbs: Double, fat: Double, isEstimated: Bool = false, id: UUID = UUID()) {
+                protein: Double, carbs: Double, fat: Double, fiber: Double? = nil, sugar: Double? = nil,
+                saturatedFat: Double? = nil, salt: Double? = nil, isEstimated: Bool = false, id: UUID = UUID()) {
         self.id = id
         self.name = name
         self.amount = amount
@@ -59,17 +65,22 @@ public struct MealItem: Sendable, Hashable, Codable, Identifiable {
         self.protein = protein
         self.carbs = carbs
         self.fat = fat
+        self.fiber = fiber
+        self.sugar = sugar
+        self.saturatedFat = saturatedFat
+        self.salt = salt
         self.isEstimated = isEstimated
     }
 
-    /// The item with typed values: exact, so min, value and max are equal.
+    /// The item with typed values: exact, so min, value and max are equal. The further nutrients stay as they are.
     public func overridden(kcal: Double, protein: Double, carbs: Double, fat: Double) -> MealItem {
         MealItem(name: name, amount: amount, factor: factor, kcalMin: kcal, kcal: kcal, kcalMax: kcal,
-                 protein: protein, carbs: carbs, fat: fat, isEstimated: false, id: id)
+                 protein: protein, carbs: carbs, fat: fat, fiber: fiber, sugar: sugar, saturatedFat: saturatedFat, salt: salt,
+                 isEstimated: false, id: id)
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, amount, factor, kcalMin, kcal, kcalMax, protein, carbs, fat, isEstimated
+        case id, name, amount, factor, kcalMin, kcal, kcalMax, protein, carbs, fat, fiber, sugar, saturatedFat, salt, isEstimated
     }
 
     public init(from decoder: Decoder) throws {
@@ -84,8 +95,26 @@ public struct MealItem: Sendable, Hashable, Codable, Identifiable {
         protein = try container.decode(Double.self, forKey: .protein)
         carbs = try container.decode(Double.self, forKey: .carbs)
         fat = try container.decode(Double.self, forKey: .fat)
+        fiber = try container.decodeIfPresent(Double.self, forKey: .fiber)
+        sugar = try container.decodeIfPresent(Double.self, forKey: .sugar)
+        saturatedFat = try container.decodeIfPresent(Double.self, forKey: .saturatedFat)
+        salt = try container.decodeIfPresent(Double.self, forKey: .salt)
         isEstimated = try container.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
     }
+
+    /// The further nutrients of one portion.
+    public var nutrients: NutrientValues {
+        get { NutrientValues(fiber: fiber, sugar: sugar, saturatedFat: saturatedFat, salt: salt) }
+        set {
+            fiber = newValue.fiber
+            sugar = newValue.sugar
+            saturatedFat = newValue.saturatedFat
+            salt = newValue.salt
+        }
+    }
+
+    /// Value of a further nutrient scaled by the quantity factor; `nil` when unknown.
+    public func totalNutrient(_ nutrient: Nutrient) -> Double? { nutrients[nutrient].map { $0 * factor } }
 
     public var totalKcal: Double { kcal * factor }
     public var totalKcalMin: Double { kcalMin * factor }
@@ -125,6 +154,17 @@ public struct MealValue: Sendable, Hashable, Identifiable {
     public var fat: Double { items.reduce(0) { $0 + $1.totalFat } }
     /// Any item still carries AI values; totals are then shown with "~".
     public var hasEstimate: Bool { items.contains(where: \.isEstimated) }
+
+    /// A further nutrient of the whole meal: the sum of the items that know it, `nil` when none does (not 0).
+    public func nutrient(_ nutrient: Nutrient) -> Double? {
+        let values = items.compactMap { $0.totalNutrient(nutrient) }
+        return values.isEmpty ? nil : values.reduce(0, +)
+    }
+
+    /// Every item of the meal has a value for the nutrient, so `nutrient(_:)` is the exact total.
+    public func knowsNutrient(_ nutrient: Nutrient) -> Bool {
+        !items.isEmpty && items.allSatisfy { $0.nutrients[nutrient] != nil }
+    }
 }
 
 /// One water entry.
@@ -236,9 +276,15 @@ public struct DayIntake: Sendable, Hashable {
     public var waterMilliliters: Int
     /// At least one meal value is an estimate; totals are shown with "~".
     public var hasEstimate: Bool
+    /// Totals of the further nutrients with the number of meals that know them.
+    public var fiber: NutrientSum
+    public var sugar: NutrientSum
+    public var saturatedFat: NutrientSum
+    public var salt: NutrientSum
 
     public init(kcal: Double, kcalMin: Double, kcalMax: Double, protein: Double, carbs: Double, fat: Double,
-                waterMilliliters: Int, hasEstimate: Bool) {
+                waterMilliliters: Int, hasEstimate: Bool, fiber: NutrientSum = .empty, sugar: NutrientSum = .empty,
+                saturatedFat: NutrientSum = .empty, salt: NutrientSum = .empty) {
         self.kcal = kcal
         self.kcalMin = kcalMin
         self.kcalMax = kcalMax
@@ -247,6 +293,19 @@ public struct DayIntake: Sendable, Hashable {
         self.fat = fat
         self.waterMilliliters = waterMilliliters
         self.hasEstimate = hasEstimate
+        self.fiber = fiber
+        self.sugar = sugar
+        self.saturatedFat = saturatedFat
+        self.salt = salt
+    }
+
+    public subscript(nutrient: Nutrient) -> NutrientSum {
+        switch nutrient {
+        case .fiber: fiber
+        case .sugar: sugar
+        case .saturatedFat: saturatedFat
+        case .salt: salt
+        }
     }
 
     public static let empty = DayIntake(kcal: 0, kcalMin: 0, kcalMax: 0, protein: 0, carbs: 0, fat: 0, waterMilliliters: 0,
@@ -269,7 +328,14 @@ public enum IntakeRules {
                   carbs: meals.reduce(0) { $0 + $1.carbs },
                   fat: meals.reduce(0) { $0 + $1.fat },
                   waterMilliliters: drinks.reduce(0) { $0 + $1.milliliters },
-                  hasEstimate: meals.contains { $0.hasEstimate })
+                  hasEstimate: meals.contains { $0.hasEstimate },
+                  fiber: nutrientSum(.fiber, of: meals), sugar: nutrientSum(.sugar, of: meals),
+                  saturatedFat: nutrientSum(.saturatedFat, of: meals), salt: nutrientSum(.salt, of: meals))
+    }
+
+    /// Sum of one further nutrient over the meals: unknown values are skipped, and the result says how many meals knew it.
+    public static func nutrientSum(_ nutrient: Nutrient, of meals: [MealValue]) -> NutrientSum {
+        NutrientSum.combine(meals.map { NutrientSum.Part(value: $0.nutrient(nutrient), isComplete: $0.knowsNutrient(nutrient)) })
     }
 
     /// Start of the Monday-to-Sunday week containing `date`, regardless of the calendar's first weekday.

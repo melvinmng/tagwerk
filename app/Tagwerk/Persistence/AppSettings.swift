@@ -66,6 +66,11 @@ final class AppSettings {
     var workoutGoalMigrated: Bool = false
     var proteinGoalEnabled: Bool = false
     var goalProteinGrams: Int = 120
+    /// The one-time takeover of the single goals as the first goal plan ran (`GoalStore.migrateIfNeeded()`).
+    var goalPlansMigrated: Bool = false
+    /// Share of the active energy that raises the daily budget, in percent: 0, 50, 75 or 100. Half is the default because
+    /// wrist devices estimate the active energy rather coarsely (decision BU1b).
+    var activityCreditPercent: Int = 50
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330
