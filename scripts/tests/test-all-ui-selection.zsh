@@ -33,10 +33,10 @@ check "full set"                      "rc=0" "$(selection TAGWERK_UI_TEST_SET=fu
 check "retries off with 0"            "rc=0" "$(selection TAGWERK_UI_TEST_RETRIES=0)"
 
 # The real list of the repository.
-expected_pr=$'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\nrc=0'
+expected_pr=$'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\n-skip-testing:TagwerkUITests/AccessibilityAuditEveningLargeTextUITests\nrc=0'
 check "pr set from the repository list" "$expected_pr" "$(selection TAGWERK_UI_TEST_SET=pr)"
 check "pr set with one retry" \
-  $'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\n-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
+  $'-skip-testing:TagwerkUITests/AccessibilityAuditRecipesLargeTextUITests\n-skip-testing:TagwerkUITests/AccessibilityAuditEveningLargeTextUITests\n-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
   "$(selection TAGWERK_UI_TEST_SET=pr TAGWERK_UI_TEST_RETRIES=1)"
 check "full set with one retry" \
   $'-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
