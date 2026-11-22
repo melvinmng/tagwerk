@@ -66,7 +66,8 @@ struct FollowUpBar<Exchange: View>: View {
                 inputRow
             }
             if let footer {
-                footer.font(.footnote).foregroundStyle(.secondaryText)
+                // The named tone: the hierarchical `.secondary` fails the contrast audit in dark mode at the largest text size.
+                footer.font(.footnote).foregroundStyle(Color.secondaryText)
             }
         }
     }

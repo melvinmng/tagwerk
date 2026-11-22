@@ -595,6 +595,54 @@ extension AIPlannerTests {
         #expect(current(planning, login.id)?.startMinutes == 16 * 60)
     }
 
+    // MARK: All suggestions (plan ki-vorschlaege-anpassen, task E2)
+
+    @Test func reviseBatch_sendsAllOpenSuggestionsWithoutFocus() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        let batch = try #require(planning.suggestionBatches.first)
+        responder.enqueue(Self.revision("Beide später.", Self.change("s1", start: "16:00", minutes: 60) + "," + Self.change("s2", start: "17:00", minutes: 60)))
+
+        await planner.revise(batch: batch, comment: "Alles etwas später")
+
+        #expect(responder.calls.last?.schema == "suggestion_revision")
+        let sent = try #require(responder.calls.last?.input.compactMap { item -> String? in if case .user(let text) = item { text } else { nil } }.joined())
+        let object = try #require(try JSONSerialization.jsonObject(with: Data(sent.utf8)) as? [String: Any])
+        #expect(object["about"] as? String == "" && object["comment"] as? String == "Alles etwas später")
+        #expect((object["suggestions"] as? [[String: Any]])?.count == 2)
+        #expect(current(planning, fahrrad.id)?.startMinutes == 16 * 60 && current(planning, login.id)?.startMinutes == 17 * 60)
+        let conversation = try #require(planning.suggestionBatches.first?.conversation)
+        #expect(conversation.map(\.role) == [.user, .assistant] && conversation.allSatisfy { $0.suggestionID == nil })
+        #expect(planner.revisionError == nil && planner.revisingID == nil)
+        #expect(responder.instructions.last?.contains("alle Vorschläge") == true)
+    }
+
+    @Test func reviseBatch_keepsMovedSuggestions() async throws {
+        let (planner, planning, fahrrad, login) = try await twoBlocks()
+        _ = await planner.moveSuggestion(login, day: today, start: 15 * 60 + 30, minutes: 60)
+        let batch = try #require(planning.suggestionBatches.first)
+        responder.enqueue(Self.revision("Beide früher.", Self.change("s1", start: "11:00", minutes: 60) + "," + Self.change("s2", start: "11:00", minutes: 60)))
+
+        await planner.revise(batch: batch, comment: "früher")
+
+        // Without a focus nothing the user moved is changed, not even by name.
+        #expect(current(planning, login.id)?.startMinutes == 15 * 60 + 30)
+        #expect(current(planning, fahrrad.id)?.startMinutes == 11 * 60)
+        #expect(planning.suggestionBatches.first?.conversation?.last?.rejected?.isEmpty == false)
+    }
+
+    @Test func reviseBatch_undo() async throws {
+        let (planner, planning, _, _) = try await twoBlocks()
+        let before = planning.suggestionBatches.first?.suggestions
+        let batch = try #require(planning.suggestionBatches.first)
+        responder.enqueue(Self.revision("Getauscht.", Self.change("s1", start: "16:00", minutes: 60) + "," + Self.change("s2", start: "14:00", minutes: 60)))
+        await planner.revise(batch: batch, comment: "tauschen")
+        #expect(planning.suggestionBatches.first?.suggestions != before)
+
+        await planner.undoRevision(of: batch.id)
+
+        #expect(planning.suggestionBatches.first?.suggestions == before)
+    }
+
     @Test func revise_sendsComment_userMoves_statusAndPreferences() async throws {
         let (planner, _, fahrrad, login) = try await twoBlocks()
         planner.preferences = { ["Mails nicht nach 18 Uhr einplanen."] }

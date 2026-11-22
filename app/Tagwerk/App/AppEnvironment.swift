@@ -433,7 +433,8 @@ final class AppEnvironment {
                                            events: { gateway.events(in: $0, calendarIDs: planning.readableCalendarIDs()) },
                                            planCalendarID: settings.planCalendarID, now: .now)
             },
-            gitHubDirectory: { [assistant] in assistant.gitHubDirectory() })
+            gitHubDirectory: { [assistant] in assistant.gitHubDirectory() },
+            editorContext: { [assistant] in assistant.proposalEditorContext() })
     }
 
     /// The background refresh: GitHub is registered without the catalog, every source loads once, then the

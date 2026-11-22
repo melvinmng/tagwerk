@@ -31,6 +31,8 @@ struct MealSheet: View {
     @State private var prepared = false
     @State private var saving = false
     @State private var voice: VoiceInputModel?
+    /// The items with their marks and the follow-up about them (plan ki-vorschlaege-anpassen, task D1).
+    @State private var followUp = PreviewFollowUpModel<MealItem>(items: [])
     @FocusState private var textFocused: Bool
 
     private var isSignedIn: Bool { environment.ai.isSignedIn }
@@ -270,6 +272,7 @@ struct MealSheet: View {
             } else {
                 estimateSummary
                 itemsSection
+                followUpSection
             }
 
             if let existing {
@@ -292,6 +295,10 @@ struct MealSheet: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
+        // A new draft (estimate, "Neu schätzen", a saved meal) starts a new proposal; changes by hand follow the list.
+        .onChange(of: draft.id) { _, _ in followUp.replaceItems(draft.items) }
+        .onChange(of: draft.items) { _, items in followUp.syncByHand(items) }
+        .onDisappear { followUp.discard() }
     }
 
     private var provenance: String {
@@ -414,6 +421,14 @@ struct MealSheet: View {
                     ValueStepper("Menge", value: $item.factor, in: MealItem.factorRange, step: MealItem.factorStep,
                                  kind: .decimal(fractionDigits: 2)) { IntakeFormat.factor($0) }
                         .font(.subheadline)
+                    HStack {
+                        PreviewRowMark(mark: followUp.mark(of: item.id))
+                        Spacer()
+                        if followUpAvailability != .hidden {
+                            Button("Mit ChatGPT zu diesem Posten schreiben", systemImage: "sparkles") { followUp.focus = item.id }
+                                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                        }
+                    }
                 }
                 .swipeActions {
                     let id = item.id
@@ -430,6 +445,45 @@ struct MealSheet: View {
             Text("Posten")
         } footer: {
             Text("Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen.")
+        }
+    }
+
+    // MARK: Follow-up
+
+    private var followUpAvailability: FollowUpAvailability {
+        FollowUpAvailability.state(hasConsent: environment.settings.mealEstimationConsent, isSignedIn: isSignedIn, isOffline: false)
+    }
+
+    /// The input line below the items. What goes out is named in its note: the description and the photo while the sheet holds
+    /// them, the items with the changes of the user, the message. Health values, goals and earlier meals never go.
+    private var followUpSection: some View {
+        let footer = draft.estimatedAt != nil && existing == nil && photoJPEG != nil
+            ? Text("Senden gibt deine Beschreibung, das Foto, die Posten mit deinen Änderungen und deine Nachricht an ChatGPT. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.")
+            : Text("Senden gibt die Posten mit deinen Änderungen und deine Nachricht an ChatGPT, dazu deine Beschreibung, solange sie hier steht. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.")
+        return PreviewFollowUpSection(
+            model: followUp, availability: followUpAvailability, place: .meal,
+            quickReplies: [String(localized: "Größere Portion"), String(localized: "Kleinere Portion"), String(localized: "Genauer aufteilen")],
+            placeholder: "Zur Schätzung etwas sagen …", footer: footer,
+            focusLabel: { String(localized: "Zu: \($0.name)") }, onSend: sendFollowUp)
+    }
+
+    private func sendFollowUp(_ message: String) {
+        // A meal that was saved earlier counts as the current meal: only its items go out, no description.
+        let sendsInput = draft.estimatedAt != nil && existing == nil
+        let input = sendsInput ? text : ""
+        let jpeg = sendsInput ? photoJPEG : nil
+        followUp.syncByHand(draft.items)
+        Task {
+            await followUp.send(message, using: { request in
+                var focus: UUID?
+                if case .one(let id) = request.scope { focus = id }
+                let answer = try await estimator.revise(text: input, jpeg: jpeg, items: request.items, pinned: Set(request.pinned),
+                                                        focus: focus, comment: request.comment)
+                let aligned = MealEstimator.align(answer.items, with: request.items, focus: focus)
+                return .init(items: aligned, message: aligned == request.items ? String(localized: "Keine Änderung.")
+                                                                                  : String(localized: "Schätzung überarbeitet."))
+            }, failure: { ($0 as? MealEstimator.Failure ?? .failed).message })
+            draft.items = followUp.items
         }
     }
 

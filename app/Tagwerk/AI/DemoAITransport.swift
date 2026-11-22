@@ -112,6 +112,10 @@ final class DemoAITransport: AIHTTPTransport {
         if text.contains("tisch") {
             return #"{"title":"","items":[]}"#
         }
+        // A follow-up (task D1): the same estimate with a third item.
+        if text.contains("message from the user:") {
+            return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":4,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":0,"sugar_g":null,"saturated_fat_g":9,"salt_g":1.2},{"name":"Butter","amount":"1 Portion","kcal_min":50,"kcal":70,"kcal_max":90,"protein_g":0,"carbs_g":0,"fat_g":8,"fiber_g":0,"sugar_g":0,"saturated_fat_g":5,"salt_g":0.1}]}"#
+        }
         return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":4,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":0,"sugar_g":null,"saturated_fat_g":9,"salt_g":1.2}]}"#
     }
 
@@ -142,12 +146,18 @@ final class DemoAITransport: AIHTTPTransport {
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
               let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
               format["name"] as? String == "recipe_ingredients" else { return nil }
+        var items: [[String: Any]] = [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
+                                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
+                                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]]
+        // A follow-up (task D2): the same recipe with one more ingredient.
+        let sent = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        if sent.compactMap({ $0["text"] as? String }).joined().contains("Message from the user:") {
+            items.append(["name": "Zwiebel", "quantity": "1 Stück", "amount": 1, "unit": "Stück", "category": "Obst & Gemüse"])
+        }
         let answer: [String: Any] = [
             "title": "Demo Gemüsepfanne", "servings": 2,
             "steps": ["Gemüse schneiden.", "In der Pfanne fünf Minuten braten."],
-            "items": [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
-                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
-                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]],
+            "items": items,
         ]
         return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
     }
