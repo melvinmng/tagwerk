@@ -51,6 +51,23 @@ final class MailTaskModel {
     @ObservationIgnored private let grantConsent: @MainActor () -> Void
     @ObservationIgnored private var edited: Set<Field> = []
     @ObservationIgnored private var request: Task<Void, Never>?
+    /// The follow-up about the proposal (plan ki-vorschlaege-anpassen, task E1): the request that is running or failed, the
+    /// sentence of the last answer, and the fields before it for one step of "Rückgängig".
+    private(set) var followUpState: FollowUpState = .ready
+    private(set) var followUpReply = ""
+    private(set) var lastFollowUpMessage = ""
+    private(set) var canUndoRevision = false
+    @ObservationIgnored private var undoSnapshot: Snapshot?
+    /// Counts follow-ups and cancellations; an answer for an older count is dropped.
+    @ObservationIgnored private var followUpGeneration = 0
+
+    private struct Snapshot {
+        var title: String
+        var notes: String
+        var due: DueDate?
+        var suggestedFields: Set<Field>
+        var edited: Set<Field>
+    }
 
     /// A shared mail.
     init(mail: MailMessage, summarizer: MailSummarizer, hasConsent: @escaping @MainActor () -> Bool,
@@ -116,18 +133,21 @@ final class MailTaskModel {
     // MARK: Editing
 
     func editTitle(_ value: String) {
+        dropUndo()
         title = value
         edited.insert(.title)
         suggestedFields.remove(.title)
     }
 
     func editNotes(_ value: String) {
+        dropUndo()
         notes = value
         edited.insert(.notes)
         suggestedFields.remove(.notes)
     }
 
     func editDue(_ value: DueDate?) {
+        dropUndo()
         due = value
         edited.insert(.due)
         suggestedFields.remove(.due)
@@ -166,6 +186,94 @@ final class MailTaskModel {
         request?.cancel()
         request = nil
         if phase == .loading { phase = .idle }
+        // A follow-up that is still running is dropped with the sheet: its answer must not arrive anywhere.
+        followUpGeneration += 1
+        if followUpState == .sending { followUpState = .ready }
+    }
+
+    // MARK: Follow-up
+
+    /// "Mit ChatGPT besprechen" is offered with the consent of the summary and while the mail has a text.
+    var canFollowUp: Bool { hasConsent() && !bodyText.isEmpty }
+
+    /// One more request about the proposal: the mail again (subject, sender name, text), the fields as they are now with the ones
+    /// the user set by hand, and the message. A field the answer changes carries the mark "Vorschlag" again, also when the
+    /// user had set it (the message was about it); a field it repeats stays as it is. A due date the answer leaves out stays:
+    /// removing one is done by hand. One step of "Rückgängig" brings the fields from before back.
+    func revise(_ comment: String) async {
+        let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard canFollowUp, followUpState != .sending, phase != .loading, !comment.isEmpty else { return }
+        lastFollowUpMessage = comment
+        followUpState = .sending
+        followUpGeneration += 1
+        let mine = followUpGeneration
+        let current = MailTaskSuggestion.Normalized(title: title.trimmingCharacters(in: .whitespacesAndNewlines), summary: notes, due: due)
+        var fixed: [String] = []
+        if edited.contains(.title) { fixed.append("title") }
+        if edited.contains(.notes) { fixed.append("summary") }
+        if edited.contains(.due) { fixed.append("due") }
+        do {
+            let answer = try await summarizer.revise(subject: subject, senderName: senderName, body: bodyText, current: current,
+                                                     fixed: fixed, comment: comment)
+            guard mine == followUpGeneration else { return }
+            applyRevision(answer, current: current)
+            followUpState = .ready
+        } catch is CancellationError {
+            if mine == followUpGeneration { followUpState = .ready }
+        } catch let failure as MailSummarizer.Failure {
+            guard mine == followUpGeneration else { return }
+            followUpState = .failed(failure.message)
+        } catch {
+            guard mine == followUpGeneration else { return }
+            followUpState = .failed(MailSummarizer.Failure.failed.message)
+        }
+    }
+
+    private func applyRevision(_ answer: MailTaskSuggestion.Normalized, current: MailTaskSuggestion.Normalized) {
+        let before = Snapshot(title: title, notes: notes, due: due, suggestedFields: suggestedFields, edited: edited)
+        var changed = false
+        if answer.title != current.title {
+            title = answer.title
+            suggestedFields.insert(.title)
+            edited.remove(.title)
+            changed = true
+        }
+        if answer.summary != current.summary {
+            notes = answer.summary
+            if notes.isEmpty { suggestedFields.remove(.notes) } else { suggestedFields.insert(.notes) }
+            edited.remove(.notes)
+            changed = true
+        }
+        if let newDue = answer.due, newDue != current.due {
+            due = newDue
+            suggestedFields.insert(.due)
+            edited.remove(.due)
+            changed = true
+        }
+        if changed {
+            undoSnapshot = before
+            canUndoRevision = true
+            followUpReply = String(localized: "Vorschlag überarbeitet.")
+        } else {
+            followUpReply = String(localized: "Keine Änderung.")
+        }
+    }
+
+    /// "Rückgängig": the fields as they were before the last answer, with their marks.
+    func undoRevision() {
+        guard let before = undoSnapshot else { return }
+        title = before.title
+        notes = before.notes
+        due = before.due
+        suggestedFields = before.suggestedFields
+        edited = before.edited
+        dropUndo()
+        followUpReply = ""
+    }
+
+    private func dropUndo() {
+        undoSnapshot = nil
+        canUndoRevision = false
     }
 
     private func fetch() async {

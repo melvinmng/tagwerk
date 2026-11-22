@@ -26,6 +26,12 @@ public struct MailTaskSuggestion: Codable, Sendable, Equatable {
         public var title: String
         public var summary: String
         public var due: DueDate?
+
+        public init(title: String, summary: String, due: DueDate?) {
+            self.title = title
+            self.summary = summary
+            self.due = due
+        }
     }
 
     private static let address = try! NSRegularExpression(pattern: #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+"#)  // swiftlint:disable:this force_try
