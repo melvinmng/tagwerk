@@ -8726,6 +8726,16 @@
         }
       }
     },
+    "Einteilung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories revised."
+          }
+        }
+      }
+    },
     "Eintrag gelöscht": {
       "localizations": {
         "en": {
@@ -11232,6 +11242,16 @@
         }
       }
     },
+    "Gröber einteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group more roughly"
+          }
+        }
+      }
+    },
     "Größere Portion": {
       "localizations": {
         "en": {
@@ -12236,12 +12256,32 @@
         }
       }
     },
+    "Kategorie wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose category"
+          }
+        }
+      }
+    },
     "keine Erinnerungen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "no reminders"
+          }
+        }
+      }
+    },
+    "Keine neuen Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new categories"
           }
         }
       }
@@ -14138,6 +14178,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort and translate with ChatGPT"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu diesem Artikel schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this item"
           }
         }
       }
@@ -17187,6 +17237,16 @@
         }
       }
     },
+    "Senden gibt die Namen deiner offenen Artikel und deiner Kategorien, den Vorschlag mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the names of your open items and of your categories, the proposal with your changes and your message to ChatGPT. Amounts are not sent."
+          }
+        }
+      }
+    },
     "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": {
       "localizations": {
         "en": {
@@ -19024,6 +19084,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write something about the recipe …"
+          }
+        }
+      }
+    },
+    "Zur Einteilung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the categories …"
           }
         }
       }

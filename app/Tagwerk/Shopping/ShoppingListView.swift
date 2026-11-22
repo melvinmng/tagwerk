@@ -36,7 +36,7 @@ struct ShoppingListView: View {
     /// The proposal of one request, identifiable for the result sheet.
     private struct SortProposal: Identifiable {
         let id = UUID()
-        let value: ShoppingSorter.Proposal
+        let draft: ShoppingSortDraft
     }
 
     init(model: ShoppingModel) {
@@ -164,7 +164,7 @@ struct ShoppingListView: View {
                 RecipeSheet(model: model) { notice = $0 }
             }
             .sheet(item: $proposal) { proposal in
-                ShoppingSortResultSheet(proposal: proposal.value) { selected in
+                ShoppingSortResultSheet(draft: proposal.draft) { selected in
                     ShoppingSorter.apply(selected, categories: environment.shoppingCategories, model: model)
                     self.proposal = nil
                 } onDiscard: {
@@ -484,7 +484,12 @@ struct ShoppingListView: View {
                 let result = try await environment.shoppingSorter.sort(request, current: current)
                 // A cancelled request must not show a late answer.
                 guard !Task.isCancelled else { return }
-                proposal = SortProposal(value: result)
+                // The follow-up sends the same names again and checks every answer against them.
+                let sorter = environment.shoppingSorter
+                let draft = ShoppingSortDraft(proposal: result, request: request, current: current) { request, current, proposal, pinned, focus, comment in
+                    try await sorter.revise(request, current: current, proposal: proposal, pinned: pinned, focus: focus, comment: comment)
+                }
+                proposal = SortProposal(draft: draft)
             } catch let failure as ShoppingSorter.Failure {
                 if !Task.isCancelled { notice = failure.message }
             } catch {
