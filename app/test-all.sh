@@ -6,6 +6,10 @@
 # and in the iOS simulator otherwise; PACKAGE_TEST_PLATFORM below lists the choice per package. The app stage builds all
 # packages for iOS in any case, so they stay compilable for the phone.
 #
+# The app and UI stages build once with "xcodebuild build-for-testing" and run the tests with "xcodebuild
+# test-without-building" (the same arguments, the same DerivedData folder). The UI build runs before the UI stage lock is
+# taken, so the lock only covers the test run. TAGWERK_BUILD_ONLY runs exactly the build half of every stage.
+#
 # Gate rule: CI (GitHub Actions, jobs "Tests (fast)" and "Tests (ui)") is the gate before a merge.
 # Locally, run the fast stages after every commit (TAGWERK_SKIP_UI_TESTS=1) and, while working on a screen, only the
 # UI test classes the change touches (TAGWERK_UI_ONLY). The full local UI run is only the fallback when CI is
@@ -15,7 +19,8 @@
 #   TAGWERK_SKIP_UI_TESTS=1    skip the UI test stage (fast local iterations)
 #   TAGWERK_DEVELOPER_DIR      Xcode developer directory instead of /Applications/Xcode.app
 #   TAGWERK_ONLY_UI_TESTS=1    run only the UI test stage (no package stages, no app unit tests, no String Catalog check)
-#   TAGWERK_TEST_RESULTS_DIR   folder for one .xcresult bundle per stage (see run_tests)
+#   TAGWERK_TEST_RESULTS_DIR   folder for the .xcresult bundles: one per stage for the tests (<stage>.xcresult) and one for
+#                              the build of a stage that builds separately (<stage>-build.xcresult)
 #   TAGWERK_TEST_SIMULATOR     simulator name or UDID instead of a slot of the simulator pool (see scripts/test-env.sh)
 #   TAGWERK_KEEP_SIMULATOR=1   leave the pool simulator booted at the end of the run (it is shut down otherwise)
 #   TAGWERK_BUILD_ONLY=1       build, do not test: every stage that would run tests runs xcodebuild build-for-testing
@@ -48,17 +53,20 @@ CURRENT_STAGE="setup"
 # Test target that contains the UI tests; -only-testing and -skip-testing entries are prefixed with it.
 UI_TEST_TARGET="TagwerkUITests"
 
-# Where the tests of each package run. "macos": xcodebuild test with the destination platform=macOS, no simulator needed;
-# the package must declare .macOS(...) in its Package.swift and build without conditional code for it. "simulator" (also
-# the default for packages that are not listed): the iOS simulator of the run.
-#   AIKit stays on the simulator: Sources/AIKit/ChatGPTLogin.swift imports UIKit (ASWebAuthenticationSession presentation).
+# Where the tests of each package run:
+#   macos        xcodebuild test with the destination platform=macOS, no simulator needed; the package must declare
+#                .macOS(...) in its Package.swift and build without conditional code for it
+#   app-scheme   the package test target is part of the scheme Tagwerk (app/project.yml, "package: <Name>/<Name>Tests") and
+#                runs in the simulator together with the app tests: one build graph and one DerivedData folder
+#   simulator    xcodebuild test in the iOS simulator of the run (default for packages that are not listed)
+#   AIKit needs the simulator: Sources/AIKit/ChatGPTLogin.swift imports UIKit (ASWebAuthenticationSession presentation).
 typeset -A PACKAGE_TEST_PLATFORM
 PACKAGE_TEST_PLATFORM=(
   TagwerkCore macos
   GitHubKit macos
   RemindersKit macos
   HealthBridge macos
-  AIKit simulator
+  AIKit app-scheme
 )
 MACOS_DESTINATION="platform=macOS"
 
@@ -176,9 +184,12 @@ fi
 # Sourced by scripts/tests/test-all-ui-selection.zsh: only the functions above are needed, not the test run.
 if [[ -n "${TAGWERK_SOURCE_ONLY:-}" ]]; then return 0; fi
 
+# Phase of the last failed xcodebuild call ("build" or "test"), set by build_for_testing and run_tests.
+FAILED_PHASE=""
+
 # Reports the failing stage and stops the script.
 stage_failed() {
-  if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+  if [[ -n "${TAGWERK_BUILD_ONLY:-}" || "$FAILED_PHASE" == "build" ]]; then
     echo "BUILD FAILED in stage: $CURRENT_STAGE" >&2
   else
     echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
@@ -208,58 +219,76 @@ if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
   echo "    build only (TAGWERK_BUILD_ONLY): build-for-testing, no tests are run"
 fi
 
-# Runs xcodebuild test, keeps the full log and fails when no test was executed.
+# Runs xcodebuild <verb> for the tests of a stage, keeps the full log and fails when no test was executed. The verb is
+# "test" (build and test in one call, used for the package stages) or "test-without-building" (the test half after
+# build_for_testing, which started the log of the stage; this output is appended to it). Usage: run_tests VERB ARGS...
 run_tests() {
+  local verb="$1"; shift
   local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
   # The result bundle name is unique per stage because xcodebuild refuses to overwrite an existing bundle.
   local result_args=()
   if [[ -n "$RESULTS_DIR" ]]; then
     result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}.xcresult")
   fi
+  [[ "$verb" == "test-without-building" ]] || : > "$log"
+  local started=$SECONDS
   # German is the source language; tests expect German texts and formats (plan english-app, Task 1).
-  if ! xcodebuild test -testLanguage de -testRegion DE "${result_args[@]}" "$@" > "$log" 2>&1; then
+  if ! xcodebuild "$verb" -testLanguage de -testRegion DE "${result_args[@]}" "$@" >> "$log" 2>&1; then
+    FAILED_PHASE="test"
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
   fi
+  local elapsed=$((SECONDS - started))
   # Swift Testing prints "Test run with N tests", XCTest prints "Executed N tests". A bundle can print both, one of
-  # them with 0 (e.g. UI tests: XCTest only), so the run counts as empty only when no summary reports a test.
-  local summary="" line count
+  # them with 0 (e.g. UI tests: XCTest only), so the run counts as empty only when no summary reports a test. A scheme
+  # with several test bundles prints one summary per bundle: all of them are listed, followed by the total.
+  local line count summaries=() total=0
   while IFS= read -r line; do
     count=$(print -r -- "$line" | sed -nE 's/.*Test run with ([0-9]+) tests?.*/\1/p; s/.*Executed ([0-9]+) tests?,.*/\1/p' | head -n 1)
-    if [[ -n "$count" && "$count" -gt 0 ]]; then summary="$line"; fi
+    if [[ -n "$count" && "$count" -gt 0 ]]; then
+      line="${line##*] }"
+      summaries+=("${line//$'\t'/}")
+      total=$((total + count))
+    fi
   done < <(grep -E "Test run with [0-9]+ tests?|Executed [0-9]+ tests?," "$log" | grep -v "Test Suite")
-  if [[ -z "$summary" ]]; then
+  if (( ${#summaries} == 0 )); then
+    FAILED_PHASE="test"
     echo "No tests were executed (log: $log)" >&2
     return 1
   fi
-  summary="${summary##*] }"
-  echo "    ${summary//$'\t'/}"
+  for line in "${summaries[@]}"; do echo "    $line"; done
+  if (( ${#summaries} > 1 )); then echo "    $total tests in ${#summaries} test bundles in total"; fi
+  echo "    test run took $elapsed s"
 }
 
-# Build-only counterpart of run_tests: xcodebuild build-for-testing with the same arguments, log file and result bundle
-# naming. "xcodebuild test" is "build-for-testing" followed by "test-without-building", so the build products and the
-# DerivedData state are the same; only the test execution (and the test language and region it needs) is left out.
+# Runs xcodebuild build-for-testing and keeps the full log of the stage (it starts the log; run_tests appends the test
+# output to it). Both the test runs and TAGWERK_BUILD_ONLY (the CI jobs that refresh the build cache) use this one
+# function with the same arguments, so the build products and the DerivedData state are the ones a test run needs.
+# Usage: build_for_testing ARGS...
 build_for_testing() {
   local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
   local result_args=()
   if [[ -n "$RESULTS_DIR" ]]; then
-    result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}.xcresult")
+    result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}-build.xcresult")
   fi
+  local started=$SECONDS
   if ! xcodebuild build-for-testing "${result_args[@]}" "$@" > "$log" 2>&1; then
+    FAILED_PHASE="build"
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
   fi
-  echo "    build succeeded (log: $log)"
+  echo "    build succeeded in $((SECONDS - started)) s (log: $log)"
 }
 
-# Runs a stage: tests normally, only the build with TAGWERK_BUILD_ONLY=1. Takes the xcodebuild arguments of the stage.
+# Runs a package stage: build and test in one xcodebuild call, only the build with TAGWERK_BUILD_ONLY=1. A package has its
+# own build graph, so there is nothing to share and nothing to do between build and test.
 run_stage() {
   if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
     build_for_testing "$@"
   else
-    run_tests "$@"
+    run_tests test "$@"
   fi
 }
 
@@ -290,14 +319,24 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
   fi
   cd "$package_dir"
   package_destination="$DESTINATION"
-  if [[ "${PACKAGE_TEST_PLATFORM[$package_name]:-simulator}" == "macos" ]]; then
-    if ! grep -q '\.macOS(' "$package_dir/Package.swift"; then
-      echo "    $package_name is listed for macOS in PACKAGE_TEST_PLATFORM but Package.swift declares no macOS platform" >&2
-      stage_failed
-    fi
-    package_destination="$MACOS_DESTINATION"
-    echo "    tests run on macOS (no simulator)"
-  fi
+  case "${PACKAGE_TEST_PLATFORM[$package_name]:-simulator}" in
+    macos)
+      if ! grep -q '\.macOS(' "$package_dir/Package.swift"; then
+        echo "    $package_name is listed for macOS in PACKAGE_TEST_PLATFORM but Package.swift declares no macOS platform" >&2
+        stage_failed
+      fi
+      package_destination="$MACOS_DESTINATION"
+      echo "    tests run on macOS (no simulator)"
+      ;;
+    app-scheme)
+      if ! grep -qE "package: *$package_name/${package_name}Tests" "$SCRIPT_DIR/project.yml"; then
+        echo "    $package_name is listed for the app scheme in PACKAGE_TEST_PLATFORM but app/project.yml does not run ${package_name}Tests in the scheme Tagwerk" >&2
+        stage_failed
+      fi
+      echo "    tests run in the app scheme (stage app scheme Tagwerk)"
+      continue
+      ;;
+  esac
   scheme=$(resolve_package_scheme "$package_name") || stage_failed
   run_stage -scheme "$scheme" -destination "$package_destination" || stage_failed
 done
@@ -312,33 +351,41 @@ echo "==> $CURRENT_STAGE"
 if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
   echo "    skipped (TAGWERK_ONLY_UI_TESTS)"
 else
-  run_stage -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+  # The scheme also runs the tests of the packages that need the simulator (AIKit). One build, then the tests.
+  APP_ARGS=(-project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED")
+  build_for_testing "${APP_ARGS[@]}" || stage_failed
+  if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
+    run_tests test-without-building "${APP_ARGS[@]}" || stage_failed
+  fi
 fi
 
 CURRENT_STAGE="app UI tests"
 echo "==> $CURRENT_STAGE"
 if [[ -n "${TAGWERK_SKIP_UI_TESTS:-}" ]]; then
   echo "    skipped (TAGWERK_SKIP_UI_TESTS)"
-elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
-  # Same scheme, destination and derived data folder as the test run below, so it builds the app and the UI test runner
-  # exactly as the test run would. No simulator boot, permissions or test selection: nothing is executed.
-  build_for_testing -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
 else
-  # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).
-  tagwerk_acquire_ui_lock || exit 2
-  # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
-  # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
-  tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
-  build_ui_selection_args || stage_failed
-  ui_status=0
-  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" \
-    "${UI_SELECTION_ARGS[@]}" || ui_status=$?
-  # The list is reported even when the stage fails: a test that wobbles twice in one run is worth knowing about.
-  if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
-    report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
+  # Same scheme, destination and derived data folder for the build and the test run. The build comes first and without
+  # the UI stage lock: waiting for another UI stage does not delay it, and the lock only covers the test run. With
+  # TAGWERK_BUILD_ONLY nothing else happens (no simulator boot, permissions or test selection: nothing is executed).
+  UI_ARGS=(-project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED")
+  # An invalid selection is reported before the build, not after it.
+  if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then build_ui_selection_args || stage_failed; fi
+  build_for_testing "${UI_ARGS[@]}" || stage_failed
+  if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
+    # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).
+    tagwerk_acquire_ui_lock || exit 2
+    # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
+    # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
+    tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
+    ui_status=0
+    run_tests test-without-building "${UI_ARGS[@]}" "${UI_SELECTION_ARGS[@]}" || ui_status=$?
+    # The list is reported even when the stage fails: a test that wobbles twice in one run is worth knowing about.
+    if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
+      report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
+    fi
+    tagwerk_release_ui_lock
+    (( ui_status == 0 )) || stage_failed
   fi
-  tagwerk_release_ui_lock
-  (( ui_status == 0 )) || stage_failed
 fi
 
 CURRENT_STAGE="string catalogs"

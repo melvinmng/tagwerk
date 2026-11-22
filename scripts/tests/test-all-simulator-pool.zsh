@@ -27,6 +27,9 @@ print -r -- "xcodebuild $*" >> "$STUB_CALLS"
 case "$*" in
   *-list*) print '{"workspace": {"schemes": []}}' ;;
   *-showBuildSettings*) print '    PRODUCT_BUNDLE_IDENTIFIER = de.tagwerk.stub' ;;
+  build-for-testing*TagwerkUITests*)
+    print "ui-stage lock during the UI build: $(cat "$TAGWERK_LOCK_DIR/ui-stage.lock/pid" 2>/dev/null || print none)" >> "$STUB_CALLS"
+    ;;
   test*)
     # Records which locks exist while a test stage runs, then reports one executed test.
     case "$*" in
@@ -91,8 +94,10 @@ print -- "-- a full run takes slot 1, runs the UI stage under the UI lock and sh
 rm -rf "$LOCK_DIR"
 check "run succeeds" "0" "$(run_script)"
 check "the destination is the simulator of slot 1" "1" "$(grep -c 'setup: platform=iOS Simulator,id=UDID-SLOT-1' "$WORK_DIR/output.txt")"
-check "the app stage uses it" "1" "$(calls_matching "xcodebuild test .*-scheme Tagwerk -destination platform=iOS Simulator,id=UDID-SLOT-1")"
+check "the app stage builds and tests with it" "1 1" \
+  "$(calls_matching "xcodebuild build-for-testing .*-scheme Tagwerk -destination platform=iOS Simulator,id=UDID-SLOT-1") $(calls_matching "xcodebuild test-without-building .*-scheme Tagwerk -destination platform=iOS Simulator,id=UDID-SLOT-1")"
 check "package stages for macOS do not use it" "0" "$(calls_matching "xcodebuild test -testLanguage de -testRegion DE -scheme TagwerkCore -destination platform=iOS")"
+check "the UI build runs before the UI lock is taken" "1" "$(calls_matching 'ui-stage lock during the UI build: none')"
 check "the UI stage runs while this run holds the UI lock" "1" "$(calls_matching 'ui-stage lock during the UI tests: [0-9]')"
 check "the simulator is booted for the UI stage" "1" "$(calls_matching 'xcrun simctl boot UDID-SLOT-1')"
 check "the simulator is shut down at the end" "1" "$(calls_matching 'xcrun simctl shutdown UDID-SLOT-1')"
@@ -109,13 +114,14 @@ check "the other holder keeps slot 1" "$OTHER_PID" "$(holder_of slot-1.lock)"
 print -- "-- all slots busy"
 rm -rf "$LOCK_DIR"; hold slot-1.lock "$OTHER_PID"; hold slot-2.lock "$OTHER_PID"; hold slot-3.lock "$OTHER_PID"
 check "the run gives up with exit code 2" "2" "$(run_script TAGWERK_SKIP_UI_TESTS=1)"
-check "no build or test ran" "0" "$(calls_matching 'xcodebuild test')"
+check "no build or test ran" "0" "$(calls_matching 'xcodebuild \(test\|build\)')"
 check "the message names the full pool" "1" "$(grep -c 'All 3 simulator slots are in use' "$WORK_DIR/output.txt")"
 
 print -- "-- the UI stage waits for another UI stage"
 rm -rf "$LOCK_DIR"; hold ui-stage.lock "$OTHER_PID"
 check "the run gives up with exit code 2" "2" "$(run_script TAGWERK_ONLY_UI_TESTS=1)"
-check "the UI tests did not start" "0" "$(calls_matching 'xcodebuild test .*TagwerkUITests')"
+check "the UI tests did not start" "0" "$(calls_matching 'xcodebuild test-without-building .*TagwerkUITests')"
+check "the UI build still ran before the wait for the other UI stage" "1" "$(calls_matching 'xcodebuild build-for-testing .*TagwerkUITests')"
 check "the simulator of the run is still shut down" "1" "$(calls_matching 'xcrun simctl shutdown UDID-SLOT-1')"
 check "the foreign UI lock is untouched" "$OTHER_PID" "$(holder_of ui-stage.lock)"
 check "the run without UI stage does not wait for it" "0" "$(run_script TAGWERK_SKIP_UI_TESTS=1)"
