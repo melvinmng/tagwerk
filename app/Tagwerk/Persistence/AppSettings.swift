@@ -158,6 +158,8 @@ final class AppSettings {
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil
     var focusQuietCatchUpAt: Date? = nil
+    /// Upper bound of the catch-up window, see `FocusQuiet.State.catchUpUntil`.
+    var focusQuietCatchUpUntil: Date? = nil
 
     /// Focus timer (plan P3, #161): durations of the phases, the number of rounds and whether breaks are used at all.
     var focusWorkMinutes: Int = 25
@@ -361,11 +363,15 @@ extension AppSettings {
 
     /// The Focus filter state, see `FocusQuiet`.
     var focusQuietState: FocusQuiet.State {
-        get { FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt) }
+        get {
+            FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt,
+                             catchUpUntil: focusQuietCatchUpUntil)
+        }
         set {
             focusQuietSince = newValue.since
             focusQuietCatchUpFrom = newValue.catchUpFrom
             focusQuietCatchUpAt = newValue.catchUpAt
+            focusQuietCatchUpUntil = newValue.catchUpUntil
         }
     }
 

@@ -13,15 +13,22 @@ public struct FocusHold: Sendable, Hashable {
     }
 }
 
-/// After a Focus filter ended: what came due since `from` while it was held back fires once at `at`.
+/// After a Focus filter ended: what came due since `from` while it was held back fires once at `at`. The window of what
+/// counts as held ends at `until` when there is one: a later Focus that was held to its own target delivered what came due
+/// after `until` already. Without `until` the window ends at `at`.
 public struct FocusCatchUp: Sendable, Hashable {
     public let from: Date
     public let at: Date
+    public let until: Date?
 
-    public init(from: Date, at: Date) {
+    public init(from: Date, at: Date, until: Date? = nil) {
         self.from = from
         self.at = at
+        self.until = until
     }
+
+    /// The end of the window: what came due from `from` up to here fires at `at`.
+    public var windowEnd: Date { min(until ?? at, at) }
 }
 
 /// Rules of the Focus filter "Mitteilungen zurückhalten". iOS tells the app only when a Focus filter starts and when it
@@ -42,11 +49,16 @@ public enum FocusQuiet {
         /// When they fire; chosen by the first notification run after the end and then kept, so repeated runs plan the same
         /// moment and nothing fires twice.
         public var catchUpAt: Date?
+        /// Upper bound of what the catch-up replays: set when another Focus starts while the catch-up is still waiting. That
+        /// Focus is held to its own target and delivers what comes due in it, so the catch-up must not replay it. `nil`
+        /// means no bound: the catch-up reaches up to `catchUpAt`.
+        public var catchUpUntil: Date?
 
-        public init(since: Date? = nil, catchUpFrom: Date? = nil, catchUpAt: Date? = nil) {
+        public init(since: Date? = nil, catchUpFrom: Date? = nil, catchUpAt: Date? = nil, catchUpUntil: Date? = nil) {
             self.since = since
             self.catchUpFrom = catchUpFrom
             self.catchUpAt = catchUpAt
+            self.catchUpUntil = catchUpUntil
         }
     }
 
@@ -54,14 +66,22 @@ public enum FocusQuiet {
     /// keeps its start. The end hands the start over to the catch-up only while the fallback target has not passed:
     /// what was held has been delivered at the target otherwise, and what came due after it was never held, so a catch-up
     /// would deliver it a second time. A start that is too old is dropped without catch-up.
+    ///
+    /// A catch-up that still waits when the next Focus starts is closed at that start (`catchUpUntil`). If the next Focus
+    /// ends before its target, its span is not delivered yet and joins the catch-up (the bound falls away); if it ends after
+    /// the target, it delivered its own span and the bound keeps the catch-up from replaying it.
     public static func applying(active: Bool, now: Date, to state: State, quietHours: QuietHours? = nil,
                                 calendar: Calendar = .current) -> State {
         var next = dropping(staleIn: state, now: now)
         if active {
-            next.since = next.since ?? now
+            if next.since == nil {
+                next.since = now
+                if next.catchUpFrom != nil, next.catchUpUntil == nil { next.catchUpUntil = now }
+            }
         } else if let since = next.since {
             if fallbackTarget(since: since, quietHours: quietHours, calendar: calendar) > now {
                 next.catchUpFrom = min(since, next.catchUpFrom ?? since)
+                next.catchUpUntil = nil
             }
             next.catchUpAt = nil
             next.since = nil
@@ -78,10 +98,11 @@ public enum FocusQuiet {
         guard at > now else {
             next.catchUpFrom = nil
             next.catchUpAt = nil
+            next.catchUpUntil = nil
             return (next, nil)
         }
         next.catchUpAt = at
-        return (next, FocusCatchUp(from: from, at: at))
+        return (next, FocusCatchUp(from: from, at: at, until: next.catchUpUntil))
     }
 
     /// The state without a start older than `maximumAge` and without a catch-up whose moment has passed: that catch-up
@@ -92,6 +113,7 @@ public enum FocusQuiet {
         if let at = next.catchUpAt, at <= now {
             next.catchUpFrom = nil
             next.catchUpAt = nil
+            next.catchUpUntil = nil
         }
         return next
     }
