@@ -47,7 +47,7 @@ struct NotificationPlanQuietHoursTests {
     @Test func taskInTheWindow_firesAtTheEnd_andSaysItWasDue() {
         let result = plan([task("A", day: 18, hour: 23, minute: 30)], rules: rules(quietHours: night))
         #expect(result.map(\.fireDate) == [at(19, 7)])
-        #expect(result.first?.body == "War fällig gestern um 23:30 · Lokal")
+        #expect(result.first?.body == "Seit gestern, 23:30 fällig · Lokal")
     }
 
     @Test func taskDueAfterTheEnd_isMovedButNotOverdue() {
@@ -60,7 +60,7 @@ struct NotificationPlanQuietHoursTests {
     @Test func taskDueInsideTheWindow_afterMidnight_isOverdueToday() {
         let result = plan([task("A", day: 19, hour: 1)], rules: rules(quietHours: night))
         #expect(result.map(\.fireDate) == [at(19, 7)])
-        #expect(result.first?.body == "War fällig heute um 01:00 · Lokal")
+        #expect(result.first?.body == "Seit heute, 01:00 fällig · Lokal")
     }
 
     @Test func fireAtTheEnd_isNotMoved() {
@@ -82,7 +82,7 @@ struct NotificationPlanQuietHoursTests {
         let day = QuietHours(startMinutes: 8 * 60 + 30, endMinutes: 0)
         let result = plan([task("A", day: 19)], rules: rules(quietHours: day))
         #expect(result.map(\.fireDate) == [at(20, 0)])
-        #expect(result.first?.body == "War fällig gestern · Lokal")
+        #expect(result.first?.body == "Seit gestern fällig · Lokal")
     }
 
     @Test func overdueTextTwoDaysBack_namesTheDate() {
@@ -91,7 +91,53 @@ struct NotificationPlanQuietHoursTests {
         let hold = FocusHold(from: at(18, 8), until: at(20, 7))
         let result = plan([task("A", day: 18, hour: 12)], rules: rules(hold: hold))
         #expect(result.first?.fireDate == at(20, 7))
-        #expect(result.first?.body == "War fällig am Mi., 18.11. um 12:00 · Lokal")
+        #expect(result.first?.body == "Seit Mi., 18.11., 12:00 fällig · Lokal")
+    }
+
+    // MARK: Texts of moved notifications (RH2b)
+
+    private func englishPlan(_ tasks: [TaskItem] = [], events: [CalendarEvent] = [], rules: NotificationRules) -> [PlannedNotification] {
+        notificationPlan(tasks: tasks, deadlineEvents: events, rules: rules, now: now, calendar: calendar,
+                         locale: Locale(identifier: "en_US"))
+    }
+
+    /// The English clock uses a narrow no-break space before "PM" on current systems.
+    private func normalized(_ text: String?) -> String? {
+        text?.replacingOccurrences(of: "\u{202F}", with: " ")
+    }
+
+    @Test func movedTexts_german_sayHowLongItIsDue() {
+        let timed = plan([task("A", day: 18, hour: 23, minute: 30)], rules: rules(quietHours: night))
+        #expect(timed.first?.body == "Seit gestern, 23:30 fällig · Lokal")
+        let dateOnly = QuietHours(startMinutes: 8 * 60 + 30, endMinutes: 0)
+        let untimed = plan([task("B", day: 19)], rules: rules(quietHours: dateOnly))
+        #expect(untimed.first?.body == "Seit gestern fällig · Lokal")
+        let deadline = plan(events: [event("klausur", start: at(18, 23, 30))], rules: rules(quietHours: night))
+        #expect(deadline.first?.body == "Deadline seit gestern, 23:30 abgelaufen")
+        let allDay = plan(events: [event("tag", start: at(19, 0), allDay: true)],
+                          rules: rules(leadTime: 0, hold: FocusHold(from: at(18, 8), until: at(20, 7))))
+        #expect(allDay.first?.body == "Deadline seit gestern abgelaufen")
+    }
+
+    @Test func movedTexts_english_matchTheGermanOnes() {
+        let timed = englishPlan([task("A", day: 18, hour: 23, minute: 30)], rules: rules(quietHours: night))
+        #expect(normalized(timed.first?.body) == "Due since yesterday, 11:30 PM · Lokal")
+        let dateOnly = QuietHours(startMinutes: 8 * 60 + 30, endMinutes: 0)
+        let untimed = englishPlan([task("B", day: 19)], rules: rules(quietHours: dateOnly))
+        #expect(untimed.first?.body == "Due since yesterday · Lokal")
+        let older = englishPlan([task("C", day: 18, hour: 12)], rules: rules(hold: FocusHold(from: at(18, 8), until: at(20, 7))))
+        #expect(normalized(older.first?.body) == "Due since Wed, 11/18, 12:00 PM · Lokal")
+        let deadline = englishPlan(events: [event("klausur", start: at(18, 23, 30))], rules: rules(quietHours: night))
+        #expect(normalized(deadline.first?.body) == "Deadline passed yesterday, 11:30 PM")
+        let allDay = englishPlan(events: [event("tag", start: at(19, 0), allDay: true)],
+                                 rules: rules(leadTime: 0, hold: FocusHold(from: at(18, 8), until: at(20, 7))))
+        #expect(allDay.first?.body == "Deadline passed yesterday")
+    }
+
+    @Test func notMovedTexts_stayAsTheyWere() {
+        #expect(plan([task("A", day: 18, hour: 23, minute: 30)], rules: rules()).first?.body == "Fällig heute um 23:30 · Lokal")
+        #expect(plan(events: [event("klausur", start: at(19, 8, 30))], rules: rules(leadTime: 120, quietHours: night)).first?.body
+                == "Deadline heute um 08:30")
     }
 
     // MARK: Events
@@ -99,7 +145,7 @@ struct NotificationPlanQuietHoursTests {
     @Test func timedEvent_inTheWindow_firesAtTheEnd() {
         let result = plan(events: [event("klausur", start: at(19, 2))], rules: rules(leadTime: 120, quietHours: night))
         #expect(result.map(\.fireDate) == [at(19, 7)])
-        #expect(result.first?.body == "Deadline war heute um 02:00")
+        #expect(result.first?.body == "Deadline seit heute, 02:00 abgelaufen")
     }
 
     @Test func timedEvent_startingAfterTheEnd_keepsTheNormalText() {
@@ -180,7 +226,7 @@ struct NotificationPlanQuietHoursTests {
         let result = plan(tasks, rules: rules(hold: hold))
         #expect(result.map(\.title) == ["Heute", "Morgen"])
         #expect(result.map(\.fireDate) == [at(19, 7), at(19, 12)])
-        #expect(result.first?.body == "War fällig gestern um 14:00 · Lokal")
+        #expect(result.first?.body == "Seit gestern, 14:00 fällig · Lokal")
     }
 
     @Test func focusHold_endingInsideTheQuietHours_isMovedOnToTheirEnd() {
@@ -199,7 +245,7 @@ struct NotificationPlanQuietHoursTests {
         let result = plan(tasks, rules: catchUpRules, now: later)
         #expect(result.map(\.title) == ["Gehalten", "Später"])
         #expect(result.first?.fireDate == at1201)
-        #expect(result.first?.body == "War fällig heute um 10:00 · Lokal")
+        #expect(result.first?.body == "Seit heute, 10:00 fällig · Lokal")
         // A run half a minute later plans the same moment.
         let again = plan(tasks, rules: catchUpRules, now: later.addingTimeInterval(30))
         #expect(again.map(\.fireDate) == result.map(\.fireDate))
