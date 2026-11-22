@@ -103,7 +103,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | PR #275, Head `43b1ece`; Pakete/App grün, UI lokal rot (Sonntags-DT „Wochenplanung starten“, Abbrüche unter Last) → Gate GitHub. Offen: Fokus-Filter-Text „4 h“ vs. 8 h ohne Ruhezeit; seltene Doppelzustellung bei Fokus B < 1 min nach A |
 | `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
 | (Integration) | #273, #275, #276 auf main + Texttöne; Fix Sonntags-DT und „+4 weitere“ (`fix/audit-sunday-and-collapsed`) | läuft (Sonnet, nur schnelle Tests) |
-| (G2 NF) | G2 Welle 1, Strang NF | läuft (Sonnet) |
+| `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). Läuft: main + Texttöne (zusammen mit BS) |
+| `chore/leaner-tests` | Tests schlanker Tasks 5, 6, 8 (Pakettests auf macOS, Simulator-Pool, ein Build) | läuft (Sonnet) |
 | `feat/g2-bible-study` | G2 BS1–BS2 | Head `476965f`, schnell grün, gepusht, noch kein PR. Verszahlen-Tabelle vorläufig (Luther-Zählung aus Luther 1545, gemeinfrei/MIT), für Schlachter 2000 nicht belegt → Nutzerentscheidung A/B/C. Agent hat vor dem Lesen der Bedingungen ~410 Seiten von Bibleserver/BibleGateway automatisch abgerufen (laut Bedingungen untersagt), danach gelöscht; nichts davon im Repo |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
 
