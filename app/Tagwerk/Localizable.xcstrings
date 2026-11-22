@@ -174,6 +174,16 @@
         }
       }
     },
+    "%@ Fahrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ travel"
+          }
+        }
+      }
+    },
     "%@ Fett": {
       "localizations": {
         "en": {
@@ -194,12 +204,32 @@
         }
       }
     },
+    "%@ Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ break"
+          }
+        }
+      }
+    },
     "%@ Stunden": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ hours"
+          }
+        }
+      }
+    },
+    "%@ Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ events"
           }
         }
       }
@@ -300,16 +330,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ logged"
-          }
-        }
-      }
-    },
-    "%@ Fahrzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ travel"
           }
         }
       }
@@ -436,22 +456,22 @@
         }
       }
     },
-    "%@ nicht mehr": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ removed"
-          }
-        }
-      }
-    },
     "%@ nach Hause": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ home"
+          }
+        }
+      }
+    },
+    "%@ nicht mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ removed"
           }
         }
       }
@@ -544,16 +564,6 @@
         }
       }
     },
-    "%@ Pause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ break"
-          }
-        }
-      }
-    },
     "%@ planen": {
       "localizations": {
         "en": {
@@ -631,16 +641,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ is already on the list"
-          }
-        }
-      }
-    },
-    "%@ Termine": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ events"
           }
         }
       }
@@ -745,22 +745,22 @@
         }
       }
     },
-    "%@ zu viel": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ over"
-          }
-        }
-      }
-    },
     "%@ zu früh": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ early"
+          }
+        }
+      }
+    },
+    "%@ zu viel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over"
           }
         }
       }
@@ -1495,16 +1495,6 @@
         }
       }
     },
-    "%lld eigene Erinnerungen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld custom reminders"
-          }
-        }
-      }
-    },
     "%lld Einträge": {
       "localizations": {
         "de": {
@@ -1885,46 +1875,6 @@
         }
       }
     },
-    "%lld Termine, %@ bis %@: %@": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Termin, %@ bis %@: %@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Termine, %@ bis %@: %@"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld event, %@ to %@: %@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld events, %@ to %@: %@"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld Termine · %@": {
       "localizations": {
         "de": {
@@ -1958,6 +1908,46 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld events · %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Termine, %@ bis %@: %@": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termin, %@ bis %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Termine, %@ bis %@: %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld event, %@ to %@: %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld events, %@ to %@: %@"
                 }
               }
             }
@@ -2213,6 +2203,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
+          }
+        }
+      }
+    },
+    "%lld eigene Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld custom reminders"
           }
         }
       }
@@ -2715,6 +2715,16 @@
         }
       }
     },
+    "%lld von %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld min"
+          }
+        }
+      }
+    },
     "%lld von %lld min Tageslicht": {
       "localizations": {
         "de": {
@@ -2727,16 +2737,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld of %2$lld min daylight"
-          }
-        }
-      }
-    },
-    "%lld von %lld min": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld of %lld min"
           }
         }
       }
@@ -3352,22 +3352,22 @@
         }
       }
     },
-    "1 Artikel wurde inzwischen geändert und bleibt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 item has changed in the meantime and stays."
-          }
-        }
-      }
-    },
     "+%lld weitere": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "+%lld more"
+          }
+        }
+      }
+    },
+    "1 Artikel wurde inzwischen geändert und bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 item has changed in the meantime and stays."
           }
         }
       }
@@ -3388,16 +3388,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 task from it"
-          }
-        }
-      }
-    },
-    "1 eigene Erinnerung": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 custom reminder"
           }
         }
       }
@@ -3428,6 +3418,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 event"
+          }
+        }
+      }
+    },
+    "1 eigene Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 custom reminder"
           }
         }
       }
@@ -3698,26 +3698,6 @@
         }
       }
     },
-    "Adresse nicht gefunden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Address not found"
-          }
-        }
-      }
-    },
-    "Adresse wird gesucht …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Searching for the address …"
-          }
-        }
-      }
-    },
     "Adresse löschen": {
       "localizations": {
         "en": {
@@ -3728,12 +3708,32 @@
         }
       }
     },
+    "Adresse nicht gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address not found"
+          }
+        }
+      }
+    },
     "Adresse trotzdem prüfen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Check the address anyway"
+          }
+        }
+      }
+    },
+    "Adresse wird gesucht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching for the address …"
           }
         }
       }
@@ -3958,16 +3958,6 @@
         }
       }
     },
-    "Alle anpassen …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adjust all …"
-          }
-        }
-      }
-    },
     "Alle Artikel sind schon auf Deutsch.": {
       "localizations": {
         "en": {
@@ -4085,6 +4075,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All from this day on"
+          }
+        }
+      }
+    },
+    "Alle anpassen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust all …"
           }
         }
       }
@@ -5331,16 +5331,6 @@
         }
       }
     },
-    "Aufwand ändern": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change effort"
-          }
-        }
-      }
-    },
     "Aufwand geändert: %@ → %@": {
       "localizations": {
         "de": {
@@ -5373,6 +5363,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Effort per day of the series. Currently %@."
+          }
+        }
+      }
+    },
+    "Aufwand ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change effort"
           }
         }
       }
@@ -5477,26 +5477,6 @@
         }
       }
     },
-    "Automatisch sichern": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back up automatically"
-          }
-        }
-      }
-    },
-    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Dauer gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed duration apply only in Tagwerk, also without a network, and take precedence."
-          }
-        }
-      }
-    },
     "Automatisch (Vorheriger Termin)": {
       "localizations": {
         "en": {
@@ -5513,6 +5493,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatic (home)"
+          }
+        }
+      }
+    },
+    "Automatisch berechnet Apple Karten die Fahrzeit. „Keine“ und eine feste Dauer gelten nur in Tagwerk, auch ohne Netz, und haben Vorrang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Maps calculates the travel time automatically. “None” and a fixed duration apply only in Tagwerk, also without a network, and take precedence."
+          }
+        }
+      }
+    },
+    "Automatisch sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up automatically"
           }
         }
       }
@@ -5543,26 +5543,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
-          }
-        }
-      }
-    },
-    "Bei iOS-Fokus zurückhalten": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold during an iOS Focus"
-          }
-        }
-      }
-    },
-    "Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calculated by Apple Maps. Tagwerk does not use your location."
           }
         }
       }
@@ -5603,6 +5583,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start"
+          }
+        }
+      }
+    },
+    "Beginn bei Zielschlafzeit": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start at target bedtime"
           }
         }
       }
@@ -5657,6 +5648,16 @@
         }
       }
     },
+    "Bei iOS-Fokus zurückhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold during an iOS Focus"
+          }
+        }
+      }
+    },
     "Beides öffnet „Planen“ in der Woche, die du planst. Den KI-Plan startest du dort mit dem KI-Knopf; von hier wird nichts gesendet.": {
       "localizations": {
         "en": {
@@ -5677,22 +5678,22 @@
         }
       }
     },
-    "Beim Tippen der Adresse gehen deine Eingaben an Apple Karten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "While you type the address, your input goes to Apple Maps."
-          }
-        }
-      }
-    },
     "Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "When planning, an expected duration in minutes is also sent for each task, derived from your earlier measurements. The measurements themselves and the labels stay on your iPhone. You can turn this off under Settings › Focus timer."
+          }
+        }
+      }
+    },
+    "Beim Tippen der Adresse gehen deine Eingaben an Apple Karten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While you type the address, your input goes to Apple Maps."
           }
         }
       }
@@ -5743,6 +5744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications aren’t allowed yet. Allow them below under “Access”."
+          }
+        }
+      }
+    },
+    "Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculated by Apple Maps. Tagwerk does not use your location."
           }
         }
       }
@@ -6846,16 +6857,6 @@
         }
       }
     },
-    "Der Rückweg gilt nach dem letzten Termin des Tages und vor Pausen von mehr als drei Stunden. Er zählt wie die Hinfahrt als belegte Zeit.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The way home applies after the last event of the day and before breaks of more than three hours. It counts as busy time like the way there."
-          }
-        }
-      }
-    },
     "Der Assistent hat zu viele Schritte gebraucht und angehalten. Formuliere die Bitte genauer.": {
       "localizations": {
         "en": {
@@ -6983,6 +6984,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The item could not be saved."
+          }
+        }
+      }
+    },
+    "Der Rückweg gilt nach dem letzten Termin des Tages und vor Pausen von mehr als drei Stunden. Er zählt wie die Hinfahrt als belegte Zeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The way home applies after the last event of the day and before breaks of more than three hours. It counts as busy time like the way there."
           }
         }
       }
@@ -7408,16 +7419,6 @@
         }
       }
     },
-    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The consent “Notes with ChatGPT” is missing."
-          }
-        }
-      }
-    },
     "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien.": {
       "localizations": {
         "en": {
@@ -7434,6 +7435,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The consent also covers “Sort with ChatGPT”; that also sends the names of your categories."
+          }
+        }
+      }
+    },
+    "Die Einwilligung „Notizen mit ChatGPT“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Notes with ChatGPT” is missing."
           }
         }
       }
@@ -7960,22 +7971,22 @@
         }
       }
     },
-    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The translation doesn’t match the note. Try again."
-          }
-        }
-      }
-    },
     "Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The translation does not match the list. Try again."
+          }
+        }
+      }
+    },
+    "Die Übersetzung passt nicht zur Notiz. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The translation doesn’t match the note. Try again."
           }
         }
       }
@@ -9524,16 +9535,6 @@
         }
       }
     },
-    "Fahrzeit ändern …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change travel time …"
-          }
-        }
-      }
-    },
     "Fahrzeit %lld Minuten, manuell festgelegt": {
       "localizations": {
         "en": {
@@ -9561,6 +9562,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Travel time · %@ %@ %@"
+          }
+        }
+      }
+    },
+    "Fahrzeit ändern …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change travel time …"
           }
         }
       }
@@ -10250,16 +10261,6 @@
         }
       }
     },
-    "Für diese Rückfrage ist deine Einwilligung nötig.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This follow-up needs your consent."
-          }
-        }
-      }
-    },
     "Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.": {
       "localizations": {
         "en": {
@@ -10370,6 +10371,16 @@
         }
       }
     },
+    "Für diese Rückfrage ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This follow-up needs your consent."
+          }
+        }
+      }
+    },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
       "extractionState": "stale",
       "localizations": {
@@ -10468,16 +10479,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "All day"
-          }
-        }
-      }
-    },
-    "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card."
           }
         }
       }
@@ -10673,16 +10674,6 @@
         }
       }
     },
-    "Gesichert: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved: %@"
-          }
-        }
-      }
-    },
     "Gesamte Liste leeren? %lld Artikel werden gelöscht.": {
       "localizations": {
         "en": {
@@ -10765,6 +10756,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only the subject, the sender’s name and the text are sent, and only when you tap."
+          }
+        }
+      }
+    },
+    "Gesichert: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved: %@"
           }
         }
       }
@@ -10947,6 +10948,16 @@
         }
       }
     },
+    "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card."
+          }
+        }
+      }
+    },
     "Gib diesen Code auf GitHub ein:": {
       "localizations": {
         "en": {
@@ -11003,16 +11014,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to"
-          }
-        }
-      }
-    },
-    "Gilt für alles ohne eigene Erinnerungen. Für Kalendertermine nur beim Anlegen in Tagwerk.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applies to everything without reminders of its own. For calendar events only when created in Tagwerk."
           }
         }
       }
@@ -11094,6 +11095,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to all local tasks without reminders of their own."
+          }
+        }
+      }
+    },
+    "Gilt für alles ohne eigene Erinnerungen. Für Kalendertermine nur beim Anlegen in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to everything without reminders of its own. For calendar events only when created in Tagwerk."
           }
         }
       }
@@ -11559,6 +11570,17 @@
         }
       }
     },
+    "Hält Mitteilungen zu Aufgaben und Deadline-Terminen zurück, solange der Fokus aktiv ist. Sie kommen nach den Ruhezeiten oder nach dem Fokus.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds back notifications for tasks and deadline events while the Focus is active. They arrive after quiet hours or after the Focus."
+          }
+        }
+      }
+    },
     "Häufigkeit": {
       "localizations": {
         "en": {
@@ -11759,22 +11781,22 @@
         }
       }
     },
-    "Im Ordner „Rezepte“ ist noch keine Notiz.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "There’s no note in the “Recipes” folder yet."
-          }
-        }
-      }
-    },
     "Im Ordner zeigen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Show in folder"
+          }
+        }
+      }
+    },
+    "Im Ordner „Rezepte“ ist noch keine Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There’s no note in the “Recipes” folder yet."
           }
         }
       }
@@ -12191,162 +12213,6 @@
         }
       }
     },
-    "Kommt immer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Always arrives"
-          }
-        }
-      }
-    },
-    "Mitteilungen nach dem Fokus": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications after the Focus"
-          }
-        }
-      }
-    },
-    "Mitteilungen zurückhalten": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold Notifications"
-          }
-        }
-      }
-    },
-    "Routinen (Tagesstart, Abend-Checkliste)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Routines (morning start, evening checklist)"
-          }
-        }
-      }
-    },
-    "Ruhezeit von %@ bis %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Ruhezeit von %1$@ bis %2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quiet hours from %1$@ to %2$@"
-          }
-        }
-      }
-    },
-    "Schalte „Aufgaben und Deadlines zurückhalten“ ein.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn on “Hold tasks and deadlines”."
-          }
-        }
-      }
-    },
-    "So richtest du ihn ein": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How to set it up"
-          }
-        }
-      }
-    },
-    "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest, or after 8 hours when no quiet hours are set up. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped."
-          }
-        }
-      }
-    },
-    "Tagwerk meldet sich nach dem Fokus, spätestens nach 4 Stunden. Nichts entfällt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tagwerk notifies you after the Focus, after 4 hours at the latest. Nothing is dropped."
-          }
-        }
-      }
-    },
-    "Tippe unter „Fokusfilter“ auf „Filter hinzufügen“ und wähle „Tagwerk“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Under “Focus filters”, tap “Add filter” and choose “Tagwerk”."
-          }
-        }
-      }
-    },
-    "Was passiert": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What happens"
-          }
-        }
-      }
-    },
-    "Wird zurückgehalten": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Held back"
-          }
-        }
-      }
-    },
-    "Wähle einen Fokus, zum Beispiel „Arbeiten“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a Focus, for example “Work”."
-          }
-        }
-      }
-    },
-    "Zielschlafzeit · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Target bedtime · %@"
-          }
-        }
-      }
-    },
-    "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them."
-          }
-        }
-      }
-    },
     "Issue #%@": {
       "localizations": {
         "en": {
@@ -12438,36 +12304,6 @@
         }
       }
     },
-    "Kalendertermine": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calendar events"
-          }
-        }
-      }
-    },
-    "keine Erinnerungen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "no reminders"
-          }
-        }
-      }
-    },
-    "Keine Verbindung. Ändern von Hand geht weiter.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No connection. Editing by hand still works."
-          }
-        }
-      }
-    },
     "KI": {
       "localizations": {
         "en": {
@@ -12484,16 +12320,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create AI weekly plan"
-          }
-        }
-      }
-    },
-    "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delivered as a notification from Tagwerk. Quiet hours and Focus filters apply."
           }
         }
       }
@@ -12544,6 +12370,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calendar diagnostics"
+          }
+        }
+      }
+    },
+    "Kalendertermine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar events"
           }
         }
       }
@@ -12792,22 +12628,22 @@
         }
       }
     },
-    "Keine Fälligkeiten in der neuen Woche.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing is due in the new week."
-          }
-        }
-      }
-    },
     "Keine Fahrzeit für diesen Termin": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No travel time for this event"
+          }
+        }
+      }
+    },
+    "Keine Fälligkeiten in der neuen Woche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is due in the new week."
           }
         }
       }
@@ -12992,6 +12828,16 @@
         }
       }
     },
+    "Keine Verbindung. Ändern von Hand geht weiter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Editing by hand still works."
+          }
+        }
+      }
+    },
     "Keine Vorschläge": {
       "localizations": {
         "en": {
@@ -13103,6 +12949,16 @@
         }
       }
     },
+    "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivered as a notification from Tagwerk. Quiet hours and Focus filters apply."
+          }
+        }
+      }
+    },
     "Kommentar": {
       "localizations": {
         "en": {
@@ -13129,6 +12985,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comment: “%@”"
+          }
+        }
+      }
+    },
+    "Kommt immer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always arrives"
           }
         }
       }
@@ -13641,12 +13507,22 @@
         }
       }
     },
-    "Losfahren · %lld min": {
+    "Los %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leave · %lld min"
+            "value": "Leave %@"
+          }
+        }
+      }
+    },
+    "Los %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave %@ · %@"
           }
         }
       }
@@ -13671,22 +13547,12 @@
         }
       }
     },
-    "Los %@ · %@": {
+    "Losfahren · %lld min": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leave %@ · %@"
-          }
-        }
-      }
-    },
-    "Los %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leave %@"
+            "value": "Leave · %lld min"
           }
         }
       }
@@ -13727,66 +13593,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Running"
-          }
-        }
-      }
-    },
-    "kommt %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "arrives %@"
-          }
-        }
-      }
-    },
-    "läuft, noch %lld Minuten": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "läuft, noch %lld Minute"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "läuft, noch %lld Minuten"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "running, %lld minute left"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "running, %lld minutes left"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "läuft · noch %lld min": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "running · %lld min left"
           }
         }
       }
@@ -14394,22 +14200,22 @@
         }
       }
     },
-    "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "With your ChatGPT account, Tagwerk can plan your day, week and month, and the assistant can change tasks for you."
-          }
-        }
-      }
-    },
     "Mit Uhrzeit": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "With a time"
+          }
+        }
+      }
+    },
+    "Mit deinem ChatGPT-Konto kann Tagwerk Tag, Woche und Monat für dich planen, und der Assistent kann Aufgaben für dich ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With your ChatGPT account, Tagwerk can plan your day, week and month, and the assistant can change tasks for you."
           }
         }
       }
@@ -14457,6 +14263,38 @@
         }
       }
     },
+    "Mitteilungen nach dem Fokus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications after the Focus"
+          }
+        }
+      }
+    },
+    "Mitteilungen ruhen": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications paused"
+          }
+        }
+      }
+    },
+    "Mitteilungen ruhen lassen": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause notifications"
+          }
+        }
+      }
+    },
     "Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.": {
       "localizations": {
         "en": {
@@ -14473,6 +14311,27 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications as usual"
+          }
+        }
+      }
+    },
+    "Mitteilungen zu Aufgaben und Deadline-Terminen, die in die Ruhezeit fallen, kommen erst am Ende der Ruhezeit. Sie entfallen nicht. Erinnerungen der Routinen bleiben davon ausgenommen. Die Zielschlafzeit stellst du unter Routinen ein.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications for tasks and deadline events that fall within quiet hours arrive at the end of quiet hours instead of being dropped. Routine reminders are exempt. You set the target bedtime under Routines."
+          }
+        }
+      }
+    },
+    "Mitteilungen zurückhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold Notifications"
           }
         }
       }
@@ -15511,16 +15370,6 @@
         }
       }
     },
-    "Nur mich": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only me"
-          }
-        }
-      }
-    },
     "Nur Tage dieser Planung.": {
       "localizations": {
         "en": {
@@ -15660,6 +15509,16 @@
         }
       }
     },
+    "Nur mich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only me"
+          }
+        }
+      }
+    },
     "Nutze „Einplanen“ unten oder im Menü einer Aufgabe.": {
       "localizations": {
         "en": {
@@ -15750,26 +15609,6 @@
         }
       }
     },
-    "Ohne Datum wird die Frist entfernt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Without a date the due date is removed."
-          }
-        }
-      }
-    },
-    "Ohne Mengen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Without quantities"
-          }
-        }
-      }
-    },
     "OK": {
       "localizations": {
         "en": {
@@ -15820,12 +15659,32 @@
         }
       }
     },
+    "Ohne Datum wird die Frist entfernt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a date the due date is removed."
+          }
+        }
+      }
+    },
     "Ohne Fälligkeit entfällt die Wiederholung.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Without a due date, the repeat is removed."
+          }
+        }
+      }
+    },
+    "Ohne Mengen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without quantities"
           }
         }
       }
@@ -16837,6 +16696,32 @@
         }
       }
     },
+    "Routinen (Tagesstart, Abend-Checkliste)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routines (morning start, evening checklist)"
+          }
+        }
+      }
+    },
+    "Ruhezeit von %@ bis %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ruhezeit von %1$@ bis %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet hours from %1$@ to %2$@"
+          }
+        }
+      }
+    },
     "Ruhezeiten": {
       "localizations": {
         "en": {
@@ -16897,6 +16782,26 @@
         }
       }
     },
+    "Rückgängig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        }
+      }
+    },
+    "Rückweg %lld Minuten %@, nach Hause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Way back %lld minutes %@, home"
+          }
+        }
+      }
+    },
     "Rückweg %lld Minuten, manuell festgelegt": {
       "localizations": {
         "en": {
@@ -16917,26 +16822,6 @@
         }
       }
     },
-    "Rückweg %lld Minuten %@, nach Hause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Way back %lld minutes %@, home"
-          }
-        }
-      }
-    },
-    "Rückgängig": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Undo"
-          }
-        }
-      }
-    },
     "Sammlung": {
       "localizations": {
         "en": {
@@ -16953,6 +16838,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "View collection"
+          }
+        }
+      }
+    },
+    "Schalte „Aufgaben und Deadlines zurückhalten“ ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on “Hold tasks and deadlines”."
           }
         }
       }
@@ -17529,6 +17424,26 @@
         }
       }
     },
+    "So richtest du ihn ein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to set it up"
+          }
+        }
+      }
+    },
+    "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest, or after 8 hours when no quiet hours are set up. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped."
+          }
+        }
+      }
+    },
     "Sonstiges": {
       "localizations": {
         "en": {
@@ -17555,16 +17470,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort by"
-          }
-        }
-      }
-    },
-    "Später": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Later"
           }
         }
       }
@@ -17768,6 +17673,16 @@
         }
       }
     },
+    "Später": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
     "Stand %@": {
       "localizations": {
         "en": {
@@ -17889,7 +17804,7 @@
         }
       }
     },
-    "Starten": {
+    "Start": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17899,7 +17814,7 @@
         }
       }
     },
-    "Start": {
+    "Starten": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18380,6 +18295,16 @@
         }
       }
     },
+    "Tagwerk meldet sich nach dem Fokus, spätestens nach 4 Stunden. Nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk notifies you after the Focus, after 4 hours at the latest. Nothing is dropped."
+          }
+        }
+      }
+    },
     "Tagwerk misst den Aufwand beim Abhaken aus den Zeitblöcken der Aufgabe. Fokus-Timer-Zeit zählt nur, soweit sie außerhalb dieser Blöcke liegt, ohne Zeitblock zählt sie allein. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.": {
       "localizations": {
         "en": {
@@ -18520,6 +18445,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk notifications"
+          }
+        }
+      }
+    },
+    "Tagwerk-Mitteilungen ruhen lassen": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Tagwerk notifications"
           }
         }
       }
@@ -18799,6 +18735,16 @@
         }
       }
     },
+    "Tippe unter „Fokusfilter“ auf „Filter hinzufügen“ und wähle „Tagwerk“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under “Focus filters”, tap “Add filter” and choose “Tagwerk”."
+          }
+        }
+      }
+    },
     "Tippen": {
       "localizations": {
         "en": {
@@ -19006,26 +18952,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Daily"
-          }
-        }
-      }
-    },
-    "Öffne die iOS-Einstellungen und tippe auf „Fokus“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open the iOS Settings and tap “Focus”."
-          }
-        }
-      }
-    },
-    "Überarbeitet": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revised"
           }
         }
       }
@@ -19414,26 +19340,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discarded"
-          }
-        }
-      }
-    },
-    "von ChatGPT angepasst": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "adjusted by ChatGPT"
-          }
-        }
-      }
-    },
-    "von dir angepasst": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "adjusted by you"
           }
         }
       }
@@ -20005,6 +19911,16 @@
         }
       }
     },
+    "Was passiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happens"
+          }
+        }
+      }
+    },
     "Was soll auf die Liste?": {
       "localizations": {
         "en": {
@@ -20218,6 +20134,7 @@
       }
     },
     "Wenn du KI-Funktionen nutzt, gehen die dafür nötigen Daten (Termine, Aufgaben, bei Issues auch Repo-Inhalte und GitHub-Benutzernamen zuweisbarer und zugewiesener Personen) an OpenAI.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -20225,8 +20142,7 @@
             "value": "When you use AI features, the data they need (events, tasks, and for issues also repo contents and GitHub usernames of assignable and assigned people) goes to OpenAI."
           }
         }
-      },
-      "extractionState": "stale"
+      }
     },
     "Wenn du zu einem Vorschlag etwas zurückschreibst, sendet Tagwerk dieselben Angaben noch einmal, dazu den Vorschlag mit deinen Änderungen und deine Nachricht.": {
       "localizations": {
@@ -20308,16 +20224,6 @@
         }
       }
     },
-    "Wie eingestellt (%@)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As set (%@)"
-          }
-        }
-      }
-    },
     "Wie Rezepte": {
       "localizations": {
         "en": {
@@ -20334,6 +20240,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Same as the app"
+          }
+        }
+      }
+    },
+    "Wie eingestellt (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As set (%@)"
           }
         }
       }
@@ -20538,6 +20454,16 @@
         }
       }
     },
+    "Wird zurückgehalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Held back"
+          }
+        }
+      }
+    },
     "Wische einen Eintrag nach links, um ihn zu löschen.": {
       "localizations": {
         "en": {
@@ -20691,6 +20617,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a reminders list as your shopping list."
+          }
+        }
+      }
+    },
+    "Wähle einen Fokus, zum Beispiel „Arbeiten“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Focus, for example “Work”."
           }
         }
       }
@@ -20989,12 +20925,12 @@
         }
       }
     },
-    "Zu allen %lld Vorschlägen": {
+    "Zielschlafzeit · %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "About all %lld proposals"
+            "value": "Target bedtime · %@"
           }
         }
       }
@@ -21009,26 +20945,6 @@
         }
       }
     },
-    "Zu diesem Vorschlag gibt es keine Rückfrage.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "There is no follow-up for this proposal."
-          }
-        }
-      }
-    },
-    "Zuhause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Home"
-          }
-        }
-      }
-    },
     "Zu Fuß": {
       "localizations": {
         "en": {
@@ -21039,12 +20955,32 @@
         }
       }
     },
+    "Zu allen %lld Vorschlägen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About all %lld proposals"
+          }
+        }
+      }
+    },
     "Zu den KI-Einstellungen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Go to AI settings"
+          }
+        }
+      }
+    },
+    "Zu diesem Vorschlag gibt es keine Rückfrage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no follow-up for this proposal."
           }
         }
       }
@@ -21129,6 +21065,16 @@
         }
       }
     },
+    "Zuhause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        }
+      }
+    },
     "Zuletzt gelöscht": {
       "localizations": {
         "en": {
@@ -21176,16 +21122,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your consent is needed to read recipes."
-          }
-        }
-      }
-    },
-    "Zum offenen Vorschlag": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About the open proposal"
           }
         }
       }
@@ -21250,12 +21186,32 @@
         }
       }
     },
+    "Zum Verschieben den Eintrag öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the entry to move it."
+          }
+        }
+      }
+    },
     "Zum Vorschlag etwas sagen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Say something about the suggestion …"
+          }
+        }
+      }
+    },
+    "Zum offenen Vorschlag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About the open proposal"
           }
         }
       }
@@ -21276,16 +21232,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "To translate, Tagwerk sends the names of your open items and the target language to ChatGPT (OpenAI), through the account you are signed in with."
-          }
-        }
-      }
-    },
-    "Zum Verschieben den Eintrag öffnen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open the entry to move it."
           }
         }
       }
@@ -21376,6 +21322,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Merged at your request; the copy with the most details is shown."
+          }
+        }
+      }
+    },
+    "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Mitteilungen ruhen lassen“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen bis zum Ende der Ruhezeit zurück, ohne Ruhezeit für höchstens 8 Stunden. Nach dem Fokus kommen Mitteilungen, die inzwischen fällig wurden.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Pause notifications”. While that Focus is active, Tagwerk holds notifications back until the end of quiet hours, or for 8 hours at most without quiet hours. After the Focus, notifications that came due in the meantime arrive."
           }
         }
       }
@@ -21996,6 +21953,16 @@
         }
       }
     },
+    "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS delivers these alerts itself, also in Apple Calendar. Quiet hours do not apply to them."
+          }
+        }
+      }
+    },
     "in %lld Tagen": {
       "localizations": {
         "de": {
@@ -22146,12 +22113,32 @@
         }
       }
     },
+    "keine Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no reminders"
+          }
+        }
+      }
+    },
     "keine Fälligkeit": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "no due date"
+          }
+        }
+      }
+    },
+    "kommt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "arrives %@"
           }
         }
       }
@@ -22172,6 +22159,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "local tasks"
+          }
+        }
+      }
+    },
+    "läuft · noch %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "running · %lld min left"
+          }
+        }
+      }
+    },
+    "läuft, noch %lld Minuten": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "läuft, noch %lld Minuten"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minute left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "running, %lld minutes left"
+                }
+              }
+            }
           }
         }
       }
@@ -22682,6 +22719,26 @@
         }
       }
     },
+    "von ChatGPT angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by ChatGPT"
+          }
+        }
+      }
+    },
+    "von dir angepasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adjusted by you"
+          }
+        }
+      }
+    },
     "von dir verschoben · KI: %@": {
       "localizations": {
         "en": {
@@ -22941,6 +22998,16 @@
         }
       }
     },
+    "Öffne die iOS-Einstellungen und tippe auf „Fokus“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the iOS Settings and tap “Focus”."
+          }
+        }
+      }
+    },
     "Öffnen": {
       "localizations": {
         "en": {
@@ -22951,22 +23018,22 @@
         }
       }
     },
-    "Öffnet Brain Dump in Tagwerk und startet das Diktat.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens Brain Dump in Tagwerk and starts dictation."
-          }
-        }
-      }
-    },
     "Öffnet Aktionen zur Fahrzeit": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens actions for the travel time"
+          }
+        }
+      }
+    },
+    "Öffnet Brain Dump in Tagwerk und startet das Diktat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Brain Dump in Tagwerk and starts dictation."
           }
         }
       }
@@ -23159,6 +23226,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Talk about this task"
+          }
+        }
+      }
+    },
+    "Überarbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revised"
           }
         }
       }

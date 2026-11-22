@@ -54,9 +54,14 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")
         editor.tap()
         editor.typeText("Gemüsepfanne für 2: 2 Paprika, 150 g Reis, Salz")
-        if app.buttons["Tastatur ausblenden"].exists { app.buttons["Tastatur ausblenden"].tap() }
+        // The keyboard is a process of its own, and animations of the app cannot be turned off there: wait for the button above it
+        // (the symbol "Tastatur ausblenden"; it exists as soon as the keyboard is up), close it, and wait until the keyboard is really gone.
+        tapButton("Tastatur ausblenden")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: Self.timeout), "The keyboard did not close")
         tapScrolling("Rezept holen")
         waitFor("Einverstanden")
+        // The decline button is the lowest control of the sheet (below the fold in the large text size): audit only when it exists.
+        waitFor("Nicht jetzt")
         try audit("Rezept anlegen (Einwilligung)")
         tapScrolling("Einverstanden")
         XCTAssertTrue(app.navigationBars["Rezept speichern"].waitForExistence(timeout: 20), "Confirmation did not open")
@@ -85,9 +90,9 @@ class RecipeScreensAuditCase: UITestCase {
         waitFor("Milch, nicht erledigt")
         tapButton("Sprache der Einkaufsliste Deutsch, auf Englisch wechseln")
         waitFor("Einkaufsliste jetzt auf Englisch")
-        // The notice above the input ("1 hinzugefügt") fades out after four seconds; when it disappears during the audit, the audit
-        // fails to read the element it already found. The other shopping audit waits for it in the same way.
-        waitUntilGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
+        // The notice above the input ("1 hinzugefügt") fades out after four seconds; audited while it is visible, it adds a finding that
+        // depends on how fast the run is. The other shopping audit waits for it in the same way (`waitUntilStaysGone`).
+        waitUntilStaysGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
         try audit("Einkaufsliste › Karte „übersetzen“")
         tapButton("Mit ChatGPT übersetzen")
         tapScrolling("Einverstanden und übersetzen")
@@ -107,6 +112,9 @@ class RecipeScreensAuditCase: UITestCase {
         openSettingsRow("KI")
         openSettingsRow("Spracheingabe und Vorlesen")
         XCTAssertTrue(app.navigationBars["Spracheingabe und Vorlesen"].waitForExistence(timeout: Self.timeout), "Voice settings did not open")
+        // The rows "Sprachpaket …" show "…" until the state of the language packs is known and then a longer text (more lines in
+        // the large text size). The audit must not run in between.
+        waitUntilGone(app.staticTexts["…"].firstMatch)
         try audit("Einstellungen › KI › Sprache")
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()

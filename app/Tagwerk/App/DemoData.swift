@@ -17,13 +17,16 @@ enum DemoData {
 
     static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) || UITestMode.isActive }
 
-    static func seedIfRequested(_ environment: AppEnvironment) async {
-        guard isRequested else { return }
+    /// Creates the sample data. Returns `true` when it exists; the caller reports the app as ready (`isDemoDataReady`)
+    /// only after the rest of the start, so the UI tests never see a screen that is still changing.
+    static func seedIfRequested(_ environment: AppEnvironment) async -> Bool {
+        guard isRequested else { return false }
         let store = EKEventStore()
+        let handledBeforeSeed = environment.storeChangesHandled
         do {
             guard try await store.requestFullAccessToEvents(), try await store.requestFullAccessToReminders() else {
                 print("DemoData: calendar or reminder access denied; grant it with simctl privacy")
-                return
+                return false
             }
             try wipe(store)
             let ids = try seed(store, leadTimeMinutes: environment.settings.leadTimeMinutes)
@@ -42,6 +45,14 @@ enum DemoData {
             }
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
             seedRecurringLocalTask(environment)
+            // The UI tests show the same screens on every weekday: today and tomorrow are working days (see `uiTestWorkdayOverrides`).
+            if UITestMode.isActive {
+                let planning = environment.planning
+                let today = PlanDay(date: UITestMode.now(), calendar: planning.calendar)
+                for (day, value) in uiTestWorkdayOverrides(today: today, calendar: planning.calendar) {
+                    planning.planStore.setOverride(value, on: day)
+                }
+            }
             await environment.taskList.reload()
             await planSamples(environment)
             await environment.planning.reload()
@@ -51,11 +62,52 @@ enum DemoData {
             seedNotes(environment)
             // Phase 4: the widget reads the demo plan right away.
             environment.writeSnapshot()
-            environment.isDemoDataReady = true
+            // The seeding wrote through its own store; the gateway's store reports that later and the app reloads.
+            if UITestMode.isActive { await waitForStoreChangeEcho(environment, handledBeforeSeed: handledBeforeSeed) }
             print("DemoData: sample data created")
+            return true
         } catch {
             print("DemoData: seeding failed: \(error)")
+            return false
         }
+    }
+
+    /// UI test mode: waits until the app has handled the EventKit changes of the seeding and nothing new arrived for
+    /// `StoreChangeSettle.quietTime`, at most `StoreChangeSettle.limit` seconds (then the run continues with a log line).
+    private static func waitForStoreChangeEcho(_ environment: AppEnvironment, handledBeforeSeed: Int) async {
+        let clock = ContinuousClock()
+        func seconds(_ duration: Duration) -> TimeInterval {
+            TimeInterval(duration.components.seconds) + TimeInterval(duration.components.attoseconds) / 1e18
+        }
+        let started = clock.now
+        var lastActivity = started
+        var lastHandled = environment.storeChangesHandled
+        while true {
+            let now = clock.now
+            if environment.isHandlingStoreChange || environment.storeChangesHandled != lastHandled {
+                lastHandled = environment.storeChangesHandled
+                lastActivity = now
+            }
+            let state = StoreChangeSettle.state(handled: environment.storeChangesHandled, handledBeforeSeed: handledBeforeSeed,
+                                                isHandling: environment.isHandlingStoreChange,
+                                                quietFor: seconds(now - lastActivity), waited: seconds(now - started))
+            switch state {
+            case .settled: return
+            case .timedOut:
+                print("DemoData: no store change echo within \(Int(StoreChangeSettle.limit)) s")
+                return
+            case .waiting: try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+    }
+
+    /// Working hours of today and tomorrow in the UI test mode: the standard week (09:00–18:00) on every weekday. Without
+    /// them a Saturday or Sunday run shows "heute ist vorbei" ("Unerledigtes verschieben", "Unerledigt von heute") at 09:30
+    /// and the next planning day is Monday, so the audits would test different screens depending on the weekday.
+    /// Pure function so the weekday logic is covered by a unit test.
+    nonisolated static func uiTestWorkdayOverrides(today: PlanDay, calendar: Calendar) -> [PlanDay: DayOverride] {
+        let hours = DayOverride.hours(WorkHours(startMinutes: 540, endMinutes: 1080))
+        return [today: hours, today.adding(days: 1, calendar: calendar): hours]
     }
 
     /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
