@@ -3758,6 +3758,16 @@
         }
       }
     },
+    "Aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
     "Aktuelle Phase zeigen": {
       "localizations": {
         "en": {
@@ -5221,6 +5231,16 @@
         }
       }
     },
+    "Aufgaben und Deadline-Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks and deadline events"
+          }
+        }
+      }
+    },
     "Aufgaben und Deadlines zurückhalten": {
       "localizations": {
         "en": {
@@ -5527,6 +5547,16 @@
         }
       }
     },
+    "Bei iOS-Fokus zurückhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold during an iOS Focus"
+          }
+        }
+      }
+    },
     "Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.": {
       "localizations": {
         "en": {
@@ -5573,16 +5603,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start"
-          }
-        }
-      }
-    },
-    "Beginn bei Zielschlafzeit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start at target bedtime"
           }
         }
       }
@@ -7870,6 +7890,16 @@
         }
       }
     },
+    "Die Zielschlafzeit stellst du unter Routinen ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You set the target bedtime under Routines."
+          }
+        }
+      }
+    },
     "Die Zusammenfassung ist fehlgeschlagen. Versuch es noch einmal oder trag die Aufgabe selbst ein.": {
       "localizations": {
         "en": {
@@ -8416,6 +8446,16 @@
         }
       }
     },
+    "Eigene Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom time"
+          }
+        }
+      }
+    },
     "Eigene …": {
       "localizations": {
         "en": {
@@ -8682,6 +8722,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule · only in Tagwerk"
+          }
+        }
+      }
+    },
+    "Einrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up"
           }
         }
       }
@@ -9773,12 +9823,32 @@
         }
       }
     },
+    "Fokus-Filter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus filter"
+          }
+        }
+      }
+    },
     "Fokus-Timer": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Focus timer"
+          }
+        }
+      }
+    },
+    "Fokus-Timer: Phasenende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus timer: end of a phase"
           }
         }
       }
@@ -11403,6 +11473,16 @@
         }
       }
     },
+    "Hinweise aus Kalender und Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts from Calendar and Reminders"
+          }
+        }
+      }
+    },
     "Hinweise im Kalender": {
       "localizations": {
         "en": {
@@ -11449,6 +11529,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "High"
+          }
+        }
+      }
+    },
+    "Hält Mitteilungen auch während eines iOS-Fokus zurück, zum Beispiel „Arbeiten“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also holds notifications back during an iOS Focus, for example “Work”."
           }
         }
       }
@@ -12025,6 +12115,16 @@
         }
       }
     },
+    "In dieser Zeit hält Tagwerk Mitteilungen zurück. Sie kommen um %@, nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "During this time, Tagwerk holds notifications back. They arrive at %@, nothing is dropped."
+          }
+        }
+      }
+    },
     "In „%@“ erledigt": {
       "localizations": {
         "en": {
@@ -12075,6 +12175,16 @@
         }
       }
     },
+    "Kommt immer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always arrives"
+          }
+        }
+      }
+    },
     "Mitteilungen nach dem Fokus": {
       "localizations": {
         "en": {
@@ -12095,6 +12205,62 @@
         }
       }
     },
+    "Routinen (Tagesstart, Abend-Checkliste)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routines (morning start, evening checklist)"
+          }
+        }
+      }
+    },
+    "Ruhezeit von %@ bis %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ruhezeit von %1$@ bis %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet hours from %1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "Schalte „Aufgaben und Deadlines zurückhalten“ ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on “Hold tasks and deadlines”."
+          }
+        }
+      }
+    },
+    "So richtest du ihn ein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to set it up"
+          }
+        }
+      }
+    },
+    "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest, or after 8 hours when no quiet hours are set up. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped."
+          }
+        }
+      }
+    },
     "Tagwerk meldet sich nach dem Fokus, spätestens nach 4 Stunden. Nichts entfällt.": {
       "localizations": {
         "en": {
@@ -12105,12 +12271,52 @@
         }
       }
     },
-    "Zusätzlich kannst du in den iOS-Einstellungen unter Fokus einen Fokus-Filter für Tagwerk hinzufügen und „Aufgaben und Deadlines zurückhalten“ wählen. Solange dieser Fokus aktiv ist, hält Tagwerk die Mitteilungen zurück, bis der Fokus endet, spätestens nach 4 Stunden. Danach kommen Mitteilungen, die inzwischen fällig wurden.": {
+    "Tippe unter „Fokusfilter“ auf „Filter hinzufügen“ und wähle „Tagwerk“.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Hold tasks and deadlines”. While that Focus is active, Tagwerk holds notifications back until the Focus ends, after 4 hours at the latest. Afterwards, notifications that came due in the meantime arrive."
+            "value": "Under “Focus filters”, tap “Add filter” and choose “Tagwerk”."
+          }
+        }
+      }
+    },
+    "Was passiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happens"
+          }
+        }
+      }
+    },
+    "Wird zurückgehalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Held back"
+          }
+        }
+      }
+    },
+    "Wähle einen Fokus, zum Beispiel „Arbeiten“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Focus, for example “Work”."
+          }
+        }
+      }
+    },
+    "Zielschlafzeit · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target bedtime · %@"
           }
         }
       }
@@ -14241,16 +14447,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications as usual"
-          }
-        }
-      }
-    },
-    "Mitteilungen zu Aufgaben und Deadline-Terminen, die in die Ruhezeit fallen, kommen erst am Ende der Ruhezeit. Sie entfallen nicht. Erinnerungen der Routinen bleiben davon ausgenommen. Die Zielschlafzeit stellst du unter Routinen ein.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications for tasks and deadline events that fall within quiet hours arrive at the end of quiet hours instead of being dropped. Routine reminders are exempt. You set the target bedtime under Routines."
           }
         }
       }
@@ -18784,6 +18980,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Daily"
+          }
+        }
+      }
+    },
+    "Öffne die iOS-Einstellungen und tippe auf „Fokus“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the iOS Settings and tap “Focus”."
           }
         }
       }
