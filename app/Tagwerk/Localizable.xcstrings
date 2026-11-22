@@ -9525,6 +9525,16 @@
         }
       }
     },
+    "Fehlt etwas?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is something missing?"
+          }
+        }
+      }
+    },
     "Felder, die du nicht änderst, bleiben unverändert.": {
       "localizations": {
         "en": {
@@ -13900,6 +13910,16 @@
         }
       }
     },
+    "Menge, z. B. „500 g“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount, e.g. “500 g”"
+          }
+        }
+      }
+    },
     "Menge: %lld": {
       "extractionState": "stale",
       "localizations": {
@@ -13928,6 +13948,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quantities stay as they are. The names change in Apple Reminders; in a shared list, others see the new names too."
+          }
+        }
+      }
+    },
+    "Mengen runden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round the amounts"
           }
         }
       }
@@ -14118,6 +14148,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write to ChatGPT about this item"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu dieser Zutat schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this ingredient"
           }
         }
       }
@@ -15598,6 +15638,16 @@
         }
       }
     },
+    "Ohne Gewürze": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without spices"
+          }
+        }
+      }
+    },
     "Ohne Mengen": {
       "localizations": {
         "en": {
@@ -16571,6 +16621,16 @@
         }
       }
     },
+    "Rezept überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe revised."
+          }
+        }
+      }
+    },
     "Rezept übersetzen": {
       "localizations": {
         "en": {
@@ -17093,6 +17153,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send"
+          }
+        }
+      }
+    },
+    "Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the recipe (text, photos or the text read from the page), the ingredients with your changes and your message to ChatGPT."
+          }
+        }
+      }
+    },
+    "Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT. Deine Liste und Mengen darauf gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the recipe (text, photos or the text read from the page), the ingredients with your changes and your message to ChatGPT. Your list and the amounts on it are not sent."
           }
         }
       }
@@ -18938,12 +19018,42 @@
         }
       }
     },
+    "Zum Rezept etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the recipe …"
+          }
+        }
+      }
+    },
     "Zur Schätzung etwas sagen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Write something about the estimate …"
+          }
+        }
+      }
+    },
+    "Zutat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient"
+          }
+        }
+      }
+    },
+    "Öffnet die Werte der Zutat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the values of the ingredient"
           }
         }
       }

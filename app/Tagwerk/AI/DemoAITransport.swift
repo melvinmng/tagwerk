@@ -146,12 +146,18 @@ final class DemoAITransport: AIHTTPTransport {
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
               let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
               format["name"] as? String == "recipe_ingredients" else { return nil }
+        var items: [[String: Any]] = [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
+                                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
+                                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]]
+        // A follow-up (task D2): the same recipe with one more ingredient.
+        let sent = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        if sent.compactMap({ $0["text"] as? String }).joined().contains("Message from the user:") {
+            items.append(["name": "Zwiebel", "quantity": "1 Stück", "amount": 1, "unit": "Stück", "category": "Obst & Gemüse"])
+        }
         let answer: [String: Any] = [
             "title": "Demo Gemüsepfanne", "servings": 2,
             "steps": ["Gemüse schneiden.", "In der Pfanne fünf Minuten braten."],
-            "items": [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
-                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
-                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]],
+            "items": items,
         ]
         return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
     }
