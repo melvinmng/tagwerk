@@ -16,7 +16,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 ## Offene Kleinigkeiten
 
-- Wacklige `AIKit`-Tests auf CI: PR #272 (Ursache: `stop()` kehrte vor dem Schließen zurück), Merge nach grünem schnellen Job: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
+- **Gemergt #272 (`b6bc0cc`)**: AIKit-Porttests (Ursache `stop()`); CI mit Cache: schneller Job 12,6 min (vorher 37/17), UI-Job 33,5 min (vorher 54/44), 1 bekannter Audit-Befund (Rezept hinzufügen, Dynamic Type). Ehemals: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
 - 22.11. 04:13: `testmanagerd` im Simulator von K lief 10 h 47 min auf ~200 % (Last 500+); Simulator heruntergefahren. Regel an Agents: Simulator nach jedem Lauf herunterfahren.
 - Regel: GitHub-Checks vor jedem Merge abwarten (Fehler bei #269: zu früh gemergt).
 
@@ -94,6 +94,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `fix/day-capacity` | #260 Kapazität | **gemergt (#268, `main` = `bafd1c3`)**, voll grün; Beispieltag „8 h frei von 8 h“; offen: `TimeGrid.freeGaps` (Raster) kennt Fahrzeit/KA1c nicht; `RecurringEffortStore.reservedMinutes` tot |
 | `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | **gemergt (#271, `main` = `04b50fb`)**; PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
 | `feat/ai-proposal-editing-previews` | #255 Stränge C–E | läuft (Sonnet) |
+| `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | läuft (Sonnet) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
 
