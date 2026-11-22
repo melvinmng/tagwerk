@@ -402,6 +402,7 @@ final class AppEnvironment {
         }
         // Closing the lock rebuilds the rows of an open search, so no passage of a hidden note stays in the model (NL4a).
         noteLock.onLock = { [weak self] in self?.activeSearch?.evaluate() }
+        noteStore.onLockMarksChanged = { [weak self] in self?.activeSearch?.evaluate() }
     }
 
     /// The model of the sheet "Mail zu Aufgabe" for a shared item: the mail if the extension parsed one, else its text.

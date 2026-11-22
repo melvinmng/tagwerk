@@ -72,8 +72,9 @@ struct NotesListView: View {
         }
         // The app switcher shows no list of a protected folder.
         .overlay { if isFolderProtected, scenePhase != .active { LockCoverView() } }
-        // A hidden folder asks at once; a failed check leaves the lock screen standing.
-        .task(id: isFolderConcealed && scenePhase == .active) {
+        // A hidden folder asks once when it appears; a failed or cancelled check leaves the lock screen standing (the system sheet
+        // may move the scene to inactive, so the scene phase is not part of the task id).
+        .task(id: isFolderConcealed) {
             guard isFolderConcealed, scenePhase == .active else { return }
             _ = await lock.unlock(reason: NoteLock.reason)
         }

@@ -35,7 +35,7 @@ struct LockedNotesView: View {
         .navigationTitle("Gesperrte Notizen")
         .navigationBarTitleDisplayMode(.inline)
         .overlay { if lock.protection.isActive, scenePhase != .active { LockCoverView() } }
-        .task(id: isHidden && scenePhase == .active) {
+        .task(id: isHidden) {
             guard isHidden, scenePhase == .active else { return }
             _ = await lock.unlock(reason: NoteLock.reason)
         }

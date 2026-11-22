@@ -80,6 +80,8 @@ final class NoteStore {
 
     /// Called when notes get locked, so the assistant forgets what it read of them (`AssistantModel.endNoteSession`).
     @ObservationIgnored var onNoteLocked: (@MainActor () -> Void)?
+    /// Called after any change of a lock mark, so an open search reads the notes again.
+    @ObservationIgnored var onLockMarksChanged: (@MainActor () -> Void)?
 
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
@@ -183,6 +185,7 @@ final class NoteStore {
         }
         guard changed else { return }
         save()
+        onLockMarksChanged?()
         if locked { onNoteLocked?() }
     }
 

@@ -68,8 +68,9 @@ struct NoteEditorView: View {
         }
         // The app switcher shows no text of a protected note.
         .overlay { if isProtected, scenePhase != .active { LockCoverView() } }
-        // A hidden note asks at once; a failed check leaves the lock screen standing.
-        .task(id: isConcealed && scenePhase == .active) {
+        // A hidden note asks once when it appears; a failed or cancelled check leaves the lock screen standing (the system
+        // sheet may move the scene to inactive, so the scene phase is not part of the task id).
+        .task(id: isConcealed) {
             guard isConcealed, scenePhase == .active else { return }
             _ = await lock.unlock(reason: NoteLock.reason)
         }
@@ -175,11 +176,14 @@ struct NoteEditorView: View {
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
-                // Behind the lock the page keeps no text; it loads the stored text again when it appears.
-                text = ""
-                lastSavedText = ""
-                selection = nil
-                isLoaded = false
+                // Behind the lock the page keeps no text; it loads the stored text again when it appears. Only then: a tab switch
+                // also ends in here and must not drop the writing mode and the cursor of an ordinary note.
+                if let note = store.note(id: noteID), environment.noteLock.isConcealed(note, in: store) {
+                    text = ""
+                    lastSavedText = ""
+                    selection = nil
+                    isLoaded = false
+                }
             }
     }
 
