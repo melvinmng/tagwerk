@@ -54,8 +54,13 @@ struct TagwerkApp: App {
                 .task {
                     // A focus session that survived the app being closed or killed; first, before the slow network calls.
                     await environment.focus.restore()
+                    // UI test mode: the observation runs before the seeding, so the EventKit echo of the demo data is handled
+                    // (and waited for by `DemoData`) instead of arriving later, while a test already runs.
+                    if UITestMode.isActive { environment.startObservingChanges() }
                     #if DEBUG && targetEnvironment(simulator)
-                    await DemoData.seedIfRequested(environment)
+                    let demoDataCreated = await DemoData.seedIfRequested(environment)
+                    #else
+                    let demoDataCreated = false
                     #endif
                     // Reads the keychain only; nothing is sent to OpenAI at start (§8.4).
                     await environment.ai.refreshAccount()
@@ -75,6 +80,9 @@ struct TagwerkApp: App {
                     environment.startFocusUpdates()
                     environment.startHabitSourceUpdates()
                     environment.startSnapshotUpdates()
+                    // Last statement of the start: the UI tests wait for the marker this sets, so nothing of the start
+                    // may change the screen afterwards.
+                    if demoDataCreated { environment.isDemoDataReady = true }
                 }
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {

@@ -168,6 +168,9 @@ stage_failed() {
 
 # Per-checkout simulator, derived data and logs, so several checkouts can test at the same time.
 source "$SCRIPT_DIR/../scripts/test-env.sh"
+# One run per checkout; a second run would share the simulator and the derived data folder.
+tagwerk_acquire_run_lock || exit 2
+trap tagwerk_release_run_lock EXIT
 DESTINATION=$(tagwerk_test_destination) || stage_failed
 LOG_DIR="$TAGWERK_TEST_LOG_DIR"
 # The app stage builds here, so the String Catalog check can reuse its .stringsdata.
@@ -289,26 +292,7 @@ elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
 else
   # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
   # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (it keeps running).
-  UI_SIMULATOR="${DESTINATION##*id=}"
-  if [[ "$DESTINATION" != *"id="* ]]; then
-    UI_SIMULATOR=$(xcrun simctl list devices available -j | /usr/bin/python3 -c '
-import json, sys
-name = sys.argv[1]
-for devices in json.load(sys.stdin)["devices"].values():
-    for device in devices:
-        if device["name"] == name:
-            print(device["udid"])
-            sys.exit(0)
-' "${DESTINATION##*name=}") || stage_failed
-  fi
-  APP_BUNDLE_ID=$(xcodebuild -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -showBuildSettings 2>/dev/null \
-    | sed -nE 's/^ *PRODUCT_BUNDLE_IDENTIFIER = (.*)$/\1/p' | head -n 1)
-  [[ -n "$UI_SIMULATOR" && -n "$APP_BUNDLE_ID" ]] || { echo "Could not resolve the simulator or the bundle ID" >&2; stage_failed; }
-  xcrun simctl boot "$UI_SIMULATOR" 2>/dev/null || true
-  xcrun simctl bootstatus "$UI_SIMULATOR" -b > /dev/null 2>&1 || true
-  for service in calendar reminders; do
-    xcrun simctl privacy "$UI_SIMULATOR" grant "$service" "$APP_BUNDLE_ID" || stage_failed
-  done
+  tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
   build_ui_selection_args || stage_failed
   ui_status=0
   run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" \
