@@ -18,7 +18,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 - Gesperrte Notizen: während der Entsperrung darf der Assistent sie lesen/bearbeiten (bis Tagwerk verlassen wird) → Änderung in #284; dort zusätzlich CI-Fehler: `NoteLockDeniedUITests.testPrivateFolderShowsLockScreen` („Schalter geht nicht an“), Audit „Rezept-Notiz: Element ohne Beschreibung“.
 - Bible Study: Verstabelle vorläufig → PR #285; CI schnell rot: Verstabelle lädt unter macOS-Pakettests (#279) nicht (Ressource leer) → Fix in Job (2).
-- Merge-Treiber für Kataloge: **gemergt (#286) und aktiviert** (gemeinsame Git-Konfiguration, gilt für alle Worktrees; Branches ohne `.gitattributes` profitieren erst nach dem ersten Nachziehen).
+- Merge-Treiber für Kataloge: **gemergt (#286) und aktiviert**; für Branches ohne `.gitattributes`: `git -c core.attributesFile=<datei mit *.xcstrings merge=xcstrings …> -c merge.xcstrings.driver="/usr/bin/python3 '<hauptordner>/scripts/merge-xcstrings.py' --marker-size %L %O %A %B %P" merge origin/main` (so bei #287 angewandt, konfliktfrei) (gemeinsame Git-Konfiguration, gilt für alle Worktrees; Branches ohne `.gitattributes` profitieren erst nach dem ersten Nachziehen).
 - Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Folge-PR (#280 ist gemergt).
 - Brain Dump am Tab/App-Symbol: nicht nötig.
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
@@ -122,7 +122,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
 | `feat/g2-note-inserts` | G2 Strang NX (NX1–NX7) | PR #288, Head `bf4e0ee`; schnell grün, UI kompiliert → GitHub. Nach #284: Scan-Text/Vorschau gesperrter Notizen verbergen (Konflikte mit NS in AppEnvironment, UITestMode, NoteEditorView) |
 | (Fix) | #284 Regel 1b + CI-Fehler; #285 Verstabelle auf macOS | läuft (Sonnet) |
-| `feat/g2-routines` | G2 Strang RO (RO1–RO8) | PR #287, Head `c3c85b2`; schnell grün, UI kompiliert → GitHub. Sperre in Tagesstart/-abschluss nach #284 (NoteField `editorRow`, `persist()`-Guard); DT-Ursache Tagesabschluss nicht gefunden (nur sonntags) |
+| `feat/g2-routines` | G2 Strang RO (RO1–RO8) | PR #287, Head `7698826` (main per Merge-Treiber eingearbeitet), vorher `c3c85b2`; schnell grün, UI kompiliert → GitHub. Sperre in Tagesstart/-abschluss nach #284 (NoteField `editorRow`, `persist()`-Guard); DT-Ursache Tagesabschluss nicht gefunden (nur sonntags) |
 | (Reparatur) | Pool-Simulator-Store zurücksetzen (`fix/pool-simulator-reset`), #283 und #282 UI-Fehler | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
