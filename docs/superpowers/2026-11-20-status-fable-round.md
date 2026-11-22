@@ -16,7 +16,8 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 ## Offene Kleinigkeiten
 
-- Wacklige `AIKit`-Tests auf CI (Reparatur läuft, `fix/aikit-loopback-tests`): `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
+- Wacklige `AIKit`-Tests auf CI: PR #272 (Ursache: `stop()` kehrte vor dem Schließen zurück), Merge nach grünem schnellen Job: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
+- 22.11. 04:13: `testmanagerd` im Simulator von K lief 10 h 47 min auf ~200 % (Last 500+); Simulator heruntergefahren. Regel an Agents: Simulator nach jedem Lauf herunterfahren.
 - Regel: GitHub-Checks vor jedem Merge abwarten (Fehler bei #269: zu früh gemergt).
 
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
