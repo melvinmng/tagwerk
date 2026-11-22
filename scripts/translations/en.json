@@ -2347,5 +2347,11 @@
   "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised.",
   "Zu allen %lld Vorschlägen": "About all %lld proposals",
   "Zum offenen Vorschlag": "About the open proposal",
-  "Überarbeitet": "Revised"
+  "Überarbeitet": "Revised",
+  "Ballaststoffe": "Fiber",
+  "Zucker": "Sugar",
+  "Gesättigte Fettsäuren": "Saturated fat",
+  "Salz": "Salt",
+  "mind. %@": "at least %@",
+  "%@ · %lld von %lld Mahlzeiten": "%1$@ · %2$lld of %3$lld meals"
 }

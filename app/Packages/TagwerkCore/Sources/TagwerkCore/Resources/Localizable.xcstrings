@@ -121,6 +121,22 @@
         }
       }
     },
+    "%@ · %lld von %lld Mahlzeiten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$lld von %3$lld Mahlzeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld of %3$lld meals"
+          }
+        }
+      }
+    },
     "%@ über Ziel": {
       "localizations": {
         "en": {
@@ -709,6 +725,16 @@
         }
       }
     },
+    "Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber"
+          }
+        }
+      }
+    },
     "Bett machen": {
       "localizations": {
         "en": {
@@ -1175,6 +1201,16 @@
         }
       }
     },
+    "Gesättigte Fettsäuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturated fat"
+          }
+        }
+      }
+    },
     "Getränke": {
       "localizations": {
         "en": {
@@ -1629,6 +1665,16 @@
         }
       }
     },
+    "Salz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salt"
+          }
+        }
+      }
+    },
     "Schlafzeit (%@)": {
       "localizations": {
         "en": {
@@ -1921,6 +1967,16 @@
         }
       }
     },
+    "Zucker": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugar"
+          }
+        }
+      }
+    },
     "Zum Beginn": {
       "localizations": {
         "en": {
@@ -2013,6 +2069,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "today"
+          }
+        }
+      }
+    },
+    "mind. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
           }
         }
       }
