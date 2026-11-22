@@ -354,6 +354,14 @@ enum AuditAllowlist {
         // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
         // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
         if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
+        // The list markers of the rendered recipe note (see the entry "•" above) arrive without an element in the combined run; only
+        // elements of the web view are accepted, and only on the screen of the recipe note.
+        if issue.auditType == .hitRegion {
+            return ["Rezept-Notiz", "AX5/dark Rezept-Notiz"].contains(currentScreen) && issue.detailedDescription.contains("WebAccessibilityObjectWrapper")
+        }
+        // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
+        // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
+        if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
         guard issue.auditType == .textClipped else { return false }
         // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
         // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).

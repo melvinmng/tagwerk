@@ -113,6 +113,16 @@ final class NoteAttachmentStore {
         records().filter { $0.noteID == noteID }.sorted { $0.createdAt < $1.createdAt }
     }
 
+    /// Name, formatted size and kind of every attachment of a note, for the rendered page.
+    func displays(of noteID: UUID) -> [UUID: NoteAttachmentDisplay] {
+        attachments(of: noteID).reduce(into: [:]) { result, record in
+            let isImage = UTType(record.typeIdentifier)?.conforms(to: .image) == true
+            result[record.id] = NoteAttachmentDisplay(
+                name: record.fileName, detail: ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file),
+                kind: isImage ? .image : .file)
+        }
+    }
+
     func record(id: UUID) -> NoteAttachmentRecord? {
         records().first { $0.id == id }
     }
