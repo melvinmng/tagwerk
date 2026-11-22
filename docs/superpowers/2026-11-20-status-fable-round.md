@@ -108,7 +108,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | (G2 TB) | G2 Strang TB | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
-| `feat/nutrition-foundation` | #254 Stränge A und B | läuft (Sonnet) |
+| `feat/nutrition-foundations` | #254 Stränge A und B | PR #281, Head `62bef72`; schnell grün; Offen für C: Zielstände nur vorwärts gespiegelt, `furtherNutrientsGranted()` nie aufgerufen, Schreiberlaubnis beim Spiegeln; `en.json` „%lld Mal“ falsch |
+| (#254 C+D) | Tagesbudget und Nährwerte in der Oberfläche | läuft (Sonnet) |
 | `chore/leaner-tests` | Tests schlanker Tasks 5, 6, 8 | PR #279, Head `78fcb30`: 4 Pakete auf macOS (AIKit bleibt, jetzt im App-Scheme), Pool Slot 1–3 + UI-Sperre, build-for-testing/test-without-building; UI-Stufe mit Pool lokal unbewiesen → CI. Nach Merge: `scripts/clean-test-env.sh --apply` (≈ 25 alte Paket-DerivedData, 4–5 GB) |
 | `feat/g2-bible-study` | G2 BS1–BS2 | Head `1a7ff68` (main eingearbeitet, schnell grün), vorher `476965f`, schnell grün, gepusht, noch kein PR. Verszahlen-Tabelle vorläufig (Luther-Zählung aus Luther 1545, gemeinfrei/MIT), für Schlachter 2000 nicht belegt → Nutzerentscheidung A/B/C. Agent hat vor dem Lesen der Bedingungen ~410 Seiten von Bibleserver/BibleGateway automatisch abgerufen (laut Bedingungen untersagt), danach gelöscht; nichts davon im Repo |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
