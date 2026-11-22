@@ -67,6 +67,34 @@ struct WeekPlanningModelTests {
         #expect(reflection(9).burdens == "Wenig Schlaf")
     }
 
+    @Test func stepSubtitle_namesNext() {
+        #expect(WeekPlanningSheet.stepSubtitle(number: 2, count: 5, next: "Fälligkeiten der neuen Woche")
+                == "Schritt 2 von 5 · danach: Fälligkeiten der neuen Woche")
+    }
+
+    @Test func stepSubtitle_lastStepHasNoNext() async {
+        let model = make(today: 18)
+        for _ in 0..<4 { model.skip() }
+        #expect(model.isLastStep && model.nextStepTitle == nil)
+        #expect(WeekPlanningSheet.stepSubtitle(number: 5, count: 5, next: model.nextStepTitle) == "Schritt 5 von 5")
+        model.skip()
+        #expect(model.isLastStep)
+    }
+
+    @Test func skip_advancesWithoutSavingTheReflection() async {
+        let model = make(today: 18)
+        await model.load()
+        model.next()
+        #expect(model.step == .reflection && model.stepTitle == "Reflexion" && model.nextStepTitle == "Fälligkeiten der neuen Woche")
+        model.weekReview.reflection.wentWell = "Noch nicht gespeichert"
+        model.skip()
+        #expect(model.step == .deadlines)
+        #expect(reflection(9).wentWell.isEmpty)
+        // It is saved when the sheet closes.
+        model.close()
+        #expect(reflection(9).wentWell == "Noch nicht gespeichert")
+    }
+
     private func seed(_ day: Int, _ text: String) {
         routines.saveReflection(WeekReflection(wentWell: text), weekStart: PlanDay(year: 2026, month: 11, day: day), at: Date(timeIntervalSince1970: 0))
     }

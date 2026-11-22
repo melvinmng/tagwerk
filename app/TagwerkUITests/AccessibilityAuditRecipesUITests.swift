@@ -38,7 +38,8 @@ class RecipeScreensAuditCase: UITestCase {
 
         app.buttons["Mehr"].firstMatch.tap()
         tapButton("Zutaten auf die Einkaufsliste")
-        tapScrolling("Zutaten übernehmen")
+        // The note is the source already: the sheet shows a line naming it and the purpose buttons (EK3b).
+        tapScrolling(AccessibilityID.Shopping.recipeToList)
         XCTAssertTrue(app.navigationBars["Zutaten"].waitForExistence(timeout: Self.timeout), "Ingredient result did not open")
         try audit("Zutaten (Rezept)")
     }

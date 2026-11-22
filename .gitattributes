@@ -1,0 +1,4 @@
+# Custom merge drivers: parallel branches that add different keys merge without conflicts.
+# The drivers are registered per clone by scripts/setup-git-merge-drivers.sh; without that, git merges these files as text.
+*.xcstrings merge=xcstrings
+scripts/translations/en.json merge=translationsjson
