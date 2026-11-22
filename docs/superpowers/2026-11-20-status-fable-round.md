@@ -102,7 +102,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/ai-proposal-previews` | #255 Stränge C–E | PR #273; fertig, Head `e7098a2`, voll grün (46 UI-Tests); main `258907a` eingearbeitet (Head `f0008a9`), schnell grün, gepusht, warte auf GitHub; nach Merge von #274 Texttöne nachziehen |
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | PR #275, Head `43b1ece`; Pakete/App grün, UI lokal rot (Sonntags-DT „Wochenplanung starten“, Abbrüche unter Last) → Gate GitHub. Offen: Fokus-Filter-Text „4 h“ vs. 8 h ohne Ruhezeit; seltene Doppelzustellung bei Fokus B < 1 min nach A |
 | `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
-| (Integration) | #273, #275, #276 auf main + Texttöne; Fix Sonntags-DT und „+4 weitere“ (`fix/audit-sunday-and-collapsed`) | läuft (Sonnet, nur schnelle Tests) |
+| (Integration) | #273 `1d1165d`, #275 `826b4f7`, #276 `2229707` auf main + Texttöne, gepusht; PR #278 „+4 weitere“ (primär, Render-Test ≥ 7:1). Sonntags-DT: keine Ursache im Code, Allowlist-Eintrag bleibt (Positionsartefakt vermutet) | warte auf GitHub |
+| `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundation` | #254 Stränge A und B | läuft (Sonnet) |
 | `chore/leaner-tests` | Tests schlanker Tasks 5, 6, 8 (Pakettests auf macOS, Simulator-Pool, ein Build) | läuft (Sonnet) |
