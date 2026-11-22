@@ -16,7 +16,7 @@ public enum HabitSuggestions {
     public static var all: [HabitSuggestion] {
         [HabitSuggestion(key: "reflect", name: String(localized: "Tag reflektieren", bundle: .module), symbol: "moon.stars", source: .eveningClosed),
          HabitSuggestion(key: "bed", name: String(localized: "Bett machen", bundle: .module), symbol: "bed.double", source: .manual),
-         HabitSuggestion(key: "movement", name: String(localized: "Bewegung", bundle: .module), symbol: "figure.walk", source: .workout),
+         HabitSuggestion(key: "movement", name: String(localized: "Bewegung", bundle: .module), symbol: "figure.walk", source: .movement),
          HabitSuggestion(key: "journal", name: String(localized: "Journal schreiben", bundle: .module), symbol: "book.closed", source: .journal),
          HabitSuggestion(key: "shower", name: String(localized: "Duschen", bundle: .module), symbol: "shower", source: .manual),
          // The daylight source is not built yet, so this one is ticked by hand.
@@ -31,6 +31,12 @@ public enum HabitSuggestions {
     public static func missing(existing: [Habit]) -> [HabitSuggestion] {
         let names = Set(existing.map { normalize($0.name) })
         return all.filter { !names.contains(normalize($0.name)) }
+    }
+
+    /// Whether a habit name is the old suggestion "Bewegung" (German or English, compared without case, accents and surrounding
+    /// space). Only the one-time switch to the source `.movement` uses it.
+    public static func isFormerMovementName(_ name: String) -> Bool {
+        ["Bewegung", "Exercise"].contains { normalize($0) == normalize(name) }
     }
 
     /// A suggestion as it will be taken over.

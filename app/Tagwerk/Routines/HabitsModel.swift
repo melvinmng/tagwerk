@@ -63,6 +63,7 @@ final class HabitsModel {
         self.calendar = calendar
         self.now = now
         self.day = PlanDay(date: now(), calendar: calendar)
+        migrateMovementSourceIfNeeded()
         refreshLocal()
     }
 
@@ -82,6 +83,18 @@ final class HabitsModel {
     /// Automatic sources already used by another habit (paused ones included).
     func takenSources(excluding id: UUID?) -> Set<HabitSource> {
         Set(habits.filter { $0.id != id && $0.source != .manual }.map(\.source))
+    }
+
+    /// Once: a habit with the source "Training erfasst" whose name is the old suggestion "Bewegung" (German or English) gets the
+    /// combined source "Bewegung" (workout or step goal). A habit the user renamed or gave another source stays as it is, and
+    /// the switch never runs again, so a later choice of the old source is respected.
+    func migrateMovementSourceIfNeeded() {
+        guard !settings.movementSourceMigrated else { return }
+        settings.movementSourceMigrated = true
+        for var habit in store.habits() where habit.source == .workout && HabitSuggestions.isFormerMovementName(habit.name) {
+            habit.source = .movement
+            store.save(habit)
+        }
     }
 
     // MARK: Loading

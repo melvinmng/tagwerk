@@ -17,7 +17,7 @@ struct HabitSheet: View {
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool { !trimmedName.isEmpty && (habit != nil || model.canAddHabit) }
-    private var sources: [HabitSource] { [.manual, .water, .workout, .steps, .eveningClosed, .journal, .bibleStudy] }
+    private var sources: [HabitSource] { [.manual, .movement, .water, .workout, .steps, .eveningClosed, .journal, .bibleStudy] }
 
     var body: some View {
         NavigationStack {
@@ -48,7 +48,12 @@ struct HabitSheet: View {
                     ForEach(sources, id: \.self) { candidate in
                         Button { source = candidate } label: {
                             HStack {
-                                Text(HabitText.sourceTitle(candidate))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(HabitText.sourceTitle(candidate))
+                                    if let subtitle = HabitText.sourceSubtitle(candidate) {
+                                        Text(subtitle).font(.footnote).foregroundStyle(.secondaryText)
+                                    }
+                                }
                                 Spacer()
                                 if source == candidate { Image(systemName: "checkmark") }
                             }

@@ -57,14 +57,13 @@ enum HabitText {
             let goal = IntakeFormat.liters(facts.goalWaterMilliliters, locale: locale)
             return String(localized: "\(value) von \(goal)")
         case .workout:
-            guard let workout else { return nil }
-            let name = workout.displayName
-            return workout.isOwn ? String(localized: "\(name) \(workout.minutes) min")
-                                 : String(localized: "\(name) \(workout.minutes) min aus Health")
+            return workout.map(workoutDetail)
         case .steps:
-            let value = IntakeFormat.grouped(facts.steps[day] ?? 0, locale: locale)
-            let goal = IntakeFormat.grouped(facts.goalSteps, locale: locale)
-            return String(localized: "\(value) von \(goal) Schritten")
+            return stepsDetail(on: day, facts: facts, locale: locale)
+        case .movement:
+            // A counted workout names itself; otherwise the steps tell how far the day is.
+            if facts.workoutDays.contains(day), let workout { return workoutDetail(workout) }
+            return stepsDetail(on: day, facts: facts, locale: locale)
         case .daylight:
             let minutes = facts.daylightMinutes[day] ?? 0
             return String(localized: "\(minutes) von \(habit.daylightMinutes) min Tageslicht")
@@ -75,6 +74,20 @@ enum HabitText {
         case .bibleStudy:
             return facts.bibleStudyDays.contains(day) ? String(localized: "Sitzung abgeschlossen") : nil
         }
+    }
+
+    private static func workoutDetail(_ workout: WorkoutValue) -> String {
+        let name = workout.displayName
+        return workout.isOwn ? String(localized: "\(name) \(workout.minutes) min")
+                             : String(localized: "\(name) \(workout.minutes) min aus Health")
+    }
+
+    /// "10.412 von 8.000 Schritten"; `nil` without a step goal (nothing to compare with).
+    private static func stepsDetail(on day: PlanDay, facts: HabitFacts, locale: Locale) -> String? {
+        guard facts.goalSteps > 0 else { return nil }
+        let value = IntakeFormat.grouped(facts.steps[day] ?? 0, locale: locale)
+        let goal = IntakeFormat.grouped(facts.goalSteps, locale: locale)
+        return String(localized: "\(value) von \(goal) Schritten")
     }
 
     /// "Täglich", "3 Tage pro Woche".
@@ -90,10 +103,16 @@ enum HabitText {
         case .water: String(localized: "Wasserziel erreicht")
         case .workout: String(localized: "Training erfasst")
         case .steps: String(localized: "Schrittziel erreicht")
+        case .movement: String(localized: "Bewegung")
         case .daylight: String(localized: "Zeit bei Tageslicht")
         case .eveningClosed: String(localized: "Tagesabschluss erledigt")
         case .journal: String(localized: "Tagebuch geschrieben")
         case .bibleStudy: String(localized: "Bible-Study-Sitzung abgeschlossen")
         }
+    }
+
+    /// The line under the name of a source in the picker; `nil` where the title says it all.
+    static func sourceSubtitle(_ source: HabitSource) -> String? {
+        source == .movement ? String(localized: "Training erfasst oder Schrittziel erreicht") : nil
     }
 }

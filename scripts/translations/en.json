@@ -2613,5 +2613,7 @@
   "Trotzdem auf morgen": "Move to tomorrow anyway",
   "Rückblick": "Review",
   "Rückblick auf KW %lld, dann KW %lld planen · etwa 10 min": "Review of week %1$lld, then plan week %2$lld · about 10 min",
-  "Schritt %lld von %lld · danach: %@": "Step %1$lld of %2$lld · next: %3$@"
+  "Schritt %lld von %lld · danach: %@": "Step %1$lld of %2$lld · next: %3$@",
+  "Bewegung": "Exercise",
+  "Training erfasst oder Schrittziel erreicht": "Workout recorded or step goal reached"
 }

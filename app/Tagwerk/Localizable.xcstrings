@@ -6061,6 +6061,16 @@
         }
       }
     },
+    "Bewegung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exercise"
+          }
+        }
+      }
+    },
     "Bezug entfernen": {
       "localizations": {
         "en": {
@@ -20742,6 +20752,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Workout logged"
+          }
+        }
+      }
+    },
+    "Training erfasst oder Schrittziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout recorded or step goal reached"
           }
         }
       }

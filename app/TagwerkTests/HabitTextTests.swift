@@ -74,6 +74,24 @@ struct HabitTextTests {
                 == "Laufen 30 min")
     }
 
+    @Test func sourceDetail_movement_namesWhatCounted() {
+        let german = Locale(identifier: "de_DE")
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 8000
+        data.steps[today] = 10_412
+        // A step goal reached on a day without a workout: the steps are named.
+        #expect(HabitText.sourceDetail(movement, on: today, facts: data, workout: nil, locale: german) == "10.412 von 8.000 Schritten")
+        // A counted workout names itself, also when the step goal is reached too.
+        data.workoutDays = [today]
+        let run = WorkoutValue(id: "1", activity: .running, start: testNow(), minutes: 42, kilocalories: nil, sourceName: nil, isOwn: true)
+        #expect(HabitText.sourceDetail(movement, on: today, facts: data, workout: run, locale: german) == "Laufen 42 min")
+        // Without a step goal and without workout details there is nothing to name.
+        #expect(HabitText.sourceDetail(movement, on: today, facts: .empty, workout: nil, locale: german) == nil)
+        #expect(HabitText.sourceTitle(.movement) == "Bewegung")
+        #expect(HabitText.sourceSubtitle(.movement) == "Training erfasst oder Schrittziel erreicht" && HabitText.sourceSubtitle(.water) == nil)
+    }
+
     @Test func sourceDetail_manualHabit_hasNone() {
         #expect(HabitText.sourceDetail(habit(start: day(11, 1)), on: today, facts: .empty, workout: nil) == nil)
     }
