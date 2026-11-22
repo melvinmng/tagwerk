@@ -1853,6 +1853,16 @@
         }
       }
     },
+    "%lld Seiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pages"
+          }
+        }
+      }
+    },
     "%lld Status": {
       "localizations": {
         "en": {
@@ -3502,6 +3512,16 @@
         }
       }
     },
+    "1 Seite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 page"
+          }
+        }
+      }
+    },
     "1 Stunde": {
       "localizations": {
         "en": {
@@ -4791,6 +4811,7 @@
       }
     },
     "Anhängen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5503,6 +5524,16 @@
         }
       }
     },
+    "Aufnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
+          }
+        }
+      }
+    },
     "Aufwand": {
       "localizations": {
         "en": {
@@ -5635,6 +5666,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unschedule"
+          }
+        }
+      }
+    },
+    "Ausrichtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alignment"
           }
         }
       }
@@ -7914,6 +7955,16 @@
         }
       }
     },
+    "Die Notiz hat sich geändert. Die Tabelle wurde nicht übernommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has changed. The table was not applied."
+          }
+        }
+      }
+    },
     "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": {
       "localizations": {
         "en": {
@@ -8105,6 +8156,16 @@
         }
       }
     },
+    "Die Strichdaten fehlen. Die Zeichnung lässt sich nur ansehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The stroke data is missing. The drawing can only be viewed."
+          }
+        }
+      }
+    },
     "Die Suche braucht mindestens 2 Zeichen.": {
       "localizations": {
         "en": {
@@ -8205,6 +8266,26 @@
         }
       }
     },
+    "Die Zeichnung ließ sich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drawing could not be read."
+          }
+        }
+      }
+    },
+    "Die Zeichnung ließ sich nicht sichern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drawing could not be saved."
+          }
+        }
+      }
+    },
     "Die Zeit ist ungültig.": {
       "localizations": {
         "en": {
@@ -8282,6 +8363,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The three quick buttons in the Capture tab add these amounts, in this order."
+          }
+        }
+      }
+    },
+    "Die erste Zeile ist die Kopfzeile. In der Notiz steht die Tabelle als Markdown-Text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first row is the header row. In the note, the table is stored as Markdown text."
           }
         }
       }
@@ -8382,6 +8473,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This backup comes from a newer version of Tagwerk. Update the app and try again."
+          }
+        }
+      }
+    },
+    "Diese Tabelle hat mehr als 8 Spalten. Bearbeite sie im Text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This table has more than 8 columns. Edit it in the text."
           }
         }
       }
@@ -8578,6 +8679,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictation"
+          }
+        }
+      }
+    },
+    "Dokument scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan document"
           }
         }
       }
@@ -8869,6 +8980,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "One of these reminders falls within quiet hours. Routine reminders still come through."
+          }
+        }
+      }
+    },
+    "Einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert"
           }
         }
       }
@@ -9480,6 +9601,26 @@
     "Erkannt: %@": {
       "shouldTranslate": false
     },
+    "Erkannten Text einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert recognized text"
+          }
+        }
+      }
+    },
+    "Erkannten Text kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy recognized text"
+          }
+        }
+      }
+    },
     "Erkenner": {
       "shouldTranslate": false
     },
@@ -9716,6 +9857,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only “Accept” creates the block in the plan calendar."
+          }
+        }
+      }
+    },
+    "Erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
           }
         }
       }
@@ -12312,6 +12463,16 @@
         }
       }
     },
+    "Im Scan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In scan"
+          }
+        }
+      }
+    },
     "Im Tagesabschluss": {
       "localizations": {
         "en": {
@@ -12328,6 +12489,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "In the morning start"
+          }
+        }
+      }
+    },
+    "Im Text bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit in text"
           }
         }
       }
@@ -13764,6 +13935,16 @@
         }
       }
     },
+    "Kopfzeile, Spalte %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header row, column %lld"
+          }
+        }
+      }
+    },
     "Kopieren": {
       "localizations": {
         "en": {
@@ -14030,6 +14211,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Link to the mail"
+          }
+        }
+      }
+    },
+    "Links": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
           }
         }
       }
@@ -17432,6 +17623,16 @@
         }
       }
     },
+    "Rechts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        }
+      }
+    },
     "Reflexion": {
       "localizations": {
         "en": {
@@ -18647,6 +18848,36 @@
         }
       }
     },
+    "Spalte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Column"
+          }
+        }
+      }
+    },
+    "Spalte links einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert column on the left"
+          }
+        }
+      }
+    },
+    "Spalte löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete column"
+          }
+        }
+      }
+    },
     "Sprachchat-Antwort": {
       "localizations": {
         "en": {
@@ -19163,6 +19394,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Symbol"
+          }
+        }
+      }
+    },
+    "Tabelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Table"
+          }
+        }
+      }
+    },
+    "Tabelle bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit table"
           }
         }
       }
@@ -19905,6 +20156,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text"
+          }
+        }
+      }
+    },
+    "Text erkannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text recognized"
+          }
+        }
+      }
+    },
+    "Text erkennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognize text"
+          }
+        }
+      }
+    },
+    "Text wird erkannt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text …"
           }
         }
       }
@@ -21267,6 +21548,16 @@
         }
       }
     },
+    "Weiter zeichnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep drawing"
+          }
+        }
+      }
+    },
     "Weitere": {
       "localizations": {
         "en": {
@@ -21977,6 +22268,26 @@
         }
       }
     },
+    "Zeichnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drawing"
+          }
+        }
+      }
+    },
+    "Zeichnung verwerfen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard drawing?"
+          }
+        }
+      }
+    },
     "Zeigt Details": {
       "localizations": {
         "en": {
@@ -21993,6 +22304,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shows the “Morning start” or “Today’s focus” card and, in the evening, the “Evening wrap-up” row in the Plan tab."
+          }
+        }
+      }
+    },
+    "Zeile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Row"
+          }
+        }
+      }
+    },
+    "Zeile %lld, Spalte %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Zeile %1$lld, Spalte %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Row %1$lld, column %2$lld"
+          }
+        }
+      }
+    },
+    "Zeile darüber einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert row above"
+          }
+        }
+      }
+    },
+    "Zeile löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete row"
+          }
+        }
+      }
+    },
+    "Zeile nach oben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move row up"
+          }
+        }
+      }
+    },
+    "Zeile nach unten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move row down"
           }
         }
       }
@@ -22141,6 +22518,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Period"
+          }
+        }
+      }
+    },
+    "Zentriert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centered"
           }
         }
       }

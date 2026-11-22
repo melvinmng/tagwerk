@@ -50,8 +50,12 @@ public struct NoteSearchItem: Sendable, Hashable, Identifiable {
     public let dayKey: String?
     /// The routine day this hit opens instead of a note: a day of "Tagesstart" that only has gratitude. `nil` for notes.
     public let routineDay: PlanDay?
+    /// The text recognised in the scans of the note (the app search only; empty for the assistant, which never gets it).
+    public let scanText: String
 
-    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil, routineDay: PlanDay? = nil) {
+    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil, routineDay: PlanDay? = nil,
+                scanText: String = "") {
+        self.scanText = scanText
         self.id = id
         self.text = text
         self.kindLabel = kindLabel
@@ -188,7 +192,7 @@ public struct SearchResults: Sendable {
             rowsByKind[.notes] = input.notes
                 .sorted { ($0.updatedAt, $0.id.uuidString) > ($1.updatedAt, $1.id.uuidString) }
                 .compactMap { note in
-                    query.match(SearchDocument(noteText: note.text, kindLabel: note.kindLabel)).map { .note(note, $0) }
+                    query.match(SearchDocument(noteText: note.text, kindLabel: note.kindLabel, scanText: note.scanText)).map { .note(note, $0) }
                 }
             rowsByKind[.shopping] = input.shopping.compactMap { item in
                 query.match(SearchDocument(shoppingName: item.name, quantity: item.quantity)).map { .shopping(item, $0) }
