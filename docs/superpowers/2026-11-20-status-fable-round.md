@@ -17,7 +17,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 ## Entscheidungen 22.11. (Kommentar in #188)
 
 - Gesperrte Notizen: während der Entsperrung darf der Assistent sie lesen/bearbeiten (bis Tagwerk verlassen wird) → Änderung in #284.
-- Bible Study: Verstabelle vorläufig → PR #285.
+- Bible Study: Verstabelle vorläufig → PR #285; CI schnell rot: Verstabelle lädt unter macOS-Pakettests (#279) nicht (Ressource leer) → Fix in Job (2).
 - Merge-Treiber für Kataloge: ja → `chore/xcstrings-merge-driver` (läuft, ohne Xcode).
 - Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Änderung in #280.
 - Brain Dump am Tab/App-Symbol: nicht nötig.
