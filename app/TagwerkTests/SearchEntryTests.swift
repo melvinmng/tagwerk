@@ -131,6 +131,57 @@ struct SearchEntryTests {
         #expect(titles(model).filter { $0 == "Statistik-Heft" }.count == 1)
     }
 
+    // MARK: Gratitude in the app search (NF5)
+
+    private let gratitudeDay = PlanDay(year: 2026, month: 11, day: 19)
+
+    @Test func gratitudeSearchItems_dayWithoutNote_hasRoutineDay() {
+        let calendar = testCalendar()
+        let items = AppEnvironment.gratitudeSearchItems(gratitudeDays: [gratitudeDay: ["Kaffee", "Sonne"]], morningNoteDays: [], calendar: calendar)
+        #expect(items.count == 1)
+        #expect(items[0].routineDay == gratitudeDay && items[0].dayKey == "2026-11-19" && items[0].kindLabel == "Tagesstart")
+        #expect(items[0].text == "Dankbar für: Kaffee · Sonne")
+        #expect(PlanDay(date: items[0].updatedAt, calendar: calendar) == gratitudeDay)
+        // A day with a note has no item of its own: its gratitude is part of the note's text.
+        #expect(AppEnvironment.gratitudeSearchItems(gratitudeDays: [gratitudeDay: ["Kaffee"]], morningNoteDays: [gratitudeDay], calendar: calendar).isEmpty)
+    }
+
+    @Test func gratitudeSearchItems_idIsStable() {
+        let calendar = testCalendar()
+        let first = AppEnvironment.gratitudeSearchItems(gratitudeDays: [gratitudeDay: ["Kaffee"]], morningNoteDays: [], calendar: calendar)
+        let second = AppEnvironment.gratitudeSearchItems(gratitudeDays: [gratitudeDay: ["Anderes"]], morningNoteDays: [], calendar: calendar)
+        #expect(first[0].id == second[0].id)
+        #expect(AppEnvironment.gratitudeItemID(for: gratitudeDay) != AppEnvironment.gratitudeItemID(for: PlanDay(year: 2026, month: 11, day: 20)))
+    }
+
+    @Test func appSearch_findsGratitudeOfDayWithNote() async throws {
+        let note = try #require(environment.notes.create(text: "Abgabe heute", kind: .morning, dayKey: "2026-11-19"))
+        environment.routines.setGratitude(["Kaffee mit Jonas"], on: gratitudeDay)
+        let model = environment.makeSearchModel()
+        model.text = "jonas"
+        let rows = model.results.sections.flatMap(\.rows)
+        let hit = rows.compactMap { row -> NoteSearchItem? in if case .note(let item, _) = row { return item } else { return nil } }
+        #expect(hit.map(\.id) == [note.id])
+    }
+
+    @Test func appSearch_findsDayWithGratitudeOnly() async {
+        environment.routines.setGratitude(["Ruhiger Morgen"], on: gratitudeDay)
+        let model = environment.makeSearchModel()
+        model.text = "ruhiger"
+        let hit = model.results.sections.flatMap(\.rows).compactMap { row -> NoteSearchItem? in if case .note(let item, _) = row { return item } else { return nil } }
+        #expect(hit.map(\.routineDay) == [gratitudeDay])
+    }
+
+    @Test func assistantSearchSource_neverContainsGratitude() throws {
+        // A morning note is not private, so it reaches the assistant; its gratitude and the days without a note never do.
+        environment.notes.create(text: "Abgabe heute", kind: .morning, dayKey: "2026-11-19")
+        environment.routines.setGratitude(["Kaffee mit Jonas"], on: gratitudeDay)
+        environment.routines.setGratitude(["Ruhiger Morgen"], on: PlanDay(year: 2026, month: 11, day: 18))
+        let items = AppEnvironment.assistantSearchNotes(store: environment.notes)
+        #expect(items.count == 1 && items[0].routineDay == nil)
+        #expect(!items.contains { $0.text.contains("Jonas") || $0.text.contains("Ruhiger") })
+    }
+
     @Test func shoppingSectionNeedsAReadyList() async {
         environment.notes.create(text: "Statistik Ideen")
         let model = environment.makeSearchModel()

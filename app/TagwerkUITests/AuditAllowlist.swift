@@ -49,6 +49,9 @@ enum AuditAllowlist {
             "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen", "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*",
             "Trinkportionen", "Brain Dump", "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?",
+            // Section headers of the notes overview and the date groups of the notes list (NF1, NF3), in the tone `secondaryText` like the others.
+            "Meine Ordner", "Persönlich", "Angeheftet", "Letzte 7 Tage",
+            "(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember) \\d{4}",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
@@ -107,6 +110,30 @@ enum AuditAllowlist {
             + "evening runs after the change) showed none of the struck candidates, and the next full run reported \"von heute übrig\" and "
             + "\"Tagesabschluss\" again, a CI run \"Anmeldung Abschlussarbeit\"; so the whole group stays. The cause is the material, not the "
             + "tone: a solid card fill (as the card of \"Artikel übersetzen\" has) would remove the group."),
+
+        Entry(auditType: .contrast, labels: [
+            "Mit ChatGPT besprechen", "Britisches Englisch", "Markennamen lassen",
+            "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",
+        ], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
+            "Header, footer and quick replies of the follow-up section of the translation preview (plan ki-vorschlaege-anpassen, task D5): "
+            + "the header in `secondaryText` (the tone of strand K) and the footer in the system footer style, and the purple bordered buttons of the shared follow-up bar (the same "
+            + "style as the quick replies of \"Tag planen\"), on the grouped background of the half-height sheet. The audit reports them as "
+            + "\"nearly passed\" or \"failed\" depending on the run and the text size; the system draws the colour of the "
+            + "bordered style and of the footer (#188, \"Schrift auf Tönung\")."),
+
+        Entry(auditType: .contrast, labels: [
+            "Mit ChatGPT besprechen", "Senden gibt das Rezept .*", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
+        ], screens: recipeScreens + recipeScreensLargeText, reason:
+            "Header, footer and quick replies of the follow-up section of the recipe sheets (plan ki-vorschlaege-anpassen, task D2): the "
+            + "header in `secondaryText` (no longer the system grey) and footer in the system footer style, and the purple bordered buttons of the shared follow-up bar (the same style "
+            + "as the quick replies of \"Tag planen\"), on the grouped background (\"nearly passed\" in some runs, not in others on the same "
+            + "screen). Same group as the other section headers and the tinted buttons above; the system draws the colours (#188, "
+            + "\"Sekundärtexte\", \"Schrift auf Tönung\")."),
+        Entry(auditType: .contrast, labels: ["\\d+\\. .*"], screens: ["Rezept anlegen (Bestätigung)", "AX5/dark Rezept anlegen (Bestätigung)"], reason:
+            "Steps of the recipe on the confirmation of \"Rezept speichern\" (plan ki-vorschlaege-anpassen, task D2): with the follow-up section "
+            + "above them the list is longer than the screen, and the audit measures the rows that lie partly under the translucent bottom bar "
+            + "with \"Rezept speichern\" against the material of the bar (primary text, normally 15:1 on the grouped background). The row "
+            + "scrolls clear of the bar; the finding is the measurement on the material, like the other rows under a bar."),
         Entry(auditType: .contrast, labels: gridCellLabels, screens: gridScreens, reason:
             "Title of the grey entries of the hour grid of \"Planen\" (\"Sprechstunde\", \"Mittagspause\"): primary text on the event colour at "
             + "24 % (grey). The time line (`gridTimeText`, 85 %, KO3a) and the titles on blue, green and red pass since strand K; the grey "
@@ -146,7 +173,20 @@ enum AuditAllowlist {
             + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
 
+        Entry(auditType: .dynamicType, labels: [
+            "Britisches Englisch", "Markennamen lassen", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
+        ], screens: ["Einkaufsliste › Übersetzung"] + recipeScreens, reason:
+            "Quick replies of the follow-up of the translation preview and of the recipe sheets (plan ki-vorschlaege-anpassen, tasks D2 and D5): bordered buttons with a text "
+            + "style in a horizontal scroll row, shared with the quick replies of \"Tag planen\" (`FollowUpBar`). The audit reports a partial "
+            + "lack of support in some runs (it does so for different texts of the screen from run to run); the buttons grow with the text size "
+            + "and are not clipped in the large text run. Stays on the device test list (large text)."),
+
         // MARK: Text clipped
+        Entry(auditType: .textClipped, labels: ["Britisches Englisch", "Markennamen lassen"], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:
+            "Quick replies of the follow-up of the translation preview (plan ki-vorschlaege-anpassen, task D5): bordered buttons in a horizontal "
+            + "scroll row (`FollowUpBar`, shared with the quick replies of \"Tag planen\"). The row scrolls sideways, so a chip wider than the "
+            + "screen is reached by swiping and its text is complete; the audit reports the chip at the edge of the visible area. Large text is "
+            + "checked on the device (large text test list)."),
         Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
             "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
             + "overlapping events share the width (up to four columns). Short or narrow entries cut their text by design; the full text is "
@@ -353,6 +393,14 @@ enum AuditAllowlist {
         // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
         // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
         if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
+        // The list markers of the rendered recipe note (see the entry "•" above) arrive without an element in the combined run; only
+        // elements of the web view are accepted, and only on the screen of the recipe note.
+        if issue.auditType == .hitRegion {
+            return ["Rezept-Notiz", "AX5/dark Rezept-Notiz"].contains(currentScreen) && issue.detailedDescription.contains("WebAccessibilityObjectWrapper")
+        }
+        // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
+        // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
+        if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
         guard issue.auditType == .textClipped else { return false }
         // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
         // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).

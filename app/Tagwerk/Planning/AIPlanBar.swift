@@ -8,6 +8,8 @@ struct AIPlanBar: View {
     @Environment(AppEnvironment.self) private var environment
     let scope: PlanScope
     @State private var showsResult = false
+    /// The planning whose suggestions are talked about at once (task E2).
+    @State private var discussedBatch: UUID?
     /// Set in the preview of a neighbour page: the open suggestions of that day.
     @Environment(\.dayPageExtras) private var pageExtras
 
@@ -31,6 +33,9 @@ struct AIPlanBar: View {
             }
             .font(.subheadline)
             .sheet(isPresented: $showsResult) { PlanResultSheet(scope: scope) }
+            .sheet(item: Binding(get: { discussedBatch.map(DiscussedBatch.init) }, set: { discussedBatch = $0?.id })) { batch in
+                PlanBatchConversationSheet(batchID: batch.id)
+            }
         }
     }
 
@@ -136,6 +141,10 @@ struct AIPlanBar: View {
                 .tint(.purple)
                 Button("Neu planen") { start() }
                     .buttonStyle(.bordered)
+                if let batch = batches.max(by: { $0.createdAt < $1.createdAt }) {
+                    Button("Alle Vorschläge besprechen") { discussedBatch = batch.id }
+                        .buttonStyle(.bordered)
+                }
             } else if retry {
                 Button("Erneut versuchen") { Task { await planner.retry() } }
                     .buttonStyle(.borderedProminent)
@@ -377,4 +386,9 @@ enum SuggestionText {
         if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
         return parts.joined(separator: " · ")
     }
+}
+
+/// Identifies the planning of the sheet "Alle Vorschläge besprechen".
+private struct DiscussedBatch: Identifiable {
+    let id: UUID
 }

@@ -1,6 +1,21 @@
 import Foundation
 import Markdown
 
+/// What the page needs to know about an attachment of the note.
+public struct NoteAttachmentDisplay: Sendable, Equatable {
+    public enum Kind: Sendable, Equatable { case image, file }
+    public var name: String
+    /// "1,2 MB", already formatted by the app.
+    public var detail: String
+    public var kind: Kind
+
+    public init(name: String, detail: String = "", kind: Kind = .file) {
+        self.name = name
+        self.detail = detail
+        self.kind = kind
+    }
+}
+
 /// Turns the Markdown of a note into the HTML page that the note view shows. The page runs without JavaScript;
 /// everything that could load or run something is handled here and again by the view (see `contentSecurityPolicy`).
 public enum NoteHTMLRenderer {
@@ -12,12 +27,33 @@ public enum NoteHTMLRenderer {
     /// the text cannot, because the scheme is not in `HTMLSanitizer.linkSchemes`.
     public static let toggleScheme = "tagwerk-toggle"
 
-    /// The HTML of the note body. `attachmentNames` names the attachments for links without a label.
-    public static func html(markdown: String, attachmentNames: [UUID: String] = [:]) -> String {
+    public struct RenderOptions: Sendable, Equatable {
+        /// The attachments of the note by ID: names links without a label and turns file references into chips.
+        public var attachments: [UUID: NoteAttachmentDisplay] = [:]
+        /// Wraps the text of the page in links that open the editor at that source line.
+        public var editLinks = false
+
+        public init(attachments: [UUID: NoteAttachmentDisplay] = [:], editLinks: Bool = false) {
+            self.attachments = attachments
+            self.editLinks = editLinks
+        }
+    }
+
+    /// The HTML of the note body.
+    public static func html(markdown: String, options: RenderOptions) -> String {
         // Smart punctuation stays off: a note shows exactly what was typed.
         let document = Document(parsing: markdown, options: [.disableSmartOpts])
-        var visitor = BodyVisitor(attachmentNames: attachmentNames)
-        return visitor.visit(document)
+        var visitor = BodyVisitor(options: options)
+        var output = visitor.visit(document)
+        // A tap below the text writes at the end of the note. The empty link is only a touch target: it stays out of the
+        // accessibility tree (the action "Bearbeiten" is the way in for VoiceOver).
+        if options.editLinks { output += "<a class=\"e tail\" href=\"\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n" }
+        return output
+    }
+
+    /// Kept for existing callers; forwards to `html(markdown:options:)`. `attachmentNames` names the attachments.
+    public static func html(markdown: String, attachmentNames: [UUID: String] = [:]) -> String {
+        html(markdown: markdown, options: RenderOptions(attachments: attachmentNames.mapValues { NoteAttachmentDisplay(name: $0) }))
     }
 
     public enum ColorScheme: Sendable { case system, light, dark }
@@ -40,17 +76,32 @@ public enum NoteHTMLRenderer {
         \(colorScheme == .dark ? ":root { " + Self.darkVariables + " }" : "")
         \(colorScheme == .system ? "@media (prefers-color-scheme: dark) { :root { " + Self.darkVariables + " } }" : "")
         html { -webkit-text-size-adjust: 100%; }
-        body { margin: 0; padding: 4px 2px 24px; color: var(--text); background: transparent; word-wrap: break-word;
+        body { margin: 0; padding: 4px 18px 24px; color: var(--text); background: transparent; word-wrap: break-word;
                font: \(String(format: "%.2f", 17 * scale))px/1.45 -apple-system, system-ui, sans-serif; }
         h1, h2, h3, h4, h5, h6 { line-height: 1.2; margin: 1.1em 0 .4em; }
-        h1 { font-size: 1.6em; } h2 { font-size: 1.35em; } h3 { font-size: 1.15em; } h4, h5, h6 { font-size: 1em; }
+        h1 { font-size: 1.41em; font-weight: 700; } h2 { font-size: 1em; font-weight: 600; }
+        h3, h4, h5, h6 { font-size: 1em; font-weight: 600; }
         p { margin: .5em 0; }
         ul, ol { padding-left: 1.4em; margin: .4em 0; }
         li > p { margin: .15em 0; }
         li.task { list-style: none; margin-left: -1.4em; }
+        li.done { color: var(--muted); }
         a { color: var(--accent); text-decoration: none; }
-        a.task-box { display: inline-block; width: 1.1em; margin-right: .4em; text-align: center; font-size: 1.1em; line-height: 1; }
+        a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }
+        a.e.block { display: block; }
+        a.e.tail { display: block; min-height: 50vh; }
+        a.img { display: inline-block; max-width: 100%; }
+        a.task-box { display: inline-flex; min-width:44px; min-height:44px; align-items: center; justify-content: center;
+                     vertical-align: top; margin: calc((1.45em - 44px) / 2) calc(.4em + (1.1em - 44px) / 2) calc((1.45em - 44px) / 2) calc((1.1em - 44px) / 2); }
+        a.task-box .box { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 1.1em; height: 1.1em;
+                          border: 2px solid var(--muted); border-radius: .3em; font-size: 1em; line-height: 1; color: #fff; }
+        a.task-box[aria-checked="true"] .box { background: var(--accent); border-color: var(--accent); font-size: .8em; font-weight: 700; }
         a.file { display: inline-block; padding: .1em .6em; border: 1px solid var(--line); border-radius: 1em; }
+        a.chip { display: inline-flex; align-items: center; gap: .5em; min-height:44px; box-sizing: border-box; padding: 0 .8em; margin: .2em .4em .2em 0; max-width: 100%;
+                 background: var(--code); border: 1px solid var(--line); border-radius: 10px; color: var(--text); }
+        a.chip::before { content: "▤"; }
+        a.chip .name { min-width: 0; overflow-wrap: anywhere; }
+        a.chip .detail { color: var(--muted); font-size: .85em; }
         blockquote { margin: .6em 0; padding: 0 0 0 .9em; border-left: 3px solid var(--line); color: var(--muted); }
         code { font: .9em ui-monospace, Menlo, monospace; background: var(--code); border-radius: 4px; padding: .05em .3em; }
         pre { background: var(--code); border-radius: 8px; padding: .6em .8em; overflow-x: auto; }
@@ -60,7 +111,7 @@ public enum NoteHTMLRenderer {
         th, td { border: 1px solid var(--line); padding: .3em .6em; vertical-align: top; }
         th { background: var(--code); }
         td.right, th.right { text-align: right; } td.center, th.center { text-align: center; }
-        img { max-width: 100%; height: auto; border-radius: 8px; }
+        img { max-width:100%; max-height:40vh; width: auto; height: auto; object-fit:contain; border-radius: 8px; }
         mark { background: #ffe66d; color: #1c1c1e; }
         details { margin: .4em 0; }
         </style></head>
@@ -92,12 +143,14 @@ public enum NoteHTMLRenderer {
     private struct BodyVisitor: MarkupVisitor {
         typealias Result = String
 
-        let attachmentNames: [UUID: String]
+        let options: RenderOptions
         /// The checkboxes are numbered in document order, like `MarkdownText.togglingCheckbox` counts them.
         var checkboxIndex = 0
         var sanitizer = HTMLSanitizer()
+        /// Greater than zero inside a real link or a table: no edit link there (no anchor inside an anchor).
+        var anchorDepth = 0
 
-        init(attachmentNames: [UUID: String]) { self.attachmentNames = attachmentNames }
+        init(options: RenderOptions) { self.options = options }
 
         mutating func defaultVisit(_ markup: Markup) -> String { children(of: markup) }
 
@@ -126,7 +179,27 @@ public enum NoteHTMLRenderer {
         mutating func visitBlockQuote(_ blockQuote: BlockQuote) -> String { "<blockquote>\n\(children(of: blockQuote))</blockquote>\n" }
 
         mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
-            "<pre><code>\(NoteHTMLRenderer.escape(codeBlock.code))</code></pre>\n"
+            let block = "<pre><code>\(NoteHTMLRenderer.escape(codeBlock.code))</code></pre>"
+            guard let line = firstContentLine(of: codeBlock), canLinkForEditing else { return block + "\n" }
+            return "<a class=\"e block\" href=\"\(NoteEditTarget.scheme):\(line)\">\(block)</a>\n"
+        }
+
+        /// The source line of the first line of code: after the opening fence of a fenced block, the first line of an
+        /// indented one. The number of lines the block spans against the lines of its code tells the two apart.
+        private func firstContentLine(of codeBlock: CodeBlock) -> Int? {
+            guard let range = codeBlock.range else { return nil }
+            let codeLines = codeBlock.code.isEmpty ? 0 : codeBlock.code.split(separator: "\n", omittingEmptySubsequences: false).count - (codeBlock.code.hasSuffix("\n") ? 1 : 0)
+            let spannedLines = range.upperBound.line - range.lowerBound.line + 1
+            return spannedLines > codeLines ? range.lowerBound.line + 1 : range.lowerBound.line
+        }
+
+        /// Whether the next piece of text may become an edit link.
+        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !sanitizer.isSuppressing }
+
+        /// Wraps an inline piece in the edit link of the source line of `markup`.
+        private func editLinked(_ html: String, for markup: Markup) -> String {
+            guard canLinkForEditing, !html.isEmpty, let line = markup.range?.lowerBound.line else { return html }
+            return "<a class=\"e\" href=\"\(NoteEditTarget.scheme):\(line)\">\(html)</a>"
         }
 
         mutating func visitThematicBreak(_ thematicBreak: ThematicBreak) -> String { "<hr>\n" }
@@ -147,8 +220,8 @@ public enum NoteHTMLRenderer {
             let isChecked = checkbox == .checked
             // A link instead of an input: it needs no script to react, and a disabled input would swallow the tap.
             let box = "<a class=\"task-box\" href=\"\(NoteHTMLRenderer.toggleScheme):\(index)\" data-index=\"\(index)\" role=\"checkbox\" "
-                + "aria-checked=\"\(isChecked)\">\(isChecked ? "☑" : "☐")</a>"
-            return "<li class=\"task\">\(box)\(content(of: item))</li>\n"
+                + "aria-checked=\"\(isChecked)\"><span class=\"box\">\(isChecked ? "✓" : "")</span></a>"
+            return "<li class=\"task\(isChecked ? " done" : "")\">\(box)\(content(of: item))</li>\n"
         }
 
         /// The content of a list item. A single paragraph is written without its own <p>, so short items stay compact.
@@ -161,6 +234,9 @@ public enum NoteHTMLRenderer {
         }
 
         mutating func visitTable(_ table: Table) -> String {
+            // A table is edited in its own sheet (NX); there is no edit link inside.
+            anchorDepth += 1
+            defer { anchorDepth -= 1 }
             let alignments = table.columnAlignments
             func row(_ cells: some Sequence<Table.Cell>, tag: String) -> String {
                 var output = "<tr>"
@@ -185,7 +261,7 @@ public enum NoteHTMLRenderer {
         // Inlines
 
         mutating func visitText(_ text: Text) -> String {
-            sanitizer.isSuppressing ? "" : NoteHTMLRenderer.escape(text.string)
+            sanitizer.isSuppressing ? "" : editLinked(NoteHTMLRenderer.escape(text.string), for: text)
         }
 
         // A single line break in a note is a line break on the page.
@@ -200,17 +276,24 @@ public enum NoteHTMLRenderer {
         mutating func visitStrikethrough(_ strikethrough: Strikethrough) -> String { wrap("del", strikethrough) }
 
         mutating func visitInlineCode(_ code: InlineCode) -> String {
-            sanitizer.isSuppressing ? "" : "<code>\(NoteHTMLRenderer.escape(code.code))</code>"
+            sanitizer.isSuppressing ? "" : editLinked("<code>\(NoteHTMLRenderer.escape(code.code))</code>", for: code)
         }
 
         mutating func visitInlineHTML(_ html: InlineHTML) -> String { sanitizer.feed(html.rawHTML) }
 
         mutating func visitLink(_ link: Link) -> String {
+            anchorDepth += 1
             let label = children(of: link)
+            anchorDepth -= 1
             guard !sanitizer.isSuppressing else { return "" }
             guard let target = link.destination.flatMap(HTMLSanitizer.allowedLinkTarget) else { return label }
             if let id = HTMLSanitizer.attachmentID(inReference: target) {
-                let name = label.isEmpty ? NoteHTMLRenderer.escape(attachmentNames[id] ?? String(id.uuidString.prefix(8))) : label
+                let display = options.attachments[id]
+                let name = label.isEmpty ? NoteHTMLRenderer.escape(display?.name ?? String(id.uuidString.prefix(8))) : label
+                if let display, display.kind == .file {
+                    let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
+                    return "<a class=\"chip\" href=\"\(target)\"><span class=\"name\">\(name)</span>\(detail)</a>"
+                }
                 return "<a class=\"file\" href=\"\(target)\">📎 \(name)</a>"
             }
             return "<a href=\"\(HTMLSanitizer.escapeAttribute(target))\">\(label)</a>"
@@ -220,7 +303,9 @@ public enum NoteHTMLRenderer {
             guard !sanitizer.isSuppressing else { return "" }
             // Only attachments are shown; a remote or any other image source is never put on the page.
             guard let id = image.source.flatMap(HTMLSanitizer.attachmentID(inReference:)) else { return "[Bild]" }
-            return "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            let picture = "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            // A tap opens the picture large (Quick Look); it never starts writing.
+            return anchorDepth == 0 ? "<a class=\"img\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
         }
 
         private mutating func wrap(_ tag: String, _ markup: Markup) -> String {

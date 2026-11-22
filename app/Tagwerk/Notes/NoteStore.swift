@@ -37,8 +37,9 @@ final class NoteStore {
 
     // MARK: Reading
 
-    /// The notes of a filter. Pinned notes first, then by `order`; the trash lists the newest deletion first.
-    func notes(_ filter: Filter = .all, sortedBy order: NoteSortOrder = .modified) -> [NoteRecord] {
+    /// The notes of a filter. Pinned notes first, then by `order`; `ascending` turns the order inside the pinned and the
+    /// unpinned notes around (oldest first, "Z bis A"). The trash lists the newest deletion first.
+    func notes(_ filter: Filter = .all, sortedBy order: NoteSortOrder = .modified, ascending: Bool = false) -> [NoteRecord] {
         let folderIDs = Set(folders().map(\.id))
         let matching = all().filter { note in
             if case .trash = filter { return note.deletedAt != nil }
@@ -54,10 +55,10 @@ final class NoteStore {
         if case .trash = filter {
             return matching.sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
         }
-        return matching.sorted { order.precedes(Self.sortKey($0), Self.sortKey($1)) }
+        return matching.sorted { order.precedes(Self.sortKey($0), Self.sortKey($1), reversed: ascending) }
     }
 
-    private static func sortKey(_ note: NoteRecord) -> NoteSortKey {
+    static func sortKey(_ note: NoteRecord) -> NoteSortKey {
         NoteSortKey(isPinned: note.isPinned, createdAt: note.createdAt, updatedAt: note.updatedAt, title: NoteText.title(note.text))
     }
 

@@ -132,6 +132,41 @@ public struct RecipeTranslationPlan: Sendable, Equatable {
         return result
     }
 
+    // MARK: Edited translation
+
+    /// The translated lines of a text the user edited, keyed by the indices of `request`. The text must have the lines of the
+    /// note: the same number of lines, the unchanged lines (blank lines, attachment references, addresses) as they were, and
+    /// every line to translate behind its prefix (indentation, hashes, bullet, number). Anything else is `structureChanged`.
+    public func translations(fromEdited text: String) throws(Failure) -> [Int: String] {
+        let lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
+        guard lines.count == segments.count else { throw .structureChanged }
+        var result: [Int: String] = [:]
+        for (index, segment) in segments.enumerated() {
+            switch segment {
+            case .fixed(let line):
+                guard lines[index] == line else { throw .structureChanged }
+            case .text(let prefix, _, _):
+                guard lines[index].hasPrefix(prefix) else { throw .structureChanged }
+                result[index] = String(lines[index].dropFirst(prefix.count))
+            case .ingredientsHeading, .stepsHeading, .servings, .source:
+                break
+            }
+        }
+        return result
+    }
+
+    /// Checks a translation the user edited by hand before it replaces the note: the same rules as for an answer of the model
+    /// (no empty line, no line break, the same attachments, links and ingredient amounts per line) and a text that still reads as
+    /// the same recipe (sections, number of ingredients and steps, servings, source). Throws the first rule that is broken.
+    public func validateEdited(_ text: String, language: VoiceLanguage) throws(Failure) {
+        let translations = try translations(fromEdited: text)
+        _ = try assembled(translations: translations, language: language)
+        guard let edited = RecipeNote.parse(text), let original = RecipeNote.parse(markdown),
+              RecipeNote.outline(text) == RecipeNote.outline(markdown),
+              edited.ingredients.count == original.ingredients.count, edited.steps.count == original.steps.count,
+              edited.servings == original.servings, edited.sourceURL == original.sourceURL else { throw .structureChanged }
+    }
+
     // MARK: Classification
 
     private static func classify(_ raw: String, inIngredients: Bool) -> Segment {

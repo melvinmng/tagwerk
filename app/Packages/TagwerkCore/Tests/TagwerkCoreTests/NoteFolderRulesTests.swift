@@ -249,4 +249,31 @@ struct NoteFolderRulesTests {
         #expect(sorted(.created) == ["Zitrone", "Apfel", "banane"])
         #expect(sorted(.title) == ["Zitrone", "Apfel", "banane"])
     }
+
+    @Test func sortOrder_reversedKeepsPinnedOnTop() {
+        let old = instant(2026, 1, 1)
+        let mid = instant(2026, 6, 1)
+        let new = instant(2026, 11, 1)
+        let apple = NoteSortKey(isPinned: false, createdAt: new, updatedAt: old, title: "Apfel")
+        let banana = NoteSortKey(isPinned: false, createdAt: old, updatedAt: new, title: "banane")
+        let cherry = NoteSortKey(isPinned: true, createdAt: mid, updatedAt: mid, title: "Zitrone")
+        let lemon = NoteSortKey(isPinned: true, createdAt: new, updatedAt: new, title: "Limone")
+        func sorted(_ order: NoteSortOrder, reversed: Bool) -> [String] {
+            [apple, banana, cherry, lemon].sorted { order.precedes($0, $1, reversed: reversed) }.map(\.title)
+        }
+        #expect(sorted(.modified, reversed: false) == ["Limone", "Zitrone", "banane", "Apfel"])
+        #expect(sorted(.modified, reversed: true) == ["Zitrone", "Limone", "Apfel", "banane"])
+        // "Z bis A" for titles.
+        #expect(sorted(.title, reversed: false) == ["Limone", "Zitrone", "Apfel", "banane"])
+        #expect(sorted(.title, reversed: true) == ["Zitrone", "Limone", "banane", "Apfel"])
+    }
+
+    @Test func sortOrder_groupingDateFollowsTheOrder() {
+        let created = instant(2026, 1, 1)
+        let updated = instant(2026, 11, 1)
+        let key = NoteSortKey(isPinned: false, createdAt: created, updatedAt: updated, title: "A")
+        #expect(NoteSortOrder.modified.groupingDate(of: key) == updated)
+        #expect(NoteSortOrder.created.groupingDate(of: key) == created)
+        #expect(NoteSortOrder.title.groupingDate(of: key) == nil)
+    }
 }

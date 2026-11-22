@@ -101,4 +101,84 @@ struct NoteMarkdownViewTests {
         let widths = try await webView.evaluateJavaScript("[...document.images].map(i => i.naturalWidth)", in: nil, contentWorld: .defaultClient) as? [Int]
         #expect(widths == [40, 0, 0])
     }
+
+    // MARK: Taps on the page
+
+    private func makeCoordinator(delay: Duration = .milliseconds(20)) -> NoteMarkdownView.Coordinator {
+        NoteMarkdownView.Coordinator(onToggleCheckbox: { _ in }, onOpenAttachment: { _ in }, unansweredTapDelay: delay)
+    }
+
+    @Test func coordinator_editLink_callsOnEditWithLine() async {
+        let coordinator = makeCoordinator()
+        var lines: [Int?] = []
+        coordinator.onEdit = { lines.append($0) }
+        await coordinator.activate(URL(string: "tagwerk-edit:12")!)
+        #expect(lines == [12])
+    }
+
+    @Test func coordinator_endLink_callsOnEditWithNil() async {
+        let coordinator = makeCoordinator()
+        var lines: [Int?] = []
+        coordinator.onEdit = { lines.append($0) }
+        await coordinator.activate(URL(string: "tagwerk-edit:end")!)
+        #expect(lines.count == 1 && lines[0] == nil)
+        // A malformed edit link does nothing.
+        await coordinator.activate(URL(string: "tagwerk-edit:x")!)
+        #expect(lines.count == 1)
+    }
+
+    @Test func coordinator_toggleLink_doesNotCallOnEdit() async {
+        var toggled: [Int] = []
+        let coordinator = NoteMarkdownView.Coordinator(onToggleCheckbox: { toggled.append($0) }, onOpenAttachment: { _ in })
+        var edits = 0
+        coordinator.onEdit = { _ in edits += 1 }
+        await coordinator.activate(URL(string: "tagwerk-toggle:3")!)
+        #expect(toggled == [3] && edits == 0)
+    }
+
+    @Test func coordinator_unansweredTap_firesAfterDelay() async {
+        let coordinator = makeCoordinator()
+        var fractions: [Double] = []
+        coordinator.onUnansweredTap = { fractions.append($0) }
+        coordinator.registerTap(fraction: 0.4)
+        #expect(fractions.isEmpty)
+        await coordinator.pendingTap?.value
+        #expect(fractions == [0.4])
+    }
+
+    @Test func coordinator_linkWithinWindow_cancelsUnansweredTap() async {
+        let coordinator = makeCoordinator(delay: .seconds(5))
+        var fractions: [Double] = []
+        coordinator.onUnansweredTap = { fractions.append($0) }
+        coordinator.registerTap(fraction: 0.4)
+        await coordinator.activate(URL(string: "tagwerk-toggle:0")!)
+        await coordinator.pendingTap?.value
+        #expect(fractions.isEmpty)
+    }
+
+    @Test func coordinator_linkJustBeforeTap_isNotAGap() async {
+        let coordinator = makeCoordinator(delay: .seconds(5))
+        var fractions: [Double] = []
+        coordinator.onUnansweredTap = { fractions.append($0) }
+        await coordinator.activate(URL(string: "tagwerk-toggle:0")!)
+        coordinator.registerTap(fraction: 0.4)
+        await coordinator.pendingTap?.value
+        #expect(fractions.isEmpty)
+    }
+
+    @Test func coordinator_secondTapReplacesTheFirst() async {
+        let coordinator = makeCoordinator()
+        var fractions: [Double] = []
+        coordinator.onUnansweredTap = { fractions.append($0) }
+        coordinator.registerTap(fraction: 0.1)
+        coordinator.registerTap(fraction: 0.9)
+        await coordinator.pendingTap?.value
+        #expect(fractions == [0.9])
+    }
+
+    @Test func configuration_stillDisablesJavaScript() {
+        let configuration = NoteMarkdownView.makeConfiguration(attachments: nil)
+        #expect(configuration.defaultWebpagePreferences.allowsContentJavaScript == false)
+        #expect(configuration.userContentController.userScripts.isEmpty)
+    }
 }

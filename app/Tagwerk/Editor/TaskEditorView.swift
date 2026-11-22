@@ -304,13 +304,21 @@ struct TaskEditorView: View {
             } else {
                 NavigationLink {
                     ReminderSelectionPage(model: reminders.list, subject: .task, calendar: calendar,
-                                          footer: remindersFooter(reminders))
+                                          footer: remindersFooter(reminders), quietContext: quietContext(reminders))
                 } label: {
                     LabeledContent("Erinnerungen",
                                    value: reminders.list.rowSummary(subject: .task, calendar: calendar))
                 }
             }
         }
+    }
+
+    /// What the hint "kommt 07:00" needs. An own list of a task from the Reminders app becomes alarms there, which quiet hours
+    /// do not hold back.
+    private func quietContext(_ reminders: TaskReminderModel) -> (anchor: Date, quietHours: QuietHours?)? {
+        guard let due = model.draft.due else { return nil }
+        if model.original.id.source == .reminders, !reminders.list.isUsingDefault { return nil }
+        return (due.startDate(in: calendar), environment.settings.quietHours)
     }
 
     private func remindersFooter(_ reminders: TaskReminderModel) -> String? {

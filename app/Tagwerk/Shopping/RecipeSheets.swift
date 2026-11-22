@@ -26,6 +26,8 @@ struct RecipeSheet: View {
     struct RecipeResult: Identifiable, Hashable {
         let id = UUID()
         let recipe: RecipeImporter.Result
+        /// Asks ChatGPT about the recipe again while the sheet holds its source; `nil` for a recipe read on the device.
+        var reviser: RecipeReviser? = nil
         /// The recipe came from a note of the user: it is not saved as a second recipe note.
         let fromNote: Bool
         /// The user chose "Nur als Rezept speichern": the result is saved as a note, the shopping list stays untouched.
@@ -42,8 +44,8 @@ struct RecipeSheet: View {
     var body: some View {
         NavigationStack {
             RecipeInputView(purpose: .shopping, model: model, start: start,
-                            choice: RecipeInputView.Choice(offersSaveOnly: offersSaveOnly)) { recipe, fromNote, purpose in
-                result = RecipeResult(recipe: recipe, fromNote: fromNote,
+                            choice: RecipeInputView.Choice(offersSaveOnly: offersSaveOnly)) { recipe, fromNote, purpose, reviser in
+                result = RecipeResult(recipe: recipe, reviser: reviser, fromNote: fromNote,
                                       savesOnly: Self.savesOnly(offersSaveOnly: offersSaveOnly, purpose: purpose))
             }
             .navigationTitle("Rezept hinzufügen")
@@ -62,14 +64,14 @@ struct RecipeSheet: View {
             .navigationDestination(item: $result) { found in
                 if found.savesOnly {
                     // The same confirmation as "Rezept mit ChatGPT anlegen"; the shopping list is not touched.
-                    RecipeNoteSaveView(result: found.recipe, store: environment.notes) { _ in
+                    RecipeNoteSaveView(result: found.recipe, reviser: found.reviser, store: environment.notes) { _ in
                         onFinished(String(localized: "Das Rezept liegt als Notiz im Ordner „Rezepte“."))
                         dismiss()
                     } onDiscard: {
                         dismiss()
                     }
                 } else {
-                    RecipeResultView(result: found.recipe, fromNote: found.fromNote, model: model) { line in
+                    RecipeResultView(result: found.recipe, reviser: found.reviser, fromNote: found.fromNote, model: model) { line in
                         onFinished(line)
                         dismiss()
                     } onDiscard: {
@@ -182,8 +184,9 @@ struct RecipeInputView: View {
     let model: ShoppingModel?
     var start: RecipeStart?
     var choice: Choice?
-    /// Called with the recipe, whether it came from a note of the user, and the purpose of the button that was tapped.
-    let onResult: (RecipeImporter.Result, Bool, RecipePurpose) -> Void
+    /// Called with the recipe, whether it came from a note of the user, the purpose of the button that was tapped and what asks
+    /// ChatGPT about the recipe again (`nil` for a recipe read on the device).
+    let onResult: (RecipeImporter.Result, Bool, RecipePurpose, RecipeReviser?) -> Void
 
     /// The input ends in one button per purpose instead of one button.
     struct Choice {
@@ -192,7 +195,7 @@ struct RecipeInputView: View {
     }
 
     init(purpose: RecipePurpose, model: ShoppingModel?, start: RecipeStart? = nil, choice: Choice? = nil,
-         onResult: @escaping (RecipeImporter.Result, Bool, RecipePurpose) -> Void) {
+         onResult: @escaping (RecipeImporter.Result, Bool, RecipePurpose, RecipeReviser?) -> Void) {
         self.purpose = purpose
         self.model = model
         self.start = start
@@ -545,7 +548,16 @@ struct RecipeInputView: View {
                                                                       localClassifier: classifier)
                 // A cancelled request must not show a late answer.
                 guard !Task.isCancelled else { return }
-                onResult(found, fromNote, purpose)
+                // The follow-up sends the source again while the sheet holds it (AN7b); a link sends the text read from the page.
+                let importer = environment.recipeImporter
+                var reviser: RecipeReviser?
+                if !found.readLocally {
+                    reviser = { current, pinned, focus, comment in
+                        try await importer.revise(input, current: current, pinned: pinned, focus: focus, comment: comment, language: language,
+                                                  shoppingLanguage: shoppingLanguage, categoryNames: names, openItemKeys: openKeys)
+                    }
+                }
+                onResult(found, fromNote, purpose, reviser)
             } catch let failure as RecipeImporter.Failure {
                 if !Task.isCancelled { errorText = failure.message }
             } catch {
@@ -583,7 +595,10 @@ struct RecipeResultView: View {
     let onAdded: (String) -> Void
     let onDiscard: () -> Void
 
-    @State private var deselected: Set<String>
+    /// The rows with their marks, the checkmarks and the follow-up (plan ki-vorschlaege-anpassen, task D2).
+    @State private var draft: RecipeDraftModel
+    /// The row whose small sheet "Zutat" is open.
+    @State private var editedRowID: UUID?
     /// "Rezept für": the servings the recipe is written for; `nil` when the recipe names none, then it has to be set.
     @State private var baseServings: Int?
     /// "Ich koche für"; `nil` follows "Rezept für".
@@ -596,20 +611,20 @@ struct RecipeResultView: View {
     @State private var quantityEditID: String?
     @State private var quantityDraft = ""
 
-    init(result: RecipeImporter.Result, fromNote: Bool, model: ShoppingModel, onAdded: @escaping (String) -> Void,
-         onDiscard: @escaping () -> Void) {
+    init(result: RecipeImporter.Result, reviser: RecipeReviser? = nil, fromNote: Bool, model: ShoppingModel,
+         onAdded: @escaping (String) -> Void, onDiscard: @escaping () -> Void) {
         self.result = result
         self.fromNote = fromNote
         self.model = model
         self.onAdded = onAdded
         self.onDiscard = onDiscard
-        _deselected = State(initialValue: Self.initiallyDeselected(result.candidates))
+        _draft = State(initialValue: RecipeDraftModel(result: result, reviser: reviser))
         _baseServings = State(initialValue: result.servings)
         _savesNote = State(initialValue: Self.defaultSavesNote(fromNote: fromNote))
     }
 
-    private var candidates: [RecipeImporter.Candidate] { result.candidates }
-    private var selected: [RecipeImporter.Candidate] { Self.selection(candidates, deselected: deselected) }
+    private var candidates: [RecipeImporter.Candidate] { draft.candidates }
+    private var selected: [RecipeImporter.Candidate] { draft.selectedCandidates }
     private var target: Int? { Self.targetServings(base: baseServings, cooking: cookingServings) }
     private var locale: Locale { result.language.locale }
     /// The language the items go on the list in: the second language of the import, else the recipe's.
@@ -712,14 +727,15 @@ struct RecipeResultView: View {
     // MARK: Body
 
     var body: some View {
-        let shown = Self.effective(candidates, base: baseServings, target: target, locale: locale, overrides: quantityOverrides)
-        let fresh = shown.filter { !$0.alreadyOnList }
-        let listed = shown.filter(\.alreadyOnList)
+        let shown = Array(zip(draft.rows, Self.effective(candidates, base: baseServings, target: target, locale: locale,
+                                                          overrides: quantityOverrides)))
+        let fresh = shown.filter { !$0.1.alreadyOnList }
+        let listed = shown.filter(\.1.alreadyOnList)
         List {
             servingsSection
             if !fresh.isEmpty {
                 Section {
-                    ForEach(fresh) { candidate in row(candidate) }
+                    ForEach(fresh, id: \.0.id) { row, candidate in self.row(row, candidate) }
                 } header: {
                     Text(Self.newHeader(count: fresh.count))
                 } footer: {
@@ -728,13 +744,14 @@ struct RecipeResultView: View {
             }
             if !listed.isEmpty {
                 Section {
-                    ForEach(listed) { candidate in row(candidate) }
+                    ForEach(listed, id: \.0.id) { row, candidate in self.row(row, candidate) }
                 } header: {
                     Text(Self.listedHeader(count: listed.count))
                 } footer: {
                     categoryFooter
                 }
             }
+            if draft.hasFollowUp { recipeFollowUp }
             if !fromNote {
                 Section {
                     Toggle("Auch als Rezept-Notiz sichern", isOn: $savesNote)
@@ -753,6 +770,13 @@ struct RecipeResultView: View {
         }
         .navigationTitle("Zutaten")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: Binding(get: { editedRowID.flatMap { id in draft.rows.first { $0.id == id } } }, set: { editedRowID = $0?.id })) { row in
+            RecipeRowEditor(row: row, categories: categoryChoices) {
+                // The values of the sheet replace an amount typed into the small field before.
+                quantityOverrides[row.candidate.id] = nil
+                draft.edit($0)
+            }
+        }
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Verwerfen", action: onDiscard) }
@@ -787,6 +811,25 @@ struct RecipeResultView: View {
         }
     }
 
+    /// The names of the list's categories and the fixed section, for the small sheet of an ingredient.
+    private var categoryChoices: [String] {
+        environment.shoppingCategories.categories().map(\.name) + [ShoppingSorter.otherName]
+    }
+
+    /// The input line below the ingredients: the source (while the sheet holds it), the ingredients with the changes of the
+    /// user and the message go out; the shopping list and everything else stay on the device.
+    private var recipeFollowUp: some View {
+        PreviewFollowUpSection(
+            model: draft.followUp,
+            availability: FollowUpAvailability.state(hasConsent: environment.settings.shoppingRecipeConsent,
+                                                     isSignedIn: environment.ai.isSignedIn, isOffline: false),
+            place: .shopping,
+            quickReplies: [String(localized: "Ohne Gewürze"), String(localized: "Mengen runden"), String(localized: "Fehlt etwas?")],
+            placeholder: "Zum Rezept etwas sagen …",
+            footer: Text("Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT. Deine Liste und Mengen darauf gehen nicht mit."),
+            focusLabel: { String(localized: "Zu: \($0.candidate.listName)") }, onSend: { message in Task { await draft.send(message) } })
+    }
+
     @ViewBuilder private var categoryFooter: some View {
         if result.readLocally {
             Text("Die Kategorien kommen aus deiner Einkaufsliste.")
@@ -798,31 +841,23 @@ struct RecipeResultView: View {
         }
     }
 
-    /// The row: a checkmark and the name with its second line, and the amount as a button of its own that opens the small field.
-    private func row(_ candidate: RecipeImporter.Candidate) -> some View {
-        let isOn = !deselected.contains(candidate.id)
+    /// The row: a checkmark that chooses, the name with its second line (a tap on it opens the values of the ingredient, AN9a), the
+    /// amount as a button of its own that opens the small field (EK4b) and, with the follow-up, a button to write about this one.
+    private func row(_ row: RecipeRow, _ candidate: RecipeImporter.Candidate) -> some View {
+        let isOn = draft.isSelected(row.id)
         let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity
-        return HStack(spacing: 0) {
-            Button {
-                if isOn { deselected.insert(candidate.id) } else { deselected.remove(candidate.id) }
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(candidate.listName).foregroundStyle(.primary)
-                        if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
-                            Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
-                        }
-                        // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
-                        Text(secondLine(candidate, quantity: quantity)).font(.subheadline).foregroundStyle(Color.secondaryText)
-                    }
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
+        return HStack(alignment: .top, spacing: 0) {
+            Button { draft.toggle(row.id) } label: {
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
+                    .minimumTapTarget()
             }
             .buttonStyle(.borderless)  // inside a list row, default buttons all fire together
+            .accessibilityLabel(candidate.listName)
             .accessibilityAddTraits(isOn ? .isSelected : [])
+            Button { editedRowID = row.id } label: { rowText(candidate, mark: draft.followUp.mark(of: row.id)) }
+                .buttonStyle(.borderless)
+                .accessibilityHint("Öffnet die Werte der Zutat")
             Button {
                 quantityDraft = quantity ?? ""
                 quantityEditID = candidate.id
@@ -835,7 +870,26 @@ struct RecipeResultView: View {
             .buttonStyle(.borderless)
             .accessibilityLabel(String(localized: "Menge ändern, \(candidate.listName)"))
             .accessibilityValue(quantity ?? String(localized: "ohne Menge"))
+            if draft.hasFollowUp {
+                Button("Mit ChatGPT zu dieser Zutat schreiben", systemImage: "sparkles") { draft.followUp.focus = row.id }
+                    .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+            }
         }
+    }
+
+    private func rowText(_ candidate: RecipeImporter.Candidate, mark: ProposalMark?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(candidate.listName).foregroundStyle(.primary)
+            if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
+                Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
+            }
+            // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
+            Text(secondLine(candidate, quantity: RecipeImporter.listItem(for: candidate, locale: listLocale).quantity))
+                .font(.subheadline).foregroundStyle(Color.secondaryText)
+            PreviewRowMark(mark: mark)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     /// Under the name: the category, or for an item on the list what is there and what checking it does.
@@ -859,7 +913,7 @@ struct RecipeResultView: View {
         isAdding = true
         let chosen = Self.effective(selected, base: baseServings, target: target, locale: locale, overrides: quantityOverrides)
         // The note keeps the title, the servings and the amounts of the recipe, not the scaled ones.
-        let note = Self.noteToSave(result, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
+        let note = Self.noteToSave(draft.current, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
         Task {
             let report = await RecipeImporter.apply(chosen, model: model, categories: environment.shoppingCategories, locale: listLocale)
             var line = Self.resultLine(report)

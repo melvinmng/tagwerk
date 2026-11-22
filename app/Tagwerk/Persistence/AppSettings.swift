@@ -117,6 +117,10 @@ final class AppSettings {
 
     /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
     var noteSortOrderRaw: String = "modified"
+    /// Turns the order of the note lists around ("Älteste zuerst"; for the title order "Z bis A"). One setting for all folders.
+    var noteSortAscending: Bool = false
+    /// Date groups ("Heute", "Letzte 7 Tage", months) in the note lists; has no effect on the title order.
+    var noteGroupsByDate: Bool = true
 
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
@@ -136,7 +140,7 @@ final class AppSettings {
 
     /// JSON of `ReminderDefaults` (plan P4); `nil` means the defaults that behave like the former lead time.
     var reminderDefaultsData: Data? = nil
-    /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
+    /// Focus filter "Mitteilungen zurückhalten" (runtime state, not a preference): set while a Focus with the filter is
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil
