@@ -289,7 +289,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld time"
+                  "value": "once"
                 }
               },
               "other": {
