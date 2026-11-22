@@ -375,9 +375,16 @@ enum AuditAllowlist {
     /// The first entry of the list that covers a finding with an element, with the pattern that matched.
     private static func matchingEntry(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement) -> (index: Int, pattern: String)? {
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
-        // Every read of an element property is a query of its own and slow, so each is read once per finding.
-        let label = element.label, identifier = element.identifier, elementType = element.elementType
-        stats.elementQueries += 3
+        // Every read of an element property is a query of its own and slow, so the properties come from one snapshot of the element
+        // (one query). When the element cannot be snapshotted, the three reads run as before and fail the same way.
+        let label: String, identifier: String, elementType: XCUIElement.ElementType
+        if let snapshot = try? element.snapshot() {
+            (label, identifier, elementType) = (snapshot.label, snapshot.identifier, snapshot.elementType)
+            stats.elementQueries += 1
+        } else {
+            (label, identifier, elementType) = (element.label, element.identifier, element.elementType)
+            stats.elementQueries += 3
+        }
         let index = entries.firstIndex { entry in
             guard entry.auditType == issue.auditType, entry.screens == nil || entry.screens?.contains(currentScreen) == true,
                   entry.elementType == nil || entry.elementType == elementType else { return false }
