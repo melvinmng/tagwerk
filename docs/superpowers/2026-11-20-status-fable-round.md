@@ -24,7 +24,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
 - Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
 
-Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2) #284 Regel 1b + #280 Mengen + Fokus-Folge-PR (4 h, Doppelzustellung), (3) gebündelte Audit-Befunde.
+Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 (läuft), (2b) Folge-PR Mengen-Knopf + Fokus 4 h + Doppelzustellung, (2c) Sperre in RO (#287) und NX (#288) nach #284, (3) gebündelte Audit-Befunde.
 
 ## Offene Kleinigkeiten
 
@@ -120,7 +120,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | (Kette) | #276, #273, #275 | **gemergt** (`main` = `0f0fce1`); CI schnell grün, UI nur wiederkehrende DT-/Tippflächen-Befunde |
 | `feat/g2-notion-import` | G2 Strang TB (Notion-Import) | PR #282, Head `455c3e0`; CI schnell grün, UI: eigener Test `NotesUITests.testEmptyJournalFolderOffersImport` rot („Ordner des Tagebuchs fehlt“, vermutlich NF-Abschnitte) → Reparatur zusammen mit #283 |
 | `feat/g2-note-lock` | G2 Strang NS (Notizen sperren) | PR #284, Head `4eea8ff`; schnell grün, UI kompiliert → GitHub. Offen: Tagesstart/-abschluss zeigen Text gesperrter Notizen (an RO) |
-| (G2 NX) | G2 Welle 2, Strang NX (Scannen, Zeichnen, Tabellen) | läuft (Sonnet) |
+| `feat/g2-note-inserts` | G2 Strang NX (NX1–NX7) | PR #288, Head `bf4e0ee`; schnell grün, UI kompiliert → GitHub. Nach #284: Scan-Text/Vorschau gesperrter Notizen verbergen (Konflikte mit NS in AppEnvironment, UITestMode, NoteEditorView) |
+| (Fix) | #284 Regel 1b + CI-Fehler; #285 Verstabelle auf macOS | läuft (Sonnet) |
 | `feat/g2-routines` | G2 Strang RO (RO1–RO8) | PR #287, Head `c3c85b2`; schnell grün, UI kompiliert → GitHub. Sperre in Tagesstart/-abschluss nach #284 (NoteField `editorRow`, `persist()`-Guard); DT-Ursache Tagesabschluss nicht gefunden (nur sonntags) |
 | (Reparatur) | Pool-Simulator-Store zurücksetzen (`fix/pool-simulator-reset`), #283 und #282 UI-Fehler | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
