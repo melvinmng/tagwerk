@@ -95,9 +95,10 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-travel-time`, `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | **gemergt (#263, #264, `main` = `099f2e8`)**; PL10b gebaut (Kapsel 9,6/10,2:1) |
 | `fix/day-capacity` | #260 Kapazität | **gemergt (#268, `main` = `bafd1c3`)**, voll grün; Beispieltag „8 h frei von 8 h“; offen: `TimeGrid.freeGaps` (Raster) kennt Fahrzeit/KA1c nicht; `RecurringEffortStore.reservedMinutes` tot |
 | `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | **gemergt (#271, `main` = `04b50fb`)**; PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
-| `feat/ai-proposal-previews` | #255 Stränge C–E | PR #273; fertig, Head `e7098a2`, voll grün (46 UI-Tests); Konflikt mit main nach #261 → wird gerade nachgezogen (Sonnet, nur schnelle Tests), Gate GitHub |
+| `feat/ai-proposal-previews` | #255 Stränge C–E | PR #273; fertig, Head `e7098a2`, voll grün (46 UI-Tests); main `258907a` eingearbeitet (Head `f0008a9`), schnell grün, gepusht, warte auf GitHub; nach Merge von #274 Texttöne nachziehen |
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | PR #275, Head `43b1ece`; Pakete/App grün, UI lokal rot (Sonntags-DT „Wochenplanung starten“, Abbrüche unter Last) → Gate GitHub. Offen: Fokus-Filter-Text „4 h“ vs. 8 h ohne Ruhezeit; seltene Doppelzustellung bei Fokus B < 1 min nach A |
 | (G2 NF) | G2 Welle 1, Strang NF | läuft (Sonnet) |
+| (G2 BS1–BS2) | G2 Welle 1, Bible Study Recherche + Regeln | läuft (Sonnet) |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
 
 ## Neues Thema (21.11.): Ernährung, Gewicht, Ziele mit ChatGPT
