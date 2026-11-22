@@ -1209,4 +1209,33 @@ struct BackupTests {
         #expect(!detail.contains("iCloud"))
         #expect(BackupStatusText.detail(.failed(message: "Voll"), folderName: "Tagwerk", summary: nil, includesPrivate: true) == "Voll")
     }
+
+    // MARK: Comparison before a restore
+
+    @Test func currentCounts_matchInspectionOfOwnBackup() throws {
+        let inspection = try backup.inspect(try backup.makeBackupData(includePrivate: true))
+        let counts = backup.currentCounts()
+        #expect(counts == inspection.counts)
+        #expect(counts.tasks > 0 && counts.notes > 0 && counts.habits > 0 && counts.meals > 0 && counts.privateNotes > 0)
+    }
+
+    @Test func counts_privateNotesOnlyWithSwitch() throws {
+        let with = try backup.inspect(try backup.makeBackupData(includePrivate: true))
+        let without = try backup.inspect(try backup.makeBackupData(includePrivate: false))
+        #expect(with.counts.privateNotes > 0 && without.counts.privateNotes == 0)
+        // The notes of the daily routine are in both, so the "Notizen" row compares like with like.
+        #expect(with.counts.notes == without.counts.notes && with.counts.tasks == without.counts.tasks)
+        #expect(with.counts.notes + with.counts.privateNotes == with.notes)
+    }
+
+    @Test func comparison_fileWithoutPrivate_saysKept() throws {
+        let device = backup.currentCounts()
+        let without = try backup.inspect(try backup.makeBackupData(includePrivate: false))
+        let rows = RestoreComparison.rows(device: device, inspection: without)
+        #expect(rows.map(\.title) == ["Aufgaben", "Notizen", "Gewohnheiten", "Mahlzeiten", "Tagebuch, Bible Study"])
+        #expect(rows.last?.device == device.privateNotes && rows.last?.file == nil)
+        #expect(rows.dropLast().allSatisfy { $0.file != nil })
+        let with = try backup.inspect(try backup.makeBackupData(includePrivate: true))
+        #expect(RestoreComparison.rows(device: device, inspection: with).last?.file == with.counts.privateNotes)
+    }
 }

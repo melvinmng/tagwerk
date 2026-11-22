@@ -85,11 +85,12 @@ struct BackupSettingsView: View {
             guard case .success(let url) = result else { return }
             do { try service.chooseFolder(url) } catch { alertText = BackupService.message(for: .folderUnavailable) }
         }
-        .confirmationDialog("Alle Daten durch die Sicherung ersetzen?", isPresented: restoreBinding, titleVisibility: .visible) {
-            Button("Wiederherstellen", role: .destructive) { restore(service) }
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            if let pendingRestore { Text(Self.summary(pendingRestore)) }
+        .sheet(isPresented: restoreBinding) {
+            if let pendingRestore {
+                RestoreComparisonSheet(inspection: pendingRestore, device: service.currentCounts(),
+                                       onReplace: { restore(service) }, onCancel: { self.pendingRestore = nil })
+                    .presentationDetents([.large])
+            }
         }
         .alert(alertText ?? "", isPresented: alertBinding) { Button("OK", role: .cancel) {} }
     }
@@ -161,16 +162,6 @@ struct BackupSettingsView: View {
     }
 
     // MARK: Texts
-
-    /// "Sicherung vom 19.11.2026: 12 Aufgaben, 5 Notizen, 3 Gewohnheiten, 2 Mahlzeiten."
-    static func summary(_ inspection: BackupService.Inspection) -> String {
-        let created = ISO8601DateFormatter().date(from: inspection.header.createdAt)
-            .map { $0.formatted(date: .abbreviated, time: .shortened) } ?? inspection.header.createdAt
-        let counts = String(localized: "\(inspection.tasks) Aufgaben, \(inspection.notes) Notizen, \(inspection.habits) Gewohnheiten, \(inspection.meals) Mahlzeiten")
-        let privateText = inspection.header.includesPrivateNotes
-            ? String(localized: "Mit Tagebuch und Bible Study.") : String(localized: "Ohne Tagebuch und Bible Study.")
-        return String(localized: "Sicherung vom \(created): \(counts). \(privateText) Das ersetzt die gesicherten Daten auf diesem iPhone.")
-    }
 
     static func lastBackupText(_ date: Date?) -> String {
         date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "Noch keine")

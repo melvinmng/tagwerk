@@ -1518,6 +1518,7 @@
       }
     },
     "%lld Aufgaben, %lld Notizen, %lld Gewohnheiten, %lld Mahlzeiten": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4119,6 +4120,7 @@
       }
     },
     "Alle Daten durch die Sicherung ersetzen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4346,6 +4348,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everything to the next working day"
+          }
+        }
+      }
+    },
+    "Alles auf diesem iPhone wird ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything on this iPhone will be replaced."
           }
         }
       }
@@ -6994,6 +7006,16 @@
         }
       }
     },
+    "Daten ersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace data"
+          }
+        }
+      }
+    },
     "Datenschutzhinweis": {
       "localizations": {
         "en": {
@@ -8781,6 +8803,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This repository is not in the list from list_github_targets."
+          }
+        }
+      }
+    },
+    "Dieses iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone"
           }
         }
       }
@@ -14719,6 +14751,16 @@
         }
       }
     },
+    "Mahlzeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals"
+          }
+        }
+      }
+    },
     "Mahlzeiten von ChatGPT schätzen": {
       "localizations": {
         "en": {
@@ -15333,6 +15375,7 @@
       }
     },
     "Mit Tagebuch und Bible Study.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16064,6 +16107,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not applied"
+          }
+        }
+      }
+    },
+    "Nicht betroffen: Chatverlauf, Anmeldung bei ChatGPT und GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not affected: chat history, sign-in to ChatGPT and GitHub."
           }
         }
       }
@@ -17096,6 +17149,7 @@
       }
     },
     "Ohne Tagebuch und Bible Study.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18945,6 +18999,16 @@
         }
       }
     },
+    "Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup"
+          }
+        }
+      }
+    },
     "Sicherung fehlgeschlagen": {
       "localizations": {
         "en": {
@@ -18955,7 +19019,18 @@
         }
       }
     },
+    "Sicherung vom %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup from %@"
+          }
+        }
+      }
+    },
     "Sicherung vom %@: %@. %@ Das ersetzt die gesicherten Daten auf diesem iPhone.": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -19870,6 +19945,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open journal"
+          }
+        }
+      }
+    },
+    "Tagebuch, Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal, Bible Study"
           }
         }
       }
@@ -21757,6 +21842,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "What happens"
+          }
+        }
+      }
+    },
+    "Was seit dem %@ dazugekommen ist, steht danach nur noch in der Sicherheitskopie, die Tagwerk jetzt anlegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whatever was added since %@ will afterwards only be in the safety copy that Tagwerk creates now."
           }
         }
       }
@@ -23822,6 +23917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "so far"
+          }
+        }
+      }
+    },
+    "bleibt erhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stays as it is"
           }
         }
       }

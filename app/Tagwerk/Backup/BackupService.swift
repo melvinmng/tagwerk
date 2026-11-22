@@ -37,6 +37,21 @@ final class BackupService {
         var notes: Int { entities.notes.count }
         var habits: Int { entities.habits.count }
         var meals: Int { entities.meals.count }
+        /// The numbers of the comparison sheet: notes of the daily routine apart from journal and Bible Study.
+        var counts: Counts {
+            let privateNotes = entities.notes.filter { !(NoteKind(rawValue: $0.kindRaw) ?? .free).isInDefaultBackup }.count
+            return Counts(tasks: tasks, notes: notes - privateNotes, habits: habits, meals: meals, privateNotes: privateNotes)
+        }
+    }
+
+    /// What a file or this device holds, for the comparison before a restore. `privateNotes` are journal and Bible Study notes,
+    /// the only notes a file may leave out (switch "Tagebuch und Bible Study einschließen").
+    struct Counts: Equatable {
+        var tasks: Int
+        var notes: Int
+        var habits: Int
+        var meals: Int
+        var privateNotes: Int
     }
 
     enum BackupError: Error, Equatable {
@@ -81,6 +96,15 @@ final class BackupService {
 
     /// Number and total size of the attachments a full backup holds (for the backup page).
     var attachmentSummary: (count: Int, bytes: Int)? { attachments?.summary }
+
+    /// What is on this device right now, counted like `Inspection` counts a file.
+    func currentCounts() -> Counts {
+        let notes = (try? context.fetch(FetchDescriptor<NoteRecord>())) ?? []
+        let privateNotes = notes.filter { !$0.kind.isInDefaultBackup }.count
+        return Counts(tasks: (try? context.fetchCount(FetchDescriptor<LocalTask>())) ?? 0, notes: notes.count - privateNotes,
+                      habits: (try? context.fetchCount(FetchDescriptor<HabitRecord>())) ?? 0,
+                      meals: (try? context.fetchCount(FetchDescriptor<MealRecord>())) ?? 0, privateNotes: privateNotes)
+    }
 
     // MARK: Writing a backup
 
