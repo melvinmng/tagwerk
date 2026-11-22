@@ -14,6 +14,18 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Beim Start jedes Jobs (auch Job 2 eines verketteten Auftrags) und vor dem letzten vollen Lauf: `git fetch origin && git merge origin/main` bzw. Branch von `origin/main` (Nutzer 21.11.).
 - Keine künstliche Last (Endlosschleifen, zusätzliche Simulatoren) in Agent-Aufträgen.
 
+## Entscheidungen 22.11. (Kommentar in #188)
+
+- Gesperrte Notizen: während der Entsperrung darf der Assistent sie lesen/bearbeiten (bis Tagwerk verlassen wird) → Änderung in #284.
+- Bible Study: Verstabelle vorläufig → PR #285.
+- Merge-Treiber für Kataloge: ja → `chore/xcstrings-merge-driver` (läuft, ohne Xcode).
+- Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Änderung in #280.
+- Brain Dump am Tab/App-Symbol: nicht nötig.
+- Fokus-Filter: immer 4 h → Folge-PR zu #275.
+- Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
+
+Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur, (2) #284 Regel 1b + #280 Mengen + Fokus-Folge-PR (4 h, Doppelzustellung), (3) gebündelte Audit-Befunde.
+
 ## Offene Kleinigkeiten
 
 - **Gemergt #272 (`b6bc0cc`)**: AIKit-Porttests (Ursache `stop()`); CI mit Cache: schneller Job 12,6 min (vorher 37/17), UI-Job 33,5 min (vorher 54/44), 1 bekannter Audit-Befund (Rezept hinzufügen, Dynamic Type). Ehemals: `LoopbackServerTests.stop_failsPendingWait` (Zeitüberschreitung statt Abbruch), `ChatGPTLoginTests.cancel_stopsServerAndFreesPort` (`portInUse`) – feste Wartezeiten/Port; ohne Zeitabhängigkeit und mit freiem Port umbauen (zu „Tests schlanker“).
