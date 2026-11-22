@@ -104,7 +104,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
 | (Integration) | #273 `1d1165d`, #275 `826b4f7`, #276 `2229707` auf main + Texttöne, gepusht; **#278 gemergt** („+4 weitere“ primär, Render-Test ≥ 7:1; CI-Befund verschwunden). Sonntags-DT: keine Ursache im Code, Allowlist-Eintrag bleibt (Positionsartefakt vermutet) | warte auf GitHub |
 | `feat/g2-shopping-recipe` | G2 Strang EK (EK1–EK3) | PR #280, Head `6dd28fa`; schnell grün, UI nur kompiliert → GitHub |
-| (Kette) | #276 → #273 → #275 auf main (`d7158d5`, nach #277/#278) | läuft (Sonnet, nur schnelle Tests); danach Merge in dieser Reihenfolge |
+| (Kette) | #276 `e3ced6d` → #273 `148e7e3` → #275 `8821cfc` auf main `d7158d5` | schnell grün, gepusht; Merge in dieser Reihenfolge nach GitHub |
+| (G2 TB) | G2 Strang TB | läuft (Sonnet) |
 | `test/leaner-ui-tests` | Tests schlanker Tasks 3, 4, 7 | läuft (Sonnet) |
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundation` | #254 Stränge A und B | läuft (Sonnet) |
