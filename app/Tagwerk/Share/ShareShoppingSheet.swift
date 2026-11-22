@@ -45,7 +45,7 @@ struct ShareShoppingSheet: View {
                     }
                 }
                 if let errorText {
-                    Section { Text(errorText).foregroundStyle(.red) }
+                    Section { Text(errorText).foregroundStyle(.redText) }
                 }
             }
             .scrollDismissesKeyboard(.interactively)

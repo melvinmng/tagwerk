@@ -191,7 +191,7 @@ struct AssigneeSelectionRow: View {
                     Image(systemName: "chevron.up.chevron.down").imageScale(.small)
                 }
                 .lineLimit(1)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             } label: {
                 Text("Zugewiesen").foregroundStyle(.primary)
             }

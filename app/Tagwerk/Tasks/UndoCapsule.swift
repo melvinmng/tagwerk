@@ -56,7 +56,7 @@ struct UndoCapsule: View {
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(.black, .green)
             VStack(alignment: .leading, spacing: 1) {
-                Text(caption).font(.caption).foregroundStyle(.secondary)
+                Text(caption).font(.caption).foregroundStyle(.secondaryText)
                 Text(title).font(.subheadline.weight(.semibold)).lineLimit(2)
             }
         }

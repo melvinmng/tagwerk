@@ -20,7 +20,7 @@ struct ChatGPTCaptureSection: View {
                 ShareLink("Mitschnitt teilen", item: captureFile)
             }
             if isBusy { ProgressView() }
-            if let status { Text(status).font(.footnote).foregroundStyle(.secondary) }
+            if let status { Text(status).font(.footnote).foregroundStyle(.secondaryText) }
         } header: {
             Text("Debug")
         } footer: {

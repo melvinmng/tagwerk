@@ -187,7 +187,7 @@ private struct TaskProposalFields: View {
         case .create, .update:
             textSection
             if editor.targetLocked {
-                Section { Text("Ziel und Personen lassen sich nur ändern, solange GitHub verbunden ist.").foregroundStyle(.secondary) }
+                Section { Text("Ziel und Personen lassen sich nur ändern, solange GitHub verbunden ist.").foregroundStyle(.secondaryText) }
             }
             if let target = editor.issueTarget { TaskProposalTargetSection(model: target) }
             Section {

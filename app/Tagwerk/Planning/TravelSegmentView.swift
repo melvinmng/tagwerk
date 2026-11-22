@@ -55,7 +55,7 @@ struct TravelSegmentView: View {
 
     private func label(_ title: String) -> some View {
         Label(title, systemImage: TravelText.symbol(transport))
-            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            .font(.caption2.weight(.semibold)).foregroundStyle(.secondaryText)
             .labelStyle(.titleAndIcon).lineLimit(1).fixedSize()
             .accessibilityLabel(TravelText.accessibilityLabel(segment, transport: transport))
     }
@@ -129,7 +129,7 @@ struct TravelRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
+            Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondaryText).frame(width: 48, alignment: .leading)
                 .accessibilityHidden(true)
             RoundedRectangle(cornerRadius: 2).fill(Color.gray.opacity(0.6)).frame(width: 4)
             // One layout, no `ViewThatFits` with two menu copies and no min-height frame in the label: both made the contrast audit run out of time. The title
@@ -141,7 +141,7 @@ struct TravelRow: View {
 
     private var title: some View {
         Label(TravelText.rowText(segment), systemImage: TravelText.symbol(transport))
-            .font(.subheadline).foregroundStyle(.secondary)
+            .font(.subheadline).foregroundStyle(.secondaryText)
             .accessibilityLabel(TravelText.accessibilityLabel(segment, transport: transport))
     }
 
@@ -176,7 +176,7 @@ struct TravelInfoRow: View {
             } label: {
                 LabeledContent {
                     Text(TravelText.overrideSummary(model.travelOverrideMode(for: event), segment: segment, transport: transport))
-                        .foregroundStyle(segment?.isTight == true ? Color.orange : Color.secondary)
+                        .foregroundStyle(segment?.isTight == true ? Color.orangeText : Color.secondaryText)
                 } label: {
                     Label("Fahrzeit", systemImage: TravelText.symbol(transport))
                 }

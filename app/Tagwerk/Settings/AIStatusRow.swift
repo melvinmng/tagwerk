@@ -8,11 +8,11 @@ struct AIStatusRow: View {
         if message.isWarning {
             Label(message.text, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
-                .foregroundStyle(.orange)
+                .foregroundStyle(.orangeText)
         } else {
             Text(message.text)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 }

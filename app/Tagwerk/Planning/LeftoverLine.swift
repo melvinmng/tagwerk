@@ -15,7 +15,7 @@ struct LeftoverLine: View {
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             // At least the 44 pt of a touch target (the audit measured 18 pt).
             .frame(minHeight: 44)

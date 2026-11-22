@@ -204,7 +204,7 @@ struct PlanIntakeLine: View {
                     Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
                 }
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
             .buttonStyle(.plain)
             .accessibilityHint("Öffnet Erfassen")

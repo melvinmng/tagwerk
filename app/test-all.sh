@@ -312,6 +312,8 @@ elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
   echo "    skipped (TAGWERK_BUILD_ONLY)"
 else
   /usr/bin/python3 "$SCRIPT_DIR/../scripts/check-strings.py" --require-english || stage_failed
+  # Text colours: the named tones of Common/TextTones.swift instead of the system grey and system colours (strand K).
+  /usr/bin/python3 "$SCRIPT_DIR/../scripts/check-colors.py" || stage_failed
   "$SCRIPT_DIR/../scripts/sync-strings.sh" --check --no-build --derived-data "$DERIVED" || stage_failed
   echo "    catalogs match the source code"
 fi

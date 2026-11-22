@@ -22,7 +22,7 @@ struct TaskRow: View {
             Button(action: onComplete) {
                 Image(systemName: isReadOnly ? "circle.dashed" : "circle")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .opacity(isReadOnly ? 0.45 : 1)
             }
             .buttonStyle(.plain)
@@ -59,7 +59,7 @@ struct TaskRow: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 4)
@@ -107,9 +107,9 @@ struct TaskRow: View {
 
     private var dueColor: Color {
         switch section {
-        case .overdue: .red
-        case .today: .orange
-        default: .secondary
+        case .overdue: .redText
+        case .today: .orangeText
+        default: .secondaryText
         }
     }
 }

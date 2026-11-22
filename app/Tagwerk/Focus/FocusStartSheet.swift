@@ -96,7 +96,7 @@ struct FocusStartSheet: View {
             if let block = request.block {
                 let from = block.start.formatted(date: .omitted, time: .shortened)
                 let to = block.end.formatted(date: .omitted, time: .shortened)
-                Text("Zeitblock \(from)–\(to)").font(.subheadline).foregroundStyle(.secondary)
+                Text("Zeitblock \(from)–\(to)").font(.subheadline).foregroundStyle(.secondaryText)
             }
         }
     }

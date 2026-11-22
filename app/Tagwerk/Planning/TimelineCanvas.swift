@@ -331,7 +331,7 @@ struct TimelineCanvas: View {
                 }
                 Text((trimmed.map { FocusTimerText.trimDetail($0, short: narrow) }
                     ?? remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
-                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    .font(.caption2).foregroundStyle(.gridTimeText).lineLimit(1)
                     .accessibilityLabel((trimmed.map { FocusTimerText.trimDetail($0) }
                         ?? remaining.map { NowText.runningAccessibility(remainingMinutes: $0) } ?? timeText(range)) + style.suffix)
             }
@@ -500,7 +500,7 @@ struct TimelineCanvas: View {
             snapIndicator(minutes: start, shown: shown, width: width + labelWidth + 6)
             VStack(alignment: .leading, spacing: 1) {
                 Text(preview.title).font(.caption.weight(.semibold)).lineLimit(2)
-                Text(timeText(start..<(start + preview.minutes))).font(.caption2).foregroundStyle(.secondary)
+                Text(timeText(start..<(start + preview.minutes))).font(.caption2).foregroundStyle(.secondaryText)
             }
             .padding(6)
             .frame(width: width - 2, height: max(18, height(preview.minutes)), alignment: .topLeading)
@@ -521,7 +521,7 @@ struct TimelineCanvas: View {
             ForEach(Array(stride(from: shown.lowerBound, to: shown.upperBound, by: 60)), id: \.self) { minutes in
                 HStack(alignment: .top, spacing: 6) {
                     Text(DateText.time(minutes: minutes / 60 * 60, calendar: model.calendar))
-                        .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.caption2.monospacedDigit()).foregroundStyle(.secondaryText)
                         .lineLimit(1).minimumScaleFactor(0.6)
                         .frame(width: labelWidth, alignment: .leading)
                     Rectangle().fill(.quaternary).frame(height: 0.5).padding(.top, Self.lineInset)

@@ -15,7 +15,7 @@ struct MailSummaryConsentSheet: View {
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Mit ChatGPT zusammenfassen“ verlässt nichts das iPhone. Die Vorschläge übernimmst du erst, wenn du sie bestätigst.")
                     ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                     VStack(spacing: 10) {
                         Button(action: onAgree) {
                             Text("Einverstanden und zusammenfassen").fontWeight(.semibold).frame(maxWidth: .infinity)
@@ -26,7 +26,7 @@ struct MailSummaryConsentSheet: View {
                     }
                     .padding(.top, 4)
                     Text("Du kannst das in den Einstellungen unter „KI“ widerrufen.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()
