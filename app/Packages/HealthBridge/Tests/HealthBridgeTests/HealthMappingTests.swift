@@ -350,3 +350,39 @@ struct ForeignNutritionMappingTests {
         #expect(types == Set(HealthKitStore.readTypes(of: .foreignNutrition).map(\.identifier)))
     }
 }
+
+struct BodyProfileMappingTests {
+    private struct ReadFailure: Error {}
+
+    @Test func bodyProfile_mapsLatestHeight() {
+        let old = Date(timeIntervalSince1970: 1_000_000_000), recent = Date(timeIntervalSince1970: 1_700_000_000)
+        #expect(HealthMapping.latestHeightCm([(old, 1.78), (recent, 1.80)]) == 180)
+        #expect(HealthMapping.latestHeightCm([(recent, 1.80), (old, 1.78)]) == 180, "the order of the samples does not matter")
+        #expect(HealthMapping.latestHeightCm([]) == nil)
+        #expect(HealthMapping.latestHeightCm([(recent, 0)]) == nil, "a zero height is no measurement")
+    }
+
+    @Test func bodyProfile_sexNotSetOrOther_isNil() {
+        #expect(HealthMapping.formulaSex(.female) == .female)
+        #expect(HealthMapping.formulaSex(.male) == .male)
+        #expect(HealthMapping.formulaSex(.other) == nil)
+        #expect(HealthMapping.formulaSex(.notSet) == nil)
+        #expect(HealthMapping.formulaSex(nil) == nil)
+    }
+
+    @Test func bodyProfile_throwingCharacteristic_isNil() {
+        let thrown: Int? = HealthMapping.profileField { throw ReadFailure() }
+        #expect(thrown == nil)
+        let value: Int? = HealthMapping.profileField { 1987 }
+        #expect(value == 1987)
+        let missing: Int? = HealthMapping.profileField { nil }
+        #expect(missing == nil)
+        // One failing field leaves the others as they are.
+        let profile = HealthBodyProfile(heightCm: 180, birthYear: thrown, sex: .female)
+        #expect(profile.heightCm == 180 && profile.birthYear == nil && profile.sex == .female)
+    }
+
+    @Test func bodyProfile_emptyHasNoFields() {
+        #expect(HealthBodyProfile.empty == HealthBodyProfile(heightCm: nil, birthYear: nil, sex: nil))
+    }
+}

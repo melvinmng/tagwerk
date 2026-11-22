@@ -21,6 +21,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _deleted: [UUID] = []
     private var _foreign: [ForeignWorkout] = []
     private var _steps: [DailySteps] = []
+    private var _bodyProfile = HealthBodyProfile.empty
     private var _nutritionSamples: [FakeNutritionSample] = []
     private var _weights: [HealthWeight] = []
     private var _foreignWeights: [ForeignWeight] = []
@@ -116,6 +117,16 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func stepsAccess() async -> StepsAccess { currentStepsAccess }
+
+    var bodyProfileValue: HealthBodyProfile {
+        get { lock.withLock { _bodyProfile } }
+        set { lock.withLock { _bodyProfile = newValue } }
+    }
+
+    /// Without the group asked the fake gives nothing, as characteristic reads do before the sheet was shown.
+    func bodyProfile() async -> HealthBodyProfile {
+        lock.withLock { (_groupAccess[.bodyProfile] ?? .notAsked) == .asked ? _bodyProfile : .empty }
+    }
 
     func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition] {
         lock.withLock {

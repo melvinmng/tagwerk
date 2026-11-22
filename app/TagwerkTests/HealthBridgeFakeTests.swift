@@ -43,4 +43,12 @@ struct HealthBridgeFakeTests {
         #expect(try await health.dailyForeignNutrition(in: interval, calendar: .current).first?.intake.kcal == 150,
                 "only the foreign entry counts")
     }
+
+    @Test func bodyProfile_allNilWhenNotAsked() async throws {
+        let health = FakeHealthStore()
+        health.bodyProfileValue = HealthBodyProfile(heightCm: 181, birthYear: 1990, sex: .male)
+        #expect(await health.bodyProfile() == .empty)
+        try await health.requestAuthorization(for: .bodyProfile)
+        #expect(await health.bodyProfile() == HealthBodyProfile(heightCm: 181, birthYear: 1990, sex: .male))
+    }
 }

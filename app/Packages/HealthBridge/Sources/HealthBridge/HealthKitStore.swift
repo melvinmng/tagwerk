@@ -325,6 +325,21 @@ extension HealthKitStore {
         return HealthMapping.foreignDays(series)
     }
 
+    public func bodyProfile() async -> HealthBodyProfile {
+        guard Self.isAvailable else { return .empty }
+        let height = await latestHeightCm()
+        let birthYear = HealthMapping.profileField { try store.dateOfBirthComponents().year }
+        let sex = HealthMapping.formulaSex(HealthMapping.profileField { try store.biologicalSex().biologicalSex })
+        return HealthBodyProfile(heightCm: height, birthYear: birthYear, sex: sex)
+    }
+
+    private func latestHeightCm() async -> Double? {
+        let descriptor = HKSampleQueryDescriptor(predicates: [.quantitySample(type: HKQuantityType(.height))],
+                                                 sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)], limit: 1)
+        guard let samples = try? await descriptor.result(for: store) else { return nil }
+        return HealthMapping.latestHeightCm(samples.map { (date: $0.endDate, meters: $0.quantity.doubleValue(for: .meter())) })
+    }
+
     /// Steps typed in the Health app count as Health counts them.
     public func dailySteps(in interval: DateInterval, calendar: Calendar) async throws -> [DailySteps] {
         let sums = try await dailySums(of: .stepCount, unit: .count(), in: interval, calendar: calendar)

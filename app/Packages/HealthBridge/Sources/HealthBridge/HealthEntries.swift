@@ -226,6 +226,24 @@ public struct DailyForeignNutrition: Sendable, Hashable {
     }
 }
 
+/// Height, birth year and sex as Health holds them. Every field is read on its own and is `nil` when it is missing, not shared or
+/// reading is not allowed (iOS does not tell those apart): a failed field never empties the others.
+public struct HealthBodyProfile: Sendable, Hashable {
+    /// The latest height measurement in centimetres.
+    public var heightCm: Double?
+    /// Only the year of the date of birth; the full date is never kept.
+    public var birthYear: Int?
+    public var sex: FormulaSex?
+
+    public init(heightCm: Double? = nil, birthYear: Int? = nil, sex: FormulaSex? = nil) {
+        self.heightCm = heightCm
+        self.birthYear = birthYear
+        self.sex = sex
+    }
+
+    public static let empty = HealthBodyProfile()
+}
+
 /// What the "Health" access row shows. Only write access is visible; iOS hides whether reading was denied.
 public enum HealthAccess: Sendable, Hashable {
     case unavailable

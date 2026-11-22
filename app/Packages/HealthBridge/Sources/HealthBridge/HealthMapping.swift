@@ -218,6 +218,25 @@ public enum HealthMapping {
         }
     }
 
+    /// The result of one read of the profile, `nil` when it throws or Health has nothing: one failing field must not empty the rest.
+    static func profileField<Value>(_ read: () throws -> Value?) -> Value? {
+        (try? read()) ?? nil
+    }
+
+    /// The most recent height in centimetres from measurements in metres; implausible values (0 or less) are ignored.
+    static func latestHeightCm(_ measurements: [(date: Date, meters: Double)]) -> Double? {
+        measurements.filter { $0.meters > 0 }.max { $0.date < $1.date }.map { $0.meters * 100 }
+    }
+
+    /// Female and male map to the formula's constants; "other" and "not set" give `nil`.
+    static func formulaSex(_ sex: HKBiologicalSex?) -> FormulaSex? {
+        switch sex {
+        case .female: .female
+        case .male: .male
+        default: nil
+        }
+    }
+
     /// A weight sample as read from Health, before the own ones are filtered out.
     struct WeightSample {
         var id: UUID

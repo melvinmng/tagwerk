@@ -33,6 +33,10 @@ public protocol HealthStoring: Sendable {
     /// result is then empty or holds `nil` values, and callers must not show an error for it.
     func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition]
 
+    /// Height, birth year and sex from Health; every field on its own, `nil` where Health gives nothing (also while the group
+    /// `bodyProfile` was not asked or reading was denied).
+    func bodyProfile() async -> HealthBodyProfile
+
     /// Day sums of the active energy for the days of `interval`, by `calendar`; days without statistics are missing.
     /// Health merges overlapping sources itself, so Tagwerk never adds single samples and never removes own workouts.
     /// Empty when reading is not allowed: iOS reports that as "no data", so callers treat empty as unknown, never as 0.
