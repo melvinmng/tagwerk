@@ -20,6 +20,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - 22.11. 04:13: `testmanagerd` im Simulator von K lief 10 h 47 min auf ~200 % (Last 500+); Simulator heruntergefahren. Regel an Agents: Simulator nach jedem Lauf herunterfahren.
 - Regel: GitHub-Checks vor jedem Merge abwarten (Fehler bei #269: zu früh gemergt).
 
+- Tagesabschluss: Dynamic-Type-Befunde wandern über verschiedene Labels („Wochenplanung starten“, „Aufgaben erledigt“, „Woche…“) → systematische Ursache im Blatt vermuten, gezielt auf CI messen.
 - CI-only Dynamic-Type-Befunde (KI › Sprache UILabels „Wie gesprochen“/„Nie …“, Übersetzen-Karte „Milch“) treten bei GitHub wiederholt auf, lokal nie → gezielt auf CI messen (eigener Auftrag nach K).
 
 - Nach #274: #273 und #275 vor dem Merge auf `check-colors.py` bringen (keine Systemfarben als Text), sonst bricht der schnelle Job auf `main`.
@@ -110,7 +111,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g2-notes-folders-list` | G2 Strang NF (NF1–NF5) | **gemergt (#277)**; PR #277, Head `7152e6b`; schnell grün; NO3c nicht gebaut (keine API), Ersatz am App-Symbol offen (Kurzbefehle voll). main + Texttöne erledigt (Head `389d1ff`), gepusht, warte auf GitHub |
 | `feat/nutrition-foundations` | #254 Stränge A und B | PR #281, Head `62bef72`; schnell grün; Offen für C: Zielstände nur vorwärts gespiegelt, `furtherNutrientsGranted()` nie aufgerufen, Schreiberlaubnis beim Spiegeln; `en.json` „%lld Mal“ falsch |
 | (#254 C+D) | Tagesbudget und Nährwerte in der Oberfläche | läuft (Sonnet) |
-| `chore/leaner-tests` | Tests schlanker Tasks 5, 6, 8 | PR #279, Head `78fcb30`: 4 Pakete auf macOS (AIKit bleibt, jetzt im App-Scheme), Pool Slot 1–3 + UI-Sperre, build-for-testing/test-without-building; UI-Stufe mit Pool lokal unbewiesen → CI. Nach Merge: `scripts/clean-test-env.sh --apply` (≈ 25 alte Paket-DerivedData, 4–5 GB) |
+| `chore/leaner-tests` | Tests schlanker Tasks 5, 6, 8 | **gemergt (#279, `main` = `7940f03`)**; CI: schneller Job 13,9 min mit macOS-Pakettests, UI 34 Tests mit Pool grün bis auf Sonntags-DT; `clean-test-env.sh --apply` lief (30 Ordner); PR #279, Head `78fcb30`: 4 Pakete auf macOS (AIKit bleibt, jetzt im App-Scheme), Pool Slot 1–3 + UI-Sperre, build-for-testing/test-without-building; UI-Stufe mit Pool lokal unbewiesen → CI. Nach Merge: `scripts/clean-test-env.sh --apply` (≈ 25 alte Paket-DerivedData, 4–5 GB) |
 | `feat/g2-bible-study` | G2 BS1–BS2 | Head `1a7ff68` (main eingearbeitet, schnell grün), vorher `476965f`, schnell grün, gepusht, noch kein PR. Verszahlen-Tabelle vorläufig (Luther-Zählung aus Luther 1545, gemeinfrei/MIT), für Schlachter 2000 nicht belegt → Nutzerentscheidung A/B/C. Agent hat vor dem Lesen der Bedingungen ~410 Seiten von Bibleserver/BibleGateway automatisch abgerufen (laut Bedingungen untersagt), danach gelöscht; nichts davon im Repo |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
 
