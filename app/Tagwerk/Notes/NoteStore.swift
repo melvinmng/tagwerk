@@ -66,12 +66,20 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
-    /// True when the note must never leave the device: a private kind, or a note in a private folder or below one.
-    /// The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
+    /// True when the note must never leave the device: a private kind, a note in a private folder or below one, or a locked
+    /// note. The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`). It does
+    /// not look at the lock session or at the setting "Mit Face ID schützen": a locked note stays private when it is unlocked.
     func isPrivate(_ note: NoteRecord) -> Bool {
         !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
-                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)))
+                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)),
+                                        isLocked: note.isLocked)
     }
+
+    /// How many notes carry the lock mark (notes in the trash included: they stay locked there).
+    var lockedCount: Int { all().filter(\.isLocked).count }
+
+    /// Called when notes get locked, so the assistant forgets what it read of them (`AssistantModel.endNoteSession`).
+    @ObservationIgnored var onNoteLocked: (@MainActor () -> Void)?
 
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
@@ -162,6 +170,20 @@ final class NoteStore {
         guard let record = note(id: id), record.isPinned != pinned else { return }
         record.isPinned = pinned
         save()
+    }
+
+    /// Sets or clears the lock mark. Locking and unlocking are not changes of the note: the change date stays. Locking ends the
+    /// assistant's note session (`onNoteLocked`), so what it read of the note earlier is forgotten; unlocking does not.
+    func setLocked(_ ids: [UUID], _ locked: Bool) {
+        let wanted = Set(ids)
+        var changed = false
+        for record in all() where wanted.contains(record.id) && record.isLocked != locked {
+            record.isLocked = locked
+            changed = true
+        }
+        guard changed else { return }
+        save()
+        if locked { onNoteLocked?() }
     }
 
     func markProcessed(_ id: UUID, at date: Date) {

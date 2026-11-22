@@ -135,6 +135,12 @@ final class NoteFieldModel {
     /// before, rule 10).
     var canSuggest: Bool {
         kind.allowsSuggestions && isSignedIn() && taskTitle != nil && day == RoutineSchedule.routineDay(at: now(), calendar: calendar)
+            && !isLockedNote
+    }
+
+    /// The note of this day is locked: it never goes to ChatGPT, so "Vorschläge holen" is not offered.
+    private var isLockedNote: Bool {
+        noteID.flatMap { store.note(id: $0) }.map(store.isPrivate) ?? false
     }
 
     // MARK: Tasks from the note

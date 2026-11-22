@@ -97,6 +97,13 @@ struct RecipeTranslationModelTests {
 
     // MARK: Offer
 
+    @Test func isOffered_neverForALockedRecipe() throws {
+        let recipe = try recipeNote()
+        #expect(RecipeTranslationModel.isOffered(recipe, store: store))
+        store.setLocked([recipe.id], true)
+        #expect(!RecipeTranslationModel.isOffered(recipe, store: store))
+    }
+
     @Test func isOffered_onlyStructuredNotesInRecipesFolder() throws {
         let recipe = try recipeNote()
         #expect(RecipeTranslationModel.isOffered(recipe, store: store))

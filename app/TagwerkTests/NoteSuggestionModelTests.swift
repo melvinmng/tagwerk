@@ -226,6 +226,30 @@ struct NoteSuggestionModelTests {
         #expect(responder.calls == 0 && counter.models == 0)
     }
 
+    @Test func fetch_neverSendsALockedNote_evenUnlocked() async {
+        let evening = note("Training morgen verschieben")
+        notes.setLocked([evening.id], true)
+        let model = makeModel()
+        await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
+        #expect(responder.calls == 0 && counter.models == 0)
+        #expect(model.phase == .idle)
+        // Unlocking the mark makes the note sendable again, so the check above is the lock and nothing else.
+        notes.setLocked([evening.id], false)
+        await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
+        #expect(responder.calls == 1)
+    }
+
+    @Test func revise_neverSendsALockedNote() async {
+        let evening = note("Training morgen verschieben")
+        let model = makeModel()
+        responder.enqueue([call("c1", "create_task", "{\"title\":\"Training\"}")])
+        await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
+        let before = responder.calls
+        notes.setLocked([evening.id], true)
+        await model.revise(noteID: evening.id, text: "Training morgen verschieben", kind: .evening, comment: "Lieber später")
+        #expect(responder.calls == before)
+    }
+
     /// Routine data that must never reach the request.
     private func routineLeakCheckSetup() {
         let store = RoutineStore(context: container.mainContext)

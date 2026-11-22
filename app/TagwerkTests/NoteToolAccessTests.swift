@@ -48,6 +48,61 @@ struct NoteToolAccessTests {
         #expect(access.visibleNote(key: NoteToolAccess.key(for: UUID())) == nil)
     }
 
+    /// A locked note is private whether or not it is unlocked right now: the store knows no lock session, so no outbound path can
+    /// depend on one. One locked free note, one locked recipe and one locked morning note.
+    @Test func lockedNote_neverReachesAnyOutboundPath() throws {
+        let normal = try #require(store.create(text: "Einkaufsplan Wochenende"))
+        let free = try #require(store.create(text: "Gesperrte freie Notiz"))
+        let recipeFolder = store.ensureSystemFolder(.recipes, name: "Rezepte")
+        let recipe = try #require(store.create(text: "# Gesperrtes Curry\n\n## Zutaten\n- 1 Zwiebel\n", folderID: recipeFolder.id))
+        let morning = try #require(store.create(text: "Gesperrte Gedanken", kind: .morning, dayKey: "2026-11-18"))
+        let locked = [free, recipe, morning]
+        // Before the lock the routine note field offers suggestions (the check below would otherwise prove nothing).
+        let field = NoteFieldModel(store: store, kind: .morning, day: PlanDay(year: 2026, month: 11, day: 18), isSignedIn: { true },
+                                   now: { testNow() })
+        #expect(field.canSuggest)
+        store.setLocked(locked.map(\.id), true)
+        // The notes chat: not listed, not readable, not searchable, no card title.
+        #expect(access.visibleNotes().map(\.id) == [normal.id])
+        for note in locked {
+            #expect(access.visibleNote(key: NoteToolAccess.key(for: note.id)) == nil)
+            #expect(access.cardTitle(key: NoteToolAccess.key(for: note.id)) == nil)
+            #expect(!NoteAssistantEntry.isOffered(target: .note(note.id), store: store))
+        }
+        #expect(access.entries(folderID: nil, query: nil).map(\.id) == [normal.id])
+        #expect(access.entries(folderID: nil, query: "gesperrte").isEmpty)
+        // The recipe paths: the picker, "Rezept übersetzen" and "Zutaten auf die Einkaufsliste".
+        #expect(!RecipeNoteSource.isOffered(recipe, store: store))
+        #expect(!RecipeNoteSource.isOffered(free, store: store))
+        #expect(!RecipeTranslationModel.isOffered(recipe, store: store))
+        // The note field of the routines never offers "Vorschläge holen" for it (`NoteSuggestionModelTests` covers the request).
+        #expect(!field.canSuggest)
+    }
+
+    @Test func setLocked_callsHook() throws {
+        let note = try #require(store.create(text: "Notiz"))
+        var calls = 0
+        store.onNoteLocked = { calls += 1 }
+        store.setLocked([note.id], true)
+        #expect(calls == 1)
+        #expect(store.lockedCount == 1)
+    }
+
+    @Test func setLocked_unlock_doesNotCallHook() throws {
+        let note = try #require(store.create(text: "Notiz"))
+        store.setLocked([note.id], true)
+        var calls = 0
+        store.onNoteLocked = { calls += 1 }
+        store.setLocked([note.id], false)
+        #expect(calls == 0)
+        #expect(store.lockedCount == 0)
+        // Locking an already locked note changes nothing and does not end the session again.
+        store.setLocked([note.id], true)
+        #expect(calls == 1)
+        store.setLocked([note.id], true)
+        #expect(calls == 1)
+    }
+
     @Test func visibleNote_malformedKey_isNil() throws {
         let (normal, _) = try fill()
         #expect(access.visibleNote(key: normal.id.uuidString) == nil)

@@ -31,6 +31,9 @@ final class NoteRecord {
     var importSourceID: String? = nil
     /// `BibleBook.key` of a Bible Study note (one note per book); `nil` for every other note.
     var bookKey: String? = nil
+    /// The user locked this note (NL1a). A locked note never leaves the device, whether or not it is unlocked right now
+    /// (`NoteStore.isPrivate`).
+    var isLocked: Bool = false
 
     init(text: String, kind: NoteKind = .free, dayKey: String? = nil, wasDictated: Bool = false, now: Date = .now) {
         self.text = text

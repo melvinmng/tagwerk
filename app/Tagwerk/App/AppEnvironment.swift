@@ -244,6 +244,8 @@ final class AppEnvironment {
         let voiceOutput = self.voiceOutput
         // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
         assistant.watchNoteConsent { settings.noteAssistantConsent }
+        // Locking a note ends the note session: the chat forgets what it read of notes before.
+        noteStore.onNoteLocked = { [weak assistant] in assistant?.endNoteSession() }
         // The notes chat: the tools wrap the app tools and select notes only through `NoteToolAccess`.
         let noteAccess = NoteToolAccess(store: noteStore)
         assistant.noteTools = NoteChatTools(base: tools, access: noteAccess, hasConsent: { settings.noteAssistantConsent })

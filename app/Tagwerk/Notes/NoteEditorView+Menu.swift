@@ -54,9 +54,9 @@ extension NoteEditorView {
         .accessibilityLabel("Mehr")
     }
 
-    /// A note of the folder "Rezepte" offers "Zutaten auf die Einkaufsliste".
+    /// A note of the folder "Rezepte" that is not locked offers "Zutaten auf die Einkaufsliste".
     func isRecipeNote(_ note: NoteRecord) -> Bool {
-        guard note.kind == .free, let folderID = note.folderID else { return false }
+        guard note.kind == .free, !note.isLocked, let folderID = note.folderID else { return false }
         return store.folder(id: folderID)?.role == .recipes
     }
 }

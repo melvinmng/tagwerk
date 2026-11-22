@@ -696,6 +696,37 @@ struct BackupTests {
         #expect(target.settings.noteSortAscending && target.settings.noteGroupsByDate)
     }
 
+    // MARK: Locked notes
+
+    @Test func lockedNote_roundTrips() throws {
+        let origin = try makeTarget()
+        let note = try #require(NoteStore(context: origin.container.mainContext).create(text: "Geheimes"))
+        note.isLocked = true
+        try origin.container.mainContext.save()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try origin.service.makeBackupData()))
+        let restored = try #require(try target.container.mainContext.fetch(FetchDescriptor<NoteRecord>()).first)
+        #expect(restored.text == "Geheimes" && restored.isLocked)
+    }
+
+    @Test func olderFileWithoutField_isUnlocked() throws {
+        let origin = try makeTarget()
+        _ = NoteStore(context: origin.container.mainContext).create(text: "Frei")
+        try origin.container.mainContext.save()
+        let data = try origin.service.makeBackupData()
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var notes = try #require(entities["notes"] as? [[String: Any]])
+        for index in notes.indices { notes[index].removeValue(forKey: "isLocked") }
+        entities["notes"] = notes
+        object["entities"] = entities
+        let old = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(old))
+        let restored = try #require(try target.container.mainContext.fetch(FetchDescriptor<NoteRecord>()).first)
+        #expect(!restored.isLocked)
+    }
+
     // MARK: Drink portions
 
     @Test func drinkPresets_roundTripThroughABackup() throws {
