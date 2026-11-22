@@ -83,6 +83,8 @@ struct NoteEditorView: View {
         content
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
+            // The running Bible Study session of this note (BS1b); it takes no space without one.
+            .safeAreaInset(edge: .top, spacing: 0) { BibleSessionBar(noteID: noteID, store: store, saveText: saveText) }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if mode == .edit, isTextFocused {
                     NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },

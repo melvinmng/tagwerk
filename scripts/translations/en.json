@@ -1704,7 +1704,6 @@
   "Bible Study starten": "Start Bible Study",
   "Sitzung läuft": "Session in progress",
   "Abschließen": "Complete",
-  "Bible Study abschließen": "Complete Bible Study",
   "Buch": "Book",
   "Altes Testament": "Old Testament",
   "Neues Testament": "New Testament",
@@ -2630,5 +2629,11 @@
   "Von": "From",
   "Weiter ab %@ (Sitzung vom %@ ist noch offen)": "Continue at %1$@ (session of %2$@ is still open)",
   "Weiter ab %@ (Sitzung vom %@)": "Continue at %1$@ (session of %2$@)",
-  "Weiter nach %@ vom %@": "Continue after %1$@ of %2$@"
+  "Weiter nach %@ vom %@": "Continue after %1$@ of %2$@",
+  "Abschließen · %@": "Complete · %@",
+  "Bis wohin gelesen?": "How far did you read?",
+  "Sitzung abgeschlossen ✓": "Session completed ✓",
+  "Sitzung läuft · %@": "Session running · %@",
+  "Sitzung läuft · %@ %@": "Session running · %1$@ %2$@",
+  "Sitzung läuft · %@ ab %@": "Session running · %1$@ from %2$@"
 }

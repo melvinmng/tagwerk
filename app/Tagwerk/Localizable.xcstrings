@@ -3831,6 +3831,16 @@
         }
       }
     },
+    "Abschließen · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete · %@"
+          }
+        }
+      }
+    },
     "Abspielen": {
       "shouldTranslate": false
     },
@@ -6108,6 +6118,7 @@
       }
     },
     "Bible Study abschließen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6193,6 +6204,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "On date"
+          }
+        }
+      }
+    },
+    "Bis wohin gelesen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far did you read?"
           }
         }
       }
@@ -19254,12 +19275,64 @@
         }
       }
     },
+    "Sitzung abgeschlossen ✓": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session completed ✓"
+          }
+        }
+      }
+    },
     "Sitzung läuft": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Session in progress"
+          }
+        }
+      }
+    },
+    "Sitzung läuft · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session running · %@"
+          }
+        }
+      }
+    },
+    "Sitzung läuft · %@ %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Sitzung läuft · %1$@ %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session running · %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Sitzung läuft · %@ ab %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Sitzung läuft · %1$@ ab %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session running · %1$@ from %2$@"
           }
         }
       }

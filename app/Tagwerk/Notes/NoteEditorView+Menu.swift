@@ -17,12 +17,6 @@ extension NoteEditorView {
                 }
             }
             if let note { lockItems(note) }
-            if let session = store.openSession(noteID: noteID) {
-                Button {
-                    saveText()
-                    store.completeSession(session.id)
-                } label: { Label("Bible Study abschließen", systemImage: "checkmark.circle") }
-            }
             if let note, isRecipeNote(note) {
                 Button {
                     // The recipe sheet reads the saved text of the note.
