@@ -1,12 +1,12 @@
 import SwiftUI
 import TagwerkCore
 
-/// The bar above the keyboard of the note editor: heading, bold, italic, list, checkbox, the attachment menu and the
+/// The bar above the keyboard of the note editor: heading, bold, italic, list, checkbox, the insert menu and the
 /// button that closes the keyboard. It scrolls sideways when the text size leaves no room for all of them.
 struct NoteFormattingBar: View {
     let onFormat: (MarkdownFormatting.Action) -> Void
     let onHideKeyboard: () -> Void
-    /// The attachment menu; `nil` when the note has no attachment store.
+    /// The insert menu; `nil` when the note has no attachment store.
     let attachments: AnyView?
 
     var body: some View {

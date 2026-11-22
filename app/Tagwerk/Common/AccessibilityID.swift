@@ -30,6 +30,11 @@ enum AccessibilityID {
         static let warningCapsule = "travel.warningCapsule"
     }
 
+    enum NoteEditor {
+        /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
+        static let insertMenu = "noteEditor.insertMenu"
+    }
+
     enum Common {
         /// The symbol button above the keyboard that closes it.
         static let hideKeyboard = "common.hideKeyboard"

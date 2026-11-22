@@ -4690,6 +4690,7 @@
       }
     },
     "Anhängen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5388,6 +5389,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discard recording"
+          }
+        }
+      }
+    },
+    "Aufnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
           }
         }
       }
@@ -8408,6 +8419,16 @@
         }
       }
     },
+    "Dokument scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan document"
+          }
+        }
+      }
+    },
     "Dream Log": {
       "localizations": {
         "en": {
@@ -8694,6 +8715,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "One of these reminders falls within quiet hours. Routine reminders still come through."
+          }
+        }
+      }
+    },
+    "Einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert"
           }
         }
       }
@@ -9532,6 +9563,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only “Accept” creates the block in the plan calendar."
+          }
+        }
+      }
+    },
+    "Erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
           }
         }
       }
@@ -18705,6 +18746,16 @@
         }
       }
     },
+    "Tabelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Table"
+          }
+        }
+      }
+    },
     "Tag": {
       "localizations": {
         "en": {
@@ -21448,6 +21499,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Z to A"
+          }
+        }
+      }
+    },
+    "Zeichnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drawing"
           }
         }
       }

@@ -56,7 +56,7 @@ struct NoteEditorView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if mode == .edit, isTextFocused {
                     NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
-                                      attachments: store.attachments != nil ? AnyView(attachMenu) : nil)
+                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil)
                 }
             }
             .toolbar {
@@ -76,10 +76,6 @@ struct NoteEditorView: View {
                         }
                         .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
                     }
-                }
-                // The bar above the keyboard has its own attachment menu; this one stays for the writing page without a keyboard.
-                if store.attachments != nil, mode == .edit || !Self.usesTapToEdit {
-                    ToolbarItem(placement: .topBarTrailing) { attachMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
             }

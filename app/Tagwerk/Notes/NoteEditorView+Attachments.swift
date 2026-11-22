@@ -3,11 +3,12 @@ import SwiftUI
 import TagwerkCore
 import UniformTypeIdentifiers
 
-/// The attachments of the note editor: the paperclip menu, the pickers' results and the reference that goes into the text.
+/// The attachments of the note editor: the insert menu, the pickers' results and the reference that goes into the text.
 extension NoteEditorView {
-    var attachMenu: some View {
-        NoteAttachmentMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
-                           onPaste: { providers in Task { await addPasted(providers) } }, onChooseFile: { isChoosingFile = true })
+    var insertMenu: some View {
+        NoteInsertMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
+                       onScanDocument: {}, onPaste: { providers in Task { await addPasted(providers) } },
+                       onChooseFile: { isChoosingFile = true }, onDrawing: {}, onTable: {})
     }
 
     // MARK: Actions
@@ -77,7 +78,7 @@ extension NoteEditorView {
     func insertReference(_ reference: String) {
         var range: Range<String.Index>?
         if case .selection(let selected)? = selection?.indices { range = selected }
-        let result = NoteAttachmentMenu.inserting(reference, into: text, replacing: range)
+        let result = NoteInsertMenu.inserting(reference, into: text, replacing: range)
         text = result.text
         selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: result.cursorOffset))
         mode = .edit

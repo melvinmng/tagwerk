@@ -1865,7 +1865,6 @@
   "Alle erledigten löschen": "Delete all completed",
   "Anhänge in Notizen": "Attachments in notes",
   "Anhänge teilen": "Share attachments",
-  "Anhängen": "Attach",
   "Bild": "Image",
   "ChatGPT liest das Rezept …": "ChatGPT is reading the recipe …",
   "Das Rezept ließ sich nicht lesen. Versuch es noch einmal.": "The recipe could not be read. Try again.",
@@ -2478,5 +2477,11 @@
   "Für diesen Tag ist keine Dankbarkeit eingetragen.": "No gratitude is entered for this day.",
   "Kein Brain Dump an diesem Tag.": "No Brain Dump on this day.",
   "nur Dankbarkeit": "gratitude only",
-  "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it."
+  "Öffnet den Tagesstart dieses Tages zum Ändern.": "Opens the morning start of this day so you can change it.",
+  "Aufnehmen": "Capture",
+  "Erstellen": "Create",
+  "Dokument scannen": "Scan document",
+  "Zeichnung": "Drawing",
+  "Tabelle": "Table",
+  "Einfügen": "Insert"
 }
