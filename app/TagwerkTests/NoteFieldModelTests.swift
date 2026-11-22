@@ -155,4 +155,13 @@ struct NoteFieldModelTests {
         #expect(saved.hasPrefix("Heute war gut.\n\nWas will ich in meinem Leben (im Moment) erreichen?"))
         #expect(!model.wasDictated)
     }
+
+    @Test func headerLabel_dreamUsesCloudMoon() {
+        let dream = NoteField.headerLabel(for: .dream)
+        #expect(dream.symbol == "cloud.moon" && dream.role == .dreamLog)
+        for kind in [NoteKind.morning, .evening] {
+            let label = NoteField.headerLabel(for: kind)
+            #expect(label.symbol == "brain.head.profile" && label.role == .brainDump)
+        }
+    }
 }

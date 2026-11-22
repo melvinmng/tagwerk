@@ -6055,6 +6055,16 @@
         }
       }
     },
+    "Bleibt auf diesem iPhone, geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on this iPhone and never goes to ChatGPT."
+          }
+        }
+      }
+    },
     "Bleibt unverändert": {
       "localizations": {
         "en": {
@@ -7020,6 +7030,7 @@
       }
     },
     "Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9909,6 +9920,16 @@
         }
       }
     },
+    "Fokus für heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus for today"
+          }
+        }
+      }
+    },
     "Fokus gestartet.": {
       "localizations": {
         "en": {
@@ -12446,6 +12467,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done in “%@”"
+          }
+        }
+      }
+    },
+    "In „Planen“ setzen · %lld von %lld gewählt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "In „Planen“ setzen · %1$lld von %2$lld gewählt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set it in “Plan” · %1$lld of %2$lld chosen"
           }
         }
       }

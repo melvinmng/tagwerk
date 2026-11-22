@@ -169,6 +169,14 @@ struct NoteField: View {
 
     private var isDreamLog: Bool { model.kind == .dream }
 
+    /// Title, folder symbol and folder role of the field (RO4): the brain dump of both sheets wears the symbol and colour
+    /// of the folder "Brain Dump", the dream log those of "Dream Log", so field and folder are recognised as the same thing.
+    static func headerLabel(for kind: NoteKind) -> (title: LocalizedStringKey, symbol: String, role: NoteFolderRole) {
+        kind == .dream
+            ? ("Dream Log", NotesFoldersView.symbol(for: .dreamLog), .dreamLog)
+            : ("Brain Dump", NotesFoldersView.symbol(for: .brainDump), .brainDump)
+    }
+
     var body: some View {
         Section {
             // One row, so the lifecycle and the sheet below attach once and not to every row of the section.
@@ -243,7 +251,8 @@ struct NoteField: View {
             }
         } header: {
             HStack {
-                Text(isDreamLog ? "Dream Log" : "Brain Dump")
+                let label = Self.headerLabel(for: model.kind)
+                FolderSectionHeader(title: label.title, symbol: label.symbol, role: label.role)
                 Spacer()
                 if model.offersGuidingQuestions {
                     Button("Leitfragen einfügen") { model.insertGuidingQuestions() }.textCase(nil)
@@ -251,7 +260,7 @@ struct NoteField: View {
             }
         } footer: {
             if isDreamLog {
-                Text("Der Dream Log bleibt auf diesem iPhone und wird nie an ChatGPT gesendet.")
+                Text("Bleibt auf diesem iPhone, geht nie an ChatGPT.")
             }
         }
         if !isDreamLog, let suggestions { suggestionSection(suggestions) }
@@ -403,5 +412,20 @@ struct NoteField: View {
         input.writeDraft = { model.writeDictation($0) }
         input.onSend = { _ in }
         voice = input
+    }
+}
+
+/// The heading of a section of the routine sheets that writes into a notes folder: the symbol of the folder in its own
+/// named colour, then the title (RO4). The symbol is decoration; the title carries the meaning.
+struct FolderSectionHeader: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let role: NoteFolderRole
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol).foregroundStyle(NoteFolderTint.color(for: role)).accessibilityHidden(true)
+            Text(title)
+        }
     }
 }

@@ -8,7 +8,7 @@ final class RoutineUITests: UITestCase {
         tab("Erfassen")
         onScreen(label: "Tagesstart.*", matching: true).tap()
         XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
-        let brainDump = app.textViews.firstMatch
+        let brainDump = app.textViews["Brain Dump"]
         XCTAssertTrue(brainDump.waitForExistence(timeout: Self.timeout))
         brainDump.tap()
         brainDump.typeText("UI-Test")
@@ -18,5 +18,33 @@ final class RoutineUITests: UITestCase {
         onScreen(label: "Tagesabschluss.*", matching: true).tap()
         XCTAssertTrue(app.navigationBars["Tagesabschluss"].waitForExistence(timeout: Self.timeout), "The evening sheet did not open")
         waitFor("Bible Study starten")
+    }
+
+    /// RO1b: dream log first, then gratitude, then the brain dump, the focus row last.
+    func testMorningSheetOrder() {
+        tab("Erfassen")
+        onScreen(label: "Tagesstart.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
+        let dream = app.staticTexts["Dream Log"].firstMatch
+        let gratitude = app.staticTexts["Dankbar für"].firstMatch
+        let brainDump = app.staticTexts["Brain Dump"].firstMatch
+        XCTAssertTrue(dream.waitForExistence(timeout: Self.timeout), "Dream Log heading missing")
+        XCTAssertTrue(gratitude.exists && brainDump.exists, "Headings of the morning sheet missing")
+        XCTAssertLessThan(dream.frame.minY, gratitude.frame.minY, "The dream log comes first")
+        XCTAssertLessThan(gratitude.frame.minY, brainDump.frame.minY, "The gratitude comes before the brain dump")
+    }
+
+    /// RO3b: the last row closes the sheet and shows "Planen" without marking the start as done.
+    func testFocusHintOpensPlanWithoutCompleting() {
+        tab("Erfassen")
+        onScreen(label: "Tagesstart.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
+        let row = app.buttons.matching(NSPredicate(format: "label MATCHES %@", "Fokus für heute.*")).firstMatch
+        scrollTo(row)
+        row.tap()
+        waitUntilGone(app.navigationBars["Tagesstart"])
+        XCTAssertTrue(app.tabBars.buttons["Planen"].isSelected, "\"Planen\" should be shown")
+        tab("Erfassen")
+        _ = onScreen(label: "Tagesstart.*Starten", matching: true)
     }
 }
