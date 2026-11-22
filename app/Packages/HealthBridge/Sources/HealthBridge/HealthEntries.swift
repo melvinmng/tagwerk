@@ -3,14 +3,16 @@ import TagwerkCore
 
 /// Kind of a Tagwerk entry mirrored to Health; part of every sync identifier.
 public enum HealthEntryKind: String, Sendable {
-    case meal, drink, workout
+    case meal, drink, workout, weight
 
-    /// The Health types an entry of this kind can have samples in.
+    /// The core Health types (`HealthShareKind`) an entry of this kind can have samples in. Types of the other groups (further
+    /// nutrients, body) are not listed here; `HealthMapping.extraDeleteIdentifiers(for:)` names them.
     public var shareKinds: [HealthShareKind] {
         switch self {
         case .meal: [.energy, .protein, .carbs, .fat]
         case .drink: [.water]
         case .workout: [.workouts, .activeEnergy]
+        case .weight: []
         }
     }
 }
@@ -25,9 +27,15 @@ public struct HealthMeal: Sendable, Hashable {
     public var protein: Double
     public var carbs: Double
     public var fat: Double
+    /// Further nutrients in grams (salt, not sodium); `nil` is unknown and is never written to Health as 0.
+    public var fiber: Double?
+    public var sugar: Double?
+    public var saturatedFat: Double?
+    public var salt: Double?
     public var estimated: Bool
 
-    public init(id: UUID, date: Date, version: Int, kcal: Double, protein: Double, carbs: Double, fat: Double, estimated: Bool) {
+    public init(id: UUID, date: Date, version: Int, kcal: Double, protein: Double, carbs: Double, fat: Double,
+                fiber: Double? = nil, sugar: Double? = nil, saturatedFat: Double? = nil, salt: Double? = nil, estimated: Bool) {
         self.id = id
         self.date = date
         self.version = version
@@ -35,6 +43,10 @@ public struct HealthMeal: Sendable, Hashable {
         self.protein = protein
         self.carbs = carbs
         self.fat = fat
+        self.fiber = fiber
+        self.sugar = sugar
+        self.saturatedFat = saturatedFat
+        self.salt = salt
         self.estimated = estimated
     }
 }
@@ -68,6 +80,40 @@ public struct HealthWorkout: Sendable, Hashable {
         self.start = start
         self.end = end
         self.kilocalories = kilocalories
+    }
+}
+
+/// A body weight as written to Health: numbers only.
+public struct HealthWeight: Sendable, Hashable {
+    public var id: UUID
+    public var date: Date
+    /// Increases with every edit; Health replaces a sample only for a higher version.
+    public var version: Int
+    public var kilograms: Double
+    /// Body fat in percent of the body mass (25 means 25 %); `nil` when not measured or switched off.
+    public var bodyFatPercent: Double?
+
+    public init(id: UUID, date: Date, version: Int, kilograms: Double, bodyFatPercent: Double? = nil) {
+        self.id = id
+        self.date = date
+        self.version = version
+        self.kilograms = kilograms
+        self.bodyFatPercent = bodyFatPercent
+    }
+}
+
+/// A body weight another app (a smart scale, the Health app) wrote to Health.
+public struct ForeignWeight: Sendable, Hashable, Identifiable {
+    public var id: UUID
+    public var date: Date
+    public var kilograms: Double
+    public var sourceName: String
+
+    public init(id: UUID, date: Date, kilograms: Double, sourceName: String) {
+        self.id = id
+        self.date = date
+        self.kilograms = kilograms
+        self.sourceName = sourceName
     }
 }
 
@@ -119,6 +165,30 @@ public enum StepsAccess: Sendable, Hashable {
     case asked
 }
 
+/// A group of Health types with its own authorization status and its own request. Each group is asked for separately and only
+/// after a tap. A new type never joins the core group of `HealthStoring.access()` (meals, water, workouts): that would put its
+/// status back to "should request", stop the mirroring and hide the Watch workouts for every existing user.
+public enum HealthAccessGroup: String, Sendable, CaseIterable, Hashable {
+    /// Writes fibre, sugar, saturated fat and sodium of meals.
+    case moreNutrients
+    /// Reads the active energy.
+    case activeEnergy
+    /// Reads and writes body weight and body fat percentage.
+    case body
+    /// Reads the nutrition entries of other apps.
+    case foreignNutrition
+    /// Reads height, date of birth and biological sex.
+    case bodyProfile
+}
+
+/// Whether the system sheet of a group was shown. iOS never tells whether reading was allowed: `asked` only means the sheet is
+/// no longer due, and a read that returns nothing may be a denied read or a day without data.
+public enum HealthGroupAccess: Sendable, Hashable {
+    case unavailable
+    case notAsked
+    case asked
+}
+
 /// The step sum of one day as Health reports it (iPhone and Apple Watch merged by Health's source order).
 public struct DailySteps: Sendable, Hashable {
     /// Start of the day in the calendar of the query.
@@ -129,6 +199,49 @@ public struct DailySteps: Sendable, Hashable {
         self.start = start
         self.count = count
     }
+}
+
+/// The active energy of one day as Health reports it (own workouts, Apple Watch and the iPhone, merged by Health's source order).
+public struct DailyActiveEnergy: Sendable, Hashable {
+    /// Start of the day in the calendar of the query.
+    public var start: Date
+    public var kilocalories: Double
+
+    public init(start: Date, kilocalories: Double) {
+        self.start = start
+        self.kilocalories = kilocalories
+    }
+}
+
+/// The nutrition other apps wrote to Health for one day, as day totals (never single entries). Tagwerk's own entries are not in
+/// it. A missing value means "no foreign entry or reading not allowed": iOS does not tell those apart, and neither does this type.
+public struct DailyForeignNutrition: Sendable, Hashable {
+    /// Start of the day in the calendar of the query.
+    public var start: Date
+    public var intake: ForeignIntake
+
+    public init(start: Date, intake: ForeignIntake) {
+        self.start = start
+        self.intake = intake
+    }
+}
+
+/// Height, birth year and sex as Health holds them. Every field is read on its own and is `nil` when it is missing, not shared or
+/// reading is not allowed (iOS does not tell those apart): a failed field never empties the others.
+public struct HealthBodyProfile: Sendable, Hashable {
+    /// The latest height measurement in centimetres.
+    public var heightCm: Double?
+    /// Only the year of the date of birth; the full date is never kept.
+    public var birthYear: Int?
+    public var sex: FormulaSex?
+
+    public init(heightCm: Double? = nil, birthYear: Int? = nil, sex: FormulaSex? = nil) {
+        self.heightCm = heightCm
+        self.birthYear = birthYear
+        self.sex = sex
+    }
+
+    public static let empty = HealthBodyProfile()
 }
 
 /// What the "Health" access row shows. Only write access is visible; iOS hides whether reading was denied.

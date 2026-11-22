@@ -18,6 +18,15 @@ enum AccessibilityID {
         static let planButton = "focus.planButton"
     }
 
+    enum Shopping {
+        /// The entries "Erledigte entfernen (N)" and "Liste leeren (N) …" of the menu; the number in the title changes.
+        static let removeCompleted = "shopping.removeCompleted"
+        static let clearList = "shopping.clearList"
+        /// The two buttons that end the recipe input: "Zutaten auf die Einkaufsliste" and "Nur als Rezept speichern".
+        static let recipeToList = "shopping.recipeToList"
+        static let recipeSaveOnly = "shopping.recipeSaveOnly"
+    }
+
     enum Tasks {
         /// A task row (task list, search results); the title makes it unique.
         static func row(_ title: String) -> String { "tasks.row.\(title)" }
@@ -28,6 +37,19 @@ enum AccessibilityID {
     enum Travel {
         /// The capsule "10 min zu früh" of a trip that starts before the previous event ends.
         static let warningCapsule = "travel.warningCapsule"
+    }
+
+    enum NoteEditor {
+        /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
+        static let insertMenu = "noteEditor.insertMenu"
+        /// "Fertig" of the full-screen drawing canvas (the note editor behind it has a "Fertig" too).
+        static let drawingDone = "noteEditor.drawingDone"
+        /// "Bearbeiten" of the drawing viewer.
+        static let drawingEdit = "noteEditor.drawingEdit"
+        /// "Fertig" of the table editor sheet.
+        static let tableDone = "noteEditor.tableDone"
+        /// The table button of the bar above the keyboard, shown while the cursor is in a table.
+        static let tableButton = "noteEditor.tableButton"
     }
 
     enum Common {

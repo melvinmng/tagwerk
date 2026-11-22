@@ -173,6 +173,19 @@ Jeder Checkout (Hauptordner oder Worktree) testet mit eigenem DerivedData-Ordner
 - Der Barrierefreiheits-Audit listet mit `TEST_RUNNER_AUDIT_COLLECT_FILE=<Datei>` die Befunde, die weder behoben noch auf der Ausnahmenliste (`app/TagwerkUITests/AuditAllowlist.swift`) stehen, in eine Datei, statt zu scheitern.
 - **Aufräumen:** Nach dem Entfernen eines Worktrees bleibt `~/Library/Developer/Tagwerk/DerivedData-tests-<Checkout>` liegen, und Simulatoren „Tagwerk Tests <Checkout>“ aus der Zeit vor dem Pool sind überflüssig. [`scripts/clean-test-env.sh`](scripts/clean-test-env.sh) listet beides (Probelauf, löscht nichts); `scripts/clean-test-env.sh --apply` löscht die Simulatoren und DerivedData-Ordner, zu denen kein Worktree mehr gehört. Dazu kommen die Paket-Ordner im Standard-DerivedData von Xcode (`~/Library/Developer/Xcode/DerivedData/<Paket>-<Hash>`, je Paket und Checkout einer): Das Skript erkennt sie am `WorkspacePath` in ihrer `info.plist` und listet sie, sobald der Checkout, aus dem sie gebaut wurden, nicht mehr auf der Festplatte existiert. `--legacy-simulators` nimmt zusätzlich die Einzel-Simulatoren bestehender Worktrees auf, die der Pool ersetzt. Das Skript fasst die Pool-Simulatoren, gestartete Simulatoren und Checkouts mit aktivem Testlauf nie an und beendet keine Prozesse. Andere Klone des Repositorys gelten nicht als Worktrees dieses Repositorys, ihre Ordner würden also mit gelistet (sie werden beim nächsten Lauf neu gebaut).
 
+### Merge-Treiber für String Catalogs und `en.json`
+
+Parallele Branches, die verschiedene Schlüssel in `Localizable.xcstrings` (oder am Ende von `scripts/translations/en.json`) ergänzen, erzeugen bei einem Text-Merge fast immer Konflikte, obwohl sich nichts widerspricht. Der Merge-Treiber [`scripts/merge-xcstrings.py`](scripts/merge-xcstrings.py) führt stattdessen den JSON-Inhalt schlüsselweise zusammen: ein Schlüssel, den nur eine Seite ergänzt, ändert oder entfernt, wird übernommen; ändern beide Seiten denselben Schlüssel, wird eine Ebene tiefer (Lokalisierung, `stringUnit`) weiterverglichen, und nur derselbe Wert mit verschiedenem Inhalt bleibt ein Konflikt. Dann meldet der Treiber den Pfad auf stderr und setzt die üblichen Konfliktmarker nur um diese Werte; alles andere ist schon zusammengeführt. Das Ergebnis steht im Format der Datei ([`scripts/catalog_format.py`](scripts/catalog_format.py)); ein Merge ohne Änderung auf der eigenen Seite lässt die Datei byteweise unverändert.
+
+Einrichtung, einmal je Klon (die Treiber stehen in der lokalen Git-Konfiguration, `.gitattributes` weist sie nur zu):
+
+```zsh
+scripts/setup-git-merge-drivers.sh          # registriert die Treiber, wiederholbar
+scripts/setup-git-merge-drivers.sh --unset  # entfernt sie wieder
+```
+
+Worktrees teilen die Konfiguration ihres Repositorys: ein Lauf deckt Hauptordner und alle Worktrees ab. Ohne die Einrichtung werden die Dateien wie bisher als Text zusammengeführt; `app/test-all.sh`, `scripts/test-env.sh` und die CI hängen nicht davon ab. **Die Merge-Schaltfläche von GitHub verwendet keine eigenen Treiber** (GitHub führt immer den Text-Merge aus); der Nutzen gilt für lokale Merges, etwa `git merge origin/main` in einen Feature-Branch. Konflikte, die GitHub in einem PR meldet, löst man deshalb lokal mit einem Merge von `origin/main`. Git liest `.gitattributes` aus dem ausgecheckten Stand: Ein Branch, der vor dieser Änderung von `main` abgezweigt wurde, hat die Datei noch nicht, sein erster `git merge origin/main` ist deshalb noch ein Text-Merge (mit den bekannten Konflikten); danach, oder bei `git rebase origin/main`, greift der Treiber.
+
 ### Tests auf GitHub Actions
 
 Der Workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) führt `app/test-all.sh` auf einem GitHub-gehosteten macOS-Runner aus, und zwar:

@@ -95,6 +95,16 @@
         }
       }
     },
+    "%@ kcal über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
     "%@ l": {
       "localizations": {
         "en": {
@@ -117,6 +127,48 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld von %lld Mahlzeiten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$lld von %3$lld Mahlzeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld of %3$lld meals"
+          }
+        }
+      }
+    },
+    "%@ über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over budget"
           }
         }
       }
@@ -709,6 +761,16 @@
         }
       }
     },
+    "Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber"
+          }
+        }
+      }
+    },
     "Bett machen": {
       "localizations": {
         "en": {
@@ -1181,6 +1243,16 @@
         }
       }
     },
+    "Gesättigte Fettsäuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturated fat"
+          }
+        }
+      }
+    },
     "Getränke": {
       "localizations": {
         "en": {
@@ -1635,6 +1707,16 @@
         }
       }
     },
+    "Salz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salt"
+          }
+        }
+      }
+    },
     "Schlafzeit (%@)": {
       "localizations": {
         "en": {
@@ -1943,6 +2025,16 @@
         }
       }
     },
+    "Zucker": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugar"
+          }
+        }
+      }
+    },
     "Zum Beginn": {
       "localizations": {
         "en": {
@@ -2039,6 +2131,16 @@
         }
       }
     },
+    "mind. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -2055,6 +2157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ left"
+          }
+        }
+      }
+    },
+    "noch %@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal left"
           }
         }
       }

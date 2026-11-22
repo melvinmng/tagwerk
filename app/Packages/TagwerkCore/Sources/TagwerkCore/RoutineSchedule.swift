@@ -119,11 +119,13 @@ public enum RoutineSchedule {
     public static let titleLimit = 60
 
     /// The checklist offered for an empty list: the order of the original evening template. The offsets apply to the
-    /// default bedtime of 23:00; "from 22:00" is left out of the first title because the bedtime is adjustable. Three
-    /// points remind (90, 60 and 30 minutes before bedtime), below the limit of four. Read at the time of adoption, so
-    /// the titles follow the app language of that moment.
+    /// default bedtime of 23:00; "from 22:00" is left out of the first title because the bedtime is adjustable. Four
+    /// points remind, the limit (RO6b, RO7b): the lights 60 minutes before bedtime (22:00 at the default bedtime, as in
+    /// the original template, but moving with the bedtime), then 90, 60 and 30 minutes before. Two points therefore
+    /// remind at the same minute, which the planner allows. Read at the time of adoption, so the titles follow the app
+    /// language of that moment.
     public static var suggestedItems: [(title: String, offsetMinutes: Int?)] {
-        [(String(localized: "Helle Lichter ausmachen", bundle: .module), nil),
+        [(String(localized: "Helle Lichter ausmachen", bundle: .module), 60),
          (String(localized: "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", bundle: .module), 90),
          (String(localized: "Eine Stunde vorm Schlafen fertig machen", bundle: .module), 60),
          (String(localized: "Zähne putzen, umziehen, Haus/Wohnung aufräumen", bundle: .module), nil),
@@ -137,6 +139,29 @@ public enum RoutineSchedule {
         ["Open evening wrap-up", "Put the phone away", "Go to bed"],
     ]
     private static let legacySuggestionOffsets = [90, 60, 30]
+
+    /// The titles of the five-point suggestion in which "Helle Lichter ausmachen" had no time, German and English, as fixed
+    /// strings for the same reason as above.
+    public static let fivePointSuggestionTitles: [[String]] = [
+        ["Helle Lichter ausmachen", "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", "Eine Stunde vorm Schlafen fertig machen",
+         "Zähne putzen, umziehen, Haus/Wohnung aufräumen", "Eine halbe Stunde vorm Schlafen ins Bett legen"],
+        ["Turn off bright lights", "Finish all tasks one hour before sleep", "Get ready one hour before sleep",
+         "Brush teeth, change, tidy up the home", "Go to bed half an hour before sleep"],
+    ]
+
+    /// The former five-point suggestion in which "Helle Lichter ausmachen" had no time. An untouched list of exactly these
+    /// points (titles, order and the offsets nil, 90, 60, nil, 30) gets the offset 60 for the first point (RO6b); any list
+    /// the user changed gives `nil`, and so does a list that already has the offset, so the call is safe to repeat. The
+    /// caller runs it once per installation, because a user who clears the time of the lights again would otherwise get
+    /// it back at every start.
+    public static func upgradedLightsOffset(_ items: [ChecklistItem]) -> [ChecklistItem]? {
+        let sorted = items.sorted { $0.order < $1.order }
+        guard sorted.map(\.offsetMinutes) == [nil, 90, 60, nil, 30],
+              fivePointSuggestionTitles.contains(where: { $0 == sorted.map(\.title) }) else { return nil }
+        var upgraded = sorted
+        upgraded[0].offsetMinutes = 60
+        return upgraded
+    }
 
     /// Whether `items` are exactly the former suggestion, untouched: same titles in the same order (by `order`) with
     /// the offsets 90, 60 and 30. Any other list (renamed, reordered, other offset, more or fewer points) is the user's.

@@ -41,9 +41,12 @@ def detect_style(text):
     return Style(separator=separator, trailing_newline=text.endswith("\n"))
 
 
-def serialize(data, style):
-    """Serializes the catalog content in the repository format with the given style."""
-    text = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True, separators=(",", style.separator))
+def serialize(data, style, sort_keys=True):
+    """Serializes the content in the repository format with the given style.
+
+    The String Catalogs are always sorted; scripts/translations/en.json keeps its insertion order (sort_keys=False).
+    """
+    text = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=sort_keys, separators=(",", style.separator))
     return text + "\n" if style.trailing_newline else text
 
 

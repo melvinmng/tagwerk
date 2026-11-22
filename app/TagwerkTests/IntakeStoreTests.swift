@@ -126,6 +126,47 @@ struct HealthMirrorTests {
         #expect(store.unsyncedEntries().isEmpty)
     }
 
+    private func mealWithFibre(fibre: Double?, salt: Double? = nil) -> MealValue {
+        MealValue(id: UUID(), date: current, kind: .lunch, title: "Brot",
+                  items: [MealItem(name: "Brot", amount: "2 Scheiben", kcalMin: 200, kcal: 200, kcalMax: 200, protein: 6, carbs: 36, fat: 2,
+                                   fiber: fibre, salt: salt)],
+                  origin: .manual)
+    }
+
+    @Test func healthValue_carriesTheFurtherNutrientsOnlyWhenEveryItemKnowsThem() {
+        let known = IntakeEntry.meal(mealWithFibre(fibre: 4, salt: 1.2)).healthValue(version: 1)
+        guard case .meal(let meal) = known else { Issue.record("meal expected"); return }
+        #expect(meal.fiber == 4 && meal.salt == 1.2 && meal.sugar == nil && meal.saturatedFat == nil)
+        // A partially known meal is not written: the partial sum would look like the whole meal in Health.
+        var partial = mealWithFibre(fibre: 4)
+        partial.items.append(MealItem(name: "Aufstrich", amount: "", kcalMin: 50, kcal: 50, kcalMax: 50, protein: 0, carbs: 0, fat: 5))
+        guard case .meal(let half) = IntakeEntry.meal(partial).healthValue(version: 1) else { Issue.record("meal expected"); return }
+        #expect(half.fiber == nil)
+    }
+
+    @Test func furtherNutrientsGranted_mirrorsMealsWithSuchValuesAgain_withAHigherVersion() async {
+        let withFibre = mealWithFibre(fibre: 4)
+        let without = mealWithFibre(fibre: nil)
+        store.addMeal(withFibre, estimatedAt: nil)
+        store.addMeal(without, estimatedAt: nil)
+        await mirror().sync()
+        #expect(store.unsyncedEntries().isEmpty)
+        #expect(health.meals.count == 2)
+        await mirror().furtherNutrientsGranted()
+        #expect(health.meals.count == 3, "only the meal with a further nutrient is written again")
+        let again = health.meals.last
+        #expect(again?.id == withFibre.id && again?.version == 2 && again?.fiber == 4)
+        #expect(store.unsyncedEntries().isEmpty)
+    }
+
+    @Test func markMealsWithFurtherNutrientsUnsynced_countsAndLeavesOthersAlone() async {
+        store.addMeal(mealWithFibre(fibre: 3), estimatedAt: nil)
+        store.addMeal(mealWithFibre(fibre: nil), estimatedAt: nil)
+        await mirror().sync()
+        #expect(store.markMealsWithFurtherNutrientsUnsynced() == 1)
+        #expect(store.unsyncedEntries().count == 1)
+    }
+
     @Test func deniedType_skippedWithoutError_staysUnsynced() async {
         store.addDrink(drink())
         health.incompleteWrites = true

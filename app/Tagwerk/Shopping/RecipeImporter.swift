@@ -448,11 +448,12 @@ final class RecipeImporter {
 
     /// Puts the selected ingredients on the list and remembers each one's category as an automatic assignment, so a choice
     /// the user makes later by hand takes precedence. Returns what the list reported. The items carry the names and units of
-    /// the shopping list (`listItem`), formatted for `locale`, and their category is remembered under that name.
+    /// the shopping list (`listItem`), formatted for `locale`, and their category is remembered under that name. An ingredient
+    /// that is on the list already raises its quantity when the two can be added and otherwise gets a second entry (EK4b).
     @discardableResult
     static func apply(_ selected: [Candidate], model: ShoppingModel, categories: ShoppingCategoryStore,
                       locale: Locale = .current) async -> ShoppingModel.AddReport {
-        let report = await model.add(selected.map { listItem(for: $0, locale: locale) })
+        let report = await model.add(selected.map { listItem(for: $0, locale: locale) }, existing: .raiseOrAppend(locale: locale))
         let all = categories.categories()
         let other = ShoppingSorter.otherName.lowercased()
         let failed = Set(report.failed.map(ShoppingName.key))

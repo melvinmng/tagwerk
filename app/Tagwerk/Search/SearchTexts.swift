@@ -134,6 +134,7 @@ enum SearchTexts {
         case .issueNumber: String(localized: "Nummer")
         case .kind: String(localized: "Art")
         case .quantity: String(localized: "Menge")
+        case .scan: String(localized: "Im Scan")
         }
     }
 

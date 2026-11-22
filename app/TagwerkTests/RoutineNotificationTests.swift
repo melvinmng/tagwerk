@@ -29,7 +29,7 @@ struct RoutineNotificationTests {
                                             locale: { Locale(identifier: "de_DE") })
     }
 
-    /// The three points of the suggestion that remind (90, 60 and 30 minutes before bedtime).
+    /// The four points of the suggestion that remind (60, 90, 60 and 30 minutes before bedtime).
     private func reminderItems() -> [ChecklistItem] { RoutineSchedule.reminderItems(store.checklist()) }
 
     private func at(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
@@ -45,21 +45,22 @@ struct RoutineNotificationTests {
         center.seed("tagwerk.routine.evening.OLD", fireDate: nil)
         await makeScheduler().reschedule()
         #expect(!center.pendingIDs.contains("tagwerk.routine.evening.OLD"))
-        #expect(center.pendingIDs.count == 9 && center.pendingIDs.allSatisfy { $0.hasPrefix("tagwerk.routine.evening.") })
+        #expect(center.pendingIDs.count == 12 && center.pendingIDs.allSatisfy { $0.hasPrefix("tagwerk.routine.evening.") })
         #expect(center.addedRepeating.isEmpty)
     }
 
     @Test func reschedule_addsDatedEveningRemindersForThreeDays() async {
         store.adoptSuggestion()
         await makeScheduler().reschedule()
-        let titles = ["Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", "Eine Stunde vorm Schlafen fertig machen",
-                      "Eine halbe Stunde vorm Schlafen ins Bett legen"]
-        // Offsets 90, 60 and 30 before 23:00 give 21:30, 22:00 and 22:30 on each of the three days.
-        #expect(center.addedDated.count == 9)
+        let titles = ["Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", "Helle Lichter ausmachen",
+                      "Eine Stunde vorm Schlafen fertig machen", "Eine halbe Stunde vorm Schlafen ins Bett legen"]
+        // Offsets 90, 60, 60 and 30 before 23:00 give 21:30, 22:00, 22:00 and 22:30 on each of the three days; the two points at
+        // 22:00 are two requests.
+        #expect(center.addedDated.count == 12)
         #expect(center.addedDated.map(\.title) == Array(repeating: titles, count: 3).flatMap { $0 })
-        #expect(center.addedDated.map(\.day) == [18, 18, 18, 19, 19, 19, 20, 20, 20])
-        #expect(center.addedDated.prefix(3).map { "\($0.hour):\($0.minute)" } == ["21:30", "22:0", "22:30"])
-        #expect(Set(center.addedDated.map(\.id)).count == 9)
+        #expect(center.addedDated.map(\.day) == [18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20])
+        #expect(center.addedDated.prefix(4).map { "\($0.hour):\($0.minute)" } == ["21:30", "22:0", "22:0", "22:30"])
+        #expect(Set(center.addedDated.map(\.id)).count == 12)
     }
 
     @Test func reschedule_removesOldRepeatingEveningRequests() async {
@@ -78,8 +79,8 @@ struct RoutineNotificationTests {
         settings.weekPlanningReminderEnabled = true
         await makeScheduler().reschedule()
         #expect(center.addedRepeating.map(\.id).sorted() == ["tagwerk.routine.morning", "tagwerk.routine.week"])
-        #expect(center.addedDated.count == 9)
-        #expect(center.pendingIDs.count == 11)
+        #expect(center.addedDated.count == 12)
+        #expect(center.pendingIDs.count == 14)
     }
 
     @Test func reschedule_skipsCheckedItemsOnTheirDayOnly() async {
@@ -89,14 +90,21 @@ struct RoutineNotificationTests {
         await makeScheduler().reschedule()
         #expect(!center.pendingIDs.contains(eveningID(item, day: 18)))
         #expect(center.pendingIDs.contains(eveningID(item, day: 19)) && center.pendingIDs.contains(eveningID(item, day: 20)))
-        #expect(center.pendingIDs.count == 8)
+        #expect(center.pendingIDs.count == 11)
+    }
+
+    @Test func reschedule_twoItemsAtTheSameMinute_bothPending() async {
+        store.adoptSuggestion()
+        await makeScheduler().reschedule()
+        let atTen = center.addedDated.filter { $0.day == 18 && $0.hour == 22 && $0.minute == 0 }
+        #expect(atTen.count == 2 && center.pendingIDs.isSuperset(of: atTen.map(\.id)))
     }
 
     @Test func reschedule_openItemsRemindAfterTheWrapUpWasCompleted() async {
         store.adoptSuggestion()
         store.update(today) { $0.closeCompletedAt = testNow() }
         await makeScheduler().reschedule()
-        #expect(center.pendingIDs.count == 9)
+        #expect(center.pendingIDs.count == 12)
     }
 
     @Test func reschedule_keepsDeadlineRequests() async {
@@ -190,7 +198,7 @@ struct RoutineNotificationTests {
         #expect(!center.pendingIDs.contains(eveningID(items[0], day: 18)))
         #expect(center.pendingIDs.contains(eveningID(items[0], day: 19)) && center.pendingIDs.contains(eveningID(items[0], day: 20)))
         #expect(center.pendingIDs.contains(eveningID(items[1], day: 18)))
-        #expect(center.pendingIDs.count == 8)
+        #expect(center.pendingIDs.count == 11)
     }
 
     @Test func uncheck_readdsWhenStillAhead() async {
@@ -203,12 +211,12 @@ struct RoutineNotificationTests {
         store.update(today) { $0.checkedItemIDs.remove(item.id) }
         await scheduler.reschedule()
         #expect(center.pendingIDs.contains(eveningID(item, day: 18)))
-        #expect(center.pendingIDs.count == 9)
+        #expect(center.pendingIDs.count == 12)
     }
 
     @Test func uncheck_afterItsTime_addsNothing() async {
         store.adoptSuggestion()
-        let item = reminderItems()[0]
+        let item = reminderItems()[1]
         let scheduler = makeScheduler()
         store.update(today) { $0.checkedItemIDs.insert(item.id) }
         await scheduler.reschedule()
@@ -232,7 +240,7 @@ struct RoutineNotificationTests {
     @Test func reschedule_afterMidnight_startsWithTheRoutineDayBefore() async {
         store.adoptSuggestion()
         settings.bedtimeMinutes = 30
-        let late = reminderItems()[2]    // 30 minutes before 00:30 is 00:00 on the calendar day after the routine day
+        let late = reminderItems()[3]    // 30 minutes before 00:30 is 00:00 on the calendar day after the routine day
         clock.now = at(19, 0, 0).addingTimeInterval(-60)  // 23:59 on the 18th: routine day 18, its 00:00 reminder is ahead
         await makeScheduler().reschedule()
         #expect(center.pendingIDs.contains(eveningID(late, day: 18)))

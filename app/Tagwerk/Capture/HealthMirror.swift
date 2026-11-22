@@ -46,6 +46,12 @@ final class HealthMirror {
         await chain.value
     }
 
+    /// The group "weitere Nährwerte nach Health" was allowed: meals that carry such values are mirrored again, once.
+    func furtherNutrientsGranted() async {
+        store.markMealsWithFurtherNutrientsUnsynced()
+        await sync()
+    }
+
     /// A run after the undo window, for deletions that are waiting.
     func syncAfterUndoWindow() {
         delayedRun?.cancel()
