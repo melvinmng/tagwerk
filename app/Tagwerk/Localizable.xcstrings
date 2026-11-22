@@ -452,6 +452,22 @@
         }
       }
     },
+    "%@ ist schon bei %@ vergeben und hier nicht wählbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ ist schon bei %2$@ vergeben und hier nicht wählbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already taken by %2$@ and can not be chosen here."
+          }
+        }
+      }
+    },
     "%@ ist zu Ende gelesen (%@ am %@). Wähle ein anderes Buch oder beginne %@ neu.": {
       "localizations": {
         "de": {
@@ -656,6 +672,22 @@
         }
       },
       "shouldTranslate": false
+    },
+    "%@ sind schon bei %@ vergeben und hier nicht wählbar.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ sind schon bei %2$@ vergeben und hier nicht wählbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ are already taken by %2$@ and can not be chosen here."
+          }
+        }
+      }
     },
     "%@ stehen schon auf der Liste.": {
       "localizations": {
@@ -4546,6 +4578,16 @@
         }
       }
     },
+    "An diesen Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On these days"
+          }
+        }
+      }
+    },
     "Andere Liste wählen": {
       "localizations": {
         "en": {
@@ -8020,6 +8062,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The list couldn’t be updated. %@"
+          }
+        }
+      }
+    },
+    "Die Mitteilung nennt Buch und nächsten Vers, zum Beispiel „Weiter in Römer ab 3,27“. Sie steht auch auf dem Sperrbildschirm. Ausgeschaltet heißt es nur „Zeit für Bible Study.“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The notification names the book and the next verse, for example “Continue in Romans from 3,27”. It also shows on the lock screen. Switched off, it only says “Time for Bible Study.”"
           }
         }
       }
@@ -15326,6 +15378,16 @@
         }
       }
     },
+    "Minute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minute"
+          }
+        }
+      }
+    },
     "Minuten": {
       "localizations": {
         "en": {
@@ -19970,6 +20032,16 @@
         }
       }
     },
+    "Stelle in der Mitteilung zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the passage in the notification"
+          }
+        }
+      }
+    },
     "Stelle, z. B. 3,21-31": {
       "extractionState": "stale",
       "localizations": {
@@ -20037,6 +20109,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Street, city"
+          }
+        }
+      }
+    },
+    "Stunde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hour"
           }
         }
       }
@@ -22822,6 +22904,16 @@
         }
       }
     },
+    "Wo „Bible Study starten“ steht und wann Tagwerk daran erinnert. Das Tagebuch steht im Tagesabschluss.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where “Start Bible Study” appears and when Tagwerk reminds you of it. The journal is in the evening wrap-up."
+          }
+        }
+      }
+    },
     "Woche": {
       "localizations": {
         "en": {
@@ -23175,6 +23267,26 @@
         }
       }
     },
+    "Zeit hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add time"
+          }
+        }
+      }
+    },
+    "Zeit löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete time"
+          }
+        }
+      }
+    },
     "Zeit mit Gott": {
       "localizations": {
         "en": {
@@ -23289,6 +23401,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Also move time blocks?"
+          }
+        }
+      }
+    },
+    "Zeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Times"
           }
         }
       }
@@ -25340,6 +25462,16 @@
         }
       }
     },
+    "und": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "and"
+          }
+        }
+      }
+    },
     "und %lld weitere": {
       "localizations": {
         "de": {
@@ -26079,6 +26211,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accepted"
+          }
+        }
+      }
+    },
+    "Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted times do not change by themselves. Skipped on days with a completed session. Tagwerk plans the reminder for the next 3 days and fills it up as soon as you open the app."
           }
         }
       }

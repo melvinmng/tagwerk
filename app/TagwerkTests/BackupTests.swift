@@ -285,6 +285,30 @@ struct BackupTests {
         #expect(fresh.settings.bibleStudyOffer == .evening)
     }
 
+    @Test func backup_roundTripsTimesAndSwitches() throws {
+        let times = [BibleStudyReminderTime(minutes: 405, weekdays: [2, 3, 4, 5, 6]), BibleStudyReminderTime(minutes: 510, weekdays: [7, 1])]
+        sourceSettings.bibleStudyReminderEnabled = true
+        sourceSettings.bibleStudyReminderTimes = times
+        sourceSettings.bibleStudyReminderShowsPassage = false
+        sourceSettings.bibleStudySkippedDayKey = "2026-11-20"
+        sourceSettings.bibleStudySuggestionSnoozedUntil = testNow()
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(target.settings.bibleStudyReminderEnabled && !target.settings.bibleStudyReminderShowsPassage)
+        #expect(target.settings.bibleStudyReminderTimes == times)
+        // "Heute nicht" and the snooze belong to the moment and are not restored.
+        #expect(target.settings.bibleStudySkippedDayKey == nil && target.settings.bibleStudySuggestionSnoozedUntil == nil)
+        // An older backup without the fields keeps the defaults of the target: off, no times, the passage shown.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["bibleStudyReminderEnabled", "bibleStudyReminderTimesData", "bibleStudyReminderShowsPassage"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(!fresh.settings.bibleStudyReminderEnabled && fresh.settings.bibleStudyReminderTimes.isEmpty)
+        #expect(fresh.settings.bibleStudyReminderShowsPassage)
+    }
+
     @Test func focusStartSettings_roundTrip() throws {
         sourceSettings.focusAsksDurationAtStart = false
         sourceSettings.focusLastStartMinutes = 45

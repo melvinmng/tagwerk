@@ -2637,5 +2637,18 @@
   "Sitzung läuft · %@ %@": "Session running · %1$@ %2$@",
   "Sitzung läuft · %@ ab %@": "Session running · %1$@ from %2$@",
   "Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent).": "The title becomes an ordinary task and is then no longer private (Reminders, assistant).",
-  "Haken entfernen": "Remove tick"
+  "Haken entfernen": "Remove tick",
+  "%@ ist schon bei %@ vergeben und hier nicht wählbar.": "%1$@ is already taken by %2$@ and can not be chosen here.",
+  "%@ sind schon bei %@ vergeben und hier nicht wählbar.": "%1$@ are already taken by %2$@ and can not be chosen here.",
+  "An diesen Tagen": "On these days",
+  "Die Mitteilung nennt Buch und nächsten Vers, zum Beispiel „Weiter in Römer ab 3,27“. Sie steht auch auf dem Sperrbildschirm. Ausgeschaltet heißt es nur „Zeit für Bible Study.“": "The notification names the book and the next verse, for example “Continue in Romans from 3,27”. It also shows on the lock screen. Switched off, it only says “Time for Bible Study.”",
+  "Minute": "Minute",
+  "Stelle in der Mitteilung zeigen": "Show the passage in the notification",
+  "Stunde": "Hour",
+  "Wo „Bible Study starten“ steht und wann Tagwerk daran erinnert. Das Tagebuch steht im Tagesabschluss.": "Where “Start Bible Study” appears and when Tagwerk reminds you of it. The journal is in the evening wrap-up.",
+  "Zeit hinzufügen": "Add time",
+  "Zeit löschen": "Delete time",
+  "Zeiten": "Times",
+  "und": "and",
+  "Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Accepted times do not change by themselves. Skipped on days with a completed session. Tagwerk plans the reminder for the next 3 days and fills it up as soon as you open the app."
 }

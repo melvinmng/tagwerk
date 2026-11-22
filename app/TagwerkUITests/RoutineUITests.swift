@@ -43,6 +43,10 @@ final class RoutineUITests: UITestCase {
             steps += 1
         }
         row.tap()
+        // BS6: the place of Bible Study is chosen on its own page.
+        let page = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study")).firstMatch
+        scrollTo(page)
+        page.tap()
         let picker = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study anbieten")).firstMatch
         scrollTo(picker)
         picker.tap()
