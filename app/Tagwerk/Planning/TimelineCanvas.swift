@@ -45,12 +45,12 @@ struct TimelineCanvas: View {
     static let hourHeight: CGFloat = 64
     static let lineInset: CGFloat = 8
     /// Width of the hour label column; grows with the text size (capped), so "08:00" is not squeezed at large sizes.
-    @ScaledMetric(relativeTo: .caption2) private var scaledLabelWidth: CGFloat = 44
-    private var labelWidth: CGFloat { min(scaledLabelWidth, 76) }
+    @ScaledMetric(relativeTo: .caption2) private var scaledLabelWidth: CGFloat = TimelineGridMetrics.hourLabelWidth
+    private var labelWidth: CGFloat { min(scaledLabelWidth, TimelineGridMetrics.hourLabelWidthLimit) }
 
     /// Narrowest a column of overlapping entries may get before the group becomes one block (about six characters of
     /// the title font; grows with the text size, BF1c).
-    @ScaledMetric(relativeTo: .caption) private var minimumColumnWidth: CGFloat = 44
+    @ScaledMetric(relativeTo: .caption) private var minimumColumnWidth: CGFloat = TimelineGridMetrics.minimumColumnWidth
     /// Below this column width the focus button shows only its symbol and the text of a cut block its short form.
     private static let narrowColumnWidth: CGFloat = 150
 
@@ -84,7 +84,7 @@ struct TimelineCanvas: View {
     var body: some View {
         let shown = shownRange
         GeometryReader { geometry in
-            let width = geometry.size.width - labelWidth - 6
+            let width = TimelineGridMetrics.entriesWidth(gridWidth: geometry.size.width, scaledLabelWidth: scaledLabelWidth)
             let ranges = entries.map(displayRange)
             // The columns also reserve the room of the travel attachments, so a trip that starts before the previous event
             // ends sits beside it instead of behind it (PL10b).
@@ -121,7 +121,7 @@ struct TimelineCanvas: View {
                                               event.map { event in TravelMenuContext(event: event, model: model) { edit(event) } }
                                           })
                             .frame(width: columnWidth - 2, height: hitHeight)
-                            .offset(x: labelWidth + 6 + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth,
+                            .offset(x: labelWidth + TimelineGridMetrics.labelGap + CGFloat(isCollapsed ? 0 : columns[index]) * columnWidth,
                                     y: isReturn ? y(top, shown) : y(top, shown) - hitHeight)
                             // Above the entries: a neighbour with wider columns must not cover the capsule. A selected or moved
                             // entry (zIndex 1 and 2) stays above it.
@@ -139,7 +139,7 @@ struct TimelineCanvas: View {
                     let columnWidth = width / CGFloat(count)
                     entryView(entry, range: range, columnWidth: columnWidth - 2)
                         .frame(width: columnWidth - 2, height: max(18, height(range.count)))
-                        .offset(x: labelWidth + 6 + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
+                        .offset(x: labelWidth + TimelineGridMetrics.labelGap + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
                 }
                 // Mockup AR1: the added time of a suggested longer day, hatched purple.
@@ -148,7 +148,7 @@ struct TimelineCanvas: View {
                         .fill(Color.purple.opacity(0.10))
                         .overlay { Rectangle().strokeBorder(Color.purple.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
                         .frame(width: width, height: height(range.count))
-                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(range.lowerBound, shown))
                         .allowsHitTesting(false)
                 }
                 // Mockup VA1: where a changed suggestion was, faded, until the next change.
@@ -157,7 +157,7 @@ struct TimelineCanvas: View {
                         RoundedRectangle(cornerRadius: 7)
                             .strokeBorder(Color.purple.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
                             .frame(width: width - 2, height: max(22, height(minutes)))
-                            .offset(x: labelWidth + 6, y: y(start, shown))
+                            .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(start, shown))
                             .allowsHitTesting(false)
                     }
                 }
@@ -172,7 +172,7 @@ struct TimelineCanvas: View {
                                         { editingTask = task }
                                     })
                         .frame(width: width - 2, height: max(22, height(range.count)))
-                        .offset(x: labelWidth + 6, y: y(range.lowerBound, shown))
+                        .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(range.lowerBound, shown))
                         .zIndex(0.5)
                 }
                 if let preview = taskPreview {
@@ -292,7 +292,7 @@ struct TimelineCanvas: View {
             }
         }
         .frame(width: width - 2, height: max(18, height(span.count)))
-        .offset(x: labelWidth + 6, y: y(span.lowerBound, shown))
+        .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(span.lowerBound, shown))
     }
 
     // MARK: Entries
@@ -497,7 +497,7 @@ struct TimelineCanvas: View {
     private func previewBlock(_ preview: (title: String, startMinutes: Int, minutes: Int), shown: Range<Int>, width: CGFloat) -> some View {
         let start = snapped(minutes: preview.startMinutes)
         return ZStack(alignment: .topLeading) {
-            snapIndicator(minutes: start, shown: shown, width: width + labelWidth + 6)
+            snapIndicator(minutes: start, shown: shown, width: width + labelWidth + TimelineGridMetrics.labelGap)
             VStack(alignment: .leading, spacing: 1) {
                 Text(preview.title).font(.caption.weight(.semibold)).lineLimit(2)
                 Text(timeText(start..<(start + preview.minutes))).font(.caption2).foregroundStyle(.secondaryText)
@@ -506,7 +506,7 @@ struct TimelineCanvas: View {
             .frame(width: width - 2, height: max(18, height(preview.minutes)), alignment: .topLeading)
             .background(Color.green.opacity(0.3), in: RoundedRectangle(cornerRadius: 7))
             .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(.green, style: StrokeStyle(lineWidth: 1.5, dash: [5, 3])))
-            .offset(x: labelWidth + 6, y: y(start, shown))
+            .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(start, shown))
         }
         .allowsHitTesting(false)
     }
@@ -595,5 +595,23 @@ struct EntryStyle {
             suffix = parts.isEmpty ? "" : " · " + parts.joined(separator: " · ")
             self.title = title
         }
+    }
+}
+
+/// The measurements behind the decision whether overlapping entries stay side by side or become one block (BF1c). They are the
+/// base values of the scaled metrics of `TimelineCanvas` (scaled with the text size there), kept in one place so a test can ask the
+/// decision for a window width and a text size without an app launch (`GridCollapseLayoutTests`).
+enum TimelineGridMetrics {
+    /// Width of the hour label column at the default text size; grows with the text size up to `hourLabelWidthLimit`.
+    static let hourLabelWidth: CGFloat = 44
+    static let hourLabelWidthLimit: CGFloat = 76
+    /// Space between the hour labels and the entries.
+    static let labelGap: CGFloat = 6
+    /// Narrowest a column of overlapping entries may get at the default text size (about six characters of the title font).
+    static let minimumColumnWidth: CGFloat = 44
+
+    /// The width the columns of the entries share: the grid without the (scaled and capped) label column and the gap.
+    static func entriesWidth(gridWidth: CGFloat, scaledLabelWidth: CGFloat) -> CGFloat {
+        gridWidth - min(scaledLabelWidth, hourLabelWidthLimit) - labelGap
     }
 }

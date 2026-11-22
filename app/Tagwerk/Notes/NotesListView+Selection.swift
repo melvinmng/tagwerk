@@ -76,6 +76,36 @@ extension NotesListView {
         .accessibilityIdentifier("notes.listMenu")
     }
 
+    // MARK: Lock
+
+    /// "Sperren" / "Sperre aufheben" / "Jetzt sperren" of the context menu of a card (NL2a).
+    @ViewBuilder
+    func lockItems(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> some View {
+        let lock = environment.noteLock
+        if note.isLocked {
+            Button { lock.removeLock([note.id], store: store) } label: { Label("Sperre aufheben", systemImage: "lock.open") }
+        } else if lock.canLock(note, privateFolderIDs: privateFolderIDs) {
+            Button {
+                lock.requestLock([note.id], store: store, introFor: { lockIntroIDs = $0 })
+            } label: { Label("Sperren", systemImage: "lock") }
+                .disabled(!lock.canAuthenticate)
+        }
+        if lock.isUnlocked, lock.isProtected(note, privateFolderIDs: privateFolderIDs) {
+            Button { lock.lockNow() } label: { Label("Jetzt sperren", systemImage: "lock") }
+        }
+    }
+
+    /// The notes of a selection that "Sperren" locks: the ones the rules allow (rule 6), the others are skipped.
+    static func lockableIDs(of notes: [NoteRecord], privateFolderIDs: Set<UUID>, settings: NoteProtection.Settings) -> [UUID] {
+        notes.filter {
+            !$0.isLocked && NoteProtection.canLock(kind: $0.kind, isInPrivateFolder: $0.folderID.map(privateFolderIDs.contains) ?? false,
+                                                  settings: settings)
+        }.map(\.id)
+    }
+
+    /// What a card shows instead of the preview of a hidden note.
+    static func lockedPreview() -> String { String(localized: "Gesperrt") }
+
     // MARK: Selection
 
     /// "N ausgewählt"; without a selection the title says what to do.
@@ -105,16 +135,28 @@ extension NotesListView {
             }
             .disabled(selection.isEmpty)
             Spacer()
-            Button("Löschen", role: .destructive) { deletingForGood = Array(selection) }
-                .disabled(selection.isEmpty)
+            Button("Löschen", role: .destructive) {
+                let ids = Array(selection)
+                let lock = environment.noteLock
+                let concealed = ids.compactMap { store.note(id: $0) }.contains { lock.isConcealed($0, in: store) }
+                lock.afterUnlock(whenConcealed: concealed) { deletingForGood = ids }
+            }
+            .disabled(selection.isEmpty)
         } else {
             let chosen = selection.compactMap { store.note(id: $0) }
+            let lock = environment.noteLock
+            let concealed = chosen.contains { lock.isConcealed($0, in: store) }
             // The entries of a routine folder belong there; moving them is not offered.
             if folderRole?.noteKind == nil {
-                Button("Bewegen") { movingNoteIDs = Array(selection) }
-                    .disabled(selection.isEmpty)
+                Button("Bewegen") {
+                    let ids = Array(selection)
+                    lock.afterUnlock(whenConcealed: concealed) { movingNoteIDs = ids }
+                }
+                .disabled(selection.isEmpty)
                 Spacer()
             }
+            lockSelectionButton(chosen)
+            Spacer()
             let pins = Self.shouldPin(chosen)
             let pinTitle: LocalizedStringKey = pins ? "Anheften" : "Lösen"
             Button(pinTitle) {
@@ -124,10 +166,32 @@ extension NotesListView {
             .disabled(selection.isEmpty)
             Spacer()
             Button("Löschen", role: .destructive) {
-                for id in selection { store.trash(id) }
+                let ids = Array(selection)
+                // A hidden note asks the device owner first (rule 7).
+                lock.afterUnlock(whenConcealed: concealed) { for id in ids { store.trash(id) } }
                 selection = []
             }
             .disabled(selection.isEmpty)
+        }
+    }
+
+    /// "Sperren" locks the chosen notes the rules allow; when every chosen note is locked already, the button removes the mark.
+    @ViewBuilder
+    private func lockSelectionButton(_ chosen: [NoteRecord]) -> some View {
+        let lock = environment.noteLock
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
+        let lockable = Self.lockableIDs(of: chosen, privateFolderIDs: privateFolderIDs, settings: lock.protection)
+        if !chosen.isEmpty, chosen.allSatisfy(\.isLocked) {
+            Button("Entsperren") {
+                lock.removeLock(chosen.map(\.id), store: store)
+                selection = []
+            }
+        } else {
+            Button("Sperren") {
+                lock.requestLock(lockable, store: store, introFor: { lockIntroIDs = $0 })
+                selection = []
+            }
+            .disabled(lockable.isEmpty || !lock.canAuthenticate)
         }
     }
 }

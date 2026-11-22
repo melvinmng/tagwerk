@@ -124,15 +124,20 @@ struct RecipeListedItemsTests {
 
     // MARK: Selection
 
+    private func draft(_ items: [RecipeImporter.Candidate]) -> RecipeDraftModel {
+        RecipeDraftModel(result: RecipeImporter.Result(title: "Dal", servings: 4, candidates: items, steps: [], language: .german),
+                         reviser: nil)
+    }
+
     @Test func result_existingItemsStartDeselected() {
-        let items = [candidate("Zwiebeln", "1"), candidate("Kokosmilch", "1 Dose", onList: false)]
-        #expect(RecipeResultView.initiallyDeselected(items) == [ShoppingName.key("Zwiebeln")])
+        let model = draft([candidate("Zwiebeln", "1"), candidate("Kokosmilch", "1 Dose", onList: false)])
+        #expect(model.rows.filter { !model.isSelected($0.id) }.map(\.candidate.name) == ["Zwiebeln"])
+        #expect(model.selectedCandidates.map(\.name) == ["Kokosmilch"])
     }
 
     @Test func buttonTitle_countsSelected() {
-        let items = [candidate("Zwiebeln", "1"), candidate("Kokosmilch", "1 Dose", onList: false), candidate("Ingwer", "10 g", onList: false)]
-        let selected = RecipeResultView.selection(items, deselected: RecipeResultView.initiallyDeselected(items))
-        #expect(RecipeResultView.addTitle(count: selected.count) == "2 Artikel hinzufügen")
+        let model = draft([candidate("Zwiebeln", "1"), candidate("Kokosmilch", "1 Dose", onList: false), candidate("Ingwer", "10 g", onList: false)])
+        #expect(RecipeResultView.addTitle(count: model.selectedCandidates.count) == "2 Artikel hinzufügen")
     }
 
     // MARK: Typed quantities
@@ -146,6 +151,25 @@ struct RecipeListedItemsTests {
         #expect(typed[0].quantity == "1 Packung")
         #expect(typed[0].line == nil, "a typed quantity is free text")
         #expect(RecipeImporter.listItem(for: typed[0], locale: german).quantity == "1 Packung")
+    }
+
+    @Test func renamingAnIngredient_keepsItsTypedQuantity_andTheValuesSheetNeverChangesAnAmount() {
+        let lentils = RecipeImporter.Candidate(name: "rote Linsen", quantity: "125 g", line: IngredientLine.parse("125 g rote Linsen"),
+                                               category: "Sonstiges", alreadyOnList: false)
+        let model = draft([lentils])
+        let typed = [lentils.id: "1 Packung"]
+        model.edit(model.rows[0].edited(name: "Berglinsen", category: "Vorrat"))
+        let renamed = model.candidates[0]
+        // The id of an ingredient is its name; the typed amount moves along, the others stay.
+        let moved = RecipeResultView.overrides(typed, renamingFrom: lentils.id, to: renamed.id)
+        #expect(moved == [renamed.id: "1 Packung"])
+        #expect(RecipeResultView.overrides(typed, renamingFrom: lentils.id, to: lentils.id) == typed)
+        #expect(RecipeResultView.overrides([:], renamingFrom: lentils.id, to: renamed.id).isEmpty)
+        // Without a typed amount the amount of the recipe scales with the servings, whatever the name is.
+        let scaled = RecipeResultView.effective(model.candidates, base: 4, target: 8, locale: german, overrides: [:])
+        #expect(scaled[0].quantity == "250 g")
+        let withTyped = RecipeResultView.effective(model.candidates, base: 4, target: 8, locale: german, overrides: moved)
+        #expect(withTyped[0].quantity == "1 Packung")
     }
 
     @Test func effective_emptyTypedQuantity_clearsIt() {

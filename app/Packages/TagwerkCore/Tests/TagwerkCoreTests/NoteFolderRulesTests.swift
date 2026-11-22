@@ -151,6 +151,17 @@ struct NoteFolderRulesTests {
         #expect(NoteFolderRules.mayLeaveDevice(kind: .morning, folderID: UUID(), privateFolderIDs: ids))
     }
 
+    @Test func mayLeaveDevice_lockedFreeNote_isFalse() {
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: [], isLocked: true))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .morning, folderID: UUID(), privateFolderIDs: [], isLocked: true))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: [], isLocked: false))
+    }
+
+    @Test func mayLeaveDevice_defaultParameterKeepsOldBehaviour() {
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .journal, folderID: nil, privateFolderIDs: []))
+    }
+
     @Test func mayLeaveDevice_dreamKind_isFalse() {
         #expect(!NoteFolderRules.mayLeaveDevice(kind: .dream, folderID: nil, privateFolderIDs: []))
         #expect(!NoteFolderRules.mayLeaveDevice(kind: .journal, folderID: nil, privateFolderIDs: []))

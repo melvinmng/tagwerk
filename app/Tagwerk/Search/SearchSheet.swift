@@ -385,6 +385,15 @@ struct SearchSheet: View {
         model.filter != .tasks && model.eventState == .loaded && model.canExtendWindow
     }
 
+    /// At least one note is hidden by the lock right now.
+    private var hasConcealedNotes: Bool {
+        let store = environment.notes
+        let lock = environment.noteLock
+        guard lock.protection.isActive, !lock.isUnlocked else { return false }
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
+        return store.notes(.all).contains { lock.isConcealed($0, privateFolderIDs: privateFolderIDs) }
+    }
+
     @ViewBuilder private func sectionView(_ kind: SearchSectionKind) -> some View {
         let section = model.results.sections.first { $0.kind == kind }
         let rows = section.map { model.visibleRows(in: $0) } ?? []
@@ -396,6 +405,10 @@ struct SearchSheet: View {
                 Button { model.showMore(kind) } label: {
                     Text("Weitere \(min(SearchModel.pageSize, model.hiddenCount(in: section))) zeigen")
                 }
+            }
+            // Hidden notes are found by their title only; the sheet says so under the note hits (NL4a).
+            if kind == .notes, section != nil, hasConcealedNotes {
+                Text("Gesperrte Notizen werden nur über den Titel gefunden.").font(.footnote).foregroundStyle(.secondaryText)
             }
             if kind == .online, model.onlineState == .loaded, section == nil {
                 Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondaryText)

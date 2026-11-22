@@ -9,11 +9,14 @@ import SwiftUI
 ///
 /// Two more arguments serve the accessibility audit: `-TagwerkUITestTextSize <size>` forces a Dynamic Type size
 /// (e.g. `accessibility5`) and `-TagwerkUITestDark` forces dark mode, both only for the app, not for the simulator.
+/// `-TagwerkUITestScreen <name>` opens a screen directly at launch (see `UITestScreen`).
 enum UITestMode {
     static let launchArgument = "-TagwerkUITest"
     static let textSizeArgument = "-TagwerkUITestTextSize"
     static let darkArgument = "-TagwerkUITestDark"
     static let clockArgument = "-TagwerkUITestNow"
+    static let lockAuthenticationArgument = "-TagwerkUITestLockAuthentication"
+    static let screenArgument = "-TagwerkUITestScreen"
     /// `-TagwerkUITestScan <pages>`: "Dokument scannen" delivers that many test pages instead of opening the document camera.
     static let scanArgument = "-TagwerkUITestScan"
 
@@ -31,6 +34,21 @@ enum UITestMode {
         return Calendar.tagwerk.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) ?? Date()
     }
 
+    /// The fixed answers of the device check for the note lock: a comma separated list of `succeed` and `fail` ("succeed,fail":
+    /// the first check passes, every later one fails); the last answer repeats. `nil` uses the system check.
+    static var lockAuthentication: [Bool]? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isActive, let index = arguments.firstIndex(of: lockAuthenticationArgument), index + 1 < arguments.count else { return nil }
+        let answers = arguments[index + 1].split(separator: ",").compactMap { answer -> Bool? in
+            switch answer {
+            case "succeed": true
+            case "fail": false
+            default: nil
+            }
+        }
+        return answers.isEmpty ? nil : answers
+    }
+
     static var dynamicTypeSize: DynamicTypeSize? {
         let arguments = ProcessInfo.processInfo.arguments
         guard isActive, let index = arguments.firstIndex(of: textSizeArgument), index + 1 < arguments.count else { return nil }
@@ -44,6 +62,11 @@ enum UITestMode {
         isActive && ProcessInfo.processInfo.arguments.contains(darkArgument) ? .dark : nil
     }
 
+    /// The screen to open at launch; `nil` without the argument or with a name that is not known.
+    static var screen: UITestScreen? {
+        isActive ? UITestScreen.named(in: ProcessInfo.processInfo.arguments) : nil
+    }
+
     /// The number of test pages that stand in for the document camera, or `nil` for the real camera.
     static var scanPageCount: Int? {
         let arguments = ProcessInfo.processInfo.arguments
@@ -53,8 +76,10 @@ enum UITestMode {
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
+    static var lockAuthentication: [Bool]? { nil }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
+    static var screen: UITestScreen? { nil }
     static var scanPageCount: Int? { nil }
     #endif
 }

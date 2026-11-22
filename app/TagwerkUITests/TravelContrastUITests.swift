@@ -1,59 +1,18 @@
 import XCTest
 
-/// Proofs 3 and 4 of the capsule "zu früh" (PL10b, plan g1 task V2): the contrast audit on the day view with a tight trip, in
-/// the grid and in the list, in light and dark appearance, WITHOUT `AuditAllowlist`. A finding on the capsule fails the test.
-/// `-TagwerkDemoTravel` adds the "Team-Call" (08:30–09:40) before the seminar (10:00), whose trip of 30 minutes then starts
-/// ten minutes before the call ends. Only findings on the capsule count here; the other elements are covered by the audits of
-/// the screens.
+/// The capsule "zu früh" of a tight trip (PL10b, plan g1 task V2) in the hour grid. `-TagwerkDemoTravel` adds the "Team-Call"
+/// (08:30–09:40) before the seminar (10:00), whose trip of 30 minutes then starts ten minutes before the call ends.
+///
+/// This class used to hold proofs 3 and 4 of the capsule, the contrast audit on the day view in light and dark appearance, in the grid and
+/// in the list. They are gone: grid and list draw the same view (`TravelWarningCapsule`, a solid fill with its own text colour, nothing
+/// of the surroundings shines through), so the contrast of the rendered capsule in `MarkerRenderContrastTests` (light and dark) and the
+/// colour values in `MarkerColorsTests` decide it without an app launch. What stays is the placement, which needs the real grid layout.
+/// Nightly only (`nightly-only.txt`).
 final class TravelContrastUITests: UITestCase {
-    override var extraLaunchArguments: [String] {
-        ["-TagwerkDemoTravel"] + Self.morningClockArguments + (name.contains("InDark") ? ["-TagwerkUITestDark"] : [])
-    }
+    override var extraLaunchArguments: [String] { ["-TagwerkDemoTravel"] + Self.morningClockArguments }
 
     private var capsules: XCUIElementQuery {
         app.descendants(matching: .any).matching(identifier: "travel.warningCapsule")
-    }
-
-    /// Fails for every contrast finding on a capsule; findings on other elements are not this test's subject.
-    private func auditCapsules(_ screen: String, file: StaticString = #filePath, line: UInt = #line) throws {
-        XCTAssertTrue(capsules.firstMatch.waitForExistence(timeout: Self.timeout),
-                      "\(screen): no capsule on screen, the audit would prove nothing", file: file, line: line)
-        // The audit has no time setting and runs out of time on a loaded machine; such a run says nothing, so it is repeated
-        // (like `AuditAllowlist`), up to three attempts. The issues of an aborted attempt are dropped.
-        for attempt in 1...3 {
-            var onCapsule: [XCUIAccessibilityAuditIssue] = []
-            do {
-                try app.performAccessibilityAudit(for: .contrast) { issue in
-                    if issue.element?.identifier == "travel.warningCapsule" { onCapsule.append(issue) }
-                    return true
-                }
-            } catch let error as NSError where error.code == -56 && attempt < 3 {
-                print("Accessibility audit timed out (attempt \(attempt) of 3), running it again")
-                continue
-            }
-            for issue in onCapsule {
-                XCTFail("\(screen): contrast finding on the capsule: \(issue.compactDescription) | \(issue.detailedDescription)",
-                        file: file, line: line)
-            }
-            return
-        }
-    }
-
-    private func checkGridAndList() throws {
-        try auditCapsules("grid")
-        // The list shows the same capsule behind "Losfahren".
-        let toggle = app.buttons["Als Liste zeigen"].firstMatch
-        XCTAssertTrue(toggle.waitForExistence(timeout: Self.timeout), "The switch to the list is missing")
-        toggle.tap()
-        try auditCapsules("list")
-    }
-
-    func testTightTripInLight() throws {
-        try checkGridAndList()
-    }
-
-    func testTightTripInDark() throws {
-        try checkGridAndList()
     }
 
     /// The attachment sits flush above its event (beside the call it overlaps in time): the capsule lies right above one of the seminar

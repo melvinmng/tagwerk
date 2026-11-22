@@ -10,12 +10,14 @@ struct MorningSheet: View {
     let day: PlanDay
     @Environment(AppEnvironment.self) private var environment
 
-    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool) {
+    init(model: RoutinesModel, day: PlanDay, notes: NoteStore, isSignedIn: @escaping () -> Bool,
+         isConcealed: @escaping @MainActor (NoteRecord) -> Bool = { _ in false }) {
         self.model = model
         self.day = day
-        _note = State(initialValue: NoteFieldModel(store: notes, kind: .morning, day: day, isSignedIn: isSignedIn))
+        _note = State(initialValue: NoteFieldModel(store: notes, kind: .morning, day: day, isSignedIn: isSignedIn,
+                                                   isConcealed: isConcealed))
         // The dream log is never sent anywhere, so it gets no sign-in check to begin with.
-        _dream = State(initialValue: NoteFieldModel(store: notes, kind: .dream, day: day))
+        _dream = State(initialValue: NoteFieldModel(store: notes, kind: .dream, day: day, isConcealed: isConcealed))
     }
     @State private var gratitude: [String] = ["", "", ""]
     @State private var isLoaded = false

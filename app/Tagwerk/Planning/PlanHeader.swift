@@ -21,35 +21,36 @@ enum PlanHeaderText {
     }
 
     /// Day "Mittwoch, 18. Nov.", week "16.–22. Nov.", month "November".
-    static func title(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> String {
+    static func title(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar, locale: Locale = .current) -> String {
         let start = anchor.startDate(in: calendar)
         switch scope {
         case .day:
-            return start.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+            return start.formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(locale))
         case .week:
             // The interval style orders day and month as the language does: "16.–22. Nov." / "Nov 16 – 22".
             let first = range.lowerBound.startDate(in: calendar), last = range.upperBound.startDate(in: calendar)
-            return (first..<last).formatted(.interval.day().month(.abbreviated))
+            return (first..<last).formatted(.interval.day().month(.abbreviated).locale(locale))
         case .month:
-            return start.formatted(.dateTime.month(.wide))
+            return start.formatted(.dateTime.month(.wide).locale(locale))
         }
     }
 
     /// The title in decreasing length, longest first; the first is `title(...)`. The header shows the longest one
     /// that fits, so the title is never cut off with an ellipsis:
     /// day "Donnerstag, 19. Nov." → "Do. 19. Nov." → "19. Nov.", week "16.–22. Nov." → "16.–22.11.", month "November" → "Nov".
-    static func titleCandidates(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar) -> [String] {
+    static func titleCandidates(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar,
+                                locale: Locale = .current) -> [String] {
         let start = anchor.startDate(in: calendar)
-        var candidates = [title(scope: scope, anchor: anchor, range: range, calendar: calendar)]
+        var candidates = [title(scope: scope, anchor: anchor, range: range, calendar: calendar, locale: locale)]
         switch scope {
         case .day:
-            candidates.append(start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
-            candidates.append(start.formatted(.dateTime.day().month(.abbreviated)))
+            candidates.append(start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(locale)))
+            candidates.append(start.formatted(.dateTime.day().month(.abbreviated).locale(locale)))
         case .week:
             let first = range.lowerBound.startDate(in: calendar), last = range.upperBound.startDate(in: calendar)
-            candidates.append((first..<last).formatted(.interval.day().month(.twoDigits)))
+            candidates.append((first..<last).formatted(.interval.day().month(.twoDigits).locale(locale)))
         case .month:
-            candidates.append(start.formatted(.dateTime.month(.abbreviated)))
+            candidates.append(start.formatted(.dateTime.month(.abbreviated).locale(locale)))
         }
         var seen = Set<String>()
         return candidates.filter { seen.insert($0).inserted }
@@ -67,9 +68,9 @@ enum PlanHeaderText {
     /// Without it (`nil`, the fallback PL16a) the form is fixed: the day view takes the middle candidate, the others the
     /// full one, and with accessibility text sizes everything takes the shortest.
     static func displayedTitle(scope: PlanScope, anchor: PlanDay, range: ClosedRange<PlanDay>, calendar: Calendar,
-                               largeText: Bool, availableWidth: CGFloat? = nil,
+                               largeText: Bool, availableWidth: CGFloat? = nil, locale: Locale = .current,
                                width: (String) -> CGFloat = { PlanHeaderMetrics.titleWidth($0) }) -> String {
-        let candidates = titleCandidates(scope: scope, anchor: anchor, range: range, calendar: calendar)
+        let candidates = titleCandidates(scope: scope, anchor: anchor, range: range, calendar: calendar, locale: locale)
         if let availableWidth { return fittingTitle(candidates, availableWidth: availableWidth, width: width) }
         if largeText { return candidates[candidates.count - 1] }
         return scope == .day && candidates.count > 1 ? candidates[1] : candidates[0]
