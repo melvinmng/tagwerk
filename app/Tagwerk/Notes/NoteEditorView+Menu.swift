@@ -5,6 +5,10 @@ import TagwerkCore
 extension NoteEditorView {
     func moreMenu(_ note: NoteRecord?) -> some View {
         Menu {
+            // A way into writing without a gesture (the page also offers it as an accessibility action).
+            if mode == .view, Self.usesTapToEdit {
+                Button { beginEditing(atLine: nil) } label: { Label("Bearbeiten", systemImage: "pencil") }
+            }
             if let note {
                 Button {
                     store.setPinned(noteID, !note.isPinned)

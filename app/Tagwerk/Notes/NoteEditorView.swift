@@ -25,6 +25,7 @@ struct NoteEditorView: View {
     @State var wasDeleted = false
     @State var selection: TextSelection?
     @State var mode: Mode = .edit
+    @FocusState var isTextFocused: Bool
     @State var isChoosingPhotos = false
     @State var photoItems: [PhotosPickerItem] = []
     @State var isTakingPhoto = false
@@ -36,6 +37,10 @@ struct NoteEditorView: View {
     @State var translation: RecipeTranslationModel?
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
     @State var notice: String?
+
+    /// Stage C switch of the line mapping: `false` renders the page without edit links and shows the pencil button again,
+    /// so the editor opens with the cursor at the end. A constant, not a setting (decided by the device check).
+    static let usesTapToEdit = true
 
     init(noteID: UUID, store: NoteStore, showsAssistant: Bool = true) {
         self.noteID = noteID
@@ -49,16 +54,25 @@ struct NoteEditorView: View {
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        switchMode()
-                    } label: {
-                        Image(systemName: mode == .edit ? "eye" : "pencil")
+                if Self.usesTapToEdit {
+                    // The page shows; a tap on its text writes. "Fertig" is the way back.
+                    if mode == .edit {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Fertig") { finishEditing() }
+                        }
                     }
-                    .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
+                } else {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            switchMode()
+                        } label: {
+                            Image(systemName: mode == .edit ? "eye" : "pencil")
+                        }
+                        .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
+                    }
                 }
                 if store.attachments != nil {
-                    ToolbarItem(placement: .topBarTrailing) { attachMenu }
+                    if mode == .edit || !Self.usesTapToEdit { ToolbarItem(placement: .topBarTrailing) { attachMenu } }
                     ToolbarItemGroup(placement: .keyboard) { attachMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
@@ -139,6 +153,7 @@ struct NoteEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 TextEditor(text: $text, selection: $selection)
+                    .focused($isTextFocused)
                     .keyboardDoneButton()
                     .padding(.horizontal, 12)
             }
@@ -147,7 +162,12 @@ struct NoteEditorView: View {
                 gratitudeHeader
                 NoteMarkdownView(markdown: text, attachments: store.attachments,
                                  attachmentDisplays: store.attachments?.displays(of: noteID) ?? [:],
-                                 onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment)
+                                 onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment,
+                                 onEdit: Self.usesTapToEdit ? { beginEditing(atLine: $0) } : nil,
+                                 onUnansweredTap: Self.usesTapToEdit ? { fraction in
+                                     beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
+                                 } : nil)
+                    .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
     }
@@ -183,6 +203,13 @@ struct NoteEditorView: View {
         switch NoteEditorSync.resolution(local: text, lastSaved: lastSavedText, stored: note?.text, isTrashed: note?.deletedAt != nil) {
         case .keep: break
         case .adopt(let stored):
+            // The cursor keeps its place while it still lies inside the new text, otherwise it goes to the end.
+            if mode == .edit {
+                let offset = selection.flatMap { Self.insertionOffset(of: $0, in: text) } ?? stored.count
+                selection = TextSelection(insertionPoint: stored.index(stored.startIndex, offsetBy: min(offset, stored.count)))
+            } else {
+                selection = nil
+            }
             text = stored
             lastSavedText = stored
             refreshShareURLs()
@@ -192,11 +219,35 @@ struct NoteEditorView: View {
         }
     }
 
-    private func switchMode() {
-        // Saving is immediate on a switch, so the list and the page never show an older text.
+    /// The character offset of a cursor (a selection of a range counts by its start), or `nil` without one.
+    private static func insertionOffset(of selection: TextSelection, in text: String) -> Int? {
+        switch selection.indices {
+        case .selection(let range): text.distance(from: text.startIndex, to: range.lowerBound)
+        default: nil
+        }
+    }
+
+    /// Opens the editor with the cursor at the end of the source line (`nil`: end of the text) and focuses it. The page
+    /// shows the same text, so nothing needs saving first and `lastSavedText` stays as it is.
+    func beginEditing(atLine line: Int?) {
+        let offset = min(line.map { NoteEditTarget.offset(endOfLine: $0, in: text) } ?? text.count, text.count)
+        selection = TextSelection(insertionPoint: text.index(text.startIndex, offsetBy: offset))
+        mode = .edit
+        // The text field exists only after this update; focusing it then brings up the keyboard at the cursor.
+        Task { @MainActor in isTextFocused = true }
+    }
+
+    /// "Fertig": saves at once, so the list and the page never show an older text, and shows the page.
+    func finishEditing() {
         saveText()
-        mode = mode == .edit ? .view : .edit
+        isTextFocused = false
+        mode = .view
         refreshShareURLs()
+    }
+
+    /// Stage C: the pencil button of the bar.
+    private func switchMode() {
+        if mode == .edit { finishEditing() } else { beginEditing(atLine: nil) }
     }
 
     /// A tap on a checkbox of the page flips it in the text and saves.

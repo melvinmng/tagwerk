@@ -18,10 +18,20 @@ struct NoteMarkdownView: UIViewRepresentable {
     var attachmentDisplays: [UUID: NoteAttachmentDisplay] = [:]
     let onToggleCheckbox: (Int) -> Void
     let onOpenAttachment: (UUID) -> Void
+    /// A tap on text: the source line, or `nil` for "end of the note". Without it the page has no edit links.
+    var onEdit: ((_ line: Int?) -> Void)?
+    /// A tap the page did not answer: the fraction of the page height (stage B of the line mapping).
+    var onUnansweredTap: ((_ fraction: Double) -> Void)?
+    /// Native context menu for a long press on a link of the page (attachments, checkboxes); `nil` shows none.
+    var contextMenu: ((_ url: URL) -> UIMenu?)?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onToggleCheckbox: onToggleCheckbox, onOpenAttachment: onOpenAttachment)
+        let coordinator = Coordinator(onToggleCheckbox: onToggleCheckbox, onOpenAttachment: onOpenAttachment)
+        coordinator.onEdit = onEdit
+        coordinator.onUnansweredTap = onUnansweredTap
+        coordinator.contextMenu = contextMenu
+        return coordinator
     }
 
     /// The configuration of the web view: no JavaScript, no stored website data, attachment images through the handler.
@@ -38,6 +48,12 @@ struct NoteMarkdownView: UIViewRepresentable {
         let configuration = Self.makeConfiguration(attachments: attachments)
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
+        // Sees every tap without taking it from the page; the page answers links, the coordinator the rest.
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
+        tap.cancelsTouchesInView = false
+        tap.delegate = context.coordinator
+        webView.addGestureRecognizer(tap)
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
@@ -50,7 +66,11 @@ struct NoteMarkdownView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.onToggleCheckbox = onToggleCheckbox
         context.coordinator.onOpenAttachment = onOpenAttachment
-        let body = NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays))
+        context.coordinator.onEdit = onEdit
+        context.coordinator.onUnansweredTap = onUnansweredTap
+        context.coordinator.contextMenu = contextMenu
+        let options = NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays, editLinks: onEdit != nil)
+        let body = NoteHTMLRenderer.html(markdown: markdown, options: options)
         context.coordinator.show(NoteHTMLRenderer.page(body: body, textScale: Self.textScale(for: dynamicTypeSize)))
     }
 
@@ -90,18 +110,74 @@ struct NoteMarkdownView: UIViewRepresentable {
     // MARK: Coordinator
 
     @MainActor
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, UIGestureRecognizerDelegate {
+        /// How long a tap waits for the page to answer it with a link navigation.
+        static let unansweredTapDelay: Duration = .milliseconds(150)
+
         var onToggleCheckbox: (Int) -> Void
         var onOpenAttachment: (UUID) -> Void
+        var onEdit: ((Int?) -> Void)?
+        var onUnansweredTap: ((Double) -> Void)?
+        var contextMenu: ((URL) -> UIMenu?)?
         weak var webView: WKWebView?
         private var rulesReady = false
         private var pendingPage: String?
         private var shownPage: String?
         private var restoredOffset: CGPoint?
+        /// The wait of the last tap; a link navigation inside `unansweredTapDelay` cancels it.
+        private(set) var pendingTap: Task<Void, Never>?
+        private var lastLinkActivation: ContinuousClock.Instant?
+        private let delay: Duration
 
-        init(onToggleCheckbox: @escaping (Int) -> Void, onOpenAttachment: @escaping (UUID) -> Void) {
+        init(onToggleCheckbox: @escaping (Int) -> Void, onOpenAttachment: @escaping (UUID) -> Void,
+             unansweredTapDelay: Duration = Coordinator.unansweredTapDelay) {
             self.onToggleCheckbox = onToggleCheckbox
             self.onOpenAttachment = onOpenAttachment
+            self.delay = unansweredTapDelay
+        }
+
+        // MARK: Taps the page does not answer (stage B)
+
+        /// Remembers a tap at `fraction` of the page height. When no link navigation follows within the delay, the tap was
+        /// on a gap between the text, and `onUnansweredTap` gets it.
+        func registerTap(fraction: Double) {
+            pendingTap?.cancel()
+            // The navigation may come first: a tap that was answered a moment ago is not a gap.
+            if let last = lastLinkActivation, ContinuousClock.now - last < delay { return }
+            pendingTap = Task { [delay] in
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled else { return }
+                onUnansweredTap?(fraction)
+            }
+        }
+
+        /// A link of the page was activated: the page answered the tap.
+        private func registerLinkActivation() {
+            lastLinkActivation = ContinuousClock.now
+            pendingTap?.cancel()
+        }
+
+        @objc func tapped(_ recognizer: UITapGestureRecognizer) {
+            guard recognizer.state == .ended, onUnansweredTap != nil, let webView else { return }
+            let scrollView = webView.scrollView
+            // A tap that stops a scrolling page is not meant for the text.
+            guard !scrollView.isDragging, !scrollView.isDecelerating, scrollView.contentSize.height > 0 else { return }
+            let y = recognizer.location(in: webView).y
+            registerTap(fraction: Double((scrollView.contentOffset.y + y) / scrollView.contentSize.height))
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+        // MARK: Context menu
+
+        func webView(_ webView: WKWebView, contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
+                     completionHandler: @escaping (UIContextMenuConfiguration?) -> Void) {
+            guard let url = elementInfo.linkURL, let menu = contextMenu?(url) else {
+                completionHandler(nil)
+                return
+            }
+            completionHandler(UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in menu })
         }
 
         /// The page is loaded only after the rule list is in place, so there is no moment without it.
@@ -139,9 +215,18 @@ struct NoteMarkdownView: UIViewRepresentable {
             // The page itself.
             if scheme == "about", navigationAction.targetFrame?.isMainFrame ?? false { return .allow }
             guard navigationAction.navigationType == .linkActivated else { return .cancel }
-            switch scheme {
+            await activate(url)
+            return .cancel
+        }
+
+        /// Carries out a link of the page.
+        func activate(_ url: URL) async {
+            registerLinkActivation()
+            switch url.scheme?.lowercased() ?? "" {
             case NoteHTMLRenderer.toggleScheme:
                 if let index = Int(url.absoluteString.dropFirst(NoteHTMLRenderer.toggleScheme.count + 1)) { onToggleCheckbox(index) }
+            case NoteEditTarget.scheme:
+                if let target = NoteEditTarget.parse(url.absoluteString) { onEdit?(target.isEnd ? nil : target.line) }
             case MarkdownText.attachmentScheme:
                 if let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString) { onOpenAttachment(id) }
             case "http", "https", "mailto", "tel":
@@ -149,7 +234,6 @@ struct NoteMarkdownView: UIViewRepresentable {
             default:
                 break
             }
-            return .cancel
         }
     }
 
