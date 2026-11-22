@@ -10396,6 +10396,16 @@
         }
       }
     },
+    "Genauer aufteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split up more precisely"
+          }
+        }
+      }
+    },
     "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
       "localizations": {
         "en": {
@@ -11208,6 +11218,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reason: %@"
+          }
+        }
+      }
+    },
+    "Größere Portion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger portion"
           }
         }
       }
@@ -12226,6 +12246,16 @@
         }
       }
     },
+    "Keine Änderung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change."
+          }
+        }
+      }
+    },
     "KI": {
       "localizations": {
         "en": {
@@ -12242,6 +12272,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create AI weekly plan"
+          }
+        }
+      }
+    },
+    "Kleinere Portion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller portion"
           }
         }
       }
@@ -14068,6 +14108,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort and translate with ChatGPT"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu diesem Posten schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this item"
           }
         }
       }
@@ -16937,6 +16987,16 @@
         }
       }
     },
+    "Schätzung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate revised."
+          }
+        }
+      }
+    },
     "Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen.": {
       "localizations": {
         "en": {
@@ -17037,12 +17097,32 @@
         }
       }
     },
+    "Senden gibt deine Beschreibung, das Foto, die Posten mit deinen Änderungen und deine Nachricht an ChatGPT. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives your description, the photo, the items with your changes and your message to ChatGPT. Data from Health, your goals and earlier entries are not sent."
+          }
+        }
+      }
+    },
     "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised."
+          }
+        }
+      }
+    },
+    "Senden gibt die Posten mit deinen Änderungen und deine Nachricht an ChatGPT, dazu deine Beschreibung, solange sie hier steht. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the items with your changes and your message to ChatGPT, plus your description as long as it is on this sheet. Data from Health, your goals and earlier entries are not sent."
           }
         }
       }
@@ -18818,6 +18898,16 @@
         }
       }
     },
+    "Von dir geänderte Zeilen wurden überschrieben. „Rückgängig“ bringt sie zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rows you changed were overwritten. “Undo” brings them back."
+          }
+        }
+      }
+    },
     "Weniger Vorschläge": {
       "localizations": {
         "en": {
@@ -18834,6 +18924,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write something about the suggestions …"
+          }
+        }
+      }
+    },
+    "Zu: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About: %@"
+          }
+        }
+      }
+    },
+    "Zur Schätzung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the estimate …"
           }
         }
       }

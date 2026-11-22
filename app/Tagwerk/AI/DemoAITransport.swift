@@ -112,6 +112,10 @@ final class DemoAITransport: AIHTTPTransport {
         if text.contains("tisch") {
             return #"{"title":"","items":[]}"#
         }
+        // A follow-up (task D1): the same estimate with a third item.
+        if text.contains("message from the user:") {
+            return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14},{"name":"Butter","amount":"1 Portion","kcal_min":50,"kcal":70,"kcal_max":90,"protein_g":0,"carbs_g":0,"fat_g":8}]}"#
+        }
         return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
     }
 
