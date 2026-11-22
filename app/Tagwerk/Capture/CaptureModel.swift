@@ -78,6 +78,10 @@ final class CaptureModel {
     private(set) var stepsAccess: StepsAccess?
     /// Permission group of the active energy, asked separately; `nil` until the first query.
     private(set) var activeEnergyAccess: HealthGroupAccess?
+    /// Permission group "weitere Nährwerte nach Health" (settings); `nil` until the first query.
+    private(set) var furtherNutrientsAccess: HealthGroupAccess?
+    /// Permission group of other apps' nutrition (settings); `nil` until the first query.
+    private(set) var foreignNutritionAccess: HealthGroupAccess?
     /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
     private(set) var steps: Int?
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
@@ -205,6 +209,8 @@ final class CaptureModel {
         let stepsAccess = await health.stepsAccess()
         self.stepsAccess = stepsAccess
         self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
+        self.furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
+        self.foreignNutritionAccess = await health.groupAccess(.foreignNutrition)
         var stepsOfDay: Int?
         if stepsAccess == .asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
@@ -497,6 +503,26 @@ final class CaptureModel {
     /// "In Health erlauben" at the budget line: the sheet for the active energy only, which leaves the other permissions alone.
     func allowActiveEnergy() async {
         try? await health.requestAuthorization(for: .activeEnergy)
+        await reload()
+    }
+
+    /// "Weitere Nährwerte nach Health" in the settings: asks for the write permission of fibre, sugar, saturated fat and sodium once,
+    /// then mirrors the meals that carry such values again (the mirror skips types that stay denied).
+    func allowFurtherNutrients() async {
+        if await health.groupAccess(.moreNutrients) == .notAsked {
+            try? await health.requestAuthorization(for: .moreNutrients)
+        }
+        furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
+        await mirror.furtherNutrientsGranted()
+    }
+
+    /// The switch "Einträge anderer Apps mitzählen": switching it on asks for the read permission once; switching it off stops
+    /// reading and removes foreign values from the sums at once. The sums follow with the reload.
+    func setCountsForeignNutrition(_ enabled: Bool) async {
+        settings.countsForeignNutrition = enabled
+        if enabled, await health.groupAccess(.foreignNutrition) == .notAsked {
+            try? await health.requestAuthorization(for: .foreignNutrition)
+        }
         await reload()
     }
 

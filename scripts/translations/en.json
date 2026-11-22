@@ -2408,5 +2408,30 @@
   "Tagwerk": {
     "shouldTranslate": false
   },
-  "Zeigt, woraus die Aktivität besteht": "Shows what the activity consists of"
+  "Zeigt, woraus die Aktivität besteht": "Shows what the activity consists of",
+  "Aktivität": "Activity",
+  "Aktivität anrechnen": "Credit activity",
+  "Angefragt": "Asked",
+  "Ballaststoff-Ziel": "Fiber goal",
+  "Ballaststoffe und Zucker": "Fiber and sugar",
+  "Ballaststoffe und Zucker sind immer dabei; gesättigte Fettsäuren und Salz erscheinen im Mahlzeitenblatt und in der Karte „Nährwerte“, wenn du sie einschaltest. Tagwerk liest für „Einträge anderer Apps mitzählen“ Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ob Health das Schreiben der weiteren Nährwerte erlaubt, steht an derselben Stelle.": "Fiber and sugar are always there; saturated fat and salt appear in the meal sheet and in the “Nutrients” card when you switch them on. For “Count entries of other apps”, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. Whether Health allows writing the further nutrients is shown in the same place.",
+  "Bis %@": "Until %@",
+  "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Eine Änderung gilt ab heute; frühere Tage behalten ihr Ziel. Das Kalorienziel ist das Grundziel für einen Tag ohne angerechnete Aktivität. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.": "The defaults are placeholders, not a recommendation. Enter your own goals. A change applies from today; earlier days keep their goal. The calorie goal is the base goal for a day without credited activity. Training time counts workouts from Tagwerk and from Health. Tagwerk reads steps from Health; 0 hides a goal.",
+  "Diese Ziele gelten für einen Tag ohne angerechnete Aktivität. Mit angerechneter Aktivität wachsen Kohlenhydrate und Fett im Verhältnis ihrer Kalorien; Eiweiß und Ballaststoffe bleiben fest.": "These goals apply to a day without credited activity. With credited activity, carbohydrates and fat grow in proportion to their calories; protein and fiber stay fixed.",
+  "Ein Teil der Aktivitätsenergie aus Health erhöht dein Tagesbudget. Geräte schätzen sie eher zu hoch, deshalb zählt voreingestellt die Hälfte. Das Kalorienziel gilt für einen Tag ohne angerechnete Aktivität.": "Part of the active energy from Health raises your daily budget. Devices tend to overestimate it, so half counts by default. The calorie goal applies to a day without credited activity.",
+  "Eine Änderung gilt ab heute. Frühere Tage, auch im Wochenrückblick, rechnen mit dem Stand, der damals galt.": "A change applies from today. Earlier days, including the weekly review, use the plan that held then.",
+  "Einträge anderer Apps mitzählen": "Count entries of other apps",
+  "Fett-Ziel": "Fat goal",
+  "Gilt ab": "Valid from",
+  "Kalorien (Grundziel)": "Calories (base goal)",
+  "Kohlenhydrate und Fett": "Carbohydrates and fat",
+  "Kohlenhydrate-Ziel": "Carbohydrate goal",
+  "Nährwerte": "Nutrients",
+  "Ohne Ziel zeigt die Karte „Nährwerte“ nur den Wert. Zucker hat eine Obergrenze: Darüber wird der Balken orange.": "Without a goal the “Nutrients” card shows only the value. Sugar has an upper limit: above it the bar turns orange.",
+  "Weitere Nährwerte nach Health": "Further nutrients to Health",
+  "Weitere Ziele": "More goals",
+  "Weitere Ziele und frühere Stände": "More goals and earlier plans",
+  "Zielstände": "Goal plans",
+  "Zucker, höchstens": "Sugar, at most",
+  "Zucker-Obergrenze": "Sugar limit"
 }

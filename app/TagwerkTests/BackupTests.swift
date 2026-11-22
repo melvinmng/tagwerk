@@ -188,6 +188,8 @@ struct BackupTests {
                                                                         waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
         settings.activityCreditPercent = 75
         settings.countsForeignNutrition = true
+        settings.saturatedFatEnabled = true
+        settings.saltEnabled = true
         settings.goalPlansMigrated = true
         context.insert(GoalPlanRecord(GoalPlan(validFrom: day, kcal: 2100, proteinGrams: 110, carbsGrams: 240, fatGrams: 70,
                                                fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2500, stepsPerDay: 9000,
@@ -356,17 +358,18 @@ struct BackupTests {
         let settings = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONEncoder().encode(AppSettingsBackup(sourceSettings)))
         let target = try makeTarget()
         settings.apply(to: target.settings)
-        #expect(target.settings.countsForeignNutrition)
+        #expect(target.settings.countsForeignNutrition && target.settings.saturatedFatEnabled && target.settings.saltEnabled)
     }
 
     @Test func settingsBackup_withoutGoalPlanFields_keepsTheDeviceValues() throws {
         let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
         var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        for key in ["goalPlansMigrated", "activityCreditPercent", "countsForeignNutrition"] { object[key] = nil }
+        for key in ["goalPlansMigrated", "activityCreditPercent", "countsForeignNutrition", "saturatedFatEnabled", "saltEnabled"] { object[key] = nil }
         let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
         let target = try makeTarget()
         older.apply(to: target.settings)
-        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated && !target.settings.countsForeignNutrition)
+        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated && !target.settings.countsForeignNutrition
+                && !target.settings.saturatedFatEnabled && !target.settings.saltEnabled)
     }
 
     @Test func restore_oldFileWithoutGoalPlans_rebuildsTheFirstPlanFromTheRestoredGoals() throws {

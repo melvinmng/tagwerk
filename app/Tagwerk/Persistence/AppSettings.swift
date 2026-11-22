@@ -74,6 +74,10 @@ final class AppSettings {
     /// Counts the nutrition entries of other apps from Health as eaten ("Einträge anderer Apps mitzählen"); off by default
     /// (decision NU5b).
     var countsForeignNutrition: Bool = false
+    /// Further nutrients that can be switched on in the meal sheet, the nutrient card and the Health mirror (decision NU1b: fibre and
+    /// sugar are always there, saturated fat and salt are optional).
+    var saturatedFatEnabled: Bool = false
+    var saltEnabled: Bool = false
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330

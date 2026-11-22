@@ -1307,6 +1307,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var goalPlansMigrated: Bool?
     var activityCreditPercent: Int?
     var countsForeignNutrition: Bool?
+    var saturatedFatEnabled: Bool?
+    var saltEnabled: Bool?
     var mealEstimationConsent: Bool
     var shoppingListID: String?
     var shoppingSuggestionDismissed: Bool
@@ -1411,6 +1413,8 @@ struct AppSettingsBackup: Codable, Equatable {
         goalPlansMigrated = record.goalPlansMigrated
         activityCreditPercent = record.activityCreditPercent
         countsForeignNutrition = record.countsForeignNutrition
+        saturatedFatEnabled = record.saturatedFatEnabled
+        saltEnabled = record.saltEnabled
         mealEstimationConsent = record.mealEstimationConsent
         shoppingListID = record.shoppingListID
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
@@ -1501,6 +1505,8 @@ struct AppSettingsBackup: Codable, Equatable {
         if let goalPlansMigrated { record.goalPlansMigrated = goalPlansMigrated }
         if let activityCreditPercent { record.activityCreditPercent = activityCreditPercent }
         if let countsForeignNutrition { record.countsForeignNutrition = countsForeignNutrition }
+        if let saturatedFatEnabled { record.saturatedFatEnabled = saturatedFatEnabled }
+        if let saltEnabled { record.saltEnabled = saltEnabled }
         record.mealEstimationConsent = mealEstimationConsent
         record.shoppingListID = shoppingListID
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
