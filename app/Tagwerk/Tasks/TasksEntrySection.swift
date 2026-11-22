@@ -109,12 +109,12 @@ struct TasksEntrySection: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
                 if let subtitle {
-                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                    Text(subtitle).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                 }
             }
             Spacer(minLength: 8)
             if let trailing {
-                Text(trailing).font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                Text(trailing).font(.subheadline).monospacedDigit().foregroundStyle(.secondaryText)
             }
             Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
         }
@@ -124,7 +124,7 @@ struct TasksEntrySection: View {
     private func suggestionCard(listID: String, title: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Liste „\(title)“ als Einkaufsliste verwenden?", systemImage: "cart").font(.headline)
-            Text(Self.suggestionText(openCount: suggestedOpenCount)).font(.subheadline).foregroundStyle(.secondary)
+            Text(Self.suggestionText(openCount: suggestedOpenCount)).font(.subheadline).foregroundStyle(.secondaryText)
             HStack {
                 Button("Verwenden") { Task { await environment.setShoppingList(listID) } }
                     .buttonStyle(.borderedProminent)

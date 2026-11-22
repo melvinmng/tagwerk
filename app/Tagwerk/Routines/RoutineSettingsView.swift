@@ -39,7 +39,7 @@ struct RoutineSettingsView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.title)
-                                Text(detail(item, bedtime: settings.bedtimeMinutes)).font(.caption).foregroundStyle(.secondary)
+                                Text(detail(item, bedtime: settings.bedtimeMinutes)).font(.caption).foregroundStyle(.secondaryText)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
@@ -141,7 +141,7 @@ struct RoutineSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.",
                   systemImage: "bell.slash")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
             Button(environment.routineNotifications.authorization == .notDetermined ? "Mitteilungen erlauben" : "Mitteilungen in den Einstellungen") {
                 if environment.routineNotifications.authorization == .notDetermined {
                     Task {

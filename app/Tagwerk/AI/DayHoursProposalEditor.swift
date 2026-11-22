@@ -152,7 +152,7 @@ private struct DayHoursProposalFields: View {
                                     calendar: calendar)
                 }
             } footer: {
-                if let problem = editor.problem { Text(problem).foregroundStyle(.red) }
+                if let problem = editor.problem { Text(problem).foregroundStyle(.redText) }
             }
         case .lunch:
             Section {

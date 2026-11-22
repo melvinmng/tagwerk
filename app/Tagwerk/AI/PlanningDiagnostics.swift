@@ -56,7 +56,7 @@ struct PlanningDiagnosticsView: View {
     var body: some View {
         List {
             if runs.isEmpty {
-                Text("Noch keine Planung protokolliert.").foregroundStyle(.secondary)
+                Text("Noch keine Planung protokolliert.").foregroundStyle(.secondaryText)
             }
             ForEach(runs.reversed()) { run in
                 VStack(alignment: .leading, spacing: 4) {

@@ -12,6 +12,16 @@ enum ContrastMath {
         return (lighter + 0.05) / (darker + 0.05)
     }
 
+    /// The opaque colour that results when `foreground` (with its own alpha) is drawn over the opaque `background`.
+    static func composited(_ foreground: UIColor, over background: UIColor) -> UIColor {
+        var (red, green, blue, alpha): (CGFloat, CGFloat, CGFloat, CGFloat) = (0, 0, 0, 0)
+        var (backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha): (CGFloat, CGFloat, CGFloat, CGFloat) = (0, 0, 0, 0)
+        foreground.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        background.getRed(&backgroundRed, green: &backgroundGreen, blue: &backgroundBlue, alpha: &backgroundAlpha)
+        return UIColor(red: red * alpha + backgroundRed * (1 - alpha), green: green * alpha + backgroundGreen * (1 - alpha),
+                       blue: blue * alpha + backgroundBlue * (1 - alpha), alpha: 1)
+    }
+
     /// A named colour of the app's asset catalogs resolved for one appearance; nil when the asset is missing.
     static func color(named name: String, style: UIUserInterfaceStyle) -> UIColor? {
         guard let color = UIColor(named: name, in: Bundle.main, compatibleWith: nil) else { return nil }

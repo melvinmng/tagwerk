@@ -18,14 +18,14 @@ struct GitHubLoginView: View {
             case .idle:
                 loginButton
             case .failed(let message):
-                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                 loginButton
             case .requestingCode:
                 ProgressView("Code wird angefordert …")
             case .showingCode(let code):
                 codeView(code)
             case .signedIn(let name):
-                Label("Angemeldet als \(name)", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                Label("Angemeldet als \(name)", systemImage: "checkmark.circle.fill").foregroundStyle(.greenText)
             }
         }
         .onChange(of: model.phase) { _, phase in
@@ -51,7 +51,7 @@ struct GitHubLoginView: View {
             .buttonStyle(.borderedProminent)  // explicit style: several buttons share this Form row
             HStack {
                 ProgressView()
-                Text("Warte auf Bestätigung …").foregroundStyle(.secondary)
+                Text("Warte auf Bestätigung …").foregroundStyle(.secondaryText)
             }
             Button("Abbrechen", role: .cancel) { model.cancel() }
                 .buttonStyle(.borderless)

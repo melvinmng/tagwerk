@@ -13,7 +13,7 @@ struct ShoppingTranslationCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.headline).accessibilityAddTraits(.isHeader)
             Text(offer.message ?? Self.text(language: offer.language, count: offer.openCount))
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { translateButton; keepButton }
                 VStack(alignment: .leading, spacing: 8) { translateButton; keepButton }
@@ -84,10 +84,10 @@ struct ShoppingTranslationResultSheet: View {
                     Section {
                         ForEach(blocked) { change in
                             HStack(spacing: 12) {
-                                Image(systemName: "minus").foregroundStyle(Color.secondary).accessibilityHidden(true)
+                                Image(systemName: "minus").foregroundStyle(Color.secondaryText).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(change.oldName)
-                                    Text(reason(change)).font(.subheadline).foregroundStyle(Color.secondary)
+                                    Text(reason(change)).font(.subheadline).foregroundStyle(Color.secondaryText)
                                 }
                                 Spacer(minLength: 0)
                             }
@@ -104,7 +104,7 @@ struct ShoppingTranslationResultSheet: View {
                             Text("\(preview.leftOut) weitere Artikel: danach noch einmal über „•••“ übersetzen.")
                         }
                     }
-                    .font(.footnote).foregroundStyle(Color.secondary)
+                    .font(.footnote).foregroundStyle(Color.secondaryText)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
                 }
@@ -128,15 +128,15 @@ struct ShoppingTranslationResultSheet: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(change.newName).foregroundStyle(.primary)
                     // A deselected item stays as it is: the row says so, like "abgewählt, bleibt „Sahne“" in the mockup.
                     Text(isOn ? change.oldName : String(localized: "\(change.oldName) · abgewählt, bleibt „\(change.oldName)“"))
-                        .font(.subheadline).foregroundStyle(Color.secondary)
+                        .font(.subheadline).foregroundStyle(Color.secondaryText)
                 }
                 Spacer(minLength: 8)
-                if let quantity = change.quantity { Text(quantity).font(.subheadline).foregroundStyle(Color.secondary) }
+                if let quantity = change.quantity { Text(quantity).font(.subheadline).foregroundStyle(Color.secondaryText) }
             }
         }
         .accessibilityElement(children: .ignore)

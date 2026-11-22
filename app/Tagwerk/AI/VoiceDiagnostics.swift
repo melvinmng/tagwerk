@@ -272,7 +272,7 @@ struct VoiceDiagnosticsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Label(check.title, systemImage: icon(check.outcome))
                                 .foregroundStyle(color(check.outcome))
-                            Text(check.detail).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
+                            Text(check.detail).font(.footnote).foregroundStyle(.secondaryText).textSelection(.enabled)
                             if model.audio[check.id] != nil {
                                 Button("Abspielen", systemImage: "play.fill") { model.play(check.id) }
                                     .buttonStyle(.bordered)

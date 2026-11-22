@@ -17,7 +17,7 @@ struct WeekPlanningSheet: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Self.stepText(number: model.stepNumber, count: model.stepCount))
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(.secondaryText)
                         ProgressView(value: Double(model.stepNumber), total: Double(model.stepCount))
                     }
                     .accessibilityElement(children: .combine)
@@ -71,7 +71,7 @@ struct WeekPlanningSheet: View {
         let review = model.weekReview
         Section {
             if let result = review.review {
-                if result.isEmpty { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondary) }
+                if result.isEmpty { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondaryText) }
                 Text("\(result.completedTasks) Aufgaben")
                 Text(IntakeFormat.weekTraining(minutes: result.workoutMinutes, count: result.workoutCount,
                                                goal: result.goals.workoutMinutesPerWeek))
@@ -83,7 +83,7 @@ struct WeekPlanningSheet: View {
                 HStack {
                     Label(summary.habit.name, systemImage: summary.habit.symbol)
                     Spacer()
-                    Text(WeekReflectionSections.countText(summary)).monospacedDigit().foregroundStyle(.secondary)
+                    Text(WeekReflectionSections.countText(summary)).monospacedDigit().foregroundStyle(.secondaryText)
                 }
             }
         } header: {
@@ -112,14 +112,14 @@ struct WeekPlanningSheet: View {
     private var deadlineSteps: some View {
         Section {
             if model.deadlineTasks.isEmpty && model.deadlineEvents.isEmpty {
-                Text("Keine Fälligkeiten in der neuen Woche.").foregroundStyle(.secondary)
+                Text("Keine Fälligkeiten in der neuen Woche.").foregroundStyle(.secondaryText)
             }
             ForEach(model.deadlineTasks) { task in
                 HStack {
                     Text(task.title).lineLimit(2)
                     Spacer()
                     if let due = task.due {
-                        Text(Self.dayText(PlanDay(due), calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
+                        Text(Self.dayText(PlanDay(due), calendar: model.calendar)).font(.caption).foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -127,7 +127,7 @@ struct WeekPlanningSheet: View {
                 HStack {
                     Label(event.title, systemImage: "flag.fill").lineLimit(2)
                     Spacer()
-                    Text(Self.dayText(event.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
+                    Text(Self.dayText(event.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondaryText)
                 }
             }
         } header: {
@@ -185,7 +185,7 @@ struct WeekPlanningSheet: View {
         }
         let habits = environment.habits.habits.filter { $0.pausedSince == nil }
         Section {
-            if habits.isEmpty { Text("Keine aktive Gewohnheit.").foregroundStyle(.secondary) }
+            if habits.isEmpty { Text("Keine aktive Gewohnheit.").foregroundStyle(.secondaryText) }
             ForEach(habits) { habit in Label(habit.name, systemImage: habit.symbol) }
             NavigationLink("Gewohnheiten bearbeiten") { HabitListView(model: environment.habits) }
         } header: {

@@ -18,7 +18,7 @@ struct HabitsSection: View {
             if model.habits.isEmpty {
                 Button { creating = true } label: { Label("Gewohnheit anlegen", systemImage: "plus.circle") }
             } else if rows.isEmpty {
-                Text("An diesem Tag ist keine Gewohnheit aktiv.").foregroundStyle(.secondary)
+                Text("An diesem Tag ist keine Gewohnheit aktiv.").foregroundStyle(.secondaryText)
             }
             ForEach(rows) { row in
                 HabitRow(row: row, model: model, capture: capture) { sheet = row.habit }
@@ -56,25 +56,25 @@ private struct HabitRow: View {
             } label: {
                 Image(systemName: row.isFulfilled ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundStyle(row.isFulfilled ? Color.green : Color.secondary)
+                    .foregroundStyle(row.isFulfilled ? Color.green : Color.secondaryText)
                     .frame(minWidth: 32, minHeight: 32)
             }
             .buttonStyle(.plain)
             .sensoryFeedback(.selection, trigger: row.isFulfilled)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Image(systemName: row.habit.symbol).foregroundStyle(.secondary)
+                    Image(systemName: row.habit.symbol).foregroundStyle(.secondaryText)
                     Text(row.habit.name)
                 }
-                Text(subtitle).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Text(subtitle).font(.caption).foregroundStyle(.secondaryText).monospacedDigit()
                 if let detail {
-                    Label(detail, systemImage: "bolt.badge.automatic").font(.caption2).foregroundStyle(.secondary)
+                    Label(detail, systemImage: "bolt.badge.automatic").font(.caption2).foregroundStyle(.secondaryText)
                 }
             }
             Spacer(minLength: 0)
             Button(action: onOpen) { Image(systemName: "info.circle") }
                 .buttonStyle(.borderless)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityLabel("Gewohnheit öffnen")
         }
         .accessibilityElement(children: .combine)

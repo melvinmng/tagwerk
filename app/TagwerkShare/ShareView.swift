@@ -155,11 +155,11 @@ struct ShareView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.title).font(.headline).lineLimit(2)
                 if let host = model.hostText {
-                    Text(host).font(.subheadline).foregroundStyle(.secondary)
+                    Text(host).font(.subheadline).foregroundStyle(.secondaryText)
                 } else if !model.fileNames.isEmpty {
-                    Text(model.fileNames.joined(separator: ", ")).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                    Text(model.fileNames.joined(separator: ", ")).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(2)
                 } else if model.payload?.mail != nil {
-                    Text("Mail").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Mail").font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
         }
