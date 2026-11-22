@@ -48,15 +48,21 @@ struct NoteToolAccessTests {
         #expect(access.visibleNote(key: NoteToolAccess.key(for: UUID())) == nil)
     }
 
-    /// A locked note is private whether or not it is unlocked right now: the store knows no lock session, so no outbound path can
-    /// depend on one. One locked free note, one locked recipe and one locked morning note.
-    @Test func lockedNote_neverReachesAnyOutboundPath() throws {
+    /// The locked free note, recipe and morning note of the next two tests, plus a normal note.
+    private func fillLocked() throws -> (normal: NoteRecord, locked: [NoteRecord], recipe: NoteRecord, free: NoteRecord) {
         let normal = try #require(store.create(text: "Einkaufsplan Wochenende"))
         let free = try #require(store.create(text: "Gesperrte freie Notiz"))
         let recipeFolder = store.ensureSystemFolder(.recipes, name: "Rezepte")
         let recipe = try #require(store.create(text: "# Gesperrtes Curry\n\n## Zutaten\n- 1 Zwiebel\n", folderID: recipeFolder.id))
         let morning = try #require(store.create(text: "Gesperrte Gedanken", kind: .morning, dayKey: "2026-11-18"))
-        let locked = [free, recipe, morning]
+        return (normal, [free, recipe, morning], recipe, free)
+    }
+
+    /// A locked note that is not unlocked reaches no outbound path: one locked free note, one locked recipe and one locked morning
+    /// note. The store without a lock session keeps every locked note back.
+    @Test func lockedNote_whileLocked_reachesNoOutboundPath() throws {
+        let (normal, locked, recipe, free) = try fillLocked()
+        let morning = locked[2]
         // Before the lock the routine note field offers suggestions (the check below would otherwise prove nothing).
         let field = NoteFieldModel(store: store, kind: .morning, day: PlanDay(year: 2026, month: 11, day: 18), isSignedIn: { true },
                                    now: { testNow() })
@@ -77,6 +83,43 @@ struct NoteToolAccessTests {
         #expect(!RecipeTranslationModel.isOffered(recipe, store: store))
         // The note field of the routines never offers "Vorschläge holen" for it (`NoteSuggestionModelTests` covers the request).
         #expect(!field.canSuggest)
+        #expect(store.isPrivate(morning))
+    }
+
+    /// The same notes are open to the assistant while the lock session is open, and closed again when it ends. Private notes stay out
+    /// in both states, also a locked one in a private folder.
+    @Test func lockedNote_whileUnlocked_isOpenToTheAssistant_untilTheSessionEnds() throws {
+        let (normal, locked, recipe, free) = try fillLocked()
+        let morning = locked[2]
+        let journalFolder = store.ensureJournalFolder()
+        let lockedInJournal = try #require(store.create(text: "Gesperrt im Tagebuch-Ordner", folderID: journalFolder.id))
+        let dream = try #require(store.create(text: "Traum", kind: .dream, dayKey: "2026-11-18"))
+        var sessionIsOpen = false
+        store.lockHoldsBack = { $0 && !sessionIsOpen }
+        store.setLocked(locked.map(\.id) + [lockedInJournal.id, dream.id], true)
+        let field = NoteFieldModel(store: store, kind: .morning, day: PlanDay(year: 2026, month: 11, day: 18), isSignedIn: { true },
+                                   now: { testNow() })
+        #expect(!field.canSuggest)
+        sessionIsOpen = true
+        #expect(Set(access.visibleNotes().map(\.id)) == Set([normal.id] + locked.map(\.id)))
+        for note in locked {
+            #expect(access.visibleNote(key: NoteToolAccess.key(for: note.id))?.id == note.id)
+            #expect(NoteAssistantEntry.isOffered(target: .note(note.id), store: store))
+        }
+        #expect(!access.entries(folderID: nil, query: "gesperrte").isEmpty)
+        #expect(RecipeNoteSource.isOffered(free, store: store))
+        #expect(RecipeTranslationModel.isOffered(recipe, store: store))
+        #expect(field.canSuggest && !store.isPrivate(morning))
+        // Private kinds and folders stay out, locked or not.
+        for note in [lockedInJournal, dream] {
+            #expect(access.visibleNote(key: NoteToolAccess.key(for: note.id)) == nil, "\(note.kind)")
+            #expect(store.isPrivate(note))
+        }
+        // The session ends: everything is closed again.
+        sessionIsOpen = false
+        #expect(access.visibleNotes().map(\.id) == [normal.id])
+        for note in locked { #expect(access.visibleNote(key: NoteToolAccess.key(for: note.id)) == nil) }
+        #expect(!RecipeTranslationModel.isOffered(recipe, store: store) && !field.canSuggest)
     }
 
     @Test func setLocked_callsHook() throws {

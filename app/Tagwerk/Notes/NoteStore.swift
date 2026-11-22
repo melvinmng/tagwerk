@@ -66,14 +66,20 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
-    /// True when the note must never leave the device: a private kind, a note in a private folder or below one, or a locked
-    /// note. The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`). It does
-    /// not look at the lock session or at the setting "Mit Face ID schützen": a locked note stays private when it is unlocked.
+    /// True when the note must not reach ChatGPT right now: a private kind, a note in a private folder or below one (always), or
+    /// a note the user locked while it is not unlocked (`lockHoldsBack`). A locked note that is unlocked in the current lock
+    /// session is available to the assistant until the app goes to the background or the lock closes (decision of 2026-11-22,
+    /// #188); closing the lock ends the assistant's note session (`onNoteLocked` and `NoteLock.onSessionClosed`). The only rule the
+    /// assistant's note access, the suggestions, the translations and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
     func isPrivate(_ note: NoteRecord) -> Bool {
         !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
                                         privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)),
-                                        isLocked: note.isLocked)
+                                        isLocked: lockHoldsBack(note.isLocked))
     }
+
+    /// Whether the lock keeps a locked note away from the assistant right now; the argument is the lock mark of the note. The
+    /// app wires it to the lock session (`NoteProtection.holdsBack`); a store without a lock keeps every locked note back.
+    @ObservationIgnored var lockHoldsBack: @MainActor (_ isLocked: Bool) -> Bool = { $0 }
 
     /// How many notes carry the lock mark (notes in the trash included: they stay locked there).
     var lockedCount: Int { all().filter(\.isLocked).count }

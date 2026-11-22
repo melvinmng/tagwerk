@@ -106,4 +106,27 @@ struct NoteLockSearchTests {
         environment.notes.setLocked([locked.id], true)
         #expect(session.readTexts.isEmpty)
     }
+
+    /// The wiring of `AppEnvironment`: a locked note is open to the assistant while the lock is open, and closing the lock ends the
+    /// assistant's note session, so no text of the unlocked note stays in it (decision of 2026-11-22, #188).
+    @Test func unlockedNote_isOpenToTheAssistant_untilTheLockCloses() async throws {
+        let locked = try note()
+        let key = NoteToolAccess.key(for: locked.id)
+        let access = NoteToolAccess(store: environment.notes)
+        environment.notes.setLocked([locked.id], true)
+        #expect(access.visibleNote(key: key) == nil)
+        #expect(await environment.noteLock.setEnabled(true))
+        #expect(access.visibleNote(key: key)?.id == locked.id)
+        let session = environment.assistant.tools.noteSession
+        session.remember(locked.id, text: "Fritz-7590 Passwort 1234", truncated: false)
+        environment.noteLock.lockNow()
+        #expect(session.readTexts.isEmpty)
+        #expect(access.visibleNote(key: key) == nil)
+        // The app going to the background closes the lock as well.
+        #expect(await environment.noteLock.unlock(reason: "Test"))
+        session.remember(locked.id, text: "Fritz-7590 Passwort 1234", truncated: false)
+        environment.noteLock.appDidEnterBackground()
+        #expect(session.readTexts.isEmpty)
+        #expect(access.visibleNote(key: key) == nil)
+    }
 }

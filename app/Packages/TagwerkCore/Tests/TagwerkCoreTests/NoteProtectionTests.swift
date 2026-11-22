@@ -50,4 +50,28 @@ struct NoteProtectionTests {
         #expect(!NoteProtection.isProtectedFolder(isPrivateFolder: false, settings: settings(privateFolders: true)))
         #expect(!NoteProtection.isProtectedFolder(isPrivateFolder: true, settings: settings(enabled: false, privateFolders: true)))
     }
+
+    // MARK: Rule 4: what the lock holds back from the assistant
+
+    @Test func holdsBack_lockedNote_onlyWhileTheSessionIsClosed() {
+        #expect(NoteProtection.holdsBack(isLocked: true, isSessionOpen: false, settings: settings()))
+        #expect(!NoteProtection.holdsBack(isLocked: true, isSessionOpen: true, settings: settings()))
+    }
+
+    @Test func holdsBack_notLocked_neverHoldsBack() {
+        #expect(!NoteProtection.holdsBack(isLocked: false, isSessionOpen: false, settings: settings()))
+        #expect(!NoteProtection.holdsBack(isLocked: false, isSessionOpen: true, settings: settings()))
+    }
+
+    /// Without the switch or without a passcode nothing can be unlocked, so an open session proves nothing: the note stays back.
+    @Test func holdsBack_inactiveLock_keepsTheNoteBack() {
+        #expect(NoteProtection.holdsBack(isLocked: true, isSessionOpen: true, settings: settings(enabled: false)))
+        #expect(NoteProtection.holdsBack(isLocked: true, isSessionOpen: true, settings: settings(passcode: false)))
+    }
+
+    /// The folder switch changes nothing for a locked free note.
+    @Test func holdsBack_ignoresTheFolderSwitch() {
+        #expect(!NoteProtection.holdsBack(isLocked: true, isSessionOpen: true, settings: settings(privateFolders: true)))
+        #expect(NoteProtection.holdsBack(isLocked: true, isSessionOpen: false, settings: settings(privateFolders: true)))
+    }
 }

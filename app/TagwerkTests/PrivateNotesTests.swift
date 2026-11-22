@@ -77,17 +77,24 @@ struct PrivateNotesTests {
         #expect(!notes.isPrivate(own) && notes.isPrivate(thought))
     }
 
-    /// Rule 4 of the lock: `isPrivate` has no parameter for the state of the lock session (unlocked or not) and no parameter for
-    /// the setting "Mit Face ID schützen". The signature is the guard: this only compiles while both stay out of it.
-    @Test func unlockedSession_stillPrivate() throws {
+    /// Rule 4 of the lock: a locked note is private while the lock is closed and open to the assistant while the lock session is
+    /// open (decision of 2026-11-22, #188). A private kind or folder is private in both states. `NoteLockTests` covers the real session.
+    @Test func lockedNote_isPrivateOnlyWhileTheSessionIsClosed() throws {
         let container = try ModelContainerFactory.make(inMemory: true)
         let notes = NoteStore(context: container.mainContext)
-        let note = try #require(notes.create(text: "Geheim"))
-        notes.setLocked([note.id], true)
-        let rule: (NoteRecord) -> Bool = notes.isPrivate
-        #expect(rule(note))
-        let core: (NoteKind, UUID?, Set<UUID>, Bool) -> Bool = NoteFolderRules.mayLeaveDevice
-        #expect(!core(.free, nil, [], true))
+        var sessionIsOpen = false
+        notes.lockHoldsBack = { $0 && !sessionIsOpen }
+        let locked = try #require(notes.create(text: "Geheim"))
+        let free = try #require(notes.create(text: "Offen"))
+        let dream = try #require(notes.create(text: "Traum", kind: .dream, dayKey: "2026-11-18"))
+        notes.setLocked([locked.id, dream.id], true)
+        #expect(notes.isPrivate(locked) && !notes.isPrivate(free) && notes.isPrivate(dream))
+        sessionIsOpen = true
+        #expect(!notes.isPrivate(locked) && !notes.isPrivate(free))
+        // The mark of a private kind changes nothing: it never leaves the device.
+        #expect(notes.isPrivate(dream))
+        sessionIsOpen = false
+        #expect(notes.isPrivate(locked))
     }
 
     @Test func lockSwitchOff_stillPrivate() throws {
@@ -102,7 +109,7 @@ struct PrivateNotesTests {
         #expect(!NoteToolAccess(store: notes).visibleNotes().contains { $0.id == note.id })
     }
 
-    @Test func recipeSource_neverOffersALockedNote() throws {
+    @Test func recipeSource_neverOffersALockedNote_whileLocked() throws {
         let container = try ModelContainerFactory.make(inMemory: true)
         let notes = NoteStore(context: container.mainContext)
         let folder = notes.ensureSystemFolder(.recipes, name: "Rezepte")

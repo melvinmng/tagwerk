@@ -4,8 +4,9 @@ import Foundation
 /// schützen" turns it on, "Private Ordner sperren" adds the private notes and folders, and one unlock opens everything
 /// until the app goes to the background.
 ///
-/// The lock only hides content in the app. Whether a note may leave the device is a different question that the lock does
-/// not influence (`NoteFolderRules.mayLeaveDevice`: a locked note is private whether or not it is unlocked).
+/// The lock hides content in the app. Whether a note may leave the device is decided by `NoteFolderRules.mayLeaveDevice`: private
+/// kinds and folders never leave, a note the user locked is available to the assistant only while the lock session is open
+/// (`holdsBack`), because the user unlocked it on purpose until they leave Tagwerk.
 public enum NoteProtection {
     public struct Settings: Sendable, Equatable {
         /// "Mit Face ID schützen".
@@ -30,6 +31,14 @@ public enum NoteProtection {
     public static func isProtected(isLocked: Bool, isPrivateContent: Bool, settings: Settings) -> Bool {
         guard settings.isActive else { return false }
         return isLocked || (settings.locksPrivateFolders && isPrivateContent)
+    }
+
+    /// Rule 4: whether the lock keeps a note away from the assistant, suggestions and translations right now. Only a note the user
+    /// locked is held back, and only while it is not unlocked: the lock is active and its session is open (unlocked with Face ID or
+    /// the passcode, until the app goes to the background or "Jetzt sperren"). With the switch off or without a passcode nothing can
+    /// be unlocked, so a locked note stays held back. Private kinds and folders are not decided here; they never leave the device.
+    public static func holdsBack(isLocked: Bool, isSessionOpen: Bool, settings: Settings) -> Bool {
+        isLocked && !(settings.isActive && isSessionOpen)
     }
 
     /// Rule 6: which notes the menu entry "Sperren" is offered for: the user's own notes and the notes of Tagesstart,

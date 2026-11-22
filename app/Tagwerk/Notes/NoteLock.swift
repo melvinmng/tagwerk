@@ -65,7 +65,9 @@ final class FixedDeviceOwnerAuthenticator: DeviceOwnerAuthenticating, @unchecked
 #endif
 
 /// The lock session of the notes (NL1a): one unlock opens every protected note and folder until the app goes to the
-/// background or "Jetzt sperren" is tapped. It hides content; it does not decide what leaves the device (`NoteStore.isPrivate`).
+/// background or "Jetzt sperren" is tapped. It hides content. While it is open the assistant may read and edit the notes the user
+/// locked, but never private kinds and folders (`NoteStore.isPrivate`, `NoteStore.lockHoldsBack`); when it closes the assistant's
+/// note session ends (`onSessionClosed`), so no unlocked text stays in it.
 @MainActor
 @Observable
 final class NoteLock {
@@ -80,6 +82,9 @@ final class NoteLock {
     @ObservationIgnored private var pending: Task<Bool, Never>?
     /// Runs when the lock closes (`lockNow`, the app leaving the foreground).
     @ObservationIgnored var onLock: (@MainActor () -> Void)?
+    /// Runs when an open session ends (`lockNow`, the app leaving the foreground, turning the protection off): the assistant forgets
+    /// what it read of unlocked notes. Not called when the lock was closed anyway.
+    @ObservationIgnored var onSessionClosed: (@MainActor () -> Void)?
 
     init(settings: AppSettings, authenticator: any DeviceOwnerAuthenticating) {
         self.settings = settings
@@ -120,8 +125,15 @@ final class NoteLock {
 
     /// "Jetzt sperren".
     func lockNow() {
-        isUnlocked = false
+        closeSession()
         onLock?()
+    }
+
+    /// Closes the session; tells `onSessionClosed` only when it was open.
+    private func closeSession() {
+        let wasOpen = isUnlocked
+        isUnlocked = false
+        if wasOpen { onSessionClosed?() }
     }
 
     /// The app went to the background: everything is closed again.
@@ -144,7 +156,7 @@ final class NoteLock {
         }
         if canAuthenticate, !(await unlock(reason: Self.reason)) { return false }
         settings.noteLockEnabled = false
-        isUnlocked = false
+        closeSession()
         return true
     }
 
@@ -154,6 +166,16 @@ final class NoteLock {
         if !locks, protection.isActive, !(await unlock(reason: Self.reason)) { return false }
         settings.noteLockPrivateFolders = locks
         return true
+    }
+
+    /// Lets the store read the session: a locked note is open to the assistant while this session is open
+    /// (`NoteProtection.holdsBack`), and held back otherwise. With an assistant, the end of the session ends its note session too.
+    func attach(to store: NoteStore, endingNoteSessionOf assistant: AssistantModel? = nil) {
+        store.lockHoldsBack = { [weak self] isLocked in
+            guard let self else { return isLocked }
+            return NoteProtection.holdsBack(isLocked: isLocked, isSessionOpen: isUnlocked, settings: protection)
+        }
+        onSessionClosed = { [weak assistant] in assistant?.endNoteSession() }
     }
 
     // MARK: Concealment
@@ -204,9 +226,12 @@ final class NoteLock {
         !isUnlocked && NoteProtection.isProtectedFolder(isPrivateFolder: privateFolderIDs.contains(folderID), settings: protection)
     }
 
-    /// The sentence for a locked note where the assistant is offered (#233 B9 shows it under "Mit ChatGPT bearbeiten").
-    static var assistantNotice: String {
-        String(localized: "Gesperrt: Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.")
+    /// The sentence for a locked note where the assistant is offered (#233 B9 shows it under "Mit ChatGPT bearbeiten"). The
+    /// assistant reads and edits a locked note while it is unlocked, until the user leaves Tagwerk.
+    static func assistantNotice(isUnlocked: Bool) -> String {
+        isUnlocked
+            ? String(localized: "Entsperrt: Der Assistent kann diese Notiz lesen und ändern, bis du Tagwerk verlässt.")
+            : String(localized: "Gesperrt: Diese Notiz geht nicht an ChatGPT. Entsperre sie, wenn der Assistent sie lesen soll.")
     }
 
     /// The reason the system prompt shows.

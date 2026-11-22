@@ -226,17 +226,41 @@ struct NoteSuggestionModelTests {
         #expect(responder.calls == 0 && counter.models == 0)
     }
 
-    @Test func fetch_neverSendsALockedNote_evenUnlocked() async {
+    @Test func fetch_neverSendsALockedNote_whileLocked() async {
         let evening = note("Training morgen verschieben")
         notes.setLocked([evening.id], true)
         let model = makeModel()
         await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
         #expect(responder.calls == 0 && counter.models == 0)
         #expect(model.phase == .idle)
-        // Unlocking the mark makes the note sendable again, so the check above is the lock and nothing else.
+        // Removing the mark makes the note sendable again, so the check above is the lock and nothing else.
         notes.setLocked([evening.id], false)
         await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
         #expect(responder.calls == 1)
+    }
+
+    /// While the lock session is open the user has unlocked the note on purpose; closing the lock stops it again.
+    @Test func fetch_sendsALockedNote_whileUnlocked_notAfterTheLockCloses() async {
+        let evening = note("Training morgen verschieben")
+        var sessionIsOpen = true
+        notes.lockHoldsBack = { $0 && !sessionIsOpen }
+        notes.setLocked([evening.id], true)
+        let model = makeModel()
+        await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
+        #expect(responder.calls == 1)
+        sessionIsOpen = false
+        await model.fetch(noteID: evening.id, text: "Training morgen verschieben", kind: .evening)
+        #expect(responder.calls == 1)
+    }
+
+    /// A private kind never goes, locked or unlocked.
+    @Test func fetch_neverSendsADreamNote_evenWhenTheLockIsOpen() async {
+        let dream = notes.create(text: "Traum vom Meer", kind: .dream, dayKey: "2026-11-18")!
+        notes.lockHoldsBack = { _ in false }
+        notes.setLocked([dream.id], true)
+        let model = makeModel()
+        await model.fetch(noteID: dream.id, text: "Traum vom Meer", kind: .dream)
+        #expect(responder.calls == 0 && counter.models == 0)
     }
 
     @Test func revise_neverSendsALockedNote() async {

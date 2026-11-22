@@ -6088,7 +6088,18 @@
         }
       }
     },
+    "Bleibt auf dem iPhone: Gesperrte Notizen gehen nicht an ChatGPT. Entsperrt kann der Assistent sie lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on the iPhone: locked notes do not go to ChatGPT. Unlocked, the assistant can read and edit them until you leave Tagwerk."
+          }
+        }
+      }
+    },
     "Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9243,6 +9254,16 @@
         }
       }
     },
+    "Entsperrt: Der Assistent kann diese Notiz lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked: the assistant can read and edit this note until you leave Tagwerk."
+          }
+        }
+      }
+    },
     "Entstehen über „Künftig immer“ auf einer Vorschlagskarte. Nach dem Löschen fragt Tagwerk wieder.": {
       "localizations": {
         "en": {
@@ -10829,11 +10850,22 @@
       }
     },
     "Geht nie an ChatGPT": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Never goes to ChatGPT"
+          }
+        }
+      }
+    },
+    "Geht nur entsperrt an ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only goes to ChatGPT when unlocked"
           }
         }
       }
@@ -11140,7 +11172,28 @@
         }
       }
     },
+    "Gesperrt sieht der Assistent die Notiz nicht. Entsperrt kann er sie lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant does not see the note while it is locked. Unlocked, it can read and edit it until you leave Tagwerk."
+          }
+        }
+      }
+    },
+    "Gesperrt: Diese Notiz geht nicht an ChatGPT. Entsperre sie, wenn der Assistent sie lesen soll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked: this note does not go to ChatGPT. Unlock it if the assistant should read it."
+          }
+        }
+      }
+    },
     "Gesperrt: Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16181,7 +16234,18 @@
         }
       }
     },
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Gesperrte Notizen sieht der Assistent nur, solange du sie entsperrt hast, bis du Tagwerk verlässt. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie, auch nicht entsperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. The names of a note’s attachments go with its text; the attachments themselves and deleted notes never go to ChatGPT. The assistant sees locked notes only while you have them unlocked, until you leave Tagwerk. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone, not even when unlocked."
+          }
+        }
+      }
+    },
     "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

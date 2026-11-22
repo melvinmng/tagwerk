@@ -72,7 +72,7 @@ struct NotesSettingsView: View {
         }
         Section {
             Label("Verbirgt den Inhalt gesperrter Notizen und privater Ordner in Tagwerk.", systemImage: "eye.slash")
-            Label("Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.", systemImage: "iphone")
+            Label("Bleibt auf dem iPhone: Gesperrte Notizen gehen nicht an ChatGPT. Entsperrt kann der Assistent sie lesen und ändern, bis du Tagwerk verlässt.", systemImage: "iphone")
             Label("Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.", systemImage: "lock.open")
         } header: {
             Text("Was die Sperre tut")

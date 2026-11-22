@@ -407,6 +407,9 @@ final class AppEnvironment {
         }
         // Closing the lock rebuilds the rows of an open search, so no passage of a hidden note stays in the model (NL4a).
         noteLock.onLock = { [weak self] in self?.activeSearch?.evaluate() }
+        // A locked note is open to the assistant while the lock session is open (NoteStore.lockHoldsBack). When the session ends,
+        // the assistant's note session ends with it, so no text of an unlocked note stays in the chat.
+        noteLock.attach(to: noteStore, endingNoteSessionOf: assistant)
         noteStore.onLockMarksChanged = { [weak self] in self?.activeSearch?.evaluate() }
     }
 

@@ -66,7 +66,7 @@ extension NoteEditorView {
                 saveText()
                 lock.removeLock([noteID], store: store)
             } label: { Label("Sperre aufheben", systemImage: "lock.open") }
-            Text(NoteLock.assistantNotice)
+            Text(NoteLock.assistantNotice(isUnlocked: !store.lockHoldsBack(true)))
         } else if lock.canLock(note, privateFolderIDs: privateFolders) {
             Button {
                 saveText()

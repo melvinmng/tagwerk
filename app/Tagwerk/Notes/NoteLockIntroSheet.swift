@@ -17,7 +17,7 @@ struct NoteLockIntroSheet: View {
                         .accessibilityHidden(true)
                     point("faceid", NoteLockIntroSheet.openText(environment.noteLock.biometry), nil)
                     point("textformat", "In Listen und Suche bleibt der Titel sichtbar", "Der Titel ist die erste Zeile der Notiz.")
-                    point("icloud.slash", "Geht nie an ChatGPT", nil)
+                    point("icloud.slash", "Geht nur entsperrt an ChatGPT", "Gesperrt sieht der Assistent die Notiz nicht. Entsperrt kann er sie lesen und ändern, bis du Tagwerk verlässt.")
                     point("doc", "Steht unverschlüsselt in der Sicherung", nil)
                     Button { Task { await onLock() } } label: {
                         Text(Self.lockTitle(environment.noteLock.biometry)).fontWeight(.semibold).frame(maxWidth: .infinity)
