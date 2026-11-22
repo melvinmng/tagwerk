@@ -163,6 +163,9 @@ struct NoteField: View {
     @State private var asksConsent = false
     /// The issue card whose target is being chosen.
     @State private var targetCardID: String?
+    /// The card whose sheet "Vorschlag anpassen" is open.
+    @State private var adjustingCardID: String?
+    @FocusState private var followUpFocused: Bool
 
     private var isDreamLog: Bool { model.kind == .dream }
 
@@ -222,6 +225,11 @@ struct NoteField: View {
                     IssueTargetSheet(model: sheet) { repository, projectIDs, assignees in
                         suggestions.setTarget(request.id, repository: repository, projectIDs: projectIDs, assignees: assignees)
                     }
+                }
+            }
+            .sheet(item: Binding(get: { adjustingCardID.map(TargetRequest.init) }, set: { adjustingCardID = $0?.id })) { request in
+                if let suggestions, let card = suggestions.cards.first(where: { $0.id == request.id }) {
+                    ProposalAdjustSheet(assistant: suggestions, call: card.call)
                 }
             }
             .sheet(isPresented: $asksConsent) {
@@ -301,7 +309,8 @@ struct NoteField: View {
                                    onConfirm: { Task { await suggestions.confirm(card.id) } },
                                    onDecline: { suggestions.decline(card.id) },
                                    canConfirm: !card.needsTarget,
-                                   accessory: targetRow(card, in: suggestions))
+                                   accessory: targetRow(card, in: suggestions),
+                                   onAdjust: card.status == .pending && card.text.canAdjust ? { adjustingCardID = card.id } : nil)
                 }
                 // Cards that wait for a target are not part of it (review focus 10).
                 if suggestions.confirmableCount > 1 {
@@ -316,7 +325,40 @@ struct NoteField: View {
             } header: {
                 Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
             }
+            if suggestions.openCount > 0 { followUpSection(suggestions) }
         }
+    }
+
+    /// The line to write to ChatGPT about the open cards (task C2): a second request with the note, the open cards as they are
+    /// now and the message. Only with the consent of the suggestions and a ChatGPT sign-in; without them the cards can still be
+    /// adjusted by hand.
+    private func followUpSection(_ suggestions: NoteSuggestionModel) -> some View {
+        let availability = FollowUpAvailability.state(hasConsent: environment.settings.noteSuggestionConsent,
+                                                      isSignedIn: environment.ai.isSignedIn, isOffline: false)
+        return Section {
+            FollowUpBar(availability: availability, state: suggestions.followUpState, place: .notes,
+                        quickReplies: NoteSuggestionModel.quickReplies, placeholder: "Zu den Vorschlägen etwas sagen …",
+                        footer: Text("Senden gibt diese Notiz, die offenen Vorschläge mit deinen Änderungen und deine Nachricht an ChatGPT."),
+                        isFocused: $followUpFocused, onSend: { reviseSuggestions($0) },
+                        onRetry: { reviseSuggestions(suggestions.followUpLastMessage) }) {
+                if !suggestions.followUpReply.isEmpty {
+                    FollowUpAnswerRow(reply: suggestions.followUpReply, mark: nil,
+                                      onUndo: suggestions.canUndoRevision ? { suggestions.undoRevision() } : nil)
+                }
+            }
+        } header: {
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles") }
+        }
+    }
+
+    /// Saves the note first, so the text that is sent is the text that is stored.
+    private func reviseSuggestions(_ message: String) {
+        guard let suggestions else { return }
+        model.flush()
+        guard let noteID = model.noteID else { return }
+        let text = model.text
+        let kind = model.kind
+        Task { await suggestions.revise(noteID: noteID, text: text, kind: kind, comment: message) }
     }
 
     /// The row below an issue card: the target as a button while the card is open, as plain text afterwards.

@@ -57,6 +57,20 @@ struct NoteAttachmentStoreTests {
         #expect(attachments.attachments(of: note.id).map(\.id) == [record.id])
     }
 
+    @Test func displays_namesSizeAndKind() throws {
+        let note = try #require(notes.create(text: "Anhänge"))
+        let image = try attachments.addImage(makeImage(width: 40, height: 30), to: note.id)
+        let file = try attachments.addFile(at: makeFile(named: "Rechnung.pdf", bytes: 2048), to: note.id)
+        let other = try #require(notes.create(text: "Andere"))
+        let foreign = try attachments.addFile(at: makeFile(named: "Fremd.pdf", bytes: 10), to: other.id)
+        let displays = attachments.displays(of: note.id)
+        #expect(Set(displays.keys) == [image.id, file.id])
+        #expect(displays[foreign.id] == nil)
+        #expect(displays[file.id]?.name == "Rechnung.pdf" && displays[file.id]?.kind == .file)
+        #expect(displays[file.id]?.detail == ByteCountFormatter.string(fromByteCount: 2048, countStyle: .file))
+        #expect(displays[image.id]?.kind == .image && displays[image.id]?.name == "Foto.jpg")
+    }
+
     @Test func addImage_fromData_andFromNonImage() throws {
         let note = try #require(notes.create(text: "Foto"))
         let png = try #require(makeImage(width: 100, height: 50).pngData())

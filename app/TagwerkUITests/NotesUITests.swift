@@ -20,6 +20,18 @@ final class NotesUITests: UITestCase {
         XCTAssertTrue(hit.waitForExistence(timeout: 20), "The search did not find the note")
     }
 
+    /// NO3b: the plus button in the row "Brain Dump" opens an empty note for writing; leaving it without text creates no note.
+    func testBrainDumpPlusOpensEmptyNoteForWriting() {
+        openNotes()
+        let plus = app.buttons["Neue Notiz in Brain Dump"].firstMatch
+        XCTAssertTrue(plus.waitForExistence(timeout: Self.timeout), "The row Brain Dump has no plus button")
+        XCTAssertTrue(app.buttons["Brain Dump, 0"].exists, "The demo data already has a Brain Dump note")
+        plus.tap()
+        XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: Self.timeout), "The empty note did not open for writing")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["Brain Dump, 0"].waitForExistence(timeout: Self.timeout), "The empty note was kept")
+    }
+
     func testShowNoteInFolderFromSearchHit() {
         openNotes()
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Brain Dump")).firstMatch

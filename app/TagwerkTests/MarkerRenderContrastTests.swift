@@ -36,6 +36,21 @@ struct MarkerRenderContrastTests {
         #expect(ratio >= 4.5, "rendered contrast of the collapsed block is \(ratio)")
     }
 
+    /// The line "+N weitere" of the block, alone on the fill of the block (grey at 24 %): the audit reported it in the AX5 run in dark mode
+    /// with the translucent tone `gridTimeText` (about 5.7:1 on the page background). The rendered image must clear 4.5:1 with room
+    /// to spare (7:1), as the whole block above only measures its brightest text.
+    @Test(arguments: [ColorScheme.light, .dark])
+    func collapsedBlock_moreLabel_renderedContrast(scheme: ColorScheme) throws {
+        let line = CollapsedGroupMoreLabel(hidden: 4)
+            .padding(10)
+            .frame(width: 200, height: 50)
+            .background(Color.gray.opacity(0.24))
+            .background(.background)
+        let ratio = try #require(ContrastMath.renderedRatio(of: line, colorScheme: scheme))
+        print("MEASURED collapsed block more line \(scheme == .dark ? "dark" : "light"): \(String(format: "%.2f", ratio)):1")
+        #expect(ratio >= 7, "rendered contrast of the \"+N weitere\" line is \(ratio)")
+    }
+
     /// The capsule "10 min zu früh" of a tight trip (PL10b), measured on the rendered image; one of the four proofs that
     /// decide between the capsule and the text mark PL10a (plan g1, V2).
     private func travelCapsuleRatio(_ scheme: ColorScheme) throws -> Double {

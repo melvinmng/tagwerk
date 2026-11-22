@@ -2175,6 +2175,16 @@
         }
       }
     },
+    "%lld ausgewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected"
+          }
+        }
+      }
+    },
     "%lld ausgewählt · %@": {
       "localizations": {
         "de": {
@@ -3498,6 +3508,16 @@
         }
       }
     },
+    "A bis Z": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A to Z"
+          }
+        }
+      }
+    },
     "Ab %@, vor der Fälligkeit, ohne Überschneidung": {
       "localizations": {
         "en": {
@@ -4069,6 +4089,16 @@
         }
       }
     },
+    "Alle Vorschläge besprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discuss all suggestions"
+          }
+        }
+      }
+    },
     "Alle ab diesem Tag": {
       "localizations": {
         "en": {
@@ -4095,6 +4125,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All to tomorrow"
+          }
+        }
+      }
+    },
+    "Alle auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select all"
           }
         }
       }
@@ -4185,6 +4225,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everything to the next working day"
+          }
+        }
+      }
+    },
+    "Alles früher am Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything earlier in the day"
           }
         }
       }
@@ -4471,11 +4521,22 @@
       }
     },
     "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pinned notes always stay on top. The choice applies to all folders."
+          }
+        }
+      }
+    },
+    "Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned notes always stay on top. The choice applies to all folders. The entries of Tagesstart and Tagesabschluss and the Dream Log stay sorted by day."
           }
         }
       }
@@ -4604,6 +4665,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The assistant cannot create attachments. Leave the reference to an attachment out of the text."
+          }
+        }
+      }
+    },
+    "Anhänge oder Links haben sich geändert. Sie müssen bleiben, wie sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachments or links changed. They must stay as they are."
           }
         }
       }
@@ -5005,6 +5076,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set to Busy"
+          }
+        }
+      }
+    },
+    "Auf Deutsch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In German"
           }
         }
       }
@@ -6034,6 +6115,16 @@
         }
       }
     },
+    "Britisches Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "British English"
+          }
+        }
+      }
+    },
     "Buch": {
       "localizations": {
         "en": {
@@ -6080,6 +6171,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is replying …"
+          }
+        }
+      }
+    },
+    "ChatGPT hat keine Änderung vorgeschlagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT suggested no change."
           }
         }
       }
@@ -6210,6 +6311,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is translating …"
+          }
+        }
+      }
+    },
+    "Checkbox": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkbox"
           }
         }
       }
@@ -7069,6 +7180,16 @@
         }
       }
     },
+    "Der Text passt nicht mehr zum Rezept: Abschnitte, Zutaten und Schritte müssen in denselben Zeilen stehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text no longer fits the recipe: sections, ingredients and steps must stay in the same lines."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -7285,6 +7406,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The sign-in was rejected on GitHub."
+          }
+        }
+      }
+    },
+    "Die Antwort passt nicht zur Notiz. Es wurde nichts geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The answer does not fit the note. Nothing was changed."
           }
         }
       }
@@ -7670,6 +7801,16 @@
         }
       }
     },
+    "Die Planung gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This planning no longer exists."
+          }
+        }
+      }
+    },
     "Die Projekte haben keine gemeinsame Stufe; jedes Issue startet in „Ready“, sonst in der ersten Stufe seines Projekts, die nicht „Done“ ist.": {
       "localizations": {
         "en": {
@@ -7867,6 +8008,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The suggestions could not be fetched. Try again."
+          }
+        }
+      }
+    },
+    "Die Vorschläge wurden überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestions were revised."
           }
         }
       }
@@ -8347,6 +8498,16 @@
         }
       }
     },
+    "Du statt Sie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “du” instead of “Sie”"
+          }
+        }
+      }
+    },
     "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": {
       "localizations": {
         "en": {
@@ -8773,6 +8934,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "Einteilung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories revised."
           }
         }
       }
@@ -9576,6 +9747,16 @@
         }
       }
     },
+    "Fehlt etwas?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is something missing?"
+          }
+        }
+      }
+    },
     "Felder, die du nicht änderst, bleiben unverändert.": {
       "localizations": {
         "en": {
@@ -9612,6 +9793,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fat"
+          }
+        }
+      }
+    },
+    "Fettschrift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bold"
           }
         }
       }
@@ -10066,6 +10257,16 @@
         }
       }
     },
+    "Frist prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the deadline"
+          }
+        }
+      }
+    },
     "Frist ändern": {
       "localizations": {
         "en": {
@@ -10381,6 +10582,16 @@
         }
       }
     },
+    "Für diesen Tag ist keine Dankbarkeit eingetragen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No gratitude is entered for this day."
+          }
+        }
+      }
+    },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
       "extractionState": "stale",
       "localizations": {
@@ -10624,12 +10835,38 @@
         }
       }
     },
+    "Gelöscht am %@ · aus „%@“": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gelöscht am %1$@ · aus „%2$@“"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted on %@ · from “%@”"
+          }
+        }
+      }
+    },
     "Gemessen über Zeitblöcke; Fokus-Timer zählt nur außerhalb der Blöcke, letzte 8 Wochen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Measured from time blocks; focus timer time only counts outside the blocks, last 8 weeks."
+          }
+        }
+      }
+    },
+    "Genauer aufteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split up more precisely"
           }
         }
       }
@@ -11289,12 +11526,42 @@
         }
       }
     },
+    "Gleichmäßiger verteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spread more evenly"
+          }
+        }
+      }
+    },
     "Grund: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reason: %@"
+          }
+        }
+      }
+    },
+    "Gröber einteilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group more roughly"
+          }
+        }
+      }
+    },
+    "Größere Portion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger portion"
           }
         }
       }
@@ -12093,6 +12360,16 @@
         }
       }
     },
+    "In den Zutaten haben sich Mengen geändert. Mengen müssen bleiben, wie sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amounts in the ingredients changed. Amounts must stay as they are."
+          }
+        }
+      }
+    },
     "In den nächsten freien Block": {
       "localizations": {
         "en": {
@@ -12249,6 +12526,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every focus session of a minute or more gives you a brick."
+          }
+        }
+      }
+    },
+    "Jede Zeile braucht einen Text und darf keinen Zeilenumbruch enthalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every line needs a text and must not contain a line break."
           }
         }
       }
@@ -12448,6 +12735,16 @@
         }
       }
     },
+    "Kategorie wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose category"
+          }
+        }
+      }
+    },
     "Kategorien": {
       "localizations": {
         "en": {
@@ -12494,6 +12791,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not a book of the Bible, not imported"
+          }
+        }
+      }
+    },
+    "Kein Brain Dump an diesem Tag.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Brain Dump on this day."
           }
         }
       }
@@ -12868,12 +13175,32 @@
         }
       }
     },
+    "Keine auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select none"
+          }
+        }
+      }
+    },
     "Keine gelöschten Notizen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No deleted notes."
+          }
+        }
+      }
+    },
+    "Keine neuen Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new categories"
           }
         }
       }
@@ -12929,12 +13256,32 @@
         }
       }
     },
+    "Keine Änderung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change."
+          }
+        }
+      }
+    },
     "Keiner": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "None"
+          }
+        }
+      }
+    },
+    "Kleinere Portion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller portion"
           }
         }
       }
@@ -13167,6 +13514,16 @@
         }
       }
     },
+    "Kursiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Italic"
+          }
+        }
+      }
+    },
     "Kurze Pause": {
       "localizations": {
         "en": {
@@ -13293,6 +13650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
+    "Letzte 7 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
           }
         }
       }
@@ -13727,6 +14094,16 @@
         }
       }
     },
+    "Markennamen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep brand names"
+          }
+        }
+      }
+    },
     "Markiert die Aufgabe wieder als offen": {
       "localizations": {
         "en": {
@@ -13773,6 +14150,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maximum"
+          }
+        }
+      }
+    },
+    "Maßeinheiten lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the units"
           }
         }
       }
@@ -13833,6 +14220,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Multiple selection"
+          }
+        }
+      }
+    },
+    "Meine Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My folders"
           }
         }
       }
@@ -13918,6 +14315,16 @@
         }
       }
     },
+    "Menge, z. B. „500 g“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount, e.g. “500 g”"
+          }
+        }
+      }
+    },
     "Menge: %lld": {
       "extractionState": "stale",
       "localizations": {
@@ -13946,6 +14353,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quantities stay as they are. The names change in Apple Reminders; in a shared list, others see the new names too."
+          }
+        }
+      }
+    },
+    "Mengen runden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round the amounts"
           }
         }
       }
@@ -14126,6 +14543,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sort and translate with ChatGPT"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu diesem Artikel schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this item"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu diesem Posten schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this item"
+          }
+        }
+      }
+    },
+    "Mit ChatGPT zu dieser Zutat schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to ChatGPT about this ingredient"
           }
         }
       }
@@ -14486,6 +14933,16 @@
         }
       }
     },
+    "Nach Datum gruppieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by date"
+          }
+        }
+      }
+    },
     "Nach Hause · %@": {
       "localizations": {
         "en": {
@@ -14532,6 +14989,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meal name"
+          }
+        }
+      }
+    },
+    "Namen zurücksetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset name"
           }
         }
       }
@@ -14706,6 +15173,16 @@
         }
       }
     },
+    "Neue Notiz in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New note in %@"
+          }
+        }
+      }
+    },
     "Neue Notiz „%@“": {
       "localizations": {
         "en": {
@@ -14732,6 +15209,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan the new week"
+          }
+        }
+      }
+    },
+    "Neuen Namen eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a new name"
+          }
+        }
+      }
+    },
+    "Neuen Ordner anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add folder"
+          }
+        }
+      }
+    },
+    "Neuer Name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New name"
           }
         }
       }
@@ -14802,6 +15309,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New Testament"
+          }
+        }
+      }
+    },
+    "Neueste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest first"
           }
         }
       }
@@ -14997,6 +15514,7 @@
       }
     },
     "Noch %lld Tage": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15229,7 +15747,28 @@
         }
       }
     },
+    "Notizen auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select notes"
+          }
+        }
+      }
+    },
+    "Notizen bleiben %lld Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes stay here for %lld days and are then deleted for good, together with their attachments."
+          }
+        }
+      }
+    },
     "Notizen bleiben hier %lld Tage und werden dann endgültig gelöscht.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15356,6 +15895,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Number"
+          }
+        }
+      }
+    },
+    "Nur Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks only"
           }
         }
       }
@@ -15629,6 +16178,16 @@
         }
       }
     },
+    "Offene Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open suggestions"
+          }
+        }
+      }
+    },
     "Offline: Änderungen an GitHub sind gerade nicht möglich.": {
       "localizations": {
         "en": {
@@ -15675,6 +16234,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Without a due date, the repeat is removed."
+          }
+        }
+      }
+    },
+    "Ohne Gewürze": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without spices"
           }
         }
       }
@@ -15802,6 +16371,7 @@
       }
     },
     "Ordner": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16076,6 +16646,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loading people …"
+          }
+        }
+      }
+    },
+    "Persönlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal"
           }
         }
       }
@@ -16592,6 +17172,16 @@
         }
       }
     },
+    "Rezept überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe revised."
+          }
+        }
+      }
+    },
     "Rezept übersetzen": {
       "localizations": {
         "en": {
@@ -16659,6 +17249,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "First set up a list under Settings › Shopping list."
+          }
+        }
+      }
+    },
+    "Richtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direction"
           }
         }
       }
@@ -17044,6 +17644,16 @@
         }
       }
     },
+    "Schätzung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate revised."
+          }
+        }
+      }
+    },
     "Schätzung, keine Messung. Passe Mengen und Werte an, bevor du sicherst. Tippe auf einen Posten, um seine Werte zu ändern; wische, um ihn zu entfernen.": {
       "localizations": {
         "en": {
@@ -17144,12 +17754,112 @@
         }
       }
     },
+    "Senden gibt Betreff, Absendername und Text der Mail, die Aufgabe mit deinen Änderungen und deine Nachricht an ChatGPT. Adressen gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the subject, the sender’s name and the text of the mail, the task with your changes and your message to ChatGPT. Addresses are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt alle Vorschläge dieser Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives all suggestions of this planning, your changes, your rules and the appointments of these days to ChatGPT."
+          }
+        }
+      }
+    },
+    "Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the recipe (text, photos or the text read from the page), the ingredients with your changes and your message to ChatGPT."
+          }
+        }
+      }
+    },
+    "Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT. Deine Liste und Mengen darauf gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the recipe (text, photos or the text read from the page), the ingredients with your changes and your message to ChatGPT. Your list and the amounts on it are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt deine Beschreibung, das Foto, die Posten mit deinen Änderungen und deine Nachricht an ChatGPT. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives your description, the photo, the items with your changes and your message to ChatGPT. Data from Health, your goals and earlier entries are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt den Text dieser Notiz, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the text of this note, the translation with your changes and your message to ChatGPT."
+          }
+        }
+      }
+    },
+    "Senden gibt die Namen deiner offenen Artikel und deiner Kategorien, den Vorschlag mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the names of your open items and of your categories, the proposal with your changes and your message to ChatGPT. Amounts are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT. Mengen gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the names of your open items, the translation with your changes and your message to ChatGPT. Amounts are not sent."
+          }
+        }
+      }
+    },
+    "Senden gibt die Posten mit deinen Änderungen und deine Nachricht an ChatGPT, dazu deine Beschreibung, solange sie hier steht. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives the items with your changes and your message to ChatGPT, plus your description as long as it is on this sheet. Data from Health, your goals and earlier entries are not sent."
+          }
+        }
+      }
+    },
     "Senden gibt die offenen Vorschläge mit deinen Änderungen an ChatGPT; es legt sie überarbeitet neu vor.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised."
+          }
+        }
+      }
+    },
+    "Senden gibt diese Notiz, die offenen Vorschläge mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives this note, the open suggestions with your changes and your message to ChatGPT."
           }
         }
       }
@@ -17455,6 +18165,7 @@
       }
     },
     "Sortieren": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -19384,6 +20095,16 @@
         }
       }
     },
+    "Von dir geänderte Zeilen wurden überschrieben. „Rückgängig“ bringt sie zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rows you changed were overwritten. “Undo” brings them back."
+          }
+        }
+      }
+    },
     "Von heute übrig": {
       "localizations": {
         "en": {
@@ -19783,6 +20504,16 @@
         }
       }
     },
+    "Vorschlag überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal revised."
+          }
+        }
+      }
+    },
     "Vorschlag übernehmen": {
       "localizations": {
         "de": {
@@ -20108,6 +20839,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Less"
+          }
+        }
+      }
+    },
+    "Weniger Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fewer suggestions"
+          }
+        }
+      }
+    },
+    "Weniger am Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less in the evening"
           }
         }
       }
@@ -20691,6 +21442,16 @@
         }
       }
     },
+    "Z bis A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z to A"
+          }
+        }
+      }
+    },
     "Zeigt Details": {
       "localizations": {
         "en": {
@@ -20965,12 +21726,32 @@
         }
       }
     },
+    "Zu allen Vorschlägen etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about all suggestions …"
+          }
+        }
+      }
+    },
     "Zu den KI-Einstellungen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Go to AI settings"
+          }
+        }
+      }
+    },
+    "Zu den Vorschlägen etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the suggestions …"
           }
         }
       }
@@ -20991,6 +21772,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At a time of day"
+          }
+        }
+      }
+    },
+    "Zu: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About: %@"
           }
         }
       }
@@ -21126,6 +21917,16 @@
         }
       }
     },
+    "Zum Rezept etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the recipe …"
+          }
+        }
+      }
+    },
     "Zum Schätzen sendet Tagwerk deine Beschreibung und, wenn du eines aufnimmst, das Foto der Mahlzeit an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
       "localizations": {
         "en": {
@@ -21246,6 +22047,36 @@
         }
       }
     },
+    "Zur Einteilung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the categories …"
+          }
+        }
+      }
+    },
+    "Zur Schätzung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the estimate …"
+          }
+        }
+      }
+    },
+    "Zur Übersetzung etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the translation …"
+          }
+        }
+      }
+    },
     "Zurück": {
       "localizations": {
         "en": {
@@ -21333,6 +22164,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "In the iOS settings under Focus, you can also add a Focus filter for Tagwerk and choose “Pause notifications”. While that Focus is active, Tagwerk holds notifications back until the end of quiet hours, or for 8 hours at most without quiet hours. After the Focus, notifications that came due in the meantime arrive."
+          }
+        }
+      }
+    },
+    "Zutat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient"
           }
         }
       }
@@ -22426,12 +23267,42 @@
         }
       }
     },
+    "noch %lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
+    "noch 1 Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day left"
+          }
+        }
+      }
+    },
     "noch nicht eingeplant": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "nur Dankbarkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gratitude only"
           }
         }
       }
@@ -22749,6 +23620,16 @@
         }
       }
     },
+    "von dir verschoben, bleibt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "moved by you, stays"
+          }
+        }
+      }
+    },
     "vor %@": {
       "localizations": {
         "en": {
@@ -22914,6 +23795,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search older events"
+          }
+        }
+      }
+    },
+    "Älteste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oldest first"
           }
         }
       }
@@ -23128,6 +24019,16 @@
         }
       }
     },
+    "Öffnet den Tagesstart dieses Tages zum Ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the morning start of this day so you can change it."
+          }
+        }
+      }
+    },
     "Öffnet die Auswahl": {
       "localizations": {
         "en": {
@@ -23164,6 +24065,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the shopping list."
+          }
+        }
+      }
+    },
+    "Öffnet die Werte der Zutat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the values of the ingredient"
           }
         }
       }
@@ -23296,6 +24207,16 @@
         }
       }
     },
+    "Überschrift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heading"
+          }
+        }
+      }
+    },
     "Übersetzen": {
       "localizations": {
         "en": {
@@ -23332,6 +24253,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Translation"
+          }
+        }
+      }
+    },
+    "Übersetzung bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit translation"
+          }
+        }
+      }
+    },
+    "Übersetzung überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation revised."
           }
         }
       }
