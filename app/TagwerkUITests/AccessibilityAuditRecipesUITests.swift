@@ -12,7 +12,7 @@ class RecipeScreensAuditCase: UITestCase {
     override var extraLaunchArguments: [String] { ["-TagwerkDemoAI"] + AuditAllowlist.fixedClockArguments }
 
     /// The settings audit starts the app once per page, so the launch of `setUp` is not needed for it.
-    override var launchesInSetUp: Bool { invocation.map { NSStringFromSelector($0.selector) != "testAuditSettings" } ?? true }
+    override var launchesInSetUp: Bool { !name.contains("testAuditSettings") }
 
     typealias Audit = (String) throws -> Void
 
