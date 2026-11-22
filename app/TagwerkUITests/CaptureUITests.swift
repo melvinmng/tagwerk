@@ -46,7 +46,8 @@ final class CaptureUITests: UITestCase {
         XCTAssertTrue(label.contains("plus 260 aktiv"), "The credited activity is missing: \(label)")
         line.tap()
         XCTAssertTrue(app.navigationBars["Aktiv heute"].waitForExistence(timeout: Self.timeout), "The breakdown did not open")
-        XCTAssertTrue(app.staticTexts["Angerechnet"].exists)
+        let credited = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Angerechnet'")).firstMatch
+        XCTAssertTrue(credited.waitForExistence(timeout: Self.timeout), "The credited row is missing")
     }
 
     /// Decision NU3b: calories and macros are visible, the further nutrients fold out; an empty field stays unknown.
@@ -62,14 +63,16 @@ final class CaptureUITests: UITestCase {
         kcal.tap()
         kcal.typeText("320")
         // Folded out on a tap; two of the four nutrients are visible by default (fiber and sugar), none is known yet.
-        let row = app.buttons["Weitere Nährwerte"].firstMatch
+        // The label of the row reads "Weitere Nährwerte, 0 von 2": the name and the counter are one element.
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Weitere Nährwerte'")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row for further nutrients is missing")
+        XCTAssertTrue(row.label.contains("0 von 2"), "No nutrient is known yet: \(row.label)")
         row.tap()
         let fiber = app.textFields["Ballaststoffe"].firstMatch
         XCTAssertTrue(fiber.waitForExistence(timeout: Self.timeout), "The fiber field did not appear")
         fiber.tap()
         fiber.typeText("6")
-        XCTAssertTrue(app.staticTexts["1 von 2"].waitForExistence(timeout: Self.timeout), "The counter did not follow the typed value")
+        eventually("The counter did not follow the typed value") { row.label.contains("1 von 2") }
         tapButton("Sichern")
         eventually("The meal was not saved: the budget did not change from \(before)") { budgetLine.label != before }
     }
