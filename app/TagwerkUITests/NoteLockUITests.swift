@@ -166,14 +166,17 @@ final class NoteLockDeniedUITests: NoteLockUITestCase {
         openNotesSettings()
         let toggle = app.switches["notes.lock.privateFolders"]
         XCTAssertTrue(toggle.waitForExistence(timeout: Self.timeout), "The switch \"Private Ordner sperren\" is missing")
-        toggle.tap()
+        // The element covers the whole row; a tap in its middle hits the label, which does not switch. The switch sits at the trailing edge.
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         eventually("The switch did not turn on") { (self.app.switches["notes.lock.privateFolders"].value as? String) == "1" }
         // Close the session through the card of the list, then open the private folder.
         tab("Aufgaben")
         let journal = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch mit Gott")).firstMatch
-        XCTAssertTrue(journal.waitForExistence(timeout: Self.timeout), "The folder of the journal is missing")
+        // The folder list is longer than the screen and lazy: the private folders sit below the routine notes.
+        scrollTo(journal)
         XCUIDevice.shared.press(.home)
         app.activate()
+        scrollTo(journal)
         journal.tap()
         XCTAssertTrue(app.descendants(matching: .any)["lock.folder"].waitForExistence(timeout: Self.timeout), "The private folder opened without the check")
     }
