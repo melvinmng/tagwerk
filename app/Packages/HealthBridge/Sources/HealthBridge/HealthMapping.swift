@@ -11,18 +11,23 @@ public enum HealthMapping {
     /// Marks values that came from an AI estimate.
     public static let estimatedKey = "TagwerkEstimated"
 
-    /// The nutrient samples of a meal.
+    /// The nutrient samples of a meal. The first four belong to the core group (`HealthShareKind`); the others are written
+    /// only with the permission of their own group (`HealthAccessGroup.moreNutrients`).
     public enum Nutrient: String, Sendable, CaseIterable {
-        case energy, protein, carbs, fat
+        case energy, protein, carbs, fat, fiber, sugar, saturatedFat, sodium
 
-        var shareKind: HealthShareKind {
+        /// The core write kind, `nil` for the nutrients of the group `moreNutrients`.
+        var shareKind: HealthShareKind? {
             switch self {
             case .energy: .energy
             case .protein: .protein
             case .carbs: .carbs
             case .fat: .fat
+            case .fiber, .sugar, .saturatedFat, .sodium: nil
             }
         }
+
+        var isCore: Bool { shareKind != nil }
 
         var identifier: HKQuantityTypeIdentifier {
             switch self {
@@ -30,10 +35,21 @@ public enum HealthMapping {
             case .protein: .dietaryProtein
             case .carbs: .dietaryCarbohydrates
             case .fat: .dietaryFatTotal
+            case .fiber: .dietaryFiber
+            case .sugar: .dietarySugar
+            case .saturatedFat: .dietaryFatSaturated
+            case .sodium: .dietarySodium
             }
         }
 
-        var unit: HKUnit { self == .energy ? .kilocalorie() : .gram() }
+        /// The unit of the written value; sodium is stored in milligrams.
+        var unit: HKUnit {
+            switch self {
+            case .energy: .kilocalorie()
+            case .sodium: .gramUnit(with: .milli)
+            default: .gram()
+            }
+        }
     }
 
     /// "tagwerk.<kind>.<UUID>[.<part>]".
@@ -55,20 +71,46 @@ public enum HealthMapping {
         return metadata
     }
 
-    /// Nutrients above zero are written; the others are removed, so an edit to 0 leaves no stale sample.
+    /// Nutrients above zero are written; the others are removed, so an edit to 0 or to "unknown" leaves no stale sample.
+    /// Values are in the unit of the nutrient (`Nutrient.unit`): salt becomes sodium in milligrams.
     static func nutrientPlan(for meal: HealthMeal) -> (writes: [(nutrient: Nutrient, value: Double)], removals: [Nutrient]) {
         var writes: [(nutrient: Nutrient, value: Double)] = []
         var removals: [Nutrient] = []
         for nutrient in Nutrient.allCases {
-            let value = switch nutrient {
+            let value: Double? = switch nutrient {
             case .energy: meal.kcal
             case .protein: meal.protein
             case .carbs: meal.carbs
             case .fat: meal.fat
+            case .fiber: meal.fiber
+            case .sugar: meal.sugar
+            case .saturatedFat: meal.saturatedFat
+            case .sodium: meal.salt.map { NutrientValues.sodiumGrams(fromSalt: $0) * 1000 }
             }
-            if value > 0 { writes.append((nutrient, value)) } else { removals.append(nutrient) }
+            if let value, value > 0 { writes.append((nutrient, value)) } else { removals.append(nutrient) }
         }
         return (writes, removals)
+    }
+
+    /// What a save of a meal does with the permissions at hand: only permitted nutrients are written or removed. A meal counts as
+    /// mirrored (`isComplete`) unless it has core values and none of them may be written; a nutrient of an optional group that is
+    /// not allowed is skipped without keeping the meal marked for retry. (A later grant resets the meals, see `IntakeStore`.)
+    static func mealWrite(plan: (writes: [(nutrient: Nutrient, value: Double)], removals: [Nutrient]),
+                          mayWrite: (Nutrient) -> Bool)
+        -> (writes: [(nutrient: Nutrient, value: Double)], removals: [Nutrient], isComplete: Bool) {
+        let writes = plan.writes.filter { mayWrite($0.nutrient) }
+        let removals = plan.removals.filter(mayWrite)
+        let hasCoreValues = plan.writes.contains { $0.nutrient.isCore }
+        let isComplete = !hasCoreValues || writes.contains { $0.nutrient.isCore }
+        return (writes, removals, isComplete)
+    }
+
+    /// Quantity types of an entry kind outside the core `HealthShareKind` list; deleting an entry removes them as well.
+    static func extraDeleteIdentifiers(for kind: HealthEntryKind) -> [HKQuantityTypeIdentifier] {
+        switch kind {
+        case .meal: Nutrient.allCases.filter { !$0.isCore }.map(\.identifier)
+        case .drink, .workout: []
+        }
     }
 
     static func activityType(_ activity: WorkoutActivity) -> HKWorkoutActivityType {

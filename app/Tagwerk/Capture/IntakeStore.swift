@@ -199,6 +199,22 @@ final class IntakeStore {
             + workouts.map { UnsyncedEntry(entry: .workout($0.value), version: $0.healthVersion) }
     }
 
+    /// After the group "weitere Nährwerte" was allowed: meals with a value for one of its nutrients are written again, with a
+    /// higher version so Health replaces the samples already there. Returns how many meals were marked.
+    @discardableResult
+    func markMealsWithFurtherNutrientsUnsynced() -> Int {
+        var count = 0
+        for record in (try? context.fetch(FetchDescriptor<MealRecord>())) ?? [] {
+            let meal = record.value
+            guard Nutrient.allCases.contains(where: { meal.nutrient($0) != nil }) else { continue }
+            record.healthVersion += 1
+            record.healthSynced = false
+            count += 1
+        }
+        if count > 0 { save() }
+        return count
+    }
+
     /// Marks the entry as mirrored, unless it was edited (higher version) or deleted meanwhile.
     func markSynced(_ id: UUID, version: Int) {
         if let record = mealRecord(id), record.healthVersion == version { record.healthSynced = true }
@@ -256,8 +272,13 @@ extension IntakeEntry {
     func healthValue(version: Int) -> HealthValue {
         switch self {
         case .meal(let meal):
+            // A further nutrient goes to Health only when every item knows it: a partial sum would look like the whole meal.
             .meal(HealthMeal(id: meal.id, date: meal.date, version: version, kcal: meal.kcal, protein: meal.protein,
-                             carbs: meal.carbs, fat: meal.fat, estimated: meal.hasEstimate))
+                             carbs: meal.carbs, fat: meal.fat,
+                             fiber: meal.knowsNutrient(.fiber) ? meal.nutrient(.fiber) : nil,
+                             sugar: meal.knowsNutrient(.sugar) ? meal.nutrient(.sugar) : nil,
+                             saturatedFat: meal.knowsNutrient(.saturatedFat) ? meal.nutrient(.saturatedFat) : nil,
+                             salt: meal.knowsNutrient(.salt) ? meal.nutrient(.salt) : nil, estimated: meal.hasEstimate))
         case .drink(let drink):
             .drink(HealthDrink(id: drink.id, date: drink.date, version: version, milliliters: drink.milliliters))
         case .workout(let workout):

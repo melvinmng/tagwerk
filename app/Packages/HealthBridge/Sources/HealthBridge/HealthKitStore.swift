@@ -117,15 +117,15 @@ public final class HealthKitStore: HealthStoring, Sendable {
     // MARK: Writing
 
     public func save(_ meal: HealthMeal) async throws -> Bool {
-        let plan = HealthMapping.nutrientPlan(for: meal)
-        for nutrient in plan.removals {
-            guard mayWrite(nutrient.shareKind) else { continue }
+        let outcome = HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal),
+                                              mayWrite: { mayWrite(type: HKQuantityType($0.identifier)) })
+        for nutrient in outcome.removals {
             let identifier = HealthMapping.syncIdentifier(.meal, id: meal.id, part: nutrient.rawValue)
             try await delete(type: HKQuantityType(nutrient.identifier), key: HKMetadataKeySyncIdentifier, value: identifier)
         }
         // A denied nutrient is skipped for good; the meal still counts as mirrored, so it is not rewritten on every run.
         var samples: [HKObject] = []
-        for (nutrient, value) in plan.writes where mayWrite(nutrient.shareKind) {
+        for (nutrient, value) in outcome.writes {
             let identifier = HealthMapping.syncIdentifier(.meal, id: meal.id, part: nutrient.rawValue)
             let metadata = HealthMapping.metadata(syncIdentifier: identifier, entryID: meal.id, version: meal.version,
                                                   estimated: meal.estimated, userEntered: !meal.estimated)
@@ -133,7 +133,7 @@ public final class HealthKitStore: HealthStoring, Sendable {
                                             quantity: HKQuantity(unit: nutrient.unit, doubleValue: value),
                                             start: meal.date, end: meal.date, metadata: metadata))
         }
-        guard !samples.isEmpty || plan.writes.isEmpty else { return false }
+        guard outcome.isComplete else { return false }
         if !samples.isEmpty { try await store.save(samples) }
         return true
     }
@@ -182,6 +182,10 @@ public final class HealthKitStore: HealthStoring, Sendable {
     public func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool {
         for shareKind in kind.shareKinds where mayWrite(shareKind) {
             try await delete(type: Self.type(of: shareKind), key: HealthMapping.entryIDKey, value: id.uuidString)
+        }
+        // Types outside the core group (fibre, sugar, …) only when their group may be written; otherwise nothing of the entry is there.
+        for identifier in HealthMapping.extraDeleteIdentifiers(for: kind) where mayWrite(type: HKQuantityType(identifier)) {
+            try await delete(type: HKQuantityType(identifier), key: HealthMapping.entryIDKey, value: id.uuidString)
         }
         return true
     }

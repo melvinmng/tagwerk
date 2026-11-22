@@ -34,7 +34,73 @@ struct HealthMappingTests {
         let plan = HealthMapping.nutrientPlan(for: meal)
         #expect(plan.writes.map(\.nutrient) == [.energy, .protein])
         #expect(plan.writes.map(\.value) == [520, 22])
-        #expect(plan.removals == [.carbs, .fat])
+        // The further nutrients are unknown here, so they are removed (never written as 0).
+        #expect(plan.removals == [.carbs, .fat, .fiber, .sugar, .saturatedFat, .sodium])
+    }
+
+    @Test func nutrientPlan_unknown_isRemovedNotWritten() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 400, protein: 10, carbs: 50, fat: 5, fiber: nil, sugar: 12,
+                              saturatedFat: nil, salt: nil, estimated: false)
+        let plan = HealthMapping.nutrientPlan(for: meal)
+        #expect(plan.writes.map(\.nutrient) == [.energy, .protein, .carbs, .fat, .sugar])
+        #expect(plan.removals == [.fiber, .saturatedFat, .sodium])
+    }
+
+    @Test func nutrientPlan_zeroKnown_isRemoved() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 400, protein: 10, carbs: 50, fat: 5, fiber: 0, sugar: 0,
+                              saturatedFat: 0, salt: 0, estimated: false)
+        let plan = HealthMapping.nutrientPlan(for: meal)
+        #expect(plan.writes.map(\.nutrient) == [.energy, .protein, .carbs, .fat])
+        #expect(plan.removals == [.fiber, .sugar, .saturatedFat, .sodium])
+    }
+
+    @Test func salt_writtenAsSodium() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 400, protein: 0, carbs: 0, fat: 0, salt: 2.5, estimated: false)
+        let sodium = HealthMapping.nutrientPlan(for: meal).writes.first { $0.nutrient == .sodium }
+        #expect(sodium?.value == 1000, "2.5 g salt are 1 g sodium, written in milligrams")
+        #expect(HealthMapping.Nutrient.sodium.unit == .gramUnit(with: .milli))
+        #expect(HealthMapping.Nutrient.fiber.unit == .gram())
+    }
+
+    @Test func nutrients_coreFlagMatchesShareKinds() {
+        #expect(HealthMapping.Nutrient.allCases.filter(\.isCore) == [.energy, .protein, .carbs, .fat])
+        #expect(HealthMapping.Nutrient.fiber.shareKind == nil)
+        #expect(HealthMapping.Nutrient.energy.shareKind == .energy)
+    }
+
+    @Test func save_skipsGroupNotAsked_andStillCountsAsMirrored() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 400, protein: 10, carbs: 50, fat: 5, fiber: 6, salt: 1,
+                              estimated: false)
+        let outcome = HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal), mayWrite: { $0.isCore })
+        #expect(outcome.writes.map(\.nutrient) == [.energy, .protein, .carbs, .fat])
+        #expect(outcome.isComplete, "a skipped optional group does not keep the meal marked for retry")
+    }
+
+    @Test func save_coreDenied_keepsTheMealMarkedForRetry() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 400, protein: 10, carbs: 50, fat: 5, fiber: 6, estimated: false)
+        let outcome = HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal), mayWrite: { !$0.isCore })
+        #expect(outcome.writes.map(\.nutrient) == [.fiber])
+        #expect(!outcome.isComplete)
+    }
+
+    @Test func save_mealWithoutAnyValues_isComplete() {
+        let meal = HealthMeal(id: id, date: .now, version: 1, kcal: 0, protein: 0, carbs: 0, fat: 0, estimated: false)
+        #expect(HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal), mayWrite: { _ in false }).isComplete)
+    }
+
+    @Test func save_removalsOnlyForPermittedTypes() {
+        let meal = HealthMeal(id: id, date: .now, version: 2, kcal: 400, protein: 10, carbs: 50, fat: 5, estimated: false)
+        let outcome = HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal), mayWrite: { $0.isCore })
+        #expect(outcome.removals.isEmpty, "the further nutrients are not removed where Tagwerk may not write")
+        let all = HealthMapping.mealWrite(plan: HealthMapping.nutrientPlan(for: meal), mayWrite: { _ in true })
+        #expect(all.removals == [.fiber, .sugar, .saturatedFat, .sodium])
+    }
+
+    @Test func deleteEntry_meal_alsoCoversTheFurtherNutrientTypes() {
+        #expect(HealthMapping.extraDeleteIdentifiers(for: .meal)
+            == [.dietaryFiber, .dietarySugar, .dietaryFatSaturated, .dietarySodium])
+        #expect(HealthMapping.extraDeleteIdentifiers(for: .drink).isEmpty)
+        #expect(HealthMapping.extraDeleteIdentifiers(for: .workout).isEmpty)
     }
 
     @Test func activityMapping_allCasesDistinctExceptOther() {

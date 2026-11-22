@@ -25,9 +25,15 @@ public struct HealthMeal: Sendable, Hashable {
     public var protein: Double
     public var carbs: Double
     public var fat: Double
+    /// Further nutrients in grams (salt, not sodium); `nil` is unknown and is never written to Health as 0.
+    public var fiber: Double?
+    public var sugar: Double?
+    public var saturatedFat: Double?
+    public var salt: Double?
     public var estimated: Bool
 
-    public init(id: UUID, date: Date, version: Int, kcal: Double, protein: Double, carbs: Double, fat: Double, estimated: Bool) {
+    public init(id: UUID, date: Date, version: Int, kcal: Double, protein: Double, carbs: Double, fat: Double,
+                fiber: Double? = nil, sugar: Double? = nil, saturatedFat: Double? = nil, salt: Double? = nil, estimated: Bool) {
         self.id = id
         self.date = date
         self.version = version
@@ -35,6 +41,10 @@ public struct HealthMeal: Sendable, Hashable {
         self.protein = protein
         self.carbs = carbs
         self.fat = fat
+        self.fiber = fiber
+        self.sugar = sugar
+        self.saturatedFat = saturatedFat
+        self.salt = salt
         self.estimated = estimated
     }
 }
