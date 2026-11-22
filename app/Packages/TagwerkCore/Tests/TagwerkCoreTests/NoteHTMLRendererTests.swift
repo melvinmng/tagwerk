@@ -236,10 +236,12 @@ struct NoteHTMLRendererTests {
         #expect(!table.contains("tagwerk-edit") && table.contains("<td>1</td>"))
     }
 
-    @Test func editLinks_tailLinkPresent() {
+    @Test func editLinks_noTailLink() {
+        // A tap below the text is answered by the view (stage B), not by an empty link: the accessibility audit flags an
+        // empty, label-less link as a control without a hit area.
         let output = editHTML("Text")
-        #expect(output.hasSuffix("<a class=\"e tail\" href=\"tagwerk-edit:end\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n"))
-        #expect(NoteHTMLRenderer.page(body: output).contains("a.e.tail"))
+        #expect(!output.contains("tail") && !output.contains("\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)"))
+        #expect(output.hasSuffix("</a></p>\n"))
     }
 
     @Test func editLinks_off_htmlIsUnchanged() {

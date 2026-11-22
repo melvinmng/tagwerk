@@ -57,6 +57,18 @@ final class NoteEditorUITests: UITestCase {
         XCTAssertFalse(app.buttons["Fertig"].exists, "A tap on the checkbox started writing")
     }
 
+    /// A tap on the empty area below the text is no link: the page reports the fraction of its height and the editor opens
+    /// at the nearest line (stage B of the line mapping).
+    func testTapBelowTheTextWritesAtTheEnd() {
+        openDemoNote()
+        XCTAssertTrue(pageText("Gliederung überarbeiten").waitForExistence(timeout: 3 * Self.timeout))
+        app.webViews.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.92)).tap()
+        XCTAssertTrue(app.buttons["Fertig"].waitForExistence(timeout: Self.timeout), "A tap below the text did not start writing")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Self.timeout))
+        app.typeText("X")
+        eventually("The X is not at the end of the text: \(editorText ?? "nil")") { editorText == Self.demoText + "X" }
+    }
+
     func testDoneReturnsToView() {
         openDemoNote()
         let second = pageText("Gliederung überarbeiten")

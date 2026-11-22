@@ -44,11 +44,7 @@ public enum NoteHTMLRenderer {
         // Smart punctuation stays off: a note shows exactly what was typed.
         let document = Document(parsing: markdown, options: [.disableSmartOpts])
         var visitor = BodyVisitor(options: options)
-        var output = visitor.visit(document)
-        // A tap below the text writes at the end of the note. The empty link is only a touch target: it stays out of the
-        // accessibility tree (the action "Bearbeiten" is the way in for VoiceOver).
-        if options.editLinks { output += "<a class=\"e tail\" href=\"\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n" }
-        return output
+        return visitor.visit(document)
     }
 
     /// Kept for existing callers; forwards to `html(markdown:options:)`. `attachmentNames` names the attachments.
@@ -89,7 +85,6 @@ public enum NoteHTMLRenderer {
         a { color: var(--accent); text-decoration: none; }
         a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }
         a.e.block { display: block; }
-        a.e.tail { display: block; min-height: 50vh; }
         a.img { display: inline-block; max-width: 100%; }
         a.task-box { display: inline-flex; min-width:44px; min-height:44px; align-items: center; justify-content: center;
                      vertical-align: top; margin: calc((1.45em - 44px) / 2) calc(.4em + (1.1em - 44px) / 2) calc((1.45em - 44px) / 2) calc((1.1em - 44px) / 2); }
