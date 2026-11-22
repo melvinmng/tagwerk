@@ -50,8 +50,12 @@ public struct NoteSearchItem: Sendable, Hashable, Identifiable {
     public let dayKey: String?
     /// The routine day this hit opens instead of a note: a day of "Tagesstart" that only has gratitude. `nil` for notes.
     public let routineDay: PlanDay?
+    /// The note is hidden by the lock: `text` holds the title line only and the row shows no passage (NL4a).
+    public let isConcealed: Bool
 
-    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil, routineDay: PlanDay? = nil) {
+    public init(id: UUID, text: String, kindLabel: String, updatedAt: Date, dayKey: String? = nil, routineDay: PlanDay? = nil,
+                isConcealed: Bool = false) {
+        self.isConcealed = isConcealed
         self.id = id
         self.text = text
         self.kindLabel = kindLabel

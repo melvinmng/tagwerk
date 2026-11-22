@@ -78,6 +78,8 @@ final class NoteLock {
     @ObservationIgnored private let authenticator: any DeviceOwnerAuthenticating
     /// The check that runs right now; a second request waits for it instead of asking again.
     @ObservationIgnored private var pending: Task<Bool, Never>?
+    /// Runs when the lock closes (`lockNow`, the app leaving the foreground).
+    @ObservationIgnored var onLock: (@MainActor () -> Void)?
 
     init(settings: AppSettings, authenticator: any DeviceOwnerAuthenticating) {
         self.settings = settings
@@ -119,6 +121,7 @@ final class NoteLock {
     /// "Jetzt sperren".
     func lockNow() {
         isUnlocked = false
+        onLock?()
     }
 
     /// The app went to the background: everything is closed again.

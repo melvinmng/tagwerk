@@ -259,11 +259,18 @@ struct NotesListView: View {
     }
 
     var visibleNotes: [NoteRecord] {
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
         let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder,
                                 ascending: environment.settings.noteSortAscending)
-            .filter { Self.matchesSearch($0, gratitude: gratitude(of: $0), query: searchText) }
+            .filter { matchesSearch($0, privateFolderIDs: privateFolderIDs) }
         // The entries of a routine folder are days: newest day first, not by change date.
         return folderRole?.noteKind == nil ? notes : Self.byDayDescending(notes)
+    }
+
+    /// The search field of the list: a hidden note matches by its title only (NL4a), everything else by its text.
+    private func matchesSearch(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
+        let isConcealed = environment.noteLock.isConcealed(note, privateFolderIDs: privateFolderIDs)
+        return Self.matchesSearch(note, gratitude: isConcealed ? [] : gratitude(of: note), query: searchText, titleOnly: isConcealed)
     }
 
     private var title: String {
@@ -569,9 +576,11 @@ extension NotesListView {
     }
 
     /// A note matches by its text; an entry of "Tagesstart" also by the gratitude of its day.
-    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String) -> Bool {
+    /// `titleOnly` is for a hidden note: only its first line is searched.
+    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String, titleOnly: Bool = false) -> Bool {
+        if titleOnly { return NoteText.matches(NoteText.title(note.text), query: query) }
         // Text and gratitude are searched together, so a query of two words may find one in each.
-        NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
+        return NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
     }
 
     /// Whether the gratitude of a day matches the search of the list; an empty search matches every day with gratitude.

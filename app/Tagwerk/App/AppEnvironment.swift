@@ -400,6 +400,8 @@ final class AppEnvironment {
             if !taskList.items.contains(where: { $0.id == id }) { await loadTasksInBackground() }
             await taskList.complete(id)
         }
+        // Closing the lock rebuilds the rows of an open search, so no passage of a hidden note stays in the model (NL4a).
+        noteLock.onLock = { [weak self] in self?.activeSearch?.evaluate() }
     }
 
     /// The model of the sheet "Mail zu Aufgabe" for a shared item: the mail if the extension parsed one, else its text.
@@ -646,11 +648,16 @@ final class AppEnvironment {
 
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
     /// `gratitude` is the gratitude of the day of a morning note; the app search appends it to the text, the assistant never gets it.
-    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = []) -> NoteSearchItem {
+    /// A hidden note (`isConcealed`: protected and not unlocked) carries its title line only, and no gratitude, so the search finds
+    /// it by its title and nothing of the text stays in the search model (NL4a).
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = [],
+                           isConcealed: Bool = false) -> NoteSearchItem {
         let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
-        let text = ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
+        let text = isConcealed ? NoteText.title(note.text)
+            : ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
         return NoteSearchItem(id: note.id, text: text, kindLabel: folderName ?? kindLabel(of: note.kind),
-                              updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey)
+                              updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey,
+                              isConcealed: isConcealed)
     }
 
     /// The notes the assistant's `search` may read: only what `NoteToolAccess` shows, never the gratitude of a day.
@@ -663,15 +670,16 @@ final class AppEnvironment {
     /// What the app search reads (not the assistant): the live notes, the gratitude of a day with a morning note appended to that
     /// note's text, and every day that only has gratitude as an item of its own.
     static func appSearchNotes(live: [NoteRecord], folderNames: [UUID: String], gratitudeDays: [PlanDay: [String]],
-                               calendar: Calendar) -> [NoteSearchItem] {
+                               calendar: Calendar, isConcealed: (NoteRecord) -> Bool = { _ in false }) -> [NoteSearchItem] {
         var morningDays = Set<PlanDay>()
         var items = live.map { note -> NoteSearchItem in
             var gratitude: [String] = []
+            let concealed = isConcealed(note)
             if note.kind == .morning, let day = note.dayKey.flatMap(NoteDayKey.day) {
                 morningDays.insert(day)
-                gratitude = gratitudeDays[day] ?? []
+                gratitude = concealed ? [] : gratitudeDays[day] ?? []
             }
-            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude)
+            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude, isConcealed: concealed)
         }
         items += gratitudeSearchItems(gratitudeDays: gratitudeDays, morningNoteDays: morningDays, calendar: calendar)
         return items
@@ -756,6 +764,7 @@ final class AppEnvironment {
         let reminders = self.remindersProvider
         let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
         let notes = self.notes
+        let noteLock = self.noteLock
         let routines = self.routines
         let shopping = self.shopping
         var sources = SearchSources(
@@ -767,8 +776,11 @@ final class AppEnvironment {
                 // A note in a folder shows the folder name as its label; the trash is not searched. The gratitude of the
                 // morning routine is searched here and nowhere else (never by the assistant).
                 let folderNames = Self.folderNames(notes)
+                // Hidden notes are found by their title only, until the lock is open (NL4a).
+                let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: notes.folders().map(\.info))
                 return Self.appSearchNotes(live: notes.notes(), folderNames: folderNames, gratitudeDays: routines.gratitudeDays(),
-                                           calendar: planning.calendar)
+                                           calendar: planning.calendar,
+                                           isConcealed: { noteLock.isConcealed($0, privateFolderIDs: privateFolderIDs) })
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
             searchOnline: searchOnline)

@@ -2515,5 +2515,6 @@
   "Öffnen nur mit Face ID oder Gerätecode": "Opens only with Face ID or device passcode",
   "Öffnen nur mit Optic ID oder Gerätecode": "Opens only with Optic ID or device passcode",
   "Öffnen nur mit Touch ID oder Gerätecode": "Opens only with Touch ID or device passcode",
-  "Öffnen nur mit dem Gerätecode": "Opens only with the device passcode"
+  "Öffnen nur mit dem Gerätecode": "Opens only with the device passcode",
+  "Gesperrte Notizen werden nur über den Titel gefunden.": "Locked notes are only found by their title."
 }

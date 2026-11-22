@@ -11117,6 +11117,16 @@
         }
       }
     },
+    "Gesperrte Notizen werden nur über den Titel gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes are only found by their title."
+          }
+        }
+      }
+    },
     "Gesperrte Notizen · %lld": {
       "localizations": {
         "en": {
