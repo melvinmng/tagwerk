@@ -49,6 +49,9 @@ enum AuditAllowlist {
             "Brot & Backwaren", "Kühlregal", "Aufgaben, 1 offen", "Vergangene Termine", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
             "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen", "Erledigt: Erinnerungen.*", "Abend-Checkliste · Schlafzeit .*",
             "Trinkportionen", "Brain Dump", "Der Eintrag bleibt auf deinem iPhone und geht nie an ChatGPT\\.", "heute \\d+:\\d+( · diktiert)?",
+            // Section headers of the notes overview and the date groups of the notes list (NF1, NF3), in the tone `secondaryText` like the others.
+            "Meine Ordner", "Persönlich", "Angeheftet", "Letzte 7 Tage",
+            "(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember) \\d{4}",
             // Titles and previews of the demo notes (the label of a note preview can have several lines). The preview of a note whose
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
@@ -388,6 +391,14 @@ enum AuditAllowlist {
         // (element detection) without an element in this environment, also without the share choice; it reproduces on the code before
         // that change; the element cannot be resolved. Stays on the device test list (VoiceOver).
         if issue.auditType == .elementDetection { return currentScreen == "Rezept anlegen (Eingabe)" }
+        // The list markers of the rendered recipe note (see the entry "•" above) arrive without an element in the combined run; only
+        // elements of the web view are accepted, and only on the screen of the recipe note.
+        if issue.auditType == .hitRegion {
+            return ["Rezept-Notiz", "AX5/dark Rezept-Notiz"].contains(currentScreen) && issue.detailedDescription.contains("WebAccessibilityObjectWrapper")
+        }
+        // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
+        // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
+        if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
         guard issue.auditType == .textClipped else { return false }
         // The card of "Artikel übersetzen" reports two clipped texts without an element (frame 0×0) in the default size; its texts are
         // reported with their own frames and covered by the entries below (the card is a plain stack of texts and buttons, nothing is cut).

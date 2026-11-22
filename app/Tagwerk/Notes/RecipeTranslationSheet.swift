@@ -136,7 +136,7 @@ struct RecipeTranslationSheet: View {
                 if showsOriginal {
                     // The original refers to the attachments of the note; nothing in it can be tapped.
                     NoteMarkdownView(markdown: original, attachments: store.attachments,
-                                     attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: model.noteID) ?? []).map { ($0.id, $0.fileName) }),
+                                     attachmentDisplays: store.attachments?.displays(of: model.noteID) ?? [:],
                                      onToggleCheckbox: { _ in }, onOpenAttachment: { _ in })
                         .padding(.horizontal, 16)
                         .allowsHitTesting(false)

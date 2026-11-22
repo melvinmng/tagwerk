@@ -110,7 +110,8 @@ struct RootView: View {
                 SearchSheet(model: model,
                             onShowDay: { day in environment.closeSearch(); showDay(day) },
                             onShowTask: { id in environment.closeSearch(); showTask(id) },
-                            onShowNoteFolder: { scope in environment.closeSearch(); environment.showNotes(scope) })
+                            onShowNoteFolder: { scope in environment.closeSearch(); environment.showNotes(scope) },
+                            onShowMorningDay: { day in environment.closeSearch(); environment.showMorningDay(day) })
             }
         }
         .background(KeyboardDismissalInstaller())

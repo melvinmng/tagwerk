@@ -178,4 +178,22 @@ struct RoutineStoreTests {
     @Test func schema_containsFocusMark() {
         #expect(ModelContainerFactory.schema.entities.map(\.name).contains("FocusMarkRecord"))
     }
+
+    @Test func gratitudeDays_skipsEmptyAndWhitespace() {
+        store.update(day) { $0.gratitude = ["Kaffee", "Sonne"] }
+        store.update(PlanDay(year: 2026, month: 11, day: 19)) { $0.startCompletedAt = testNow() }
+        // A record with blank entries only (written by an older version or by hand) is not a day with gratitude.
+        let blank = RoutineDayRecord(day: PlanDay(year: 2026, month: 11, day: 20))
+        blank.gratitudeData = try? JSONEncoder().encode(["  ", ""])
+        container.mainContext.insert(blank)
+        try? container.mainContext.save()
+        #expect(store.gratitudeDays() == [day: ["Kaffee", "Sonne"]])
+    }
+
+    @Test func gratitudeDays_afterClearing_isGone() {
+        store.update(day) { $0.gratitude = ["Kaffee"] }
+        #expect(store.gratitudeDays().keys.contains(day))
+        store.update(day) { $0.gratitude = [] }
+        #expect(store.gratitudeDays().isEmpty)
+    }
 }
