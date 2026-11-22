@@ -156,6 +156,31 @@ struct IntentServicesTests {
         #expect(environment.router.dictationRequested)
     }
 
+    @Test func openNewBrainDumpNote_pushesNotesAndNote() throws {
+        let (_, environment) = try make()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        environment.tasksPath = [.shopping]
+        environment.openNewBrainDumpNote()
+        let note = try #require(environment.notes.notes(.folder(folder.id)).first)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder.id)), .note(note.id)])
+        #expect(environment.requestedTab == 1)
+        #expect(note.text.isEmpty && note.kind == .free)
+        // Nothing starts a recording.
+        #expect(!environment.router.dictationRequested)
+    }
+
+    @Test func openNewBrainDumpNote_withoutFolder_createsItFirst() throws {
+        let (_, environment) = try make()
+        for folder in environment.notes.folders() where folder.role == .brainDump {
+            environment.notes.context.delete(folder)
+        }
+        #expect(environment.notes.folder(role: .brainDump) == nil)
+        environment.openNewBrainDumpNote()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        #expect(environment.tasksPath.count == 3 && environment.tasksPath.first == .notes)
+        #expect(environment.notes.notes(.folder(folder.id)).count == 1)
+    }
+
     // MARK: Habits (phase 7)
 
     private func addHabit(_ environment: AppEnvironment, name: String = "Lesen 20 min", source: HabitSource = .manual,

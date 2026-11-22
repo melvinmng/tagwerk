@@ -20,6 +20,26 @@ extension NoteStore {
         }
     }
 
+    enum FolderResetError: Error, Equatable {
+        /// The folder is the user's own; only a system folder has a fixed name to go back to.
+        case notASystemFolder
+    }
+
+    /// Whether a system folder carries another name than the one it was created with.
+    static func isRenamed(_ folder: NoteFolderRecord) -> Bool {
+        guard let role = folder.role else { return false }
+        return folder.name != defaultFolderName(for: role)
+    }
+
+    /// Puts the fixed name back; only offered while the name differs from `defaultFolderName(for:)`. Throws
+    /// `FolderResetError.notASystemFolder` for the user's own folders and `NoteFolderRules.NameError.duplicate` when
+    /// another folder on the same level has taken the fixed name meanwhile.
+    func resetFolderName(_ id: UUID) throws {
+        guard let record = folder(id: id) else { return }
+        guard let role = record.role else { throw FolderResetError.notASystemFolder }
+        try renameFolder(id, to: Self.defaultFolderName(for: role))
+    }
+
     /// Creates the fixed folders that are missing and files the routine and dream notes into their folders.
     /// Safe to call again at any time: it creates nothing twice, keeps renamed folders and saves only after a change.
     func ensureDefaultFolders() {

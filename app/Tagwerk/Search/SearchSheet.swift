@@ -12,6 +12,8 @@ struct SearchSheet: View {
     let onShowTask: (TaskID) -> Void
     /// Shows the folder list of a note in "Aufgaben" (`nil`: "Alle Notizen"); the sheet closes first.
     let onShowNoteFolder: (NotesScope) -> Void
+    /// A hit for a day that only has gratitude: closes the search and shows the page of that day.
+    let onShowMorningDay: (PlanDay) -> Void
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -28,11 +30,13 @@ struct SearchSheet: View {
     @State private var notice: String?
 
     init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void,
-         onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in }) {
+         onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in },
+         onShowMorningDay: @escaping (PlanDay) -> Void = { _ in }) {
         self.model = model
         self.onShowDay = onShowDay
         self.onShowTask = onShowTask
         self.onShowNoteFolder = onShowNoteFolder
+        self.onShowMorningDay = onShowMorningDay
     }
 
     private var calendar: Calendar { environment.planning.calendar }
@@ -209,7 +213,17 @@ struct SearchSheet: View {
 
     /// "Im Ordner zeigen": the list of the note in "Aufgaben"; a note without a folder lies in "Notizen".
     private func showNoteFolder(_ note: NoteSearchItem) {
+        // A day that only has gratitude lies in "Tagesstart".
+        if note.routineDay != nil, let folder = environment.notes.folder(role: .morningRoutine) {
+            onShowNoteFolder(.folder(folder.id))
+            return
+        }
         onShowNoteFolder(environment.notesScope(ofNote: note.id))
+    }
+
+    /// A note opens in its own sheet; a day that only has gratitude has no note, its page opens in "Aufgaben".
+    private func open(_ note: NoteSearchItem) {
+        if let day = note.routineDay { onShowMorningDay(day) } else { openNote = NoteTarget(id: note.id) }
     }
 
     private func reopen(_ task: TaskItem) {
@@ -479,13 +493,13 @@ struct SearchSheet: View {
                 .accessibilityAction(named: Text("Link kopieren")) { UIPasteboard.general.url = issue.url }
         case .note(let note, let match):
             SearchNoteRow(note: note, match: match, calendar: calendar)
-                .onTapGesture { openNote = NoteTarget(id: note.id) }
+                .onTapGesture { open(note) }
                 .contextMenu {
-                    Button("Öffnen", systemImage: "chevron.right") { openNote = NoteTarget(id: note.id) }
+                    Button("Öffnen", systemImage: "chevron.right") { open(note) }
                     Button("Im Ordner zeigen", systemImage: "folder") { showNoteFolder(note) }
                 }
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction(named: Text("Öffnen")) { openNote = NoteTarget(id: note.id) }
+                .accessibilityAction(named: Text("Öffnen")) { open(note) }
                 .accessibilityAction(named: Text("Im Ordner zeigen")) { showNoteFolder(note) }
         case .shopping(let item, let match):
             SearchShoppingRow(item: item, match: match, onCheckOff: { Task { await model.checkOff(item) } })
