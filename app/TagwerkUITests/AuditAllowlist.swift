@@ -363,7 +363,12 @@ enum AuditAllowlist {
         // "Planen (Tag)" at the default size: once the screen has settled, the hour grid has scrolled to "now" (realign on "Heute") and the
         // suggestion card above it ("Derselbe Termin?") lies partly behind the bar. The audit reports the cut card text as "may be clipped"
         // without an element (frame 0×0); the screenshot of the run shows the text only scrolled under the bar, not cut in its own frame.
+        // "Einstellungen › KI › Sprache" in the largest text size: the one clipped text of this page is the toggle label "Mikrofon in Gesprächen"
+        // (entry above: the label wraps completely, the audit counts the height of the row as clipped). When the page is opened directly
+        // with `-TagwerkUITestScreen` the audit reports it without its element; reached through the settings list it came with the element
+        // (frame 36, 276, 236 × 187 in both cases, the same single finding on the page).
         return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
+            || currentScreen == "AX5/dark Einstellungen › KI › Sprache"
             || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
     }
 
