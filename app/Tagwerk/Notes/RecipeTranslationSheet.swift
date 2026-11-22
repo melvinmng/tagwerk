@@ -88,7 +88,7 @@ struct RecipeTranslationSheet: View {
                 Text("Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.")
             }
             if case .failed(let message) = model.phase {
-                Section { Text(message).foregroundStyle(.red) }
+                Section { Text(message).foregroundStyle(.redText) }
             }
             Section {
                 Button(action: tapTranslate) {
@@ -114,7 +114,7 @@ struct RecipeTranslationSheet: View {
     private var progress: some View {
         VStack(spacing: 16) {
             ProgressView()
-            Text("Rezept wird übersetzt …").foregroundStyle(.secondary)
+            Text("Rezept wird übersetzt …").foregroundStyle(.secondaryText)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
@@ -137,7 +137,7 @@ struct RecipeTranslationSheet: View {
                              onToggleCheckbox: { _ in }, onOpenAttachment: { _ in })
                 .allowsHitTesting(false)
             Text("Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16).padding(.vertical, 8)
             VStack(spacing: 10) {

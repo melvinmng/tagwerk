@@ -16,7 +16,7 @@ struct DeadlineCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Deadlines", systemImage: "flag.fill")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(.redText)
                 ForEach(deadlines) { deadline in
                     DeadlineRowLabel(deadline: deadline, model: model)
                         .deadlineInteractions(deadline, model: model, actions: actions)

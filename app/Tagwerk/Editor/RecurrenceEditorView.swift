@@ -62,11 +62,11 @@ struct RecurrenceEditorView: View {
                 if model.isChanged, let previous, previous.rule != .unsupported,
                    RecurrenceText.summary(previous, calendar: calendar) != model.summary {
                     Text("Bisher: \(RecurrenceText.summary(previous, calendar: calendar))")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                 }
                 if let last = model.lastOccurrence {
                     Text("Letzter Termin: \(longDay(last))")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             .accessibilityElement(children: .combine)

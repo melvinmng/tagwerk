@@ -79,7 +79,7 @@ struct NotesListView: View {
             }
             if notes.isEmpty {
                 Text(emptyText)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
             }
@@ -169,7 +169,7 @@ struct NotesListView: View {
                     Button { environment.tasksPath.append(.note(session.noteID)) } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Self.sessionTitle(session)).foregroundStyle(.primary)
-                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondary)
+                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondaryText)
                         }
                     }
                     .buttonStyle(.plain)
@@ -270,19 +270,19 @@ struct NotesListView: View {
                         Spacer(minLength: 4)
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
-                                .font(.footnote).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                                .font(.footnote).foregroundStyle(.secondaryText).labelStyle(.titleAndIcon)
                                 .accessibilityLabel("Dateien angehängt: \(attachmentInfo.fileCount)")
                         }
                         if note.isPinned {
-                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)
+                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondaryText)
                                 .accessibilityLabel("Angeheftet")
                         }
                     }
                     if !preview.isEmpty {
-                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                        Text(preview).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     }
                     Text(footerText(for: note))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 if let imageID = attachmentInfo.firstImageID, let thumbnail = store.attachments?.thumbnail(for: imageID) {
                     Image(uiImage: thumbnail).resizable().scaledToFill().frame(width: 48, height: 48)

@@ -36,7 +36,7 @@ struct SetupView: View {
                             if chatGPTSignIn.isSigningIn {
                                 HStack(spacing: 8) {
                                     ProgressView()
-                                    Text("Anmeldung läuft …").foregroundStyle(.secondary)
+                                    Text("Anmeldung läuft …").foregroundStyle(.secondaryText)
                                 }
                             } else {
                                 Button("Mit ChatGPT anmelden") {
@@ -86,7 +86,7 @@ struct SetupView: View {
             Text(step.title)
             Spacer()
             if let result = model.results[step], result != .fullAccess {
-                Text(step.notDoneLabel).font(.caption).foregroundStyle(.secondary)
+                Text(step.notDoneLabel).font(.caption).foregroundStyle(.secondaryText)
             }
         }
     }

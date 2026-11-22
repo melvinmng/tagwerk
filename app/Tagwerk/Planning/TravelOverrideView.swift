@@ -92,7 +92,7 @@ struct TravelOverrideView: View {
             HStack {
                 Text(title).foregroundStyle(.primary)
                 Spacer()
-                if let detail { Text(detail).foregroundStyle(.secondary) }
+                if let detail { Text(detail).foregroundStyle(.secondaryText) }
                 if selected { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
             }
         }

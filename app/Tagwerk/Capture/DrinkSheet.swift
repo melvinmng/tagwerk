@@ -31,7 +31,7 @@ struct DrinkSheet: View {
                                 HStack {
                                     Text(CaptureText.time(drink.date, calendar: model.calendar))
                                     Spacer()
-                                    Text("\(drink.milliliters) ml").monospacedDigit().foregroundStyle(.secondary)
+                                    Text("\(drink.milliliters) ml").monospacedDigit().foregroundStyle(.secondaryText)
                                 }
                             }
                             .tint(.primary)

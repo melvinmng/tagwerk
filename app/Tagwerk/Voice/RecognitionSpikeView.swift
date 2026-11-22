@@ -131,12 +131,12 @@ struct RecognitionSpikeSection: View {
                 ProgressView(value: Double(model.level)).tint(.red)
             }
             if !model.finalText.isEmpty || !model.volatileText.isEmpty {
-                (Text(model.finalText) + Text(model.volatileText.isEmpty ? "" : " " + model.volatileText).foregroundStyle(.secondary))
+                (Text(model.finalText) + Text(model.volatileText.isEmpty ? "" : " " + model.volatileText).foregroundStyle(.secondaryText))
                     .textSelection(.enabled)
             }
             if let outcome = model.outcome {
                 Text(outcome + (model.elapsed.map { String(format: " · erster Text nach %.1f s", $0) } ?? ""))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
             }
             ForEach(model.rows) { row in
                 LabeledContent(row.title, value: row.value).font(.footnote)

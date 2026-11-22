@@ -20,7 +20,7 @@ struct SourceSelectionView: View {
                     Spacer()
                     Text(note).font(.subheadline)
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityElement(children: .combine)
             } else {
                 Button {

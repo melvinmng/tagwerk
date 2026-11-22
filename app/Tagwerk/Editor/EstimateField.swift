@@ -19,7 +19,7 @@ struct EstimateField: View {
                         .keyboardDoneButton(focus: $isTyping)
                         .frame(minWidth: 44, maxWidth: 64)
                         .accessibilityLabel("Geschätzter Aufwand in Stunden")
-                    Text("h").foregroundStyle(.secondary)
+                    Text("h").foregroundStyle(.secondaryText)
                     stepButton("plus", direction: 1, label: String(localized: "Mehr"))
                 }
                 .padding(.horizontal, 4)

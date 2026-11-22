@@ -71,7 +71,7 @@ struct NoteChangeSheet: View {
         let lines = NoteDiff.lines(old: old, new: new)
         return LazyVStack(alignment: .leading, spacing: 4) {
             if lines.allSatisfy({ $0.kind == .same }) {
-                Text("Keine Änderung").foregroundStyle(.secondary)
+                Text("Keine Änderung").foregroundStyle(.secondaryText)
             }
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {

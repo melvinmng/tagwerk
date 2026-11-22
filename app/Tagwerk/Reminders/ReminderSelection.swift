@@ -29,13 +29,13 @@ struct ReminderSelectionRows: View {
                     Spacer()
                     if isSelected {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(model.isUsingDefault ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
+                            .foregroundStyle(model.isUsingDefault ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.tint))
                             .accessibilityHidden(true)
                     }
                 }
                 .contentShape(Rectangle())
             }
-            .foregroundStyle(model.isUsingDefault ? .secondary : .primary)
+            .foregroundStyle(model.isUsingDefault ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.primary))
             .accessibilityAddTraits(isSelected ? .isSelected : [])
             .accessibilityHint(model.isUsingDefault ? Text("Standard") : Text(verbatim: ""))
         }

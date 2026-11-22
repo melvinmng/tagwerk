@@ -144,7 +144,7 @@ struct ConversationSpikeSection: View {
                 Label(model.isRunning ? "Abbrechen" : "Sprechmodus-Probe starten",
                       systemImage: model.isRunning ? "stop.circle.fill" : "waveform.circle.fill")
             }
-            if let status = model.status { Text(status).font(.footnote).foregroundStyle(.secondary) }
+            if let status = model.status { Text(status).font(.footnote).foregroundStyle(.secondaryText) }
             if !model.route.isEmpty { LabeledContent("Route", value: model.route).font(.footnote) }
             ForEach(model.rounds) { round in
                 VStack(alignment: .leading, spacing: 2) {
@@ -155,7 +155,7 @@ struct ConversationSpikeSection: View {
                         Text(String(format: "Sprechen %.1f s · erster Text %@ · %@", round.speakingSeconds ?? 0,
                                     round.firstTextSeconds.map { String(format: "%.1f s", $0) } ?? "–", round.outcome))
                     }
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
                 }
             }
         } header: {
