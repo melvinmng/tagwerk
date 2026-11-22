@@ -159,6 +159,31 @@ struct HabitTextTests {
         for source in HabitSource.allCases where source != .manual { #expect(!HabitText.sourceNoun(source).isEmpty, "\(source)") }
     }
 
+    @Test func automaticHint_namesSource() {
+        #expect(HabitText.automaticHint(.water) == "Automatisch erfüllt durch das Wasserziel. Lässt sich nicht abwählen.")
+        #expect(HabitText.automaticHint(.eveningClosed) == "Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen.")
+        #expect(HabitText.automaticHint(.manual) == nil)
+        // Every automatic source has its own sentence, and each one says it cannot be unchecked.
+        let hints = HabitSource.allCases.filter { $0 != .manual }.compactMap(HabitText.automaticHint)
+        #expect(hints.count == HabitSource.allCases.count - 1 && Set(hints).count == hints.count)
+        #expect(hints.allSatisfy { $0.hasSuffix("Lässt sich nicht abwählen.") && $0.hasPrefix("Automatisch erfüllt durch ") })
+    }
+
+    @Test func symbolName_coversEverySymbol() {
+        for symbol in HabitText.symbols {
+            let name = HabitText.symbolName(symbol)
+            #expect(!name.isEmpty && name != symbol, "No name for \(symbol)")
+        }
+        let names = HabitText.symbols.map(HabitText.symbolName)
+        #expect(Set(names).count == names.count)
+        #expect(HabitText.symbolName("figure.walk") == "Gehen")
+        #expect(HabitText.symbolName("unknown.symbol") == "unknown.symbol")
+    }
+
+    @Test func footer_matchesDecision() {
+        #expect(HabitText.sourceFooter == "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.")
+    }
+
     @Test func sourceDetail_manualHabit_hasNone() {
         #expect(HabitText.sourceDetail(habit(start: day(11, 1)), on: today, facts: .empty, workout: nil) == nil)
     }

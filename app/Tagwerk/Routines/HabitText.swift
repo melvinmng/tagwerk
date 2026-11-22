@@ -182,4 +182,56 @@ enum HabitText {
         case .manualDoneSourcePending: String(localized: "von Hand abgehakt")
         }
     }
+
+    // MARK: Hint, footer and symbol names (GW3, GW2)
+
+    /// Shown for three seconds under the list when an automatically fulfilled row is tapped: "Automatisch erfüllt durch das
+    /// Wasserziel. Lässt sich nicht abwählen."; `nil` for habits by hand.
+    static func automaticHint(_ source: HabitSource) -> String? {
+        switch source {
+        case .manual: nil
+        case .water: String(localized: "Automatisch erfüllt durch das Wasserziel. Lässt sich nicht abwählen.")
+        case .workout: String(localized: "Automatisch erfüllt durch das Training. Lässt sich nicht abwählen.")
+        case .steps: String(localized: "Automatisch erfüllt durch das Schrittziel. Lässt sich nicht abwählen.")
+        case .movement: String(localized: "Automatisch erfüllt durch die Bewegung. Lässt sich nicht abwählen.")
+        case .daylight: String(localized: "Automatisch erfüllt durch das Tageslicht. Lässt sich nicht abwählen.")
+        case .eveningClosed: String(localized: "Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen.")
+        case .journal: String(localized: "Automatisch erfüllt durch das Tagebuch. Lässt sich nicht abwählen.")
+        case .bibleStudy: String(localized: "Automatisch erfüllt durch die Bible-Study-Sitzung. Lässt sich nicht abwählen.")
+        }
+    }
+
+    /// The footer under "Erfüllt durch" in the habit sheet.
+    static var sourceFooter: String {
+        String(localized: "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.")
+    }
+
+    /// The name VoiceOver reads for a symbol in the picker ("Gehen" for `figure.walk`); the symbol itself for an unknown one.
+    static func symbolName(_ symbol: String) -> String {
+        switch symbol {
+        case "checkmark.circle": String(localized: "Häkchen")
+        case "book": String(localized: "Buch")
+        case "figure.walk": String(localized: "Gehen")
+        case "figure.run": String(localized: "Laufen")
+        case "figure.strengthtraining.traditional": String(localized: "Krafttraining")
+        case "drop": String(localized: "Tropfen")
+        case "bed.double": String(localized: "Bett")
+        case "leaf": String(localized: "Blatt")
+        case "pencil": String(localized: "Stift")
+        case "brain.head.profile": String(localized: "Kopf mit Gehirn")
+        case "heart": String(localized: "Herz")
+        case "sun.max": String(localized: "Sonne")
+        case "fork.knife": String(localized: "Messer und Gabel")
+        case "music.note": String(localized: "Musiknote")
+        case "pills": String(localized: "Tabletten")
+        case "cup.and.saucer": String(localized: "Tasse")
+        case "moon.stars": String(localized: "Mond und Sterne")
+        case "sparkles": String(localized: "Funken")
+        case "book.closed": String(localized: "Geschlossenes Buch")
+        case "shower": String(localized: "Dusche")
+        case "graduationcap": String(localized: "Abschlusshut")
+        case "book.pages": String(localized: "Aufgeschlagenes Buch")
+        default: symbol
+        }
+    }
 }

@@ -10,6 +10,9 @@ struct HabitsSection: View {
     let onEdit: () -> Void
     @State private var sheet: Habit?
     @State private var creating = false
+    /// The hint of a tap on an automatically fulfilled row (GW3); gone after three seconds. `hintTaps` restarts the timer.
+    @State private var hint: String?
+    @State private var hintTaps = 0
 
     var body: some View {
         let rows = model.rows(for: day)
@@ -21,7 +24,20 @@ struct HabitsSection: View {
                 Text("An diesem Tag ist keine Gewohnheit aktiv.").foregroundStyle(.secondaryText)
             }
             ForEach(rows) { row in
-                HabitRow(row: row, model: model, capture: capture) { sheet = row.habit }
+                HabitRow(row: row, model: model, capture: capture, onOpen: { sheet = row.habit }, onBlockedTap: { text in
+                    hint = text
+                    hintTaps += 1
+                    AccessibilityNotification.Announcement(text).post()
+                })
+            }
+            if let hint {
+                Text(hint)
+                    .font(.footnote).foregroundStyle(.secondaryText)
+                    .accessibilityIdentifier("habits.automaticHint")
+                    .task(id: hintTaps) {
+                        try? await Task.sleep(for: .seconds(HabitsSection.hintSeconds))
+                        if !Task.isCancelled { self.hint = nil }
+                    }
             }
         } header: {
             // The sheets hang on this one view: on the section they would apply to every row.
@@ -35,6 +51,9 @@ struct HabitsSection: View {
         }
     }
 
+    /// How long the hint of a tap on an automatic row stays under the list.
+    static let hintSeconds = 3
+
     /// "3 von 5" for the shown day; nothing without a row.
     private func shownCounter(_ rows: [HabitsModel.Row]) -> HabitCounter? {
         rows.isEmpty ? nil : HabitCounter(done: rows.filter(\.isFulfilled).count, total: rows.count)
@@ -46,20 +65,22 @@ private struct HabitRow: View {
     let model: HabitsModel
     let capture: CaptureModel
     let onOpen: () -> Void
+    /// A tap on a row that its source fulfilled: it stays checked, and the section explains why.
+    let onBlockedTap: (String) -> Void
+    @State private var blockedTaps = 0
 
     var body: some View {
         let subtitle = HabitText.subtitle(row.habit, today: model.today, facts: model.facts, calendar: model.calendar)
         let line = stateLine
         HStack(spacing: 12) {
-            Button {
-                if !row.isAutomatic { Task { await model.toggle(row.id) } }
-            } label: {
+            Button(action: tapMark) {
                 HabitStateMark(state: row.state)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .sensoryFeedback(.selection, trigger: row.isFulfilled)
+            .sensoryFeedback(.warning, trigger: blockedTaps)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Image(systemName: row.habit.symbol).foregroundStyle(.secondaryText)
@@ -79,8 +100,16 @@ private struct HabitRow: View {
         .accessibilityValue(accessibilityValue(subtitle: subtitle, line: line))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: Text("Gewohnheit öffnen"), onOpen)
-        .accessibilityAction {
-            if !row.isAutomatic { Task { await model.toggle(row.id) } }
+        .accessibilityAction { tapMark() }
+    }
+
+    /// A habit by hand or an open source is checked or unchecked; an automatically fulfilled row only explains itself.
+    private func tapMark() {
+        if row.isAutomatic {
+            blockedTaps += 1
+            if let hint = HabitText.automaticHint(row.habit.source) { onBlockedTap(hint) }
+        } else {
+            Task { await model.toggle(row.id) }
         }
     }
 

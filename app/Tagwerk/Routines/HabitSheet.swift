@@ -38,7 +38,7 @@ struct HabitSheet: View {
                                     .background(symbol == candidate ? Color.accentColor.opacity(0.2) : Color.clear, in: .rect(cornerRadius: 10))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel(candidate)
+                            .accessibilityLabel(HabitText.symbolName(candidate))
                             .accessibilityAddTraits(symbol == candidate ? .isSelected : [])
                         }
                     }
@@ -64,7 +64,7 @@ struct HabitSheet: View {
                 } header: {
                     Text("Erfüllt durch")
                 } footer: {
-                    Text("Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.")
+                    Text(HabitText.sourceFooter)
                 }
                 Section {
                     ValueStepper("Tage pro Woche", value: $daysPerWeek, in: 1...7) { "\($0)" }
