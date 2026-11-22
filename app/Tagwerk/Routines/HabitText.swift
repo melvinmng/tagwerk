@@ -115,4 +115,71 @@ enum HabitText {
     static func sourceSubtitle(_ source: HabitSource) -> String? {
         source == .movement ? String(localized: "Training erfasst oder Schrittziel erreicht") : nil
     }
+
+    // MARK: States of a row (GW2a, GW3b)
+
+    /// Share of the goal for water and steps (0…1, never more); `nil` for sources without a measure: a workout, a closed evening, a
+    /// journal entry, a Bible Study session, daylight, and "Bewegung" without a step goal.
+    static func sourceProgress(_ habit: Habit, on day: PlanDay, facts: HabitFacts) -> Double? {
+        switch habit.source {
+        case .water:
+            return share(facts.waterMilliliters[day] ?? 0, of: facts.goalWaterMilliliters)
+        case .steps, .movement:
+            return share(facts.steps[day] ?? 0, of: facts.goalSteps)
+        case .manual, .workout, .daylight, .eveningClosed, .journal, .bibleStudy:
+            return nil
+        }
+    }
+
+    private static func share(_ value: Int, of goal: Int) -> Double? {
+        goal > 0 ? min(1, max(0, Double(value) / Double(goal))) : nil
+    }
+
+    /// The line under the subtitle of a row, by state:
+    /// (2) "Automatisch erfüllt · 2,1 l von 2,0 l", (3) "5.600 von 8.000 Schritten · hakt sich selbst ab",
+    /// (4) "Von Hand abgehakt · Tagebuch noch offen"; `nil` for habits by hand. A source without a measure says
+    /// "Tagebuch noch offen · hakt sich selbst ab" in (3).
+    static func stateLine(_ row: HabitsModel.Row, on day: PlanDay, facts: HabitFacts, workout: WorkoutValue?,
+                          locale: Locale = .current) -> String? {
+        let habit = row.habit
+        switch row.state {
+        case .manualOpen, .manualDone:
+            return nil
+        case .automaticDone:
+            let head = String(localized: "Automatisch erfüllt")
+            return sourceDetail(habit, on: day, facts: facts, workout: workout, locale: locale).map { "\(head) · \($0)" } ?? head
+        case .automaticPending(let progress):
+            let measure = progress == nil ? nil : sourceDetail(habit, on: day, facts: facts, workout: nil, locale: locale)
+            let first = measure ?? String(localized: "\(sourceNoun(habit.source)) noch offen")
+            return "\(first) · " + String(localized: "hakt sich selbst ab")
+        case .manualDoneSourcePending:
+            return String(localized: "Von Hand abgehakt") + " · " + String(localized: "\(sourceNoun(habit.source)) noch offen")
+        }
+    }
+
+    /// The source as a short noun, for "Tagebuch noch offen".
+    static func sourceNoun(_ source: HabitSource) -> String {
+        switch source {
+        case .manual: ""
+        case .water: String(localized: "Wasserziel")
+        case .workout: String(localized: "Training")
+        case .steps: String(localized: "Schrittziel")
+        case .movement: String(localized: "Bewegung")
+        case .daylight: String(localized: "Tageslicht")
+        case .eveningClosed: String(localized: "Tagesabschluss")
+        case .journal: String(localized: "Tagebuch")
+        case .bibleStudy: String(localized: "Bible Study")
+        }
+    }
+
+    /// What VoiceOver says for the state of a row, in words instead of the bolt.
+    static func accessibilityState(_ state: HabitsModel.Row.State) -> String {
+        switch state {
+        case .manualOpen: String(localized: "offen")
+        case .manualDone: String(localized: "erledigt")
+        case .automaticDone: String(localized: "automatisch erfüllt")
+        case .automaticPending: String(localized: "offen, hakt sich selbst ab")
+        case .manualDoneSourcePending: String(localized: "von Hand abgehakt")
+        }
+    }
 }

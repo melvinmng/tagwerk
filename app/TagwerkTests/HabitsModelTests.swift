@@ -102,6 +102,44 @@ struct HabitsModelTests {
         #expect(habitStore.habits().first { $0.id == late.id }?.source == .workout)
     }
 
+    @Test func row_states_coverAllFour() async throws {
+        let manual = addHabit(.manual, name: "Lesen")
+        let water = addHabit(.water, name: "Wasser")
+        let steps = addHabit(.steps, name: "Schritte")
+        let journal = addHabit(.journal, name: "Tagebuch")
+        intake.addDrink(DrinkValue(id: UUID(), date: testNow().addingTimeInterval(-3600), milliliters: 2100))
+        health.steps = [DailySteps(start: day(11, 18).startDate(in: calendar), count: 5600)]
+        let model = makeModel()
+        await model.reload()
+        func state(_ habit: Habit) throws -> HabitsModel.Row.State { try #require(model.rows.first { $0.id == habit.id }).state }
+        // (1) by hand, open  (2) fulfilled by the source  (3) the source is open and ticks by itself, with and without a measure
+        #expect(try state(manual) == .manualOpen)
+        #expect(try state(water) == .automaticDone)
+        #expect(try state(steps) == .automaticPending(progress: 0.7))
+        #expect(try state(journal) == .automaticPending(progress: nil))
+        // (4) ticked by hand while the source is still open; the check can be removed again.
+        await model.toggle(steps.id)
+        #expect(try state(steps) == .manualDoneSourcePending)
+        #expect(try #require(model.rows.first { $0.id == steps.id }).isFulfilled)
+        await model.toggle(steps.id)
+        #expect(try state(steps) == .automaticPending(progress: 0.7))
+        await model.toggle(manual.id)
+        #expect(try state(manual) == .manualDone)
+        // Fulfilled by the source wins over a check by hand, and the check of an automatic row is not removed by a tap.
+        await model.toggle(water.id)
+        #expect(try state(water) == .automaticDone)
+        #expect(model.todayCounter == HabitCounter(done: 2, total: 4))
+    }
+
+    @Test func row_state_ofANeighbourDay_followsThatDay() async throws {
+        let water = addHabit(.water, name: "Wasser")
+        intake.addDrink(DrinkValue(id: UUID(), date: testNow().addingTimeInterval(-3600), milliliters: 2100))
+        let model = makeModel()
+        await model.reload()
+        #expect(model.rows(for: day(11, 18)).first?.state == .automaticDone)
+        #expect(model.rows(for: day(11, 17)).first { $0.id == water.id }?.state == .automaticPending(progress: 0))
+    }
+
     @Test func workoutHabit_countsOwnAndHealthWorkoutsFromTenMinutes() async throws {
         addHabit(.workout)
         let morning = testNow().addingTimeInterval(-3600)

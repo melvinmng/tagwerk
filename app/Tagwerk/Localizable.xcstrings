@@ -532,6 +532,16 @@
         }
       }
     },
+    "%@ noch offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ still open"
+          }
+        }
+      }
+    },
     "%@ noch offen in %@": {
       "localizations": {
         "de": {
@@ -5736,6 +5746,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Maps calculates the travel time automatically. “None” and a fixed duration apply only in Tagwerk, also without a network, and take precedence."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically"
           }
         }
       }
@@ -18621,6 +18641,16 @@
         }
       }
     },
+    "Schrittziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step goal"
+          }
+        }
+      }
+    },
     "Schrittziel erreicht": {
       "localizations": {
         "en": {
@@ -20055,6 +20085,16 @@
         }
       }
     },
+    "Tageslicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daylight"
+          }
+        }
+      }
+    },
     "Tagesroutine": {
       "localizations": {
         "en": {
@@ -21325,6 +21365,16 @@
         }
       }
     },
+    "Von Hand abgehakt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked by hand"
+          }
+        }
+      }
+    },
     "Von Hand abhaken": {
       "localizations": {
         "en": {
@@ -22020,6 +22070,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Water: %@"
+          }
+        }
+      }
+    },
+    "Wasserziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water goal"
           }
         }
       }
@@ -23917,11 +23977,22 @@
       }
     },
     "automatisch": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "automatic"
+          }
+        }
+      }
+    },
+    "automatisch erfüllt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fulfilled automatically"
           }
         }
       }
@@ -24286,6 +24357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "h"
+          }
+        }
+      }
+    },
+    "hakt sich selbst ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checks itself"
           }
         }
       }
@@ -24863,6 +24944,16 @@
         }
       }
     },
+    "offen, hakt sich selbst ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open, checks itself"
+          }
+        }
+      }
+    },
     "ohne Erinnerung": {
       "extractionState": "stale",
       "localizations": {
@@ -25163,6 +25254,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "adjusted by ChatGPT"
+          }
+        }
+      }
+    },
+    "von Hand abgehakt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checked by hand"
           }
         }
       }
