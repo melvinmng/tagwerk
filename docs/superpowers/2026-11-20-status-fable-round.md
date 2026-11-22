@@ -95,7 +95,7 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/g1-travel-time`, `feat/g1-focus-in-plan` | G1 Strang V (V1–V5) und F8 | **gemergt (#263, #264, `main` = `099f2e8`)**; PL10b gebaut (Kapsel 9,6/10,2:1) |
 | `fix/day-capacity` | #260 Kapazität | **gemergt (#268, `main` = `bafd1c3`)**, voll grün; Beispieltag „8 h frei von 8 h“; offen: `TimeGrid.freeGaps` (Raster) kennt Fahrzeit/KA1c nicht; `RecurringEffortStore.reservedMinutes` tot |
 | `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | **gemergt (#271, `main` = `04b50fb`)**; PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
-| `feat/ai-proposal-editing-previews` | #255 Stränge C–E | läuft (Sonnet) |
+| `feat/ai-proposal-previews` | #255 Stränge C–E | PR #273; fertig, Head `e7098a2`, voll grün (46 UI-Tests); **Konflikt mit main nach #261** → nächster freier Platz: main einarbeiten (nur schnelle Tests), Gate GitHub |
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | läuft (Sonnet) |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
 
