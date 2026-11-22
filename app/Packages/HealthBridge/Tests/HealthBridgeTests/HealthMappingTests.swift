@@ -234,3 +234,59 @@ struct DailyActiveEnergyMappingTests {
         #expect(HealthMapping.dailyActiveEnergy([(Date(timeIntervalSince1970: 0), -3)]).first?.kilocalories == 0)
     }
 }
+
+struct WeightMappingTests {
+    let id = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+
+    @Test func syncIdentifier_weight() {
+        #expect(HealthMapping.syncIdentifier(.weight, id: id, part: "mass") == "tagwerk.weight.11111111-2222-3333-4444-555555555555.mass")
+        #expect(HealthMapping.syncIdentifier(.weight, id: id, part: "bodyFat").hasSuffix(".bodyFat"))
+    }
+
+    @Test func save_weight_deniedReturnsFalse() {
+        let weight = HealthWeight(id: id, date: .now, version: 1, kilograms: 81.4, bodyFatPercent: 22)
+        let denied = HealthMapping.weightWrite(for: weight, mayWrite: { _ in false })
+        #expect(!denied.isComplete)
+        #expect(denied.writes.isEmpty && denied.removals.isEmpty)
+        // Only the body fat is denied: the weight is written and the entry counts as mirrored.
+        let partial = HealthMapping.weightWrite(for: weight, mayWrite: { $0 == .mass })
+        #expect(partial.isComplete)
+        #expect(partial.writes.map(\.part) == [.mass] && partial.writes.first?.value == 81.4)
+    }
+
+    @Test func weightWrite_bodyFatIsAFraction_andAnEditWithoutItRemovesTheOldSample() {
+        let both = HealthMapping.weightWrite(for: HealthWeight(id: id, date: .now, version: 1, kilograms: 80, bodyFatPercent: 25),
+                                             mayWrite: { _ in true })
+        #expect(both.writes.map(\.part) == [.mass, .bodyFat])
+        #expect(both.writes.last?.value == 0.25)
+        #expect(both.removals.isEmpty)
+        let massOnly = HealthMapping.weightWrite(for: HealthWeight(id: id, date: .now, version: 2, kilograms: 80, bodyFatPercent: nil),
+                                                 mayWrite: { _ in true })
+        #expect(massOnly.writes.map(\.part) == [.mass])
+        #expect(massOnly.removals == [.bodyFat])
+    }
+
+    @Test func weightUnits() {
+        #expect(HealthMapping.WeightPart.mass.unit == .gramUnit(with: .kilo))
+        #expect(HealthMapping.WeightPart.bodyFat.unit == .percent())
+    }
+
+    @Test func deleteEntry_weight_onlyBodyTypes() {
+        #expect(HealthMapping.extraDeleteIdentifiers(for: .weight) == [.bodyMass, .bodyFatPercentage])
+        #expect(HealthEntryKind.weight.shareKinds.isEmpty, "a weight never touches the core group")
+    }
+
+    @Test func foreignWeights_filtersOwn() {
+        let day = Date(timeIntervalSince1970: 1_800_000_000)
+        func sample(_ offset: Double, _ kg: Double, bundle: String, marker: Bool = false) -> HealthMapping.WeightSample {
+            HealthMapping.WeightSample(id: UUID(), date: day.addingTimeInterval(offset), kilograms: kg,
+                                       metadata: marker ? [HealthMapping.markerKey: 1] : nil, sourceBundleID: bundle, sourceName: bundle)
+        }
+        let result = HealthMapping.foreignWeights([sample(3, 81.0, bundle: "com.withings"), sample(1, 82.0, bundle: "local.tagwerk.app"),
+                                                   sample(2, 80.5, bundle: "com.apple.health", marker: true),
+                                                   sample(0, 79.9, bundle: "com.apple.health")],
+                                                  ownBundleID: "local.tagwerk.app")
+        #expect(result.map(\.kilograms) == [79.9, 81.0], "own samples (by source and by marker) are dropped, the rest is oldest first")
+        #expect(result.map(\.sourceName) == ["com.apple.health", "com.withings"])
+    }
+}

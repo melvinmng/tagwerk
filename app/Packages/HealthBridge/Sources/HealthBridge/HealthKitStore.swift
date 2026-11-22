@@ -150,6 +150,25 @@ public final class HealthKitStore: HealthStoring, Sendable {
         return true
     }
 
+    public func save(_ weight: HealthWeight) async throws -> Bool {
+        let outcome = HealthMapping.weightWrite(for: weight, mayWrite: { mayWrite(type: HKQuantityType($0.identifier)) })
+        for part in outcome.removals {
+            let identifier = HealthMapping.syncIdentifier(.weight, id: weight.id, part: part.rawValue)
+            try await delete(type: HKQuantityType(part.identifier), key: HKMetadataKeySyncIdentifier, value: identifier)
+        }
+        guard outcome.isComplete else { return false }
+        let samples: [HKObject] = outcome.writes.map { part, value in
+            let identifier = HealthMapping.syncIdentifier(.weight, id: weight.id, part: part.rawValue)
+            let metadata = HealthMapping.metadata(syncIdentifier: identifier, entryID: weight.id, version: weight.version,
+                                                  estimated: false, userEntered: true)
+            return HKQuantitySample(type: HKQuantityType(part.identifier),
+                                    quantity: HKQuantity(unit: part.unit, doubleValue: value),
+                                    start: weight.date, end: weight.date, metadata: metadata)
+        }
+        if !samples.isEmpty { try await store.save(samples) }
+        return true
+    }
+
     /// Workouts cannot be replaced by sync version reliably, so the old one (and its energy sample) is removed first.
     public func save(_ workout: HealthWorkout) async throws -> Bool {
         guard mayWrite(.workouts) else { return false }
@@ -228,6 +247,27 @@ public final class HealthKitStore: HealthStoring, Sendable {
 }
 
 extension HealthKitStore {
+    public func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] {
+        guard Self.isAvailable else { return [] }
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: HKQuantityType(.bodyMass),
+                                         predicate: HKQuery.predicateForSamples(withStart: interval.start, end: interval.end))],
+            sortDescriptors: [SortDescriptor(\.startDate)])
+        let samples: [HKQuantitySample]
+        do {
+            samples = try await descriptor.result(for: store)
+        } catch let error as HKError where error.code == .errorNoData || error.code == .errorAuthorizationNotDetermined {
+            return []
+        }
+        let raw = samples.map { sample in
+            HealthMapping.WeightSample(id: sample.uuid, date: sample.startDate,
+                                       kilograms: sample.quantity.doubleValue(for: .gramUnit(with: .kilo)),
+                                       metadata: sample.metadata, sourceBundleID: sample.sourceRevision.source.bundleIdentifier,
+                                       sourceName: sample.sourceRevision.source.name)
+        }
+        return HealthMapping.foreignWeights(raw, ownBundleID: ownBundleID)
+    }
+
     /// Day sums of a quantity type from a statistics collection: Health merges overlapping sources (iPhone, Apple Watch) by its
     /// source order, so Tagwerk never adds up single samples. A denied read gives no statistics, like a day without data.
     private func dailySums(of identifier: HKQuantityTypeIdentifier, unit: HKUnit, in interval: DateInterval,

@@ -10,6 +10,8 @@ public protocol HealthStoring: Sendable {
     func requestAuthorization() async throws
     func save(_ meal: HealthMeal) async throws -> Bool
     func save(_ drink: HealthDrink) async throws -> Bool
+    /// Writes the weight (and the body fat percentage, when given) of the group `body`; `false` when the weight may not be written.
+    func save(_ weight: HealthWeight) async throws -> Bool
     func save(_ workout: HealthWorkout) async throws -> Bool
     /// Removes every sample of the entry, in the types of its kind. Types Tagwerk may not write count as done,
     /// because nothing of the entry can be stored there.
@@ -21,6 +23,10 @@ public protocol HealthStoring: Sendable {
     func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess
     /// Shows the system sheet for `group` only. Call only after a user tap.
     func requestAuthorization(for group: HealthAccessGroup) async throws
+
+    /// Weights of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed, which iOS
+    /// does not tell apart from "no measurement".
+    func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight]
 
     /// Day sums of the active energy for the days of `interval`, by `calendar`; days without statistics are missing.
     /// Health merges overlapping sources itself, so Tagwerk never adds single samples and never removes own workouts.

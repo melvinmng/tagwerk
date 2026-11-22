@@ -12,6 +12,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _deleted: [UUID] = []
     private var _foreign: [ForeignWorkout] = []
     private var _steps: [DailySteps] = []
+    private var _weights: [HealthWeight] = []
+    private var _foreignWeights: [ForeignWeight] = []
     private var _activeEnergy: [DailyActiveEnergy] = []
     private var _activeEnergyReads: [DateInterval] = []
     private var _groupAccess: [HealthAccessGroup: HealthGroupAccess] = [:]
@@ -44,6 +46,11 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     var drinks: [HealthDrink] { lock.withLock { _drinks } }
     var workouts: [HealthWorkout] { lock.withLock { _workouts } }
     var deleted: [UUID] { lock.withLock { _deleted } }
+    var weights: [HealthWeight] { lock.withLock { _weights } }
+    var foreignWeights: [ForeignWeight] {
+        get { lock.withLock { _foreignWeights } }
+        set { lock.withLock { _foreignWeights = newValue } }
+    }
     var authorizationRequests: Int { lock.withLock { _authorizationRequests } }
     var stepsAuthorizationRequests: Int { lock.withLock { _stepsAuthorizationRequests } }
     var foreignReads: [DateInterval] { lock.withLock { _foreignReads } }
@@ -78,6 +85,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     func save(_ meal: HealthMeal) async throws -> Bool { try await write { _meals.append(meal) } }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
+    func save(_ weight: HealthWeight) async throws -> Bool { try await write { _weights.append(weight) } }
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { try await write { _deleted.append(id) } }
 
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout] {
@@ -88,6 +96,13 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func stepsAccess() async -> StepsAccess { currentStepsAccess }
+
+    func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] {
+        lock.withLock {
+            guard (_groupAccess[.body] ?? .notAsked) == .asked else { return [] }
+            return _foreignWeights.filter { $0.date >= interval.start && $0.date < interval.end }
+        }
+    }
 
     var activeEnergy: [DailyActiveEnergy] {
         get { lock.withLock { _activeEnergy } }

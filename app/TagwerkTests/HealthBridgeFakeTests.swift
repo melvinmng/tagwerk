@@ -14,4 +14,12 @@ struct HealthBridgeFakeTests {
         try await health.requestAuthorization(for: .activeEnergy)
         #expect(try await health.dailyActiveEnergy(in: interval, calendar: .current).map(\.kilocalories) == [520])
     }
+
+    @Test func foreignWeights_emptyUntilTheBodyGroupWasAsked() async throws {
+        let health = FakeHealthStore()
+        health.foreignWeights = [ForeignWeight(id: UUID(), date: day, kilograms: 80.2, sourceName: "Waage")]
+        #expect(try await health.foreignWeights(in: interval).isEmpty)
+        try await health.requestAuthorization(for: .body)
+        #expect(try await health.foreignWeights(in: interval).map(\.sourceName) == ["Waage"])
+    }
 }

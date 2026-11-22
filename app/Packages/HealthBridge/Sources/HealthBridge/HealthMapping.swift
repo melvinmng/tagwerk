@@ -109,8 +109,51 @@ public enum HealthMapping {
     static func extraDeleteIdentifiers(for kind: HealthEntryKind) -> [HKQuantityTypeIdentifier] {
         switch kind {
         case .meal: Nutrient.allCases.filter { !$0.isCore }.map(\.identifier)
+        case .weight: WeightPart.allCases.map(\.identifier)
         case .drink, .workout: []
         }
+    }
+
+    /// The samples of a weight entry; each has its own sync identifier part.
+    enum WeightPart: String, CaseIterable, Sendable {
+        case mass, bodyFat
+
+        var identifier: HKQuantityTypeIdentifier { self == .mass ? .bodyMass : .bodyFatPercentage }
+        var unit: HKUnit { self == .mass ? .gramUnit(with: .kilo) : .percent() }
+    }
+
+    /// What a save of a weight writes or removes with the permissions at hand. `isComplete` is `false` only when the weight itself
+    /// may not be written (the entry stays marked for a retry); a denied body fat sample is skipped. Body fat is stored as a
+    /// fraction (25 % is 0.25); without a body fat value an older sample of the entry is removed.
+    static func weightWrite(for weight: HealthWeight, mayWrite: (WeightPart) -> Bool)
+        -> (writes: [(part: WeightPart, value: Double)], removals: [WeightPart], isComplete: Bool) {
+        var writes: [(part: WeightPart, value: Double)] = []
+        var removals: [WeightPart] = []
+        if mayWrite(.mass) { writes.append((.mass, weight.kilograms)) }
+        if let fat = weight.bodyFatPercent, fat > 0 {
+            if mayWrite(.bodyFat) { writes.append((.bodyFat, fat / 100)) }
+        } else if mayWrite(.bodyFat) {
+            removals.append(.bodyFat)
+        }
+        return (writes, removals, mayWrite(.mass))
+    }
+
+    /// A weight sample as read from Health, before the own ones are filtered out.
+    struct WeightSample {
+        var id: UUID
+        var date: Date
+        var kilograms: Double
+        var metadata: [String: Any]?
+        var sourceBundleID: String
+        var sourceName: String
+    }
+
+    /// The weights of other sources, oldest first; own samples (by source or marker) are dropped.
+    static func foreignWeights(_ samples: [WeightSample], ownBundleID: String?) -> [ForeignWeight] {
+        samples
+            .filter { !isOwn(metadata: $0.metadata, sourceBundleID: $0.sourceBundleID, ownBundleID: ownBundleID) }
+            .sorted { $0.date < $1.date }
+            .map { ForeignWeight(id: $0.id, date: $0.date, kilograms: $0.kilograms, sourceName: $0.sourceName) }
     }
 
     static func activityType(_ activity: WorkoutActivity) -> HKWorkoutActivityType {

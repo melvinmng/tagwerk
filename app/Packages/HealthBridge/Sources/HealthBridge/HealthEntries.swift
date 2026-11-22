@@ -3,14 +3,16 @@ import TagwerkCore
 
 /// Kind of a Tagwerk entry mirrored to Health; part of every sync identifier.
 public enum HealthEntryKind: String, Sendable {
-    case meal, drink, workout
+    case meal, drink, workout, weight
 
-    /// The Health types an entry of this kind can have samples in.
+    /// The core Health types (`HealthShareKind`) an entry of this kind can have samples in. Types of the other groups (further
+    /// nutrients, body) are not listed here; `HealthMapping.extraDeleteIdentifiers(for:)` names them.
     public var shareKinds: [HealthShareKind] {
         switch self {
         case .meal: [.energy, .protein, .carbs, .fat]
         case .drink: [.water]
         case .workout: [.workouts, .activeEnergy]
+        case .weight: []
         }
     }
 }
@@ -78,6 +80,40 @@ public struct HealthWorkout: Sendable, Hashable {
         self.start = start
         self.end = end
         self.kilocalories = kilocalories
+    }
+}
+
+/// A body weight as written to Health: numbers only.
+public struct HealthWeight: Sendable, Hashable {
+    public var id: UUID
+    public var date: Date
+    /// Increases with every edit; Health replaces a sample only for a higher version.
+    public var version: Int
+    public var kilograms: Double
+    /// Body fat in percent of the body mass (25 means 25 %); `nil` when not measured or switched off.
+    public var bodyFatPercent: Double?
+
+    public init(id: UUID, date: Date, version: Int, kilograms: Double, bodyFatPercent: Double? = nil) {
+        self.id = id
+        self.date = date
+        self.version = version
+        self.kilograms = kilograms
+        self.bodyFatPercent = bodyFatPercent
+    }
+}
+
+/// A body weight another app (a smart scale, the Health app) wrote to Health.
+public struct ForeignWeight: Sendable, Hashable, Identifiable {
+    public var id: UUID
+    public var date: Date
+    public var kilograms: Double
+    public var sourceName: String
+
+    public init(id: UUID, date: Date, kilograms: Double, sourceName: String) {
+        self.id = id
+        self.date = date
+        self.kilograms = kilograms
+        self.sourceName = sourceName
     }
 }
 
