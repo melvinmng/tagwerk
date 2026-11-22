@@ -2,11 +2,11 @@ import Foundation
 import Testing
 @testable import AIKit
 
+/// Every server here listens on a port the system picks (port 0), so tests never share or guess a port.
+/// The tests that rebind a port wait for the server's actual close, not for a clock.
 struct LoopbackServerTests {
     @Test func start_waitsForReady() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
+        let (server, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         #expect(server.isReady)
         // Ready means a client can connect right away.
         let response = try await RawHTTPClient.get("/auth/callback?code=c&state=s1", port: port)
@@ -15,9 +15,7 @@ struct LoopbackServerTests {
     }
 
     @Test func server_callback_redirectsToAppSchemeAndDeliversURL() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
+        let (server, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         let response = try await RawHTTPClient.get("/auth/callback?code=c1&state=s1&client_id=oaiapp_1", port: port)
         #expect(response.contains("Location: tagwerk://auth/done"))
         let url = try await server.waitForCallback(timeout: 2)
@@ -26,9 +24,7 @@ struct LoopbackServerTests {
     }
 
     @Test func server_wrongState_ignored_thenCorrectAccepted() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
+        let (server, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         let rejected = try await RawHTTPClient.get("/auth/callback?code=evil&state=wrong", port: port)
         #expect(rejected.hasPrefix("HTTP/1.1 400"))
         let unknownPath = try await RawHTTPClient.get("/favicon.ico", port: port)
@@ -40,9 +36,7 @@ struct LoopbackServerTests {
     }
 
     @Test func server_requestInTwoChunks() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
+        let (server, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         let response = try await RawHTTPClient.send(
             ["GET /auth/callback?code=c1&state=s1 HTTP/1.1\r\nHo", "st: 127.0.0.1\r\n\r\n"], port: port
         )
@@ -53,40 +47,51 @@ struct LoopbackServerTests {
     }
 
     @Test func server_portInUse_reportsError() async throws {
-        let port = TestPorts.make()
-        let first = LoopbackServer(port: port, expectedState: "s1")
-        try await first.start()
+        let (first, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         let second = LoopbackServer(port: port, expectedState: "s2")
         await #expect(throws: ChatGPTAuthError.portInUse) { try await second.start() }
         await first.stop()
     }
 
+    @Test func stop_freesPort() async throws {
+        let (first, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
+        await first.stop()
+        #expect(first.stopWasClean == true)
+        let second = LoopbackServer(port: port, expectedState: "s2")
+        try await second.start()
+        await second.stop()
+    }
+
     @Test func stop_freesPort_evenRightAfterServingARequest() async throws {
-        let port = TestPorts.make()
-        let first = LoopbackServer(port: port, expectedState: "s1")
-        try await first.start()
+        let (first, port) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         _ = try await RawHTTPClient.get("/auth/callback?code=c&state=s1", port: port)
         _ = try await first.waitForCallback(timeout: 2)
         await first.stop()
+        #expect(first.stopWasClean == true)
         let second = LoopbackServer(port: port, expectedState: "s2")
         try await second.start()
         await second.stop()
     }
 
     @Test func stop_failsPendingWait() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
-        let wait = Task { try await server.waitForCallback(timeout: 10) }
-        try await Task.sleep(for: .milliseconds(50))
+        let (server, _) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
+        let registered = Gate()
+        server.onWaiterRegistered = { registered.open() }
+        // The timeout is far beyond any test run, so only `stop()` can end the wait.
+        let wait = Task { try await server.waitForCallback(timeout: 3600) }
+        await registered.wait()
         await server.stop()
         await #expect(throws: ChatGPTAuthError.cancelled) { try await wait.value }
     }
 
+    @Test func waitAfterStop_failsImmediately() async throws {
+        let (server, _) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
+        await server.stop()
+        await #expect(throws: ChatGPTAuthError.cancelled) { try await server.waitForCallback(timeout: 3600) }
+    }
+
     @Test func waitForCallback_timesOut() async throws {
-        let port = TestPorts.make()
-        let server = LoopbackServer(port: port, expectedState: "s1")
-        try await server.start()
+        let (server, _) = try await LoopbackServer.startOnFreePort(expectedState: "s1")
         await #expect(throws: ChatGPTAuthError.timedOut) { try await server.waitForCallback(timeout: 0.1) }
         await server.stop()
     }
