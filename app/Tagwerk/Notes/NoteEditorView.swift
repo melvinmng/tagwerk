@@ -178,14 +178,13 @@ struct NoteEditorView: View {
         }
     }
 
-    /// The gratitude of a morning entry stays in the routine record; the editor only shows it above the text.
+    /// The gratitude of a morning entry stays in the routine record; the editor only shows it as a card above the text.
     @ViewBuilder private var gratitudeHeader: some View {
-        let line = NotesListView.gratitudeLine(gratitude(of: store.note(id: noteID)))
-        if !line.isEmpty {
-            Text(line)
-                .font(.subheadline).foregroundStyle(.secondaryText)
-                .padding(.horizontal, 17).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        let note = store.note(id: noteID)
+        let entries = gratitude(of: note)
+        if !entries.isEmpty, let day = note?.dayKey.flatMap(NoteDayKey.day) {
+            GratitudeCard(entries: entries) { environment.routines.openStart(day) }
+                .padding(.horizontal, 16).padding(.vertical, 8)
         }
     }
 

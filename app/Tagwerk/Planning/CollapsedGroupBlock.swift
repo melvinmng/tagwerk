@@ -50,8 +50,7 @@ struct CollapsedGroupBlock: View {
                     Text(title).font(.caption).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if shownTitles.hidden > 0 {
-                    Text("+\(shownTitles.hidden) weitere").font(.caption).foregroundStyle(.gridTimeText).lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    CollapsedGroupMoreLabel(hidden: shownTitles.hidden)
                 }
             }
             .padding(Self.padding)
@@ -82,6 +81,18 @@ struct CollapsedGroupBlock: View {
         guard slots >= 2 else { return ([], titles.count) }
         let shown = slots - 1
         return (Array(titles.prefix(shown)), titles.count - shown)
+    }
+}
+
+/// The last line of a block that cannot show all titles ("+2 weitere"). It uses the primary colour like the titles: the translucent
+/// tone `gridTimeText` (60 % in dark mode) measured about 5.7:1 on the block's fill and was reported by the accessibility audit
+/// in the AX5 run in dark mode (the entries behind the translucent fill change the background).
+struct CollapsedGroupMoreLabel: View {
+    let hidden: Int
+
+    var body: some View {
+        Text("+\(hidden) weitere").font(.caption).foregroundStyle(.primary).lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
