@@ -2299,7 +2299,18 @@
         }
       }
     },
+    "%lld erledigte Artikel entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %lld completed items?"
+          }
+        }
+      }
+    },
     "%lld erledigte Artikel löschen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3241,6 +3252,16 @@
         }
       }
     },
+    "**Nur auf dein Tippen:** Ohne dein Tippen auf „Zutaten auf die Einkaufsliste“, „Nur als Rezept speichern“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** without your tap on “Add ingredients to the shopping list”, “Save as recipe only”, “Get recipe” or “Translate”, nothing leaves the iPhone. A link is loaded only then, too."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Mit ChatGPT zusammenfassen“ verlässt nichts das iPhone. Die Vorschläge übernimmst du erst, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -3304,6 +3325,7 @@
       }
     },
     "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4291,6 +4313,7 @@
       }
     },
     "Alle erledigten löschen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5956,6 +5979,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hold during an iOS Focus"
+          }
+        }
+      }
+    },
+    "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Either one can also create a note in the “Recipes” folder, if you like."
           }
         }
       }
@@ -8781,6 +8814,7 @@
       }
     },
     "Du wählst die Zutaten aus und kannst das Rezept zusätzlich als Notiz im Ordner „Rezepte“ sichern.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9798,12 +9832,21 @@
       }
     },
     "Erledigte entfernen": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove Completed"
+          }
+        }
+      }
+    },
+    "Erledigte entfernen (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove completed (%lld)"
           }
         }
       }
@@ -14206,6 +14249,26 @@
         }
       }
     },
+    "Liste leeren (%lld) …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear list (%lld) …"
+          }
+        }
+      }
+    },
+    "Liste leeren …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear list …"
+          }
+        }
+      }
+    },
     "Liste verschwunden": {
       "localizations": {
         "en": {
@@ -14703,6 +14766,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amount %@"
+          }
+        }
+      }
+    },
+    "Menge von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount of %@"
+          }
+        }
+      }
+    },
+    "Menge ändern, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change amount, %@"
           }
         }
       }
@@ -15481,6 +15564,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimate again"
+          }
+        }
+      }
+    },
+    "Neu · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New · %lld"
           }
         }
       }
@@ -17230,6 +17323,16 @@
         }
       }
     },
+    "Portionen · %lld im Rezept": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings · %lld in the recipe"
+          }
+        }
+      }
+    },
     "Posten": {
       "localizations": {
         "en": {
@@ -17441,6 +17544,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Source already used: you tick it by hand."
+          }
+        }
+      }
+    },
+    "Quelle: Fotos (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: photos (%lld)"
+          }
+        }
+      }
+    },
+    "Quelle: Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: link"
+          }
+        }
+      }
+    },
+    "Quelle: Link, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: link, %@"
+          }
+        }
+      }
+    },
+    "Quelle: Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: note"
+          }
+        }
+      }
+    },
+    "Quelle: Notiz „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: note “%@”"
+          }
+        }
+      }
+    },
+    "Quelle: geteilter Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: shared text"
           }
         }
       }
@@ -17921,6 +18084,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Schon auf der Liste · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on the list · %lld"
           }
         }
       }
@@ -19462,6 +19635,16 @@
         }
       }
     },
+    "Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk loads the page only when you tap one of the buttons, and sends only the text it read, not the address."
+          }
+        }
+      }
+    },
     "Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
       "localizations": {
         "en": {
@@ -19473,6 +19656,7 @@
       }
     },
     "Tagwerk lädt die Seite erst, wenn du „Zutaten holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -21149,6 +21333,7 @@
       }
     },
     "Was soll mit dem Rezept geschehen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22776,6 +22961,7 @@
       }
     },
     "Zutaten holen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22786,6 +22972,7 @@
       }
     },
     "Zutaten übernehmen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22973,6 +23160,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "also: “%@”"
+          }
+        }
+      }
+    },
+    "auf der Liste: %@ · anhaken erhöht auf %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "auf der Liste: %1$@ · anhaken erhöht auf %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · checking raises it to %@"
+          }
+        }
+      }
+    },
+    "auf der Liste: %@ · anhaken legt einen zweiten Eintrag an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · checking adds a second entry"
+          }
+        }
+      }
+    },
+    "auf der Liste: %@ · bleibt unverändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · stays as it is"
+          }
+        }
+      }
+    },
+    "auf der Liste: ohne Menge · anhaken legt einen zweiten Eintrag an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: no amount · checking adds a second entry"
+          }
+        }
+      }
+    },
+    "auf der Liste: ohne Menge · anhaken setzt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: no amount · checking sets it to %@"
           }
         }
       }
@@ -23904,6 +24147,16 @@
         }
       }
     },
+    "ohne Menge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no amount"
+          }
+        }
+      }
+    },
     "ohne Project": {
       "extractionState": "stale",
       "localizations": {
@@ -23971,6 +24224,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "already on the list"
+          }
+        }
+      }
+    },
+    "schon auf der Liste · bleibt unverändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "already on the list · stays as it is"
           }
         }
       }

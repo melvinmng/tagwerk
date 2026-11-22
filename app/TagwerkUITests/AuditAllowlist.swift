@@ -218,13 +218,14 @@ enum AuditAllowlist {
         // MARK: Recipe screens and settings (G1, G2)
         Entry(auditType: .contrast, labels: [
             "Rezepttext", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
-            "Portionen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Vorlesen", "ChatGPT", "Notiz",
+            "Portionen", "Portionen · \\d+ im Rezept", "Neu · \\d+", "Schon auf der Liste · \\d+", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Vorlesen", "ChatGPT", "Notiz",
             "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*",
             "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",
             "Inhalte", "Stimme", "Ziele", "Liste", "Kategorien",
             "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
             "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*", "(?s)Portionen: \\d+\\nZutaten.*", "wird mit ChatGPT gelesen",
+            "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an\\.",
             "Rezepte", "Schätzung", "Anzeige", "In Planen anzeigen", "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*",
             "(?s)„In Planen anzeigen“ zeigt .*", "Einkaufsliste jetzt auf (Englisch|Deutsch)",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "Section headers, footers, values and previews in the secondary text tone on the "
@@ -253,25 +254,28 @@ enum AuditAllowlist {
             + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
             + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),
         Entry(auditType: .contrast, labels: [
-            "Verwerfen", "Rezept holen", "Zutaten holen", "Zurücksetzen", "Probe hören", "Übernehmen", "Demo Linsensuppe",
-        ], screens: recipeScreens + recipeScreensLargeText, reason: "What the accent colour did not fix: \"Rezept holen\" and \"Zutaten holen\" are dimmed by the system "
+            "Verwerfen", "Rezept holen", "Zutaten holen", "Zutaten auf die Einkaufsliste", "Nur als Rezept speichern", "Zurücksetzen", "Probe hören", "Übernehmen", "Demo Linsensuppe",
+        ], screens: recipeScreens + recipeScreensLargeText, reason: "What the accent colour did not fix: \"Rezept holen\", \"Zutaten holen\", \"Zutaten auf die Einkaufsliste\" and \"Nur als Rezept speichern\" are dimmed by the system "
             + "while the text field is empty (gewollt schwach), \"Verwerfen\" and \"Übernehmen\" sit in the navigation bar, whose Liquid Glass "
             + "background lets the list scroll behind it, and \"Zurücksetzen\" and \"Probe hören\" are list buttons in the accent colour on a "
             + "grouped row. The system draws the background; no own colour to change without replacing the system style (#188). All other "
             + "accent texts of these screens pass since strand K (72 findings before, 36 after, three repetitions each)."),
 
         Entry(auditType: .dynamicType, labels: [
-            "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
+            "Abbrechen", "Verwerfen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an\\.", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
             "\\d\\. .*", "Vorlesen", "Eiweiß-Ziel", "(?s)Sendet auf dein Tippen die Namen .*", "Rezepte mit ChatGPT lesen und übersetzen", "ChatGPT",
             "(?s)Notizen liegen nur auf diesem iPhone\\..*", "Stimme", "Sprachchat-Antwort", "Einkaufsliste",
             "Stimme (Deutsch|English)", "Tempo", "Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus\\.", "Übernehmen",
-        ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers and steps use text styles; the audit still reports a partial lack of "
-            + "support. In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`, screenshots checked) every one of these texts "
-            + "grows and wraps."),
+            "Rezept holen", "Zutaten auf die Einkaufsliste", "Nur als Rezept speichern",
+        ], screens: recipeScreens, reason: "Navigation bar buttons, form rows, footers, steps and the buttons that end the recipe input (EK3b) use text "
+            + "styles; the audit still reports a partial lack of support, for the last button of the input on each of the two input screens "
+            + "(a text style with `fontWeight(.semibold)`, as before EK3b; the allowlist names the buttons because the audit picks one of them). "
+            + "In the AX5 run of the same screens (`AccessibilityAuditRecipesLargeTextUITests`) every one of these texts grows and wraps."),
         Entry(auditType: .textClipped, labels: [
             "Rezept mit ChatGPT anlegen", "Neues Rezept", "Demo Linsensuppe", "Andere Notiz wählen …", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*",
             "(?s)(Um ein Rezept zu lesen|Gesendet wird|Nicht gesendet werden|Nur auf dein Tippen|Wenn du zu einem Vorschlag etwas zurückschreibst|Eine Notiz mit den Abschnitten|Die gewählte Liste erscheint|Portionen: \\d+\\nZutaten).*",
             "Du kannst das in den Einstellungen unter „Einkaufsliste“ widerrufen\\.", "Mikrofon in Gesprächen",
+            "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an\\.",
             "Rezepte mit ChatGPT lesen und übersetzen", "Mit ChatGPT sortieren und übersetzen", "(?s)Sendet auf dein Tippen die Namen .*",
             "Einkaufsliste jetzt auf (Englisch|Deutsch)", "Neue Artikel kommen auf (Englisch|Deutsch)\\. .*", "Mit ChatGPT übersetzen", "Übersetzung",
             "\\d+ von \\d+ Artikeln · .*", "(?s)Mengen bleiben, wie sie sind\\..*", "Verwerfen", "Übernehmen",

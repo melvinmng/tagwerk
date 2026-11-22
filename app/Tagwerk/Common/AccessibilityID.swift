@@ -18,6 +18,15 @@ enum AccessibilityID {
         static let planButton = "focus.planButton"
     }
 
+    enum Shopping {
+        /// The entries "Erledigte entfernen (N)" and "Liste leeren (N) …" of the menu; the number in the title changes.
+        static let removeCompleted = "shopping.removeCompleted"
+        static let clearList = "shopping.clearList"
+        /// The two buttons that end the recipe input: "Zutaten auf die Einkaufsliste" and "Nur als Rezept speichern".
+        static let recipeToList = "shopping.recipeToList"
+        static let recipeSaveOnly = "shopping.recipeSaveOnly"
+    }
+
     enum Tasks {
         /// A task row (task list, search results); the title makes it unique.
         static func row(_ title: String) -> String { "tasks.row.\(title)" }
