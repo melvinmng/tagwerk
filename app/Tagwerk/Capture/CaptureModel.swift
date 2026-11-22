@@ -76,6 +76,8 @@ final class CaptureModel {
     private(set) var access: HealthAccess?
     /// Step permission, asked separately from `access`; `nil` until the first query.
     private(set) var stepsAccess: StepsAccess?
+    /// Permission group of the active energy, asked separately; `nil` until the first query.
+    private(set) var activeEnergyAccess: HealthGroupAccess?
     /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
     private(set) var steps: Int?
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
@@ -170,11 +172,12 @@ final class CaptureModel {
         return [first, second]
     }
 
-    var summaryRows: [[SummaryTile]] { summaryRows(steps: steps) }
+    var summaryRows: [[SummaryTile]] { summaryRows(steps: steps, plan: figures.plan) }
 
-    func summaryRows(steps: Int?) -> [[SummaryTile]] {
-        Self.summaryRows(protein: settings.proteinGoalEnabled, steps: stepsTile(for: steps) != .hidden,
-                         training: settings.goalWorkoutMinutesPerWeek > 0)
+    /// The tiles of a page: protein and training follow the goal plan that holds on that page's day.
+    func summaryRows(steps: Int?, plan: GoalPlan) -> [[SummaryTile]] {
+        Self.summaryRows(protein: plan.proteinGrams != nil, steps: stepsTile(for: steps) != .hidden,
+                         training: plan.workoutMinutesPerWeek > 0)
     }
 
     // MARK: Loading
@@ -201,6 +204,7 @@ final class CaptureModel {
         }
         let stepsAccess = await health.stepsAccess()
         self.stepsAccess = stepsAccess
+        self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
         var stepsOfDay: Int?
         if stepsAccess == .asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
@@ -482,6 +486,18 @@ final class CaptureModel {
         } else {
             await connectHealth()
         }
+    }
+
+    /// The budget line offers "In Health erlauben" for the active energy until its sheet was shown; with crediting switched off
+    /// (share 0) there is nothing to offer.
+    func offersActiveEnergy(for budget: EnergyBudget) -> Bool {
+        activeEnergyAccess == .notAsked && budget.creditPercent > 0
+    }
+
+    /// "In Health erlauben" at the budget line: the sheet for the active energy only, which leaves the other permissions alone.
+    func allowActiveEnergy() async {
+        try? await health.requestAuthorization(for: .activeEnergy)
+        await reload()
     }
 
     func connectSteps() async {

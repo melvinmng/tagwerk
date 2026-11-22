@@ -95,6 +95,40 @@ struct CaptureModelTests {
         #expect(model.figures.totals.foreign?.sources == ["Yazio"])
     }
 
+    @Test func activeEnergyTile_isOfferedUntilTheGroupWasAsked_andRequestsOnce() async {
+        let health = FakeHealthStore()
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.offersActiveEnergy(for: model.figures.budget))
+        await model.allowActiveEnergy()
+        #expect(health.groupRequests(.activeEnergy) == 1)
+        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        await model.reload()
+        #expect(health.groupRequests(.activeEnergy) == 1, "a reload never asks again")
+    }
+
+    @Test func activeEnergyTile_isHiddenWhenCreditingIsOff() async {
+        settings.activityCreditPercent = 0
+        let model = makeWithBudget(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+    }
+
+    @Test func summaryRows_followThePlanOfThePage() async {
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let old = GoalPlan(validFrom: today.adding(days: -30, calendar: calendar), kcal: 2300, proteinGrams: 120, waterMilliliters: 2000,
+                           stepsPerDay: 8000, workoutMinutesPerWeek: 150)
+        var current = old
+        current.validFrom = today
+        current.proteinGrams = nil
+        current.id = UUID()
+        let model = makeWithBudget(FakeHealthStore(), plans: [old, current])
+        await model.reload()
+        #expect(model.summaryRows(steps: nil, plan: model.figures.plan).flatMap { $0 }.contains(.protein) == false)
+        let yesterday = model.page(for: today.adding(days: -1, calendar: calendar))
+        #expect(model.summaryRows(steps: nil, plan: yesterday.figures.plan).flatMap { $0 }.contains(.protein))
+    }
+
     @Test func reload_keepsBudgetWhileHealthAnswers() async {
         let health = FakeHealthStore()
         health.setGroupAccess(.asked, for: .activeEnergy)

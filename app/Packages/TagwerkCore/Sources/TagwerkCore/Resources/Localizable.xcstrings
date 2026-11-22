@@ -33,6 +33,16 @@
         }
       }
     },
+    "%@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories over budget"
+          }
+        }
+      }
+    },
     "%@ Schritte": {
       "localizations": {
         "en": {
@@ -1171,6 +1181,16 @@
         }
       }
     },
+    "Etwa %@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories over budget"
+          }
+        }
+      }
+    },
     "Fleisch & Fisch": {
       "localizations": {
         "en": {
@@ -1595,6 +1615,16 @@
         }
       }
     },
+    "Noch %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories left"
+          }
+        }
+      }
+    },
     "Noch %lld min bis zur Schlafzeit (%@)": {
       "localizations": {
         "de": {
@@ -1607,6 +1637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Noch etwa %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories left"
           }
         }
       }
@@ -1977,6 +2017,16 @@
         }
       }
     },
+    "Ziel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal %@"
+          }
+        }
+      }
+    },
     "Ziel an %lld von %lld Tagen": {
       "localizations": {
         "de": {
@@ -2119,6 +2169,26 @@
         }
       }
     },
+    "minus %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus %@ eaten"
+          }
+        }
+      }
+    },
+    "minus etwa %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus about %@ eaten"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -2145,6 +2215,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal left"
+          }
+        }
+      }
+    },
+    "plus %@ aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus %@ active"
+          }
+        }
+      }
+    },
+    "plus aktiv ohne Werte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus active without values"
           }
         }
       }

@@ -180,3 +180,102 @@ struct ActiveEnergyMakeTests {
         #expect(ActiveEnergy.make(healthKcal: 400, ownWorkouts: [own(nil, inHealth: false)]).total == 400)
     }
 }
+
+struct BudgetEquationTests {
+    private let plan = GoalPlan(validFrom: PlanDay(year: 2026, month: 11, day: 21), kcal: 2300, waterMilliliters: 2000, stepsPerDay: 8000,
+                                workoutMinutesPerWeek: 150)
+    private let german = Locale(identifier: "de_DE")
+
+    private func budget(health: Double? = 520, own: Double = 0, percent: Int = 100, eaten: Double = 1340,
+                        estimated: Bool = true) -> EnergyBudget {
+        EnergyBudget.make(plan: plan, active: ActiveEnergy(healthKcal: health, unsyncedOwnKcal: own), creditPercent: percent,
+                          eatenKcal: eaten, eatenIsEstimated: estimated)
+    }
+
+    @Test func equation_fullCredit_addsUp() {
+        let equation = IntakeFormat.budgetEquation(budget(), locale: german)
+        #expect(equation.goal == "2.300" && equation.active == "520" && equation.eaten == "~1.340" && equation.remaining == "~1.480")
+        #expect(!equation.isOver)
+        #expect(equation.spoken == "Noch etwa 1.480 Kilokalorien: Ziel 2.300, plus 520 aktiv, minus etwa 1.340 gegessen")
+    }
+
+    @Test func equation_halfCredit_showsTheCreditedPartSoTheLineAddsUp() {
+        let equation = IntakeFormat.budgetEquation(budget(percent: 50), locale: german)
+        #expect(equation.active == "260", "the Aktiv term is what counts, not the raw 520")
+        #expect(equation.remaining == "~1.220")
+        #expect(2300 + 260 - 1340 == 1220)
+    }
+
+    @Test func equation_creditOff_hasNoActiveTerm() {
+        let equation = IntakeFormat.budgetEquation(budget(percent: 0), locale: german)
+        #expect(equation.active == nil)
+        #expect(equation.remaining == "~960")
+        #expect(!equation.spoken.contains("aktiv"))
+    }
+
+    @Test func equation_noActiveValue_isADashNeverZero() {
+        let equation = IntakeFormat.budgetEquation(budget(health: nil, own: 0), locale: german)
+        #expect(equation.active == "–")
+        #expect(equation.spoken.contains("aktiv ohne Werte"))
+    }
+
+    @Test func equation_ownWorkoutsWithoutHealth_countAsActive() {
+        let equation = IntakeFormat.budgetEquation(budget(health: nil, own: 300, percent: 100), locale: german)
+        #expect(equation.active == "300")
+    }
+
+    @Test func equation_over_namesTheExcess() {
+        let equation = IntakeFormat.budgetEquation(budget(percent: 100, eaten: 2940), locale: german)
+        #expect(equation.isOver && equation.remaining == "~120")
+        #expect(equation.spoken.hasPrefix("Etwa 120 Kilokalorien über dem Budget: Ziel 2.300"))
+    }
+
+    @Test func equation_exactEntries_haveNoTildeAndNoApproximately() {
+        let equation = IntakeFormat.budgetEquation(budget(percent: 100, eaten: 1340, estimated: false), locale: german)
+        #expect(equation.eaten == "1.340" && equation.remaining == "1.480")
+        #expect(!equation.spoken.contains("etwa"))
+    }
+}
+
+struct ActiveBreakdownTests {
+    private let plan = GoalPlan(validFrom: PlanDay(year: 2026, month: 11, day: 21), kcal: 2300, waterMilliliters: 2000, stepsPerDay: 8000,
+                                workoutMinutesPerWeek: 150)
+    private let start = Date(timeIntervalSince1970: 1_800_000_000)
+
+    private func workout(_ kcal: Double?, own: Bool, offset: TimeInterval = 0) -> WorkoutValue {
+        WorkoutValue(id: UUID().uuidString, activity: .running, start: start.addingTimeInterval(offset), minutes: 30, kilocalories: kcal,
+                     sourceName: own ? nil : "Apple Watch", isOwn: own)
+    }
+
+    private func budget(health: Double?, gap: Double = 0, percent: Int = 50) -> EnergyBudget {
+        EnergyBudget.make(plan: plan, active: ActiveEnergy(healthKcal: health, unsyncedOwnKcal: gap), creditPercent: percent, eatenKcal: 0)
+    }
+
+    @Test func everyday_isTheHealthSumMinusTheWorkoutsInsideIt() {
+        let result = ActiveBreakdown.make(budget: budget(health: 520), workouts: [workout(310, own: false)])
+        #expect(result.everydayKcal == 210 && result.gapKcal == 0 && result.totalKcal == 520)
+        #expect(result.creditedKcal == 260)
+    }
+
+    @Test func ownWorkoutInsideHealth_isNotAddedAndSubtractedFromTheRest() {
+        // 300 kcal own workout mirrored with calories: it is inside the 520.
+        let result = ActiveBreakdown.make(budget: budget(health: 520), workouts: [workout(300, own: true)])
+        #expect(result.everydayKcal == 220 && result.gapKcal == 0)
+    }
+
+    @Test func ownWorkoutHealthLacks_isTheGapAndLeavesTheRestAlone() {
+        let result = ActiveBreakdown.make(budget: budget(health: 520, gap: 300), workouts: [workout(300, own: true)])
+        #expect(result.everydayKcal == 520 && result.gapKcal == 300 && result.totalKcal == 820)
+    }
+
+    @Test func withoutHealthSum_noEverydayValue() {
+        let result = ActiveBreakdown.make(budget: budget(health: nil, gap: 300), workouts: [workout(300, own: true)])
+        #expect(result.everydayKcal == nil && !result.isFromHealth && result.totalKcal == 300)
+    }
+
+    @Test func everyday_neverNegative_andWorkoutsWithoutCaloriesAreLeftOut() {
+        let result = ActiveBreakdown.make(budget: budget(health: 200), workouts: [workout(310, own: false), workout(nil, own: false), workout(0, own: true)])
+        #expect(result.everydayKcal == 0)
+        #expect(result.workouts.count == 1)
+    }
+}
