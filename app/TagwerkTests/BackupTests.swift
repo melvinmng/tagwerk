@@ -179,6 +179,10 @@ struct BackupTests {
         reflection.goalsProgress = "Projekt läuft"
         reflection.gratitudeTaken = true
         context.insert(reflection)
+        context.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 512.5, creditPercent: 75,
+                                                 foreign: ForeignIntake(kcal: 340, protein: 12, carbs: 40, fat: 9,
+                                                                        nutrients: NutrientValues(fiber: 5, sugar: 11, saturatedFat: 3, salt: 1.5),
+                                                                        waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
         settings.activityCreditPercent = 75
         settings.goalPlansMigrated = true
         context.insert(GoalPlanRecord(GoalPlan(validFrom: day, kcal: 2100, proteinGrams: 110, carbsGrams: 240, fatGrams: 70,
@@ -361,6 +365,29 @@ struct BackupTests {
         #expect(plans.count == 1)
         #expect(plans.first?.kcal == 2100, "the plan is built from the restored goalKilocalories")
         #expect(target.settings.goalPlansMigrated)
+    }
+
+    @Test func restore_oldFileWithoutDayHealth_keepsTheStoredValuesOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["dayHealth"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        let day = PlanDay(year: 2026, month: 11, day: 1)
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: day, activeKcal: 300, creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-01"])
+    }
+
+    @Test func restore_withDayHealth_replacesTheStoredValues() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(DayHealthRecord(DayHealth(day: PlanDay(year: 2026, month: 11, day: 1), activeKcal: 300,
+                                                                      creditPercent: 50), updatedAt: clock.now))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
+        #expect(stored.map(\.dayKey) == ["2026-11-18"])
+        #expect(stored.first?.value.foreign.sources == ["Yazio"])
     }
 
     // MARK: Round trip
