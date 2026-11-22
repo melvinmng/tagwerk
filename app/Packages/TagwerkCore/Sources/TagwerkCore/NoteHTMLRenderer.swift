@@ -45,8 +45,9 @@ public enum NoteHTMLRenderer {
         let document = Document(parsing: markdown, options: [.disableSmartOpts])
         var visitor = BodyVisitor(options: options)
         var output = visitor.visit(document)
-        // A tap below the text writes at the end of the note.
-        if options.editLinks { output += "<a class=\"e tail\" href=\"\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)\"></a>\n" }
+        // A tap below the text writes at the end of the note. The empty link is only a touch target: it stays out of the
+        // accessibility tree (the action "Bearbeiten" is the way in for VoiceOver).
+        if options.editLinks { output += "<a class=\"e tail\" href=\"\(NoteEditTarget.scheme):\(NoteEditTarget.endToken)\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n" }
         return output
     }
 

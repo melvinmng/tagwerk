@@ -238,7 +238,7 @@ struct NoteHTMLRendererTests {
 
     @Test func editLinks_tailLinkPresent() {
         let output = editHTML("Text")
-        #expect(output.hasSuffix("<a class=\"e tail\" href=\"tagwerk-edit:end\"></a>\n"))
+        #expect(output.hasSuffix("<a class=\"e tail\" href=\"tagwerk-edit:end\" aria-hidden=\"true\" tabindex=\"-1\"></a>\n"))
         #expect(NoteHTMLRenderer.page(body: output).contains("a.e.tail"))
     }
 
