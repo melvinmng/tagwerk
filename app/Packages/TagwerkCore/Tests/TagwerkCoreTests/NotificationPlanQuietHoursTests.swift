@@ -251,6 +251,18 @@ struct NotificationPlanQuietHoursTests {
         #expect(again.map(\.fireDate) == result.map(\.fireDate))
     }
 
+    @Test func focusCatchUp_withUpperBound_leavesWhatCameDueAfterItAlone() {
+        let now = at(18, 15)
+        let moment = now.addingTimeInterval(60)
+        let tasks = [task("Gehalten", day: 18, hour: 10), task("Spätere Phase", day: 18, hour: 13), task("Später", day: 18, hour: 18)]
+        var catchUpRules = rules(catchUp: FocusCatchUp(from: at(18, 9), at: moment, until: at(18, 10, 1)))
+        catchUpRules.minimumDelay = 0
+        let result = plan(tasks, rules: catchUpRules, now: now)
+        // "Spätere Phase" came due at 13:00, after the bound; it was delivered by the Focus that held it and is not planned.
+        #expect(result.map(\.title) == ["Gehalten", "Später"])
+        #expect(result.first?.fireDate == moment)
+    }
+
     @Test func focusCatchUp_insideTheQuietHours_waitsForTheEnd() {
         let catchUp = FocusCatchUp(from: at(18, 20), at: at(18, 23, 31))
         let result = plan([task("A", day: 18, hour: 22)], rules: rules(quietHours: night, catchUp: catchUp), now: at(18, 23, 30))

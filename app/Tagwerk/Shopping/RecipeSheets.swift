@@ -633,16 +633,6 @@ struct RecipeResultView: View {
     /// The language the items go on the list in: the second language of the import, else the recipe's.
     private var listLocale: Locale { (result.shoppingLanguage ?? result.language).locale }
 
-    /// Items that are on the list already start unselected: checking one is a decision (raise or second entry), not a default.
-    static func initiallyDeselected(_ candidates: [RecipeImporter.Candidate]) -> Set<String> {
-        Set(candidates.filter(\.alreadyOnList).map(\.id))
-    }
-
-    /// What "hinzufügen" puts on the list.
-    static func selection(_ candidates: [RecipeImporter.Candidate], deselected: Set<String>) -> [RecipeImporter.Candidate] {
-        candidates.filter { !deselected.contains($0.id) }
-    }
-
     // MARK: Servings
 
     static let servingsRange = RecipeImporter.servingsRange
@@ -672,6 +662,16 @@ struct RecipeResultView: View {
             }
             return scaled
         }
+    }
+
+    /// The amounts typed into the small field, after the ingredient of `old` was renamed to `new`: the typed amount follows the
+    /// ingredient, whose id is its name.
+    static func overrides(_ overrides: [String: String], renamingFrom old: String, to new: String) -> [String: String] {
+        guard old != new, let typed = overrides[old] else { return overrides }
+        var moved = overrides
+        moved[old] = nil
+        moved[new] = typed
+        return moved
     }
 
     /// The candidates as they go on the list: scaled for the servings, with the amounts the user typed instead (a typed amount
@@ -774,10 +774,10 @@ struct RecipeResultView: View {
         .navigationTitle("Zutaten")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(get: { editedRowID.flatMap { id in draft.rows.first { $0.id == id } } }, set: { editedRowID = $0?.id })) { row in
-            RecipeRowEditor(row: row, categories: categoryChoices) {
-                // The values of the sheet replace an amount typed into the small field before.
-                quantityOverrides[row.candidate.id] = nil
-                draft.edit($0)
+            RecipeRowEditor(row: row, categories: categoryChoices) { edited in
+                // The sheet changes name and category only; an amount typed into the small field stays with the ingredient.
+                quantityOverrides = Self.overrides(quantityOverrides, renamingFrom: row.candidate.id, to: edited.candidate.id)
+                draft.edit(edited)
             }
         }
         .navigationBarBackButtonHidden()

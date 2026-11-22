@@ -13,20 +13,14 @@ struct RecipeRow: Identifiable, Equatable, Sendable {
     var id = UUID()
     var candidate: RecipeImporter.Candidate
 
-    /// The row with the values of the small sheet "Zutat": a name (the name of the list when the recipe has a second one),
-    /// an amount as text and a category. A changed amount drops the structured amount and the unit of the second language, so
-    /// scaling and the list use the text the user typed.
-    @MainActor func edited(name: String, quantity: String, category: String) -> RecipeRow {
+    /// The row with the values of the small sheet "Zutat": a name (the name of the list when the recipe has a second one) and a
+    /// category. The amount is not part of it: it is changed with the amount button of the row only, which keeps it apart from
+    /// the scaling by servings.
+    @MainActor func edited(name: String, category: String) -> RecipeRow {
         var row = self
         let newName = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(ShoppingInputParser.maxNameLength))
         if !newName.isEmpty {
             if row.candidate.shoppingName != nil { row.candidate.shoppingName = newName } else { row.candidate.name = newName }
-        }
-        let newQuantity = String(quantity.trimmingCharacters(in: .whitespacesAndNewlines).prefix(RecipeImporter.maxQuantityLength))
-        if newQuantity != (row.candidate.quantity ?? "") {
-            row.candidate.quantity = newQuantity.isEmpty ? nil : newQuantity
-            row.candidate.line = nil
-            row.candidate.shoppingUnit = nil
         }
         row.candidate.category = category
         return row

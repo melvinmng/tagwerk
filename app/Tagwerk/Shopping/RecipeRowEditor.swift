@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The small sheet "Zutat" of the result sheet (plan ki-vorschlaege-anpassen, task D2, AN9a): name, amount and category of one
-/// ingredient. The categories are those of the shopping list and the fixed section; nothing else can be chosen, so the list
+/// The small sheet "Zutat" of the result sheet (plan ki-vorschlaege-anpassen, task D2, AN9a): name and category of one
+/// ingredient. The amount is changed with the amount button of the row, not here. The categories are those of the shopping list and the fixed section; nothing else can be chosen, so the list
 /// never gets a category from here. "Übernehmen" only changes the proposal.
 struct RecipeRowEditor: View {
     let row: RecipeRow
@@ -9,7 +9,6 @@ struct RecipeRowEditor: View {
     let onSave: (RecipeRow) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
-    @State private var quantity: String
     @State private var category: String
 
     init(row: RecipeRow, categories: [String], onSave: @escaping (RecipeRow) -> Void) {
@@ -17,7 +16,6 @@ struct RecipeRowEditor: View {
         self.categories = categories
         self.onSave = onSave
         _name = State(initialValue: row.candidate.listName)
-        _quantity = State(initialValue: row.candidate.quantity ?? "")
         _category = State(initialValue: row.candidate.category)
     }
 
@@ -31,7 +29,6 @@ struct RecipeRowEditor: View {
             Form {
                 Section {
                     TextField("Name", text: $name)
-                    TextField("Menge, z. B. „500 g“", text: $quantity)
                 }
                 Section("Kategorie") {
                     Picker("Kategorie", selection: $category) {
@@ -48,7 +45,7 @@ struct RecipeRowEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Übernehmen") {
-                        onSave(row.edited(name: name, quantity: quantity, category: category))
+                        onSave(row.edited(name: name, category: category))
                         dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
