@@ -74,6 +74,9 @@ final class WorkoutRecord {
     var kilocalories: Double?
     var healthVersion: Int = 1
     var healthSynced: Bool = false
+    /// Whether the calories were written to Health together with the workout; decided when the workout was mirrored, because the
+    /// permission may change afterwards. `nil` for workouts mirrored before this was recorded.
+    var energyInHealth: Bool?
 
     init(id: UUID, activity: WorkoutActivity, start: Date, minutes: Int, kilocalories: Double?, healthVersion: Int = 1) {
         self.id = id

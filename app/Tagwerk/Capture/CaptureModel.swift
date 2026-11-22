@@ -11,7 +11,10 @@ struct CaptureDay: Equatable {
     var drinks: [DrinkValue]
     /// Own and Health workouts of the day, by start.
     var workouts: [WorkoutValue]
+    /// The day's own entries only; what counts as eaten (with other apps' entries) is in `figures.totals`.
     var intake: DayIntake
+    /// Plan, Health values and budget of the day.
+    var figures: DayFigures
     var dayMinutes: Int
     var weekMinutes: Int
     /// `nil` without a value (shown as "–", never 0).
@@ -48,6 +51,8 @@ final class CaptureModel {
     private let store: IntakeStore
     private let mirror: HealthMirror
     private let health: any HealthStoring
+    /// Goal plan, Health values and budget of a day; shared with the plan header, the widget and the weekly review.
+    let budgets: DayBudgets
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var deletedEntries: [UUID: IntakeStore.Deleted] = [:]
 
@@ -57,6 +62,10 @@ final class CaptureModel {
     /// Own and Health workouts of the day, by start.
     private(set) var workouts: [WorkoutValue] = []
     private(set) var intake: DayIntake = .empty
+    /// Plan, Health values and budget of the displayed day.
+    private(set) var figures: DayFigures
+    /// The same for today, whatever day is displayed: plan header, widget and Siri.
+    private(set) var todayFigures: DayFigures
     /// Today's sums regardless of the displayed day: plan header, widget and Siri (phase 4).
     private(set) var todayIntake: DayIntake = .empty
     private(set) var todayHasEntries = false
@@ -95,7 +104,9 @@ final class CaptureModel {
     /// Tests wait for each Health run, so no run outlives the test's store.
     @ObservationIgnored private let waitsForHealth: Bool
 
-    init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings,
+    /// `budgets` defaults to a service without stored plans and Health values: the single goals of the settings and the own
+    /// entries stand in (previews, tests that do not care for the budget).
+    init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
          calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false) {
         self.waitsForHealth = waitsForHealth
         self.store = store
@@ -104,9 +115,15 @@ final class CaptureModel {
         self.settings = settings
         self.calendar = calendar
         self.now = now
+        let budgets = budgets ?? DayBudgets(intake: store, goals: nil, dayHealth: nil, health: health, settings: settings,
+                                            calendar: calendar, now: now)
+        self.budgets = budgets
         let today = PlanDay(date: now(), calendar: calendar)
         self.day = today
         self.lastToday = today
+        let initial = budgets.figures(on: today, own: .empty)
+        self.figures = initial
+        self.todayFigures = initial
     }
 
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
@@ -200,6 +217,9 @@ final class CaptureModel {
         guard day == requestedDay else { return }
         weekForeign = foreignOfWeek
         steps = stepsOfDay
+        // The day sums of the active energy and of other apps' nutrition go into the store; the figures read them from there.
+        await budgets.refreshHealth(in: week)
+        guard day == requestedDay else { return }
         refreshLocal(week: week)
         await prefetchNeighbourHealth()
     }
@@ -232,6 +252,7 @@ final class CaptureModel {
         }
         guard !Task.isCancelled else { return }
         healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
+        await budgets.refreshHealth(in: interval)
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -258,13 +279,14 @@ final class CaptureModel {
         dayMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd))
         weekMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval)
         intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+        figures = budgets.figures(on: day, own: intake)
         refreshToday()
     }
 
     /// The shown day as the page displays it.
     var current: CaptureDay {
-        CaptureDay(day: day, meals: meals, drinks: drinks, workouts: workouts, intake: intake, dayMinutes: dayMinutes,
-                   weekMinutes: weekMinutes, steps: steps)
+        CaptureDay(day: day, meals: meals, drinks: drinks, workouts: workouts, intake: intake, figures: figures,
+                   dayMinutes: dayMinutes, weekMinutes: weekMinutes, steps: steps)
     }
 
     /// The page of another day for the preview beside the shown one: the local entries and, from the Health cache,
@@ -282,8 +304,9 @@ final class CaptureModel {
         let weekWorkouts = store.workouts(in: weekInterval) + foreign.filter { weekInterval.contains($0.start) }
         let workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
         let steps = target == today ? todaySteps : healthCache?.steps[target]
-        return CaptureDay(day: target, meals: meals, drinks: drinks, workouts: workouts,
-                          intake: IntakeRules.dayIntake(meals: meals, drinks: drinks),
+        let intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+        return CaptureDay(day: target, meals: meals, drinks: drinks, workouts: workouts, intake: intake,
+                          figures: budgets.figures(on: target, own: intake),
                           dayMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd)),
                           weekMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval), steps: steps)
     }
@@ -294,6 +317,7 @@ final class CaptureModel {
         let todayMeals = day == today ? meals : store.meals(on: today, calendar: calendar)
         let todayDrinks = day == today ? drinks : store.drinks(on: today, calendar: calendar)
         todayIntake = IntakeRules.dayIntake(meals: todayMeals, drinks: todayDrinks)
+        todayFigures = day == today ? figures : budgets.figures(on: today, own: todayIntake)
         todayHasEntries = !todayMeals.isEmpty || !todayDrinks.isEmpty
         onTodayChanged?()
     }

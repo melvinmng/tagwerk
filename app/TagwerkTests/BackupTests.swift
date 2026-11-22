@@ -91,7 +91,10 @@ struct BackupTests {
         meal.healthSynced = true
         context.insert(meal)
         context.insert(DrinkRecord(DrinkValue(id: UUID(), date: now, milliliters: 250), healthVersion: 2))
-        context.insert(WorkoutRecord(id: UUID(), activity: .running, start: now, minutes: 40, kilocalories: 310.5, healthVersion: 2))
+        let workout = WorkoutRecord(id: UUID(), activity: .running, start: now, minutes: 40, kilocalories: 310.5, healthVersion: 2)
+        workout.healthSynced = true
+        workout.energyInHealth = false
+        context.insert(workout)
         let category = ShoppingCategory(name: "Backwaren", sortIndex: 4, builtinKey: nil, createdAt: now)
         context.insert(category)
         context.insert(ShoppingAssignment(nameKey: "brot", categoryID: category.id, sourceRaw: "manual", updatedAt: now))
@@ -184,6 +187,7 @@ struct BackupTests {
                                                                         nutrients: NutrientValues(fiber: 5, sugar: 11, saturatedFat: 3, salt: 1.5),
                                                                         waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
         settings.activityCreditPercent = 75
+        settings.countsForeignNutrition = true
         settings.goalPlansMigrated = true
         context.insert(GoalPlanRecord(GoalPlan(validFrom: day, kcal: 2100, proteinGrams: 110, carbsGrams: 240, fatGrams: 70,
                                                fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2500, stepsPerDay: 9000,
@@ -340,14 +344,29 @@ struct BackupTests {
         #expect(plan.value.fiberGrams == 30 && plan.value.targetWeightKg == 72.5 && plan.value.origin == .assistant)
     }
 
+    @Test func backup_roundTripsTheEnergyFlagOfAWorkoutAndTheForeignSwitch() throws {
+        let workout = try #require(try source.mainContext.fetch(FetchDescriptor<WorkoutRecord>()).first)
+        let decoded = try JSONDecoder().decode(WorkoutBackup.self, from: JSONEncoder().encode(WorkoutBackup(workout)))
+        #expect(decoded.makeRecord().energyInHealth == false && decoded.makeRecord().healthSynced)
+        // A file from before the flag decodes to "unknown", so the current permission decides.
+        var object = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(WorkoutBackup(workout))) as? [String: Any])
+        object["energyInHealth"] = nil
+        let older = try JSONDecoder().decode(WorkoutBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        #expect(older.makeRecord().energyInHealth == nil)
+        let settings = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONEncoder().encode(AppSettingsBackup(sourceSettings)))
+        let target = try makeTarget()
+        settings.apply(to: target.settings)
+        #expect(target.settings.countsForeignNutrition)
+    }
+
     @Test func settingsBackup_withoutGoalPlanFields_keepsTheDeviceValues() throws {
         let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
         var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        for key in ["goalPlansMigrated", "activityCreditPercent"] { object[key] = nil }
+        for key in ["goalPlansMigrated", "activityCreditPercent", "countsForeignNutrition"] { object[key] = nil }
         let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
         let target = try makeTarget()
         older.apply(to: target.settings)
-        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated)
+        #expect(target.settings.activityCreditPercent == 50 && !target.settings.goalPlansMigrated && !target.settings.countsForeignNutrition)
     }
 
     @Test func restore_oldFileWithoutGoalPlans_rebuildsTheFirstPlanFromTheRestoredGoals() throws {

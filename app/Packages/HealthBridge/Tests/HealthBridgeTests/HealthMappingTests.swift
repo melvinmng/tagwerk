@@ -385,4 +385,13 @@ struct BodyProfileMappingTests {
     @Test func bodyProfile_emptyHasNoFields() {
         #expect(HealthBodyProfile.empty == HealthBodyProfile(heightCm: nil, birthYear: nil, sex: nil))
     }
+
+    @Test func accessAllows_followsTheDeniedKinds() {
+        #expect(HealthAccess.authorized.allowsWriting(.activeEnergy))
+        #expect(HealthAccess.partial([.activeEnergy, .water]).allowsWriting(.energy))
+        #expect(!HealthAccess.partial([.activeEnergy, .water]).allowsWriting(.activeEnergy))
+        #expect(!HealthAccess.denied.allowsWriting(.energy))
+        #expect(!HealthAccess.notDetermined.allowsWriting(.energy))
+        #expect(!HealthAccess.unavailable.allowsWriting(.energy))
+    }
 }

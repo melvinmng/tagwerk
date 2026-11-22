@@ -71,6 +71,9 @@ final class AppSettings {
     /// Share of the active energy that raises the daily budget, in percent: 0, 50, 75 or 100. Half is the default because
     /// wrist devices estimate the active energy rather coarsely (decision BU1b).
     var activityCreditPercent: Int = 50
+    /// Counts the nutrition entries of other apps from Health as eaten ("Einträge anderer Apps mitzählen"); off by default
+    /// (decision NU5b).
+    var countsForeignNutrition: Bool = false
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330
