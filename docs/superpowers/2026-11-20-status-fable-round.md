@@ -18,7 +18,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 - Gesperrte Notizen: während der Entsperrung darf der Assistent sie lesen/bearbeiten (bis Tagwerk verlassen wird) → Änderung in #284; dort zusätzlich CI-Fehler: `NoteLockDeniedUITests.testPrivateFolderShowsLockScreen` („Schalter geht nicht an“), Audit „Rezept-Notiz: Element ohne Beschreibung“.
 - Bible Study: Verstabelle vorläufig → PR #285; CI schnell rot: Verstabelle lädt unter macOS-Pakettests (#279) nicht (Ressource leer) → Fix in Job (2).
-- Merge-Treiber für Kataloge: ja → PR #286 (`ad15527`); nach Merge `scripts/setup-git-merge-drivers.sh` im Hauptordner ausführen (gilt für alle Worktrees; Branches ohne `.gitattributes` profitieren erst nach dem ersten Nachziehen).
+- Merge-Treiber für Kataloge: **gemergt (#286) und aktiviert** (gemeinsame Git-Konfiguration, gilt für alle Worktrees; Branches ohne `.gitattributes` profitieren erst nach dem ersten Nachziehen).
 - Rezept-Ergebnis: Menge nur über Mengen-Knopf, Werte-Blatt nur Name → Folge-PR (#280 ist gemergt).
 - Brain Dump am Tab/App-Symbol: nicht nötig.
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
@@ -45,7 +45,7 @@ Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur, (2) #284 Regel 1b + #280 M
 - Tests: vor jedem Commit `TAGWERK_SKIP_UI_TESTS=1 app/test-all.sh`; am Strangende `git fetch origin && git merge origin/main`, dann ein voller `app/test-all.sh`. Bekannte wacklige Audits: einmal wiederholen, jeden Fehler mit Laufnummer melden.
 - Ab GitHub-Pflicht-Check (nach #261): `main` nur beim Start holen, kein Nachziehen vor dem Abschlusslauf; GitHub testet das Merge-Ergebnis; nachziehen nur bei Konflikt oder rotem CI (Nutzer 21.11.).
 - Determinismus: Datums-Tests zeitzonenunabhängig (Formatierung mit `calendar.timeZone`); GitHub-CI läuft in UTC auf iPhone 18 Pro.
-- Kataloge: kompaktes Format; `sync-strings.sh` erst nutzen, wenn #261 auf `main` ist (danach formattreu); `check-strings.py`; Englisch in `scripts/translations/en.json`; „Projekt“ statt „Project“.
+- Kataloge: Merge-Treiber aktiv (Konflikte nur noch bei gleichem Schlüssel mit verschiedenem Text); kompaktes Format; `sync-strings.sh` erst nutzen, wenn #261 auf `main` ist (danach formattreu); `check-strings.py`; Englisch in `scripts/translations/en.json`; „Projekt“ statt „Project“.
 - Rechner: keine künstliche Last, keine Prozesse beenden, nie `simctl shutdown all` (nur den eigenen Simulator), nur ein Testlauf je Arbeitskopie, Simulator nach UI-Lauf herunterfahren; am Ende eigenen Simulator, DerivedData und Xcode-DerivedData mit Pfad in die Arbeitskopie löschen.
 - Grenzen: nicht pushen, keine PRs/Issues/TODO.md/`t3gh`; Commits englisch, ohne KI-Hinweis, ohne Co-Authored-By.
 
