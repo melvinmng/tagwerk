@@ -663,6 +663,8 @@ struct NoteBackup: BackupEntity {
     var deletedAt: Date?
     var importSourceID: String?
     var bookKey: String?
+    /// Optional, so files from before the lock stay readable; `nil` reads as not locked.
+    var isLocked: Bool?
 
     init(_ record: NoteRecord) {
         id = record.id
@@ -679,6 +681,7 @@ struct NoteBackup: BackupEntity {
         deletedAt = record.deletedAt
         importSourceID = record.importSourceID
         bookKey = record.bookKey
+        isLocked = record.isLocked
     }
 
     func makeRecord() -> NoteRecord {
@@ -697,6 +700,7 @@ struct NoteBackup: BackupEntity {
         record.deletedAt = deletedAt
         record.importSourceID = importSourceID
         record.bookKey = bookKey
+        record.isLocked = isLocked ?? false
         return record
     }
 }

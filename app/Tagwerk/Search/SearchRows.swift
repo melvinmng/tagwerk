@@ -210,20 +210,25 @@ struct SearchNoteRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "note.text").font(.title3).foregroundStyle(.secondaryText).frame(width: 24).accessibilityHidden(true)
+            Image(systemName: note.isConcealed ? "lock.fill" : "note.text").font(.title3).foregroundStyle(.secondaryText).frame(width: 24)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(SearchTexts.highlighted(title, ranges: match.titleRanges)).lineLimit(2)
-                Text(SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar))
-                    .font(.caption).foregroundStyle(.secondaryText)
-                if let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
+                Text(subtitle).font(.caption).foregroundStyle(.secondaryText)
+                // A hidden note shows no passage: that would tell what its text holds.
+                if !note.isConcealed, let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
             }
             Spacer(minLength: 0)
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([String(localized: "Notiz"), title,
-                             SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar)]
-            .joined(separator: ", "))
+        .accessibilityLabel([String(localized: "Notiz"), title, subtitle].joined(separator: ", "))
+    }
+
+    /// The kind and day; a hidden note shows "Ordner · Gesperrt" instead.
+    private var subtitle: String {
+        note.isConcealed ? "\(note.kindLabel) · " + String(localized: "Gesperrt")
+            : SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar)
     }
 
     /// The first line of the text, as the search document reads it.
