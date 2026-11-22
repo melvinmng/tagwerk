@@ -11,6 +11,8 @@ struct TaskRow: View {
     var isReadOnly = false
     /// Repeating task (reminder or local): marked with ↻ (design §13.8).
     var isRecurring = false
+    /// Own reminders, only while they differ from the default (plan g1, ER4b).
+    var reminderMark: ReminderMark?
     /// Title with highlighted passages (search); replaces the plain title, the issue number stays in front.
     var titleText: AttributedString?
     let onComplete: () -> Void
@@ -46,6 +48,15 @@ struct TaskRow: View {
                         Image(systemName: "circle.lefthalf.filled").imageScale(.small)
                         Text(TaskRowText.statusText(progress))
                     }
+                    if let reminderMark {
+                        Text("·")
+                        switch reminderMark {
+                        case .custom(let count):
+                            Label("\(count)", systemImage: "bell.fill").labelStyle(.titleAndIcon).imageScale(.small)
+                        case .none:
+                            Image(systemName: "bell.slash").imageScale(.small)
+                        }
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -65,7 +76,8 @@ struct TaskRow: View {
         // One element per row (screen reader, Voice Control, audit): the circle, due date, priority and list were
         // separate elements. The circle stays a button for touch; "Erledigt" is an action of the row.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(TaskRowText.accessibilityLabel(item: item, isRecurring: isRecurring, now: now, calendar: calendar))
+        .accessibilityLabel(TaskRowText.accessibilityLabel(item: item, isRecurring: isRecurring, now: now, calendar: calendar,
+                                                           reminderMark: reminderMark))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: Text(isReadOnly ? "Nur lesbar, GitHub offline" : "Erledigt"), onComplete)
         .accessibilityIdentifier(AccessibilityID.Tasks.row(item.title))
@@ -102,10 +114,10 @@ struct TaskRow: View {
     }
 }
 
-/// The spoken text of a task row: title, due date, repeat, priority, list and project status, in this order.
+/// The spoken text of a task row: title, due date, repeat, priority, list, project status and own reminders, in this order.
 enum TaskRowText {
     static func accessibilityLabel(item: TaskItem, isRecurring: Bool, now: Date, calendar: Calendar,
-                                   locale: Locale = .current) -> String {
+                                   reminderMark: ReminderMark? = nil, locale: Locale = .current) -> String {
         var parts = [item.title]
         if let due = item.due {
             let dueText = DueText.text(due, now: now, calendar: calendar, locale: locale)
@@ -120,7 +132,16 @@ enum TaskRowText {
             case .several: parts.append(statusText(progress))
             }
         }
+        if let reminderMark { parts.append(reminderText(reminderMark)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// "3 eigene Erinnerungen", "1 eigene Erinnerung" or "keine Erinnerungen".
+    static func reminderText(_ mark: ReminderMark) -> String {
+        switch mark {
+        case .custom(let count): count == 1 ? String(localized: "1 eigene Erinnerung") : String(localized: "\(count) eigene Erinnerungen")
+        case .none: String(localized: "keine Erinnerungen")
+        }
     }
 
     /// The stage in work, or the count of different stages: "In Progress", "2 Status".

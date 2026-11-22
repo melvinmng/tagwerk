@@ -98,6 +98,7 @@ struct RecipeConsentView: View {
                 point("paperplane", "**Gesendet wird:** der Rezepttext oder die Fotos und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse. Beim Übersetzen der Text der einen Rezept-Notiz, ohne Anhänge.")
                 point("eye.slash", "**Nicht gesendet werden:** deine Einkaufsliste, Mengen auf der Liste, Aufgaben, Termine, andere Notizen, Daten aus Health. Eine Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone, und private Notizen stehen nie zur Auswahl.")
                 point("hand.tap", "**Nur auf dein Tippen:** Ohne „Zutaten holen“, „Rezept holen“ oder „Übersetzen“ verlässt nichts das iPhone. Auch ein Link wird erst dann geladen.")
+                ConsentFollowUpPoint()
                 VStack(spacing: 10) {
                     Button(action: onAgree) {
                         Text("Einverstanden").fontWeight(.semibold).frame(maxWidth: .infinity)

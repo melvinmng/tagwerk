@@ -73,6 +73,11 @@ extension Calendar {
 final class TaskListModel {
     var filter: TaskFilter = .all
     private(set) var items: [TaskItem] = []
+    /// What each task row says about reminders (plan g1, ER4b), by task key: only tasks whose list differs from the default.
+    /// Rebuilt after a reload, after a task was written and after the editor saved reminders (`refreshReminderMarks`).
+    private(set) var reminderMarks: [String: ReminderMark] = [:]
+    /// The stored reminder lists and the defaults the marks are computed from; set by the app environment.
+    @ObservationIgnored var reminderMarkInputs: (() -> (overrides: [String: [ReminderOverride]], defaults: ReminderDefaults))?
     private(set) var sourceStates: [TaskSource: SourceState] = [:]
     private(set) var lastCompleted: TaskItem?
     /// Task to scroll to and mark briefly after "Aufgabe zeigen" (design §13.8 G3).
@@ -149,6 +154,20 @@ final class TaskListModel {
         for source in sourceStates.keys where !registered.contains(source) && !signedOutSources.contains(source) {
             sourceStates[source] = nil
         }
+        refreshReminderMarks()
+    }
+
+    /// Recomputes `reminderMarks` for the open tasks.
+    func refreshReminderMarks() {
+        guard let inputs = reminderMarkInputs?() else {
+            if !reminderMarks.isEmpty { reminderMarks = [:] }
+            return
+        }
+        var marks: [String: ReminderMark] = [:]
+        for item in items {
+            if let mark = ReminderMark.of(task: item, overrides: inputs.overrides, defaults: inputs.defaults) { marks[item.id.key] = mark }
+        }
+        if marks != reminderMarks { reminderMarks = marks }
     }
 
     private func load(_ provider: any TaskProvider, generation: Int) async {
@@ -539,6 +558,7 @@ final class TaskListModel {
         } else {
             items.append(item)
         }
+        refreshReminderMarks()
     }
 
     static func message(for error: Error) -> String {

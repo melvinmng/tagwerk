@@ -104,6 +104,7 @@ struct TaskEditorView: View {
                         }
                     }
                     if model.isVisible(.due) { dueFields }
+                    if model.isVisible(.due) { remindersRow }
                     if model.showsRecurrenceRow { recurrenceRow }
                     if model.removesRecurrenceWithDue {
                         Text("Ohne Fälligkeit entfällt die Wiederholung.")
@@ -119,8 +120,6 @@ struct TaskEditorView: View {
                         EstimateField(minutes: $model.draft.estimateMinutes)
                     }
                 }
-
-                remindersSection
 
                 statusSection
 
@@ -217,11 +216,11 @@ struct TaskEditorView: View {
                 case .handOver:
                     Button("Abgeben", role: .destructive) { Task { await finish(model.save()) } }
                 case .remindersReach:
-                    Button("Nur diese") {
+                    Button(ReminderReachText.onlyThis(reachDay, calendar: calendar)) {
                         reminders?.reach = .onlyThis
                         Task { await finish(model.save()) }
                     }
-                    Button("Alle folgenden") {
+                    Button(ReminderReachText.fromThis(reachDay, calendar: calendar)) {
                         reminders?.reach = .allFollowing
                         Task { await finish(model.save()) }
                     }
@@ -294,20 +293,22 @@ struct TaskEditorView: View {
         model.reminders = created
     }
 
-    /// The list of reminders; without a due date only a hint, because the reminders count from it. The picker opens as
-    /// a page of the navigation stack, so no sheet hangs on a row.
-    @ViewBuilder private var remindersSection: some View {
-        if let reminders, model.isVisible(.due) {
-            Section {
-                if model.draft.due == nil {
-                    Text("Erinnerungen brauchen ein Fälligkeitsdatum.").foregroundStyle(.secondary)
-                } else {
-                    ReminderListEditor(model: reminders.list, calendar: calendar)
+    /// One row under "Fällig" with the short form of the reminders; the list opens as a page of the navigation stack, so no
+    /// sheet hangs on a row. Without a due date the row is grey, because the reminders count from it.
+    @ViewBuilder private var remindersRow: some View {
+        if let reminders {
+            if model.draft.due == nil {
+                LabeledContent("Erinnerungen", value: String(localized: "Braucht eine Fälligkeit"))
+                    .foregroundStyle(.secondary)
+                    .accessibilityElement(children: .combine)
+            } else {
+                NavigationLink {
+                    ReminderSelectionPage(model: reminders.list, subject: .task, calendar: calendar,
+                                          footer: remindersFooter(reminders))
+                } label: {
+                    LabeledContent("Erinnerungen",
+                                   value: reminders.list.rowSummary(subject: .task, calendar: calendar))
                 }
-            } header: {
-                Text("Erinnerungen")
-            } footer: {
-                if model.draft.due != nil, let footer = remindersFooter(reminders) { Text(footer) }
             }
         }
     }
@@ -336,7 +337,10 @@ struct TaskEditorView: View {
 
     private func finish(_ success: Bool) {
         guard success else { return }
-        if reminders?.hasChanges == true { environment.notifications.scheduleSoon() }
+        if reminders?.hasChanges == true {
+            environment.notifications.scheduleSoon()
+            environment.taskList.refreshReminderMarks()
+        }
         if let saved = model.saved { onSaved(saved, model.requestedAssignees) }
         // A handed-over issue leaves the plan; its planning edits must not create a day or block again.
         if model.savedIsListed, let planning, let plannedEdit, plannedEdit != planning.plannedEdit(for: model.original) {
@@ -366,6 +370,11 @@ struct TaskEditorView: View {
         return planning.today.startDate(in: calendar).formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
     }
 
+    /// The due date the reminder question names: the reminders of a repeating task count from it.
+    private var reachDay: PlanDay {
+        model.draft.due.map(PlanDay.init) ?? PlanDay(date: .now, calendar: calendar)
+    }
+
     private var askingSaveQuestion: Binding<Bool> {
         Binding(get: { saveQuestion != nil }, set: { if !$0 { saveQuestion = nil } })
     }
@@ -373,7 +382,7 @@ struct TaskEditorView: View {
     private var saveQuestionTitle: String {
         switch saveQuestion {
         case .keepBlocks: String(localized: "Wiederholung geändert")
-        case .remindersReach: String(localized: "Erinnerungen ändern")
+        case .remindersReach: ReminderReachText.title(.task)
         case .handOver: String(localized: "Du bist danach nicht mehr zugewiesen.")
         case .effortReach, nil: effortQuestion
         }

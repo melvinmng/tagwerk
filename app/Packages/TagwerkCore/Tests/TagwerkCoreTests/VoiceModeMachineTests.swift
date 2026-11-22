@@ -422,6 +422,39 @@ struct VoiceModeMachineTests {
         #expect(machine.tick(now: at(13.5)) == [.cancelListening, .confirm(ids: ["g1"])])
     }
 
+    @Test func confirmAll_withNoteCard_isRejectedWithNotice() {
+        var machine = listeningWithCards(OpenCards(ids: ["a", "n"], deletes: 0, guarded: 0, notes: 1))
+        #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.notesNeedSingle)])
+        #expect(ActionAnnouncement.prompt(.notesNeedSingle, language: .german) == "Notiz-Änderungen bitte einzeln bestätigen.")
+        #expect(ActionAnnouncement.prompt(.notesNeedSingle, language: .english) == "Please confirm changes to notes one by one.")
+        // Even one note card alone is not confirmed with "alle".
+        var single = listeningWithCards(OpenCards(ids: ["n"], deletes: 0, guarded: 0, notes: 1))
+        #expect(reply(&single, "Alle bestätigen", at: 8) == [.prompt(.notesNeedSingle)])
+    }
+
+    @Test func confirmAll_withNoteCardAndDeletion_asksForTheDeletionFirst() {
+        var machine = listeningWithCards(OpenCards(ids: ["n", "d"], deletes: 1, guarded: 0, notes: 1))
+        #expect(reply(&machine, "Alle bestätigen", at: 8) == [.prompt(.deletesNeedTap)])
+    }
+
+    @Test func confirm_singleNoteCard_startsCountdown() {
+        var machine = listeningWithCards(OpenCards(ids: ["n1"], deletes: 0, guarded: 0, notes: 1))
+        #expect(reply(&machine, "Ja", at: 8) == [.startListening(.german)])
+        machine.recordingStarted(now: at(11.5))
+        #expect(machine.tick(now: at(13.5)) == [.cancelListening, .confirm(ids: ["n1"])])
+    }
+
+    @Test func confirm_singleDeleteNote_asksForDelete() {
+        // A card that deletes a note counts as a deletion: "Ja" is not enough, "Ja, löschen" is.
+        var machine = listeningWithCards(OpenCards(ids: ["d1"], deletes: 1))
+        #expect(reply(&machine, "Ja", at: 8) == [.prompt(.sayDelete)])
+    }
+
+    @Test func openCards_notesDefaultsToZero() {
+        #expect(OpenCards(ids: ["a"], deletes: 0).notes == 0)
+        #expect(OpenCards.none.notes == 0)
+    }
+
     @Test func openCards_guardedDefaultsToZero() {
         #expect(OpenCards(ids: ["a"], deletes: 0).guarded == 0)
         #expect(OpenCards.none.guarded == 0)

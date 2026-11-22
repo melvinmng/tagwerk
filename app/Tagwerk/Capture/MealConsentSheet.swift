@@ -13,6 +13,7 @@ struct MealConsentSheet: View {
                     point("paperplane", "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus.")
                     point("heart.slash", "**Nicht gesendet werden** Daten aus Health, deine Ziele und frühere Einträge.")
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.")
+                    ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
                         .font(.footnote).foregroundStyle(.secondary)
                     VStack(spacing: 10) {

@@ -12,6 +12,13 @@
 #   TAGWERK_DEVELOPER_DIR      Xcode developer directory instead of /Applications/Xcode.app
 #   TAGWERK_ONLY_UI_TESTS=1    run only the UI test stage (no package stages, no app unit tests, no String Catalog check)
 #   TAGWERK_TEST_RESULTS_DIR   folder for one .xcresult bundle per stage (see run_tests)
+#   TAGWERK_BUILD_ONLY=1       build, do not test: every stage that would run tests runs xcodebuild build-for-testing
+#                              instead, with the same schemes, destination and derived data folders, so the build
+#                              products are the ones a test run would produce. Used by CI to refresh the build cache
+#                              after a merge. Combines with TAGWERK_SKIP_UI_TESTS and TAGWERK_ONLY_UI_TESTS to select
+#                              the stages (packages and app, or only the UI test runner). The simulator is not
+#                              booted, no permissions are granted, the String Catalog check is skipped, and the UI
+#                              test selection variables below are ignored (they only choose which tests run).
 #
 # UI test selection (only affects the "app UI tests" stage):
 #   TAGWERK_UI_TEST_SET        "full" (default): all UI tests; "pr": skips the tests listed in
@@ -151,7 +158,11 @@ if [[ -n "${TAGWERK_SOURCE_ONLY:-}" ]]; then return 0; fi
 
 # Reports the failing stage and stops the script.
 stage_failed() {
-  echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
+  if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+    echo "BUILD FAILED in stage: $CURRENT_STAGE" >&2
+  else
+    echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
+  fi
   exit 1
 }
 
@@ -168,6 +179,9 @@ mkdir -p "$LOG_DIR"
 RESULTS_DIR="${TAGWERK_TEST_RESULTS_DIR:-}"
 [[ -z "$RESULTS_DIR" ]] || mkdir -p "$RESULTS_DIR"
 echo "==> setup: $DESTINATION, derived data $DERIVED"
+if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+  echo "    build only (TAGWERK_BUILD_ONLY): build-for-testing, no tests are run"
+fi
 
 # Runs xcodebuild test, keeps the full log and fails when no test was executed.
 run_tests() {
@@ -198,6 +212,32 @@ run_tests() {
   echo "    ${summary//$'\t'/}"
 }
 
+# Build-only counterpart of run_tests: xcodebuild build-for-testing with the same arguments, log file and result bundle
+# naming. "xcodebuild test" is "build-for-testing" followed by "test-without-building", so the build products and the
+# DerivedData state are the same; only the test execution (and the test language and region it needs) is left out.
+build_for_testing() {
+  local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
+  local result_args=()
+  if [[ -n "$RESULTS_DIR" ]]; then
+    result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}.xcresult")
+  fi
+  if ! xcodebuild build-for-testing "${result_args[@]}" "$@" > "$log" 2>&1; then
+    grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
+    echo "Full log: $log" >&2
+    return 1
+  fi
+  echo "    build succeeded (log: $log)"
+}
+
+# Runs a stage: tests normally, only the build with TAGWERK_BUILD_ONLY=1. Takes the xcodebuild arguments of the stage.
+run_stage() {
+  if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+    build_for_testing "$@"
+  else
+    run_tests "$@"
+  fi
+}
+
 # Resolves the scheme to test: "<Pkg>" if the package exposes a single product, else "<Pkg>-Package".
 resolve_package_scheme() {
   local package_name="$1"
@@ -225,7 +265,7 @@ for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
   fi
   cd "$package_dir"
   scheme=$(resolve_package_scheme "$package_name") || stage_failed
-  run_tests -scheme "$scheme" -destination "$DESTINATION" || stage_failed
+  run_stage -scheme "$scheme" -destination "$DESTINATION" || stage_failed
 done
 
 CURRENT_STAGE="app (xcodegen)"
@@ -238,13 +278,17 @@ echo "==> $CURRENT_STAGE"
 if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
   echo "    skipped (TAGWERK_ONLY_UI_TESTS)"
 else
-  run_tests -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
+  run_stage -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
 fi
 
 CURRENT_STAGE="app UI tests"
 echo "==> $CURRENT_STAGE"
 if [[ -n "${TAGWERK_SKIP_UI_TESTS:-}" ]]; then
   echo "    skipped (TAGWERK_SKIP_UI_TESTS)"
+elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+  # Same scheme, destination and derived data folder as the test run below, so it builds the app and the UI test runner
+  # exactly as the test run would. No simulator boot, permissions or test selection: nothing is executed.
+  build_for_testing -project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme TagwerkUITests -destination "$DESTINATION" -derivedDataPath "$DERIVED" || stage_failed
 else
   # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
   # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (it keeps running).
@@ -264,6 +308,8 @@ CURRENT_STAGE="string catalogs"
 echo "==> $CURRENT_STAGE"
 if [[ -n "${TAGWERK_ONLY_UI_TESTS:-}" ]]; then
   echo "    skipped (TAGWERK_ONLY_UI_TESTS)"
+elif [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+  echo "    skipped (TAGWERK_BUILD_ONLY)"
 else
   /usr/bin/python3 "$SCRIPT_DIR/../scripts/check-strings.py" --require-english || stage_failed
   "$SCRIPT_DIR/../scripts/sync-strings.sh" --check --no-build --derived-data "$DERIVED" || stage_failed
@@ -271,4 +317,8 @@ else
 fi
 
 CURRENT_STAGE="done"
-echo "ALL TESTS PASSED"
+if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
+  echo "ALL BUILDS SUCCEEDED (build only, no tests were run)"
+else
+  echo "ALL TESTS PASSED"
+fi

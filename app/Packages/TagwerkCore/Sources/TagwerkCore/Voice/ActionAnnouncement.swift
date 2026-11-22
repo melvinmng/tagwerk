@@ -63,6 +63,8 @@ public enum ActionAnnouncement {
         case deletesNeedTap
         /// "Alle bestätigen" while a card assigns an issue to other people or to no one.
         case guardedNeedTap
+        /// "Alle bestätigen" while a card creates or revises a note.
+        case notesNeedSingle
         /// The confirmation countdown was stopped.
         case cancelled
     }
@@ -79,6 +81,8 @@ public enum ActionAnnouncement {
         case (.deletesNeedTap, .english): "Please confirm deletions one by one."
         case (.guardedNeedTap, .german): "Zuweisungen bitte einzeln bestätigen."
         case (.guardedNeedTap, .english): "Please confirm assignments one by one."
+        case (.notesNeedSingle, .german): "Notiz-Änderungen bitte einzeln bestätigen."
+        case (.notesNeedSingle, .english): "Please confirm changes to notes one by one."
         case (.cancelled, .german): "Abgebrochen."
         case (.cancelled, .english): "Cancelled."
         }

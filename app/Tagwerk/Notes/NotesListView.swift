@@ -117,6 +117,8 @@ struct NotesListView: View {
                 ToolbarItemGroup(placement: .bottomBar) { selectionActions }
             }
         }
+        // The notes chat from this list; not in "Zuletzt gelöscht" and not in a private folder.
+        .noteAssistantEntry(NoteAssistantEntry.Target(scope: scope), store: store)
         .safeAreaInset(edge: .bottom) {
             if allowsCapture, !editMode.isEditing { captureBar }
         }
