@@ -145,14 +145,28 @@ struct NotesFoldersView: View {
         .buttonStyle(.plain)
     }
 
-    /// "Brain Dump": a tap opens the folder, the swipe from the leading edge starts a new note in it.
+    /// "Brain Dump": a tap on the row opens the folder, the plus button (NO3b) starts a new note in it. The swipe from
+    /// the leading edge and the context menu do the same.
     private func brainDumpRow(_ folder: NoteFolderRecord, count: Int) -> some View {
-        Button {
-            environment.tasksPath.append(.notesFolder(.folder(folder.id)))
-        } label: {
-            rowLabel(symbol: Self.symbol(for: .brainDump), title: Text(folder.name), count: count, depth: 1, role: .brainDump)
+        HStack(spacing: 0) {
+            Button {
+                environment.tasksPath.append(.notesFolder(.folder(folder.id)))
+            } label: {
+                rowLabel(symbol: Self.symbol(for: .brainDump), title: Text(folder.name), count: count, depth: 1, role: .brainDump,
+                         showsChevron: false)
+            }
+            .buttonStyle(.plain)
+            Button { newBrainDumpNote(in: folder) } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(NoteFolderTint.color(for: .brainDump))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Neue Notiz in \(folder.name)")
+            .accessibilityIdentifier("notes.brainDumpPlus")
         }
-        .buttonStyle(.plain)
         .swipeActions(edge: .leading) {
             Button { newBrainDumpNote(in: folder) } label: { Label("Neu", systemImage: "square.and.pencil") }.tint(.accentColor)
         }

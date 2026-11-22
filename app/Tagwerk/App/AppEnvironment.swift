@@ -547,6 +547,21 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
+    /// Creates an empty note in "Brain Dump" and opens it for writing from anywhere in the app (the plus button of the
+    /// folder overview). The editor removes the note again when it closes without text, so a tap that is not followed
+    /// by writing leaves nothing behind. Replaces whatever was pushed in the tab "Aufgaben".
+    func openNewBrainDumpNote() {
+        if notes.folder(role: .brainDump) == nil { notes.ensureDefaultFolders() }
+        guard let folder = notes.folder(role: .brainDump) else {
+            tasksPath = [.notes]
+            requestedTab = 1
+            return
+        }
+        let note = notes.createBlank(folderID: folder.id)
+        tasksPath = [.notes, .notesFolder(.folder(folder.id)), .note(note.id)]
+        requestedTab = 1
+    }
+
     /// Opens a notes list in the tab "Aufgaben", on top of the folder overview. Replaces whatever was pushed there.
     /// A locked folder asks for Face ID in its list like at every other opening.
     func showNotes(_ scope: NotesScope) {
