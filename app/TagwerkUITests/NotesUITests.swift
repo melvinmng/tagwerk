@@ -37,7 +37,9 @@ final class NotesUITests: UITestCase {
     func testEmptyJournalFolderOffersImport() {
         openNotes()
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch mit Gott")).firstMatch
-        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout), "The folder of the journal is missing")
+        // The journal sits in the last named section ("Persönlich"), below the first screen of the folder list.
+        scrollTo(folder)
+        XCTAssertTrue(folder.exists, "The folder of the journal is missing")
         folder.tap()
         XCTAssertFalse(app.buttons["Aus Notion importieren"].exists, "A folder with an entry offers the import")
         // The demo data has one entry; the trash empties the folder.
