@@ -2,7 +2,8 @@ import SwiftUI
 import TagwerkCore
 import UniformTypeIdentifiers
 
-/// Settings → Datensicherung: back up into a file, restore from one, and the automatic backup into a chosen folder.
+/// Settings → Datensicherung: a status card on top, then back up into a file, restore from one, and the automatic backup into a
+/// chosen folder.
 struct BackupSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var document: BackupDocument?
@@ -11,51 +12,69 @@ struct BackupSettingsView: View {
     @State private var isChoosingFolder = false
     @State private var pendingRestore: BackupService.Inspection?
     @State private var alertText: String?
+    /// Number and size of the own files in the backup folder; read when the page opens and after a backup.
+    @State private var folderSummary: (count: Int, bytes: Int)?
 
     var body: some View {
         @Bindable var settings = environment.settings
         let service = environment.backup
+        let status = service.status
         Form {
+            Section {
+                StatusCard(status: status, folderName: service.folderName, summary: folderSummary,
+                           includesPrivate: settings.backupIncludesPrivateNotes)
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+
             Section {
                 Button { makeBackup(service) } label: { Label("Jetzt sichern", systemImage: "square.and.arrow.up") }
                 Button { isChoosingFile = true } label: { Label("Wiederherstellen …", systemImage: "arrow.counterclockwise") }
-                if let text = Self.attachmentsText(service.attachmentSummary) {
-                    LabeledContent("Anhänge in Notizen", value: text)
+            }
+
+            Section {
+                Toggle(isOn: $settings.autoBackupEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Automatisch sichern")
+                        Text("Täglich beim Verlassen der App, die letzten \(BackupRules.keptFiles) bleiben")
+                            .font(.footnote).foregroundStyle(.secondaryText)
+                    }
                 }
-            } footer: {
-                Text("Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.")
-            }
-
-            Section {
-                Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
-            } footer: {
-                Text("Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.")
-            }
-
-            Section {
-                Toggle("Automatisch sichern", isOn: $settings.autoBackupEnabled)
                 Button { isChoosingFolder = true } label: {
                     LabeledContent("Sicherungsordner", value: service.folderName ?? String(localized: "Nicht gewählt"))
                 }
                 .tint(.primary)
-                LabeledContent("Letzte Sicherung", value: Self.lastBackupText(settings.lastAutoBackupAt))
-                if let error = settings.lastBackupError {
-                    Text(error).font(.footnote).foregroundStyle(.redText)
+            } header: {
+                Text("Automatisch")
+            } footer: {
+                Text("Andere Dateien im Ordner rührt Tagwerk nicht an. Gelöscht werden nur ältere Dateien mit dem Namen „Tagwerk-Sicherung-…“.")
+            }
+
+            Section {
+                Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
+                NavigationLink { BackupCoverageView() } label: { Text("Was wird gesichert?") }
+                if let text = Self.attachmentsText(service.attachmentSummary) {
+                    LabeledContent("Anhänge in Notizen", value: text)
                 }
             } header: {
-                Text("Automatische Sicherung")
+                Text("Inhalt")
             } footer: {
-                Text("Wähle einen Ordner, zum Beispiel in iCloud Drive. Beim Wechsel in den Hintergrund sichert Tagwerk, wenn die letzte Sicherung älter als 24 Stunden ist. Die letzten \(BackupRules.keptFiles) Dateien bleiben, ältere mit dem Namen „Tagwerk-Sicherung-…“ werden gelöscht. Andere Dateien im Ordner rührt Tagwerk nicht an.")
+                Text("Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten. Die Sicherung ist nicht verschlüsselt und liegt dort, wo du sie speicherst.")
             }
 
             Section {
                 EmptyView()
+            } header: {
+                Text("Vor dem Wiederherstellen")
             } footer: {
-                Text("Nicht gesichert: der Chatverlauf mit dem Assistenten und Zwischenspeicher, die Tagwerk neu lädt. Beim Wiederherstellen werden alle gesicherten Daten ersetzt. Angaben, die an dieses Gerät gebunden sind (Kalender, Erinnerungslisten, Einkaufsliste), werden übernommen; fehlen sie auf dem Gerät, verhält sich Tagwerk wie bei einer fehlenden Liste.")
+                Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).")
             }
         }
         .navigationTitle("Datensicherung")
         .navigationBarTitleDisplayMode(.inline)
+        .task { refreshFolderSummary(service) }
+        .onChange(of: settings.backupFolderBookmark) { refreshFolderSummary(service) }
+        .onChange(of: settings.lastAutoBackupAt) { refreshFolderSummary(service) }
         .fileExporter(isPresented: $isExporting, document: document, contentType: .json, defaultFilename: service.suggestedFileName) { result in
             if case .failure = result { alertText = BackupService.message(for: .writeFailed) }
         }
@@ -73,6 +92,10 @@ struct BackupSettingsView: View {
             if let pendingRestore { Text(Self.summary(pendingRestore)) }
         }
         .alert(alertText ?? "", isPresented: alertBinding) { Button("OK", role: .cancel) {} }
+    }
+
+    private func refreshFolderSummary(_ service: BackupService) {
+        folderSummary = service.folderSummary()
     }
 
     /// "12 · 34 MB"; `nil` without attachments, so the row only shows when it matters for the file size.
@@ -159,5 +182,47 @@ struct BackupSettingsView: View {
 
     private var alertBinding: Binding<Bool> {
         Binding(get: { alertText != nil }, set: { if !$0 { alertText = nil } })
+    }
+}
+
+/// The card on top of the page: whether, when, where to and with which content the backup ran. The warning state is orange and
+/// carries a symbol and text, never colour alone.
+private struct StatusCard: View {
+    let status: BackupStatus
+    let folderName: String?
+    let summary: (count: Int, bytes: Int)?
+    let includesPrivate: Bool
+    private let now = Date()
+
+    var body: some View {
+        let calendar = Calendar.tagwerk
+        VStack(alignment: .leading, spacing: 4) {
+            Label {
+                Text(BackupStatusText.headline(status))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(status.isWarning ? Color.orangeText : status == .off ? Color.secondaryText : Color.greenText)
+            } icon: {
+                Image(systemName: symbolName).foregroundStyle(status.isWarning ? Color.orange : status == .off ? Color.secondaryText : Color.green)
+            }
+            if let title = BackupStatusText.title(status, now: now, calendar: calendar) {
+                Text(title).font(.title3.weight(.semibold))
+            }
+            Text(BackupStatusText.detail(status, folderName: folderName, summary: summary, includesPrivate: includesPrivate))
+                .font(.footnote).foregroundStyle(.secondaryText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(status.isWarning ? Color.orange.opacity(0.14) : Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("backup.statusCard")
+    }
+
+    private var symbolName: String {
+        switch status {
+        case .backedUp: "checkmark.circle.fill"
+        case .off: "pause.circle"
+        case .overdue, .folderMissing, .failed: "exclamationmark.triangle.fill"
+        }
     }
 }

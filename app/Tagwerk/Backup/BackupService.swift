@@ -165,6 +165,29 @@ final class BackupService {
         return (try? URL(resolvingBookmarkData: bookmark, options: [], relativeTo: nil, bookmarkDataIsStale: &stale))?.lastPathComponent
     }
 
+    /// Own backup files in the chosen folder (only names that follow the pattern of `BackupRules.isOwnFile`): their number and
+    /// total size. `nil` without a folder or when the folder cannot be read.
+    func folderSummary() -> (count: Int, bytes: Int)? {
+        guard let bookmark = settings.backupFolderBookmark else { return nil }
+        var stale = false
+        guard let folder = try? URL(resolvingBookmarkData: bookmark, options: [], relativeTo: nil, bookmarkDataIsStale: &stale) else { return nil }
+        let scoped = folder.startAccessingSecurityScopedResource()
+        defer { if scoped { folder.stopAccessingSecurityScopedResource() } }
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return nil }
+        let own = names.filter(BackupRules.isOwnFile)
+        let bytes = own.reduce(0) { total, name in
+            let size = (try? folder.appendingPathComponent(name).resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+            return total + size
+        }
+        return (own.count, bytes)
+    }
+
+    /// The status of the automatic backup for the card on the backup page.
+    var status: BackupStatus {
+        BackupStatus.status(autoEnabled: settings.autoBackupEnabled, hasFolder: settings.backupFolderBookmark != nil,
+                            lastBackup: settings.lastAutoBackupAt, lastError: settings.lastBackupError, now: now())
+    }
+
     func clearFolder() {
         settings.backupFolderBookmark = nil
         settings.lastBackupError = nil

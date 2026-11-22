@@ -1159,4 +1159,54 @@ struct BackupTests {
         backup.clearFolder()
         #expect(sourceSettings.backupFolderBookmark == nil && sourceSettings.lastBackupError == nil)
     }
+    // MARK: Status card
+
+    @Test func folderSummary_countsOnlyOwnFiles() throws {
+        #expect(backup.folderSummary() == nil)
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try backup.chooseFolder(folder)
+        let empty = try #require(backup.folderSummary())
+        #expect(empty.count == 0 && empty.bytes == 0)
+        try Data(count: 1000).write(to: folder.appendingPathComponent("Tagwerk-Sicherung-2026-10-01-0800.json"))
+        try Data(count: 500).write(to: folder.appendingPathComponent("Tagwerk-Sicherung-2026-10-02-0800.json"))
+        for foreign in ["Notizen.txt", "Tagwerk-Sicherung-2026-10-01-0800.json.bak", "Tagwerk-Vor-Wiederherstellung-2026-10-01-0800.json"] {
+            try Data(count: 9000).write(to: folder.appendingPathComponent(foreign))
+        }
+        let summary = try #require(backup.folderSummary())
+        #expect(summary.count == 2 && summary.bytes == 1500)
+        try FileManager.default.removeItem(at: folder)
+        #expect(backup.folderSummary() == nil)
+    }
+
+    @Test func status_followsTheSettingsAndTheClock() throws {
+        sourceSettings.autoBackupEnabled = false
+        #expect(backup.status == .off)
+        sourceSettings.autoBackupEnabled = true
+        backup.clearFolder()
+        #expect(backup.status == .folderMissing)
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try backup.chooseFolder(folder)
+        #expect(backup.status == .overdue(since: nil, days: 0))
+        backup.runAutomaticBackup()
+        #expect(backup.status == .backedUp(at: clock.now))
+        clock.now = clock.now.addingTimeInterval(3 * 86_400)
+        #expect(backup.status == .overdue(since: sourceSettings.lastAutoBackupAt, days: 3))
+    }
+
+    @Test func statusText_namesWhenAndWhatWithoutClaimingTheStorage() {
+        let now = clock.now
+        let earlierToday = now.addingTimeInterval(-3 * 3600)
+        let title = BackupStatusText.title(.backedUp(at: earlierToday), now: now, calendar: calendar)
+        #expect(title?.hasPrefix("Heute, ") == true && title?.hasSuffix("7:00") == true)
+        let yesterday = BackupStatusText.title(.backedUp(at: now.addingTimeInterval(-86_400)), now: now, calendar: calendar)
+        #expect(yesterday?.hasPrefix("Heute") == false && yesterday?.hasSuffix("10:00") == true)
+        #expect(BackupStatusText.title(.overdue(since: now, days: 3), now: now, calendar: calendar) == "Seit 3 Tagen")
+        #expect(BackupStatusText.headline(.overdue(since: nil, days: 0)) == "Noch nicht gesichert")
+        let detail = BackupStatusText.detail(.backedUp(at: now), folderName: "Tagwerk", summary: (7, 41_000_000), includesPrivate: true)
+        #expect(detail.contains("Automatisch nach „Tagwerk“") && detail.contains("Sicherungen: 7") && detail.contains("mit Tagebuch und Bible Study"))
+        #expect(!detail.contains("iCloud"))
+        #expect(BackupStatusText.detail(.failed(message: "Voll"), folderName: "Tagwerk", summary: nil, includesPrivate: true) == "Voll")
+    }
 }
