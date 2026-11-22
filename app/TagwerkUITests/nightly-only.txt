@@ -16,3 +16,6 @@ PlanHeaderLayoutUITests
 
 # Placement of the travel capsule in the grid needs the real layout; its contrast is checked by the render test (MarkerRenderContrastTests).
 TravelContrastUITests/testAttachmentSitsAboveItsEventInTheGrid
+
+# The collapse of overlapping entries needs the real grid; the decision by text size and width is checked by GridCollapseLayoutTests.
+PlanOverlapUITests/testOverlappingEntriesCollapseAtLargeText
