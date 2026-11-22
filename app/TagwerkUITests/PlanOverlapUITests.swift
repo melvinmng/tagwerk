@@ -1,11 +1,14 @@
 import XCTest
 
 /// Overlapping entries in the hour grid (BF1c): with large text the columns would be too narrow, so the entries become
-/// one block; in the standard size they stay side by side. `-TagwerkDemoOverlap` adds three appointments at 13:30–14:30.
+/// one block. `-TagwerkDemoOverlap` adds three appointments at 13:30–14:30.
+///
+/// The decision by text size and width (collapse at the largest size, side by side at the standard size) is asked in
+/// `GridCollapseLayoutTests` without an app launch. This is the one case that runs in the real grid, nightly only
+/// (`nightly-only.txt`): the block, its VoiceOver label, the list behind it and the way from the list to an entry.
 final class PlanOverlapUITests: UITestCase {
     override var extraLaunchArguments: [String] {
-        ["-TagwerkDemoOverlap"] + Self.morningClockArguments
-            + (name.contains("LargeText") ? ["-TagwerkUITestTextSize", "accessibility5"] : [])
+        ["-TagwerkDemoOverlap", "-TagwerkUITestTextSize", "accessibility5"] + Self.morningClockArguments
     }
 
     private let titles = ["Projektbesprechung", "Zahnarzt Kontrolle", "Anruf Steuerberater"]
@@ -46,16 +49,5 @@ final class PlanOverlapUITests: UITestCase {
         waitUntilGone(app.staticTexts["Zum Verschieben den Eintrag öffnen."])
         XCTAssertTrue(app.textFields["Zahnarzt Kontrolle"].waitForExistence(timeout: Self.timeout)
                       || app.staticTexts["Zahnarzt Kontrolle"].waitForExistence(timeout: Self.timeout), "The entry does not open")
-    }
-
-    func testOverlappingEntriesStaySideBySideAtStandardSize() {
-        waitFor("Sprechstunde")
-        for title in titles {
-            let entry = button(startingWith: title + ", ")
-            reveal(entry)
-            XCTAssertTrue(entry.exists, "\(title) is not a block of its own")
-        }
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "3 Termine")).firstMatch.exists,
-                       "The entries collapsed in the standard size")
     }
 }

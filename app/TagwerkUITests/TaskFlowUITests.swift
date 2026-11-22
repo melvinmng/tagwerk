@@ -107,21 +107,10 @@ final class TaskFlowUITests: UITestCase {
         waitUntilGone(bar)
     }
 
-    /// The button above the keyboard is a symbol ("Tastatur ausblenden"), there is no second "Fertig", and the sheet stays open.
-    func testKeyboardButtonHidesKeyboard() {
-        tab("Aufgaben")
-        tapButton("Neue Aufgabe")
-        onScreen(label: "Lokal").tap()
-        typeIn("Notiz", text: "UI-Test")
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Self.timeout), "The keyboard did not appear")
-        XCTAssertFalse(app.buttons["Fertig"].exists, "The keyboard button must not be labelled \"Fertig\" any more")
-        tapButton("Tastatur ausblenden")
-        waitUntilGone(app.keyboards.firstMatch)
-        XCTAssertTrue(app.textFields["Titel"].exists, "The sheet closed with the keyboard")
-    }
-
-    /// The root view sets the Return key of single-line fields to "Fertig", also inside sheets; a multi-line field keeps "return".
-    func testReturnKeyReadsFertigInSingleLineFields() {
+    /// The keyboard of the task sheet, in one launch: the Return key of single-line fields reads "Fertig" (the root view sets it, also
+    /// inside sheets, #188 TA1a), a multi-line field keeps "return", the button above the keyboard is a symbol ("Tastatur ausblenden"),
+    /// there is no second "Fertig", and the sheet stays open when the keyboard closes.
+    func testKeyboardReturnKeyAndHideButton() {
         tab("Aufgaben")
         tapButton("Neue Aufgabe")
         onScreen(label: "Lokal").tap()
@@ -129,7 +118,12 @@ final class TaskFlowUITests: UITestCase {
         XCTAssertTrue(app.keyboards.buttons["Fertig"].waitForExistence(timeout: Self.timeout),
                       "The Return key of the title field does not read \"Fertig\"")
         typeIn("Notiz", text: "UI-Test")
-        XCTAssertTrue(app.keyboards.buttons["Fertig"].waitForNonExistence(timeout: Self.timeout),
-                      "The Return key of the multi-line field must not read \"Fertig\"")
+        // Neither the Return key of the multi-line field nor the button above the keyboard may read "Fertig".
+        XCTAssertTrue(app.buttons["Fertig"].waitForNonExistence(timeout: Self.timeout),
+                      "The Return key of the multi-line field or the keyboard button reads \"Fertig\"")
+        XCTAssertTrue(app.keyboards.firstMatch.exists, "The keyboard did not stay up for the note")
+        tapButton("Tastatur ausblenden")
+        waitUntilGone(app.keyboards.firstMatch)
+        XCTAssertTrue(app.textFields["Titel"].exists, "The sheet closed with the keyboard")
     }
 }
