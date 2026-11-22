@@ -264,9 +264,12 @@ enum AuditAllowlist {
             // between the passes and after the last one, so that the switch back does not run into the next test step.
             try waitForStableScreen(app, screen: screen, file: file, line: line)
             var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+            let auditStarted = Date()
             try runAudit(app, for: pass) { issue in
                 findings.append((issue, issue.element))
             }
+            stats.auditSeconds += Date().timeIntervalSince(auditStarted)
+            stats.findings += findings.count
             for finding in findings where !isAccepted(finding.issue, element: finding.element) {
                 let element = finding.element
                 XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
@@ -274,6 +277,7 @@ enum AuditAllowlist {
             }
         }
         try waitForStableScreen(app, screen: screen, file: file, line: line)
+        recordStats(screen: screen)
     }
 
     /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
@@ -337,6 +341,8 @@ enum AuditAllowlist {
     }
 
     private static func coverage(of issue: XCUIAccessibilityAuditIssue, element: XCUIElement?) -> Coverage {
+        let started = Date()
+        defer { stats.matchSeconds += Date().timeIntervalSince(started) }
         guard let element else { return acceptsFindingWithoutElement(issue) ? .elementlessRule : .none }
         guard let match = matchingEntry(issue, element: element) else { return .none }
         return .entry(index: match.index, pattern: match.pattern)
@@ -366,6 +372,7 @@ enum AuditAllowlist {
         func matches(_ text: String, _ pattern: String) -> Bool { text.range(of: "^(\(pattern))$", options: .regularExpression) != nil }
         // Every read of an element property is a query of its own and slow, so each is read once per finding.
         let label = element.label, identifier = element.identifier, elementType = element.elementType
+        stats.elementQueries += 3
         let index = entries.firstIndex { entry in
             guard entry.auditType == issue.auditType, entry.screens == nil || entry.screens?.contains(currentScreen) == true,
                   entry.elementType == nil || entry.elementType == elementType else { return false }
@@ -413,6 +420,32 @@ enum AuditAllowlist {
     static var collectsFindings: Bool { collectFile != nil }
 
     static var currentScreen = ""
+
+    /// Cost of judging the findings of one `audit` call, written to `<collect file>.stats` in collect mode (one line per audit call):
+    /// the time of `performAccessibilityAudit`, the time of matching the findings against the allowlist (`coverage(of:element:)`,
+    /// which includes the queries of the element) and the number of queries of the element. Measurement only; it does not change a result.
+    private struct Stats {
+        var auditSeconds = 0.0
+        var matchSeconds = 0.0
+        var findings = 0
+        var elementQueries = 0
+    }
+    private static var stats = Stats()
+
+    private static func recordStats(screen: String) {
+        defer { stats = Stats() }
+        guard let path = collectFile else { return }
+        let line = String(format: "%@ | findings=%d auditSeconds=%.2f matchSeconds=%.2f elementQueries=%d\n", screen, stats.findings,
+                          stats.auditSeconds, stats.matchSeconds, stats.elementQueries)
+        let statsPath = path + ".stats"
+        if let handle = FileHandle(forWritingAtPath: statsPath) {
+            handle.seekToEndOfFile()
+            handle.write(Data(line.utf8))
+            try? handle.close()
+        } else {
+            try? line.write(toFile: statsPath, atomically: true, encoding: .utf8)
+        }
+    }
 
     private static func record(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement?, coverage: Coverage) {
         var accepted = ""
