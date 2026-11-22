@@ -308,22 +308,46 @@ enum AuditAllowlist {
             // depend on the speed of the run. The Dynamic Type pass switches the system text size, so the wait also runs
             // between the passes and after the last one, so that the switch back does not run into the next test step.
             try waitForStableScreen(app, screen: screen, file: file, line: line)
-            var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
-            let auditStarted = Date()
-            try runAudit(app, for: pass) { issue in
-                findings.append((issue, issue.element))
-            }
-            stats.auditSeconds += Date().timeIntervalSince(auditStarted)
-            stats.findings += findings.count
-            for finding in findings where !isAccepted(finding.issue, element: finding.element) {
-                let element = finding.element
-                XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
-                    + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
+            let rejected = try rejectedFindings(app, screen: screen, pass: pass)
+            guard !rejected.isEmpty else { continue }
+            // A finding is a property of the screen, so it comes back when the pass runs again. One that does not is a measurement
+            // of the moment (the audit resizes the text and reads the layout while the runner is busy; the Dynamic Type check named
+            // other texts of the same screen from run to run on the same code) and does not fail the test. A second pass is only
+            // needed when the first one has a finding, so a clean screen costs nothing.
+            try waitForStableScreen(app, screen: screen, file: file, line: line)
+            let confirmed = Set(try rejectedFindings(app, screen: screen, pass: pass).map(\.key))
+            for finding in rejected {
+                if confirmed.contains(finding.key) {
+                    XCTFail(finding.message, file: file, line: line)
+                } else {
+                    print("Unconfirmed audit finding (not reported by the second pass): \(finding.message)")
+                }
             }
         }
         try waitForStableScreen(app, screen: screen, file: file, line: line)
         recordStats(screen: screen)
     }
+
+    /// Runs one audit pass and returns the findings that are not on the allowlist, each with the message that fails the test and a
+    /// key that identifies it again in another pass (type, text of the finding and label of the element, not its frame, which moves
+    /// with the scroll position).
+    private static func rejectedFindings(_ app: XCUIApplication, screen: String, pass: XCUIAccessibilityAuditType) throws
+        -> [(key: String, message: String)] {
+        var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+        let auditStarted = Date()
+        try runAudit(app, for: pass) { issue in
+            findings.append((issue, issue.element))
+        }
+        stats.auditSeconds += Date().timeIntervalSince(auditStarted)
+        stats.findings += findings.count
+        return findings.filter { !isAccepted($0.issue, element: $0.element) }.map { finding in
+            let element = finding.element
+            let message = "\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
+                + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)"
+            return ("\(finding.issue.auditType.rawValue)|\(finding.issue.compactDescription)|\(element?.label ?? "-")", message)
+        }
+    }
+
 
     /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
     /// written to the collect file as a finding of its own and the run goes on, so the flaky screens can be listed.
