@@ -39,6 +39,12 @@ final class NoteSuggestionModel {
 
     private(set) var phase: Phase = .idle
     private(set) var cards: [Card] = []
+    /// The follow-up about the open cards (task C2): the request that is running or failed, and the last answer.
+    private(set) var followUpState: FollowUpState = .ready
+    /// The sentence of the last answer to a follow-up.
+    private(set) var followUpReply = ""
+    /// The cards before the last answer; one step of "Rückgängig". A change of any card drops it.
+    @ObservationIgnored private var undoCards: [Card]?
 
     @ObservationIgnored private let responder: any ResponseStreaming
     @ObservationIgnored private let model: @MainActor () async throws -> String
@@ -55,6 +61,9 @@ final class NoteSuggestionModel {
     /// Counts resets and requests; an answer that arrives for an older count is dropped (review focus 5).
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var noteID: UUID?
+    @ObservationIgnored private(set) var followUpLastMessage = ""
+    @ObservationIgnored lazy var cardReviser = CardReviser(
+        responder: responder, model: model, hasConsent: { [weak self] in self?.cardFollowUpHasConsent ?? false }, now: now)
 
     init(responder: any ResponseStreaming, model: @escaping @MainActor () async throws -> String, tools: any ToolHandler,
          describer: ActionCardDescriber, notes: NoteStore, hasConsent: @escaping @MainActor () -> Bool,
@@ -75,6 +84,9 @@ final class NoteSuggestionModel {
     }
 
     var openCount: Int { cards.filter { $0.status == .pending }.count }
+
+    var isRevising: Bool { followUpState == .sending }
+    var canUndoRevision: Bool { undoCards != nil }
 
     /// The open cards "Alle bestätigen" may confirm: those that do not wait for a target and that are not confirmed alone
     /// (an issue for other people or for no one, like in the chat).
@@ -107,6 +119,9 @@ final class NoteSuggestionModel {
         let mine = generation
         self.noteID = noteID
         cards = []
+        followUpState = .ready
+        followUpReply = ""
+        undoCards = nil
         phase = .loading
         do {
             let slug = try await model()
@@ -223,8 +238,9 @@ final class NoteSuggestionModel {
     /// values name another one. Returns the new call, or `nil` for a card that is not open.
     @discardableResult
     func adjust(_ call: ToolCall, arguments: Data, mark: ProposalMark = .byUser) -> ToolCall? {
-        guard let index = cards.firstIndex(where: { $0.id == call.id }), cards[index].status == .pending,
+        guard !isRevising, let index = cards.firstIndex(where: { $0.id == call.id }), cards[index].status == .pending,
               let new = ProposalArguments.decode(arguments) else { return nil }
+        undoCards = nil
         let before = cards[index]
         let original = before.proposed ?? before.call
         let adjusted = ToolCall(id: before.call.id, name: before.call.name, arguments: arguments)
@@ -277,8 +293,9 @@ final class NoteSuggestionModel {
 
     /// Runs the function of a card once; no further request follows. An issue without a target is not run.
     func confirm(_ id: String) async {
-        guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending,
+        guard !isRevising, let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending,
               !cards[index].needsTarget else { return }
+        undoCards = nil
         let call = cards[index].call
         let mine = generation
         cards[index].status = .running
@@ -291,12 +308,14 @@ final class NoteSuggestionModel {
     }
 
     func decline(_ id: String) {
-        guard let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending else { return }
+        guard !isRevising, let index = cards.firstIndex(where: { $0.id == id }), cards[index].status == .pending else { return }
+        undoCards = nil
         cards[index].status = .declined
     }
 
     /// Confirms every open card that has what it needs; issues that wait for a target or that are confirmed alone stay open.
     func confirmAll() async {
+        guard !isRevising else { return }
         for card in cards where isBatchConfirmable(card) { await confirm(card.id) }
     }
 
@@ -305,6 +324,9 @@ final class NoteSuggestionModel {
         generation += 1
         cards = []
         phase = .idle
+        followUpState = .ready
+        followUpReply = ""
+        undoCards = nil
     }
 
     // MARK: Prompt
@@ -348,25 +370,31 @@ final class NoteSuggestionModel {
     // MARK: Helpers
 
     nonisolated private static func collect(_ stream: AsyncThrowingStream<StreamEvent, Error>) async throws -> [ToolCall] {
+        try await collectAnswer(stream).calls
+    }
+
+    /// The calls and the text of a completed answer; a follow-up shows the text as the sentence of the answer.
+    nonisolated private static func collectAnswer(_ stream: AsyncThrowingStream<StreamEvent, Error>) async throws -> (calls: [ToolCall], text: String) {
         var calls: [ToolCall] = []
+        var text = ""
         var completed = false
         for try await event in stream {
             switch event {
             case .functionCall(let id, let name, let arguments): calls.append(ToolCall(id: id, name: name, arguments: Data(arguments.utf8)))
             case .completed: completed = true
-            case .textDelta: break
+            case .textDelta(let delta): text += delta
             }
         }
         // A stream that ends without `completed` was cut off: no cards from a partial answer.
         guard completed else { throw ChatGPTError.incomplete }
-        return calls
+        return (calls, text.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     private struct TimedOut: Error {}
 
-    private func withTimeout(_ operation: @escaping @Sendable () async throws -> [ToolCall]) async throws -> [ToolCall] {
+    private func withTimeout<T: Sendable>(_ operation: @escaping @Sendable () async throws -> T) async throws -> T {
         let limit = timeout
-        return try await withThrowingTaskGroup(of: [ToolCall].self) { group in
+        return try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask { try await operation() }
             group.addTask {
                 try await Task.sleep(for: limit)
@@ -389,13 +417,210 @@ final class NoteSuggestionModel {
     }
 }
 
+
+// MARK: Follow-up about the open cards (plan ki-vorschlaege-anpassen, task C2)
+
+extension NoteSuggestionModel {
+    /// The answer to a follow-up is a new set of function calls for the open cards. The note is sent again, so the consent and
+    /// the kind of note are checked exactly like for "Vorschläge holen": a private note sends nothing, whatever the stored
+    /// kind and the kind the caller names say. Done and declined cards stay as they are and are not sent.
+    func revise(noteID: UUID, text: String, kind: NoteKind, comment: String) async {
+        let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard kind.allowsSuggestions, notes.note(id: noteID)?.kind.allowsSuggestions != false, hasConsent(),
+              !isRevising, !comment.isEmpty else { return }
+        let open = cards.filter { $0.status == .pending }
+        guard !open.isEmpty else { return }
+        let mine = generation
+        followUpState = .sending
+        followUpLastMessage = comment
+        do {
+            let slug = try await model()
+            guard mine == generation else { return }
+            let sent = context()
+            let catalog = gitHubDirectory()?.storedCatalog
+            let request = Self.revisionRequest(text: text, kind: kind, context: sent, now: now(), cards: open, comment: comment)
+            let tools = NoteSuggestionRules.definitions(from: self.tools.definitions, gitHub: catalog != nil)
+            let instructions = Self.instructions(gitHub: catalog != nil) + "\n" + Self.revisionInstructions
+            let answer = try await withTimeout { [responder] in
+                try await Self.collectAnswer(responder.respond(model: slug, instructions: instructions, input: [.user(request)],
+                                                               tools: tools, jsonSchema: nil))
+            }
+            guard mine == generation else { return }
+            let accepted = NoteSuggestionRules.accepted(answer.calls, context: sent, gitHub: catalog != nil)
+            replaceOpenCards(with: accepted, catalog: catalog, sentence: answer.text)
+            followUpState = .ready
+        } catch is CancellationError {
+            if mine == generation { followUpState = .ready }
+        } catch {
+            guard mine == generation else { return }
+            followUpState = .failed(Self.message(for: error))
+        }
+    }
+
+    /// "Rückgängig": the cards as they were before the last answer.
+    func undoRevision() {
+        guard let before = undoCards, !isRevising else { return }
+        cards = before
+        undoCards = nil
+        followUpReply = ""
+        phase = cards.isEmpty ? .empty : .loaded
+    }
+
+    /// The open cards become the cards of the answer; done and declined cards stay in front. A card the answer repeats
+    /// unchanged is kept as it is (with its mark); one it changes carries the mark "von ChatGPT angepasst". An answer without
+    /// a function call changes nothing.
+    private func replaceOpenCards(with calls: [ToolCall], catalog: GitHubCatalog?, sentence: String) {
+        guard !calls.isEmpty else {
+            followUpReply = sentence.isEmpty ? String(localized: "ChatGPT hat keine Änderung vorgeschlagen.") : sentence
+            return
+        }
+        let open = cards.filter { $0.status == .pending }
+        var unmatched = open
+        var replaced: [Card] = []
+        var withoutMatch: [Int] = []
+        for call in calls {
+            let match = Self.match(call, in: unmatched)
+            if let match { unmatched.removeAll { $0.id == match.id } } else { withoutMatch.append(replaced.count) }
+            replaced.append(revisedCard(for: call, replacing: match, catalog: catalog))
+        }
+        // A single issue card and a single new issue answer each other even when the model changed the title.
+        let oldIssues = unmatched.filter(\.isIssue)
+        let newIssues = withoutMatch.filter { replaced[$0].isIssue }
+        if oldIssues.count == 1, newIssues.count == 1 {
+            replaced[newIssues[0]] = carriedOver(replaced[newIssues[0]], from: oldIssues[0])
+        }
+        let after = cards.filter { $0.status != .pending } + replaced
+        guard after != cards else {
+            followUpReply = sentence.isEmpty ? String(localized: "ChatGPT hat keine Änderung vorgeschlagen.") : sentence
+            return
+        }
+        undoCards = cards
+        cards = after
+        phase = cards.isEmpty ? .empty : .loaded
+        followUpReply = sentence.isEmpty ? String(localized: "Die Vorschläge wurden überarbeitet.") : sentence
+    }
+
+    /// The open card an answered call is about: the same function and, for a call with an id, the same id; for a new task the
+    /// same title.
+    private static func match(_ call: ToolCall, in cards: [Card]) -> Card? {
+        let arguments = ProposalArguments.decode(call.arguments) ?? [:]
+        return cards.first { card in
+            guard card.call.name == call.name, let old = ProposalArguments.decode(card.call.arguments) else { return false }
+            for key in ["id", "event_id"] where arguments[key] != nil || old[key] != nil { return arguments[key] as? String == old[key] as? String }
+            return (arguments["title"] as? String)?.lowercased() == (old["title"] as? String)?.lowercased()
+        }
+    }
+
+    private func revisedCard(for call: ToolCall, replacing old: Card?, catalog: GitHubCatalog?) -> Card {
+        var call = call
+        var carriedTarget: AppTools.GitHubTarget?
+        var carries = false
+        // An issue keeps the target the user chose: the request never held it, so the answer cannot name it.
+        if let old, old.isIssue, NoteSuggestionRules.isIssue(call), let carried = Self.issueCall(call, taking: old.call) {
+            call = carried
+            carriedTarget = old.target
+            carries = true
+        }
+        if let old, Self.sameJSON(call.arguments, old.call.arguments) { return old }
+        var card = carries
+            ? Card(call: call, text: issueDescriber.describe(call), status: .pending, time: nil, isIssue: true, target: carriedTarget)
+            : makeCard(call, catalog: catalog)
+        if let old, card.call.name == old.call.name { card.proposed = old.proposed ?? old.call }
+        card.mark = .byAssistant
+        card.text = describe(card)
+        return card
+    }
+
+    private func carriedOver(_ card: Card, from old: Card) -> Card {
+        guard let call = Self.issueCall(card.call, taking: old.call) else { return card }
+        var carried = Card(call: call, text: issueDescriber.describe(call), status: .pending, time: nil, isIssue: true, target: old.target)
+        carried.mark = .byAssistant
+        carried.proposed = old.proposed ?? old.call
+        carried.text = describe(carried)
+        return carried
+    }
+
+    /// `call` with repository, projects and people of `old`.
+    private static func issueCall(_ call: ToolCall, taking old: ToolCall) -> ToolCall? {
+        guard var arguments = ProposalArguments.decode(call.arguments), let previous = ProposalArguments.decode(old.arguments) else { return nil }
+        for key in ["repository", "project_ids", "assignees"] { arguments[key] = previous[key] ?? NSNull() }
+        return ToolCall(id: call.id, name: call.name, arguments: ProposalArguments.encode(arguments))
+    }
+
+    private static func sameJSON(_ a: Data, _ b: Data) -> Bool {
+        guard let first = ProposalArguments.decode(a), let second = ProposalArguments.decode(b) else { return a == b }
+        return NSDictionary(dictionary: first).isEqual(to: second)
+    }
+
+    // MARK: Request
+
+    /// The request of "Vorschläge holen" plus the open cards with their current values and the message. The target of an
+    /// issue (repository, projects, people) is not part of it, like in the first request.
+    static func revisionRequest(text: String, kind: NoteKind, context: NoteSuggestionContext, now: Date, cards: [Card], comment: String,
+                                calendar: Calendar = .tagwerk) -> String {
+        let entries: [[String: Any]] = cards.map { card in
+            var arguments = ProposalArguments.decode(card.call.arguments) ?? [:]
+            if card.isIssue { for key in ["repository", "project_ids", "assignees"] { arguments[key] = NSNull() } }
+            return ["function": card.call.name, "arguments": arguments, "fixed_by_user": card.mark == .byUser]
+        }
+        let data = (try? JSONSerialization.data(withJSONObject: entries, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data("[]".utf8)
+        return """
+        \(request(text: text, kind: kind, context: context, now: now, calendar: calendar))
+
+        Current suggestions as JSON:
+        \(String(decoding: data, as: UTF8.self))
+
+        Message from the user about the suggestions:
+        \(comment)
+        """
+    }
+
+    static var revisionInstructions: String {
+        """
+        You already suggested changes for this note, and the user now writes about them. Answer with the complete new set \
+        of function calls for the current suggestions (at most 5), and one short sentence of text before them that says what \
+        you changed.
+        - Change only what the message asks for. Repeat every other suggestion exactly as it is.
+        - Suggestions with fixed_by_user true were edited by the user: keep them exactly as they are unless the message is about them.
+        - Keep the ids of the calls as given by the tasks and events; never invent an id.
+        - If the message needs nothing changed or something you cannot know, answer with the sentence only and no function call.
+        """
+    }
+
+    /// Quick replies of the follow-up line below the cards.
+    static var quickReplies: [String] {
+        [String(localized: "Weniger Vorschläge"), String(localized: "Später"), String(localized: "Nur Aufgaben")]
+    }
+}
+
 // MARK: Sheet "Vorschlag anpassen"
 
 extension NoteSuggestionModel: CardAdjusting {
-    /// The follow-up about one card arrives with task C2; until then the sheet shows only the fields.
-    var cardFollowUpHasConsent: Bool { false }
+    /// A follow-up about one card sends the card, which stems from the note: it needs the consent of the suggestions and a
+    /// note that may be sent.
+    var cardFollowUpHasConsent: Bool {
+        guard hasConsent() else { return false }
+        return noteID.flatMap { notes.note(id: $0)?.kind.allowsSuggestions } != false
+    }
 
+    /// One request about one card (`CardReviser`): the function, its values, the marks and the message; no note text and no
+    /// other card. The target of an issue is not sent; the answer cannot change it.
     func reviseCard(_ call: ToolCall, current: Data, comment: String) async throws -> CardReviser.Answer {
-        throw CardReviser.Failure.consentMissing
+        guard cardFollowUpHasConsent else { throw CardReviser.Failure.consentMissing }
+        guard let card = cards.first(where: { $0.id == call.id }), card.status == .pending else { throw CardReviser.Failure.unknownFunction }
+        let secret = ["repository", "project_ids", "assignees"]
+        var sentCurrent = ProposalArguments.decode(current) ?? [:]
+        var sentProposed = ProposalArguments.decode((card.proposed ?? card.call).arguments)
+        if card.isIssue {
+            for key in secret { sentCurrent[key] = NSNull() }
+            if sentProposed != nil { for key in secret { sentProposed?[key] = NSNull() } }
+        }
+        var answer = try await cardReviser.revise(name: card.call.name, current: ProposalArguments.encode(sentCurrent),
+                                                  proposed: card.mark == .byUser ? sentProposed.map(ProposalArguments.encode) : nil, comment: comment)
+        if card.isIssue, var arguments = ProposalArguments.decode(answer.arguments), let original = ProposalArguments.decode(current) {
+            for key in secret { arguments[key] = original[key] ?? NSNull() }
+            answer.arguments = ProposalArguments.encode(arguments)
+        }
+        return answer
     }
 }

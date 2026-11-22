@@ -6043,6 +6043,16 @@
         }
       }
     },
+    "ChatGPT hat keine Änderung vorgeschlagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT suggested no change."
+          }
+        }
+      }
+    },
     "ChatGPT hat zu lange gebraucht. Versuch es noch einmal oder trag die Aufgabe selbst ein.": {
       "localizations": {
         "en": {
@@ -7826,6 +7836,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The suggestions could not be fetched. Try again."
+          }
+        }
+      }
+    },
+    "Die Vorschläge wurden überarbeitet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestions were revised."
           }
         }
       }
@@ -15259,6 +15279,16 @@
         }
       }
     },
+    "Nur Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks only"
+          }
+        }
+      }
+    },
     "Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben.": {
       "localizations": {
         "en": {
@@ -17013,6 +17043,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sending gives the open proposals with your changes to ChatGPT; it proposes them again, revised."
+          }
+        }
+      }
+    },
+    "Senden gibt diese Notiz, die offenen Vorschläge mit deinen Änderungen und deine Nachricht an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send gives this note, the open suggestions with your changes and your message to ChatGPT."
           }
         }
       }
@@ -18774,6 +18814,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Daily"
+          }
+        }
+      }
+    },
+    "Weniger Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fewer suggestions"
+          }
+        }
+      }
+    },
+    "Zu den Vorschlägen etwas sagen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something about the suggestions …"
           }
         }
       }
