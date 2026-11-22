@@ -41,6 +41,24 @@ struct FocusQuietTests {
         #expect(FocusQuiet.dropping(staleIn: FocusQuiet.State(since: at(18, 20)), now: at(18, 22)).since == at(18, 20))
     }
 
+    @Test func secondFocusAfterTheCatchUpFired_doesNotCatchUpAgain() {
+        // Focus A ended and its catch-up fired at 10:01, but no notification run cleaned the state up before Focus B.
+        let fired = FocusQuiet.State(since: nil, catchUpFrom: at(18, 8), catchUpAt: at(18, 10, 1))
+        let restarted = FocusQuiet.applying(active: true, now: at(18, 14), to: fired, quietHours: night, calendar: calendar)
+        #expect(restarted == FocusQuiet.State(since: at(18, 14)))
+        let ended = FocusQuiet.applying(active: false, now: at(18, 15), to: restarted, quietHours: night, calendar: calendar)
+        #expect(ended == FocusQuiet.State(since: nil, catchUpFrom: at(18, 14), catchUpAt: nil))
+    }
+
+    @Test func staleCatchUp_isDroppedOnceItsMomentHasPassed() {
+        let fired = FocusQuiet.State(since: nil, catchUpFrom: at(18, 8), catchUpAt: at(18, 10, 1))
+        #expect(FocusQuiet.dropping(staleIn: fired, now: at(18, 10, 1)) == FocusQuiet.State())
+        // Before its moment, and without a chosen moment, the catch-up stays.
+        #expect(FocusQuiet.dropping(staleIn: fired, now: at(18, 10)) == fired)
+        let unscheduled = FocusQuiet.State(since: nil, catchUpFrom: at(18, 8))
+        #expect(FocusQuiet.dropping(staleIn: unscheduled, now: at(18, 23)) == unscheduled)
+    }
+
     // MARK: Catch-up
 
     @Test func scheduling_firstRunAfterTheEnd_picksAMinuteAhead_andLaterRunsKeepIt() {

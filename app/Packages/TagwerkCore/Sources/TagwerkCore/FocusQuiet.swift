@@ -86,10 +86,15 @@ public enum FocusQuiet {
         return (next, FocusCatchUp(from: from, at: at))
     }
 
-    /// The state without a start older than `maximumAge`.
+    /// The state without a start older than `maximumAge` and without a catch-up whose moment has passed: that catch-up
+    /// fired already, and it must not widen the catch-up of a later Focus.
     public static func dropping(staleIn state: State, now: Date) -> State {
         var next = state
         if let since = next.since, now.timeIntervalSince(since) >= maximumAge { next.since = nil }
+        if let at = next.catchUpAt, at <= now {
+            next.catchUpFrom = nil
+            next.catchUpAt = nil
+        }
         return next
     }
 

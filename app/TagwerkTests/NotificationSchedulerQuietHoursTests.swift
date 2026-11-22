@@ -161,6 +161,18 @@ struct NotificationSchedulerQuietHoursTests {
         #expect(settings.focusQuietState == FocusQuiet.State())
     }
 
+    @Test func secondFocusAfterTheCatchUpFired_doesNotReplayIt() async {
+        local.tasks = [task("A", day: 18, hour: 11)]  // fires 09:00; an earlier Focus caught it up at 10:01
+        settings.focusQuietState = FocusQuiet.State(since: nil, catchUpFrom: at(18, 8), catchUpAt: at(18, 10, 1))
+        settings.focusQuietState = FocusQuiet.applying(active: true, now: at(18, 14), to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: at(18, 14)).reschedule()
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: at(18, 15), to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: at(18, 15)).reschedule()
+        #expect(center.pending.isEmpty)
+    }
+
     @Test func staleFocusStart_isDropped() async {
         settings.focusQuietSince = at(16, 9)
         local.tasks = [task("A", day: 18, hour: 14)]
