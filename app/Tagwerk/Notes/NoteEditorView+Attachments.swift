@@ -87,9 +87,7 @@ extension NoteEditorView {
     }
 
     func refreshShareURLs() {
-        let referenced = MarkdownText.attachmentIDs(in: text)
-        shareURLs = (store.attachments?.attachments(of: noteID) ?? []).filter { referenced.contains($0.id) }
-            .compactMap { store.attachments?.exportURL(for: $0.id) }
+        shareURLs = store.attachments?.shareableURLs(of: noteID, text: text) ?? []
     }
 
     // MARK: Texts
