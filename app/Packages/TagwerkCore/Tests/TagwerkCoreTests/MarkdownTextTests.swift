@@ -142,4 +142,26 @@ struct MarkdownTextTests {
         #expect(result == "[a](attachment:\(replacement.uuidString)) [b](attachment:\(unknown.uuidString)) https://example.com/attachment:\(known.uuidString)")
         #expect(MarkdownText.replacingAttachmentIDs(in: text, with: [:]) == text)
     }
+
+    @Test func renamingReference_replacesTheLabelOfOneAttachment() {
+        let scan = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let other = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!
+        let text = "Vor\n[Scan 20.11.2026](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)\n"
+            + "Nochmal [Scan 20.11.2026](ATTACHMENT:3f2504e0-4f89-41d3-9a0c-0305e82c3301) und [Link](https://example.com)"
+        let renamed = MarkdownText.renamingReference(of: scan, to: "Mietvertrag [neu]", in: text)
+        #expect(renamed == "Vor\n[Mietvertrag \\[neu\\]](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)\n"
+            + "Nochmal [Mietvertrag \\[neu\\]](ATTACHMENT:3f2504e0-4f89-41d3-9a0c-0305e82c3301) und [Link](https://example.com)")
+        #expect(MarkdownText.attachmentIDs(in: renamed) == [scan, other])
+        // Nothing to rename: the text stays as it is.
+        #expect(MarkdownText.renamingReference(of: UUID(), to: "X", in: text) == text)
+    }
+
+    @Test func renamingReference_keepsPictureReferencesAndEscapedLabels() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let original = MarkdownText.reference(for: id, name: "Plan [v2] (neu).pdf", isImage: false)
+        let renamed = MarkdownText.renamingReference(of: id, to: "Anlage", in: "a " + original + " b")
+        #expect(renamed == "a [Anlage](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301) b")
+        let picture = MarkdownText.reference(for: id, name: "Zeichnung", isImage: true)
+        #expect(MarkdownText.renamingReference(of: id, to: "Skizze", in: picture) == "![Skizze](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)")
+    }
 }

@@ -37,6 +37,8 @@ struct NoteEditorView: View {
     @State var translation: RecipeTranslationModel?
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
     @State var notice: String?
+    /// What the insert features put on top of the page (scanner, share sheet, rename prompt).
+    @State var inserts = NoteInsertState()
 
     /// Stage C switch of the line mapping: `false` renders the page without edit links and shows the pencil button again,
     /// so the editor opens with the cursor at the end. A constant, not a setting (decided by the device check).
@@ -98,6 +100,7 @@ struct NoteEditorView: View {
                 if case .success(let urls) = result { for url in urls { addFile(url) } }
             }
             .quickLookPreview($previewURL)
+            .noteInsertPresentations(inserts, onScanFinished: addScan, onRename: renameAttachment)
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -140,7 +143,7 @@ struct NoteEditorView: View {
                 saveText()
                 // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
                 // neither an empty one to remove nor an attachment list to trim while one of them is open.
-                guard !isTakingPhoto, previewURL == nil else { return }
+                guard !isTakingPhoto, previewURL == nil, !inserts.isPresenting else { return }
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
@@ -168,7 +171,8 @@ struct NoteEditorView: View {
                                  onEdit: Self.usesTapToEdit ? { beginEditing(atLine: $0) } : nil,
                                  onUnansweredTap: Self.usesTapToEdit ? { fraction in
                                      beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
-                                 } : nil)
+                                 } : nil,
+                                 contextMenu: attachmentMenu)
                     .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
@@ -274,7 +278,7 @@ struct NoteEditorView: View {
         saveText()
     }
 
-    private func openAttachment(_ id: UUID) {
+    func openAttachment(_ id: UUID) {
         previewURL = store.attachments?.exportURL(for: id)
     }
 

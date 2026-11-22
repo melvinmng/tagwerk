@@ -186,10 +186,23 @@ final class NoteAttachmentStore {
     func displays(of noteID: UUID) -> [UUID: NoteAttachmentDisplay] {
         attachments(of: noteID).filter { !$0.isCompanion }.reduce(into: [:]) { result, record in
             let isImage = UTType(record.typeIdentifier)?.conforms(to: .image) == true
-            result[record.id] = NoteAttachmentDisplay(
-                name: record.fileName, detail: ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file),
-                kind: isImage ? .image : .file)
+            let size = ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file)
+            if record.roleRaw == Role.scan.rawValue {
+                result[record.id] = NoteAttachmentDisplay(name: record.fileName, detail: Self.scanDetail(pages: record.pageCount, size: size),
+                                                          kind: .scan(pages: record.pageCount))
+            } else {
+                result[record.id] = NoteAttachmentDisplay(name: record.fileName, detail: size, kind: isImage ? .image : .file)
+            }
         }
+    }
+
+    /// "8 Seiten · 3,1 MB · PDF": the line under the name of a scan.
+    static func scanDetail(pages: Int, size: String) -> String {
+        var parts: [String] = []
+        if pages == 1 { parts.append(String(localized: "1 Seite")) } else if pages > 1 { parts.append(String(localized: "\(pages) Seiten")) }
+        parts.append(size)
+        parts.append("PDF")
+        return parts.joined(separator: " · ")
     }
 
     func record(id: UUID) -> NoteAttachmentRecord? {
@@ -272,7 +285,17 @@ final class NoteAttachmentStore {
         let bounds = page.bounds(for: .mediaBox)
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let scale = edge / max(bounds.width, bounds.height)
-        return page.thumbnail(of: CGSize(width: bounds.width * scale, height: bounds.height * scale), for: .mediaBox)
+        let size = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
+        let thumbnail = page.thumbnail(of: size, for: .mediaBox)
+        // The picture has exactly `edge` pixels on its longer side, whatever the screen scale is.
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            thumbnail.draw(in: CGRect(origin: .zero, size: size))
+        }
     }
 
     /// The files of the attachments a note's text refers to, for "Anhänge teilen", under their own names. Files that belong

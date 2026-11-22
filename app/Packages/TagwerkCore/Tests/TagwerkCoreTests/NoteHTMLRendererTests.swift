@@ -380,4 +380,28 @@ struct NoteHTMLRendererTests {
         #expect(page.contains("div.table {") && page.contains("overflow-x: auto") && page.contains("mask-image"))
         #expect(page.contains("th { background: var(--code); font-weight: 600; }"))
     }
+
+    // MARK: Scans
+
+    @Test func renderer_scanBecomesCardWithPagesAndPreviewImage() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let display = NoteAttachmentDisplay(name: "Scan 20.11.2026.pdf", detail: "8 Seiten · 3,1 MB · PDF", kind: .scan(pages: 8))
+        let options = NoteHTMLRenderer.RenderOptions(attachments: [id: display])
+        let output = NoteHTMLRenderer.html(markdown: MarkdownText.reference(for: id, name: "Mietvertrag", isImage: false), options: options)
+        #expect(output.contains("<a class=\"scan\" href=\"attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301\" data-pages=\"8\">"))
+        #expect(output.contains("<img src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301\" alt=\"\">"))
+        #expect(output.contains("<span class=\"name\">Mietvertrag</span><span class=\"detail\">8 Seiten · 3,1 MB · PDF</span>"))
+        // Without a label the name of the attachment is shown.
+        let unnamed = NoteHTMLRenderer.html(markdown: "[](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)", options: options)
+        #expect(unnamed.contains("<span class=\"name\">Scan 20.11.2026.pdf</span>"))
+        #expect(NoteHTMLRenderer.page(body: "").contains("a.scan {"))
+    }
+
+    @Test func renderer_scanDetailIsEscaped() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let display = NoteAttachmentDisplay(name: "x", detail: "<b>8</b>", kind: .scan(pages: 8))
+        let output = NoteHTMLRenderer.html(markdown: "[x](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)",
+                                           options: NoteHTMLRenderer.RenderOptions(attachments: [id: display]))
+        #expect(output.contains("&lt;b&gt;8&lt;/b&gt;") && !output.contains("<b>8"))
+    }
 }

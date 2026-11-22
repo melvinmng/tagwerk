@@ -83,8 +83,8 @@ struct NoteInsertMenu: View {
 
     static var cameraIsAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
-    /// The document camera needs a camera and is missing in the simulator.
-    static var scannerIsAvailable: Bool { VNDocumentCameraViewController.isSupported }
+    /// The document camera needs a camera and is missing in the simulator; the UI tests bring their own test pages.
+    static var scannerIsAvailable: Bool { VNDocumentCameraViewController.isSupported || UITestMode.scanPageCount != nil }
 
     /// The text with `reference` inserted at the cursor (or the selection, which it replaces), or at the end when there is
     /// no cursor. The reference gets its own line: a line break goes before it unless it starts a line, and one behind it.

@@ -102,6 +102,47 @@ struct NoteMarkdownViewTests {
         #expect(widths == [40, 0, 0])
     }
 
+    /// The natural sizes of two pictures of the page, read from the app's own world (the page script is off).
+    private func naturalSizes(_ body: String, attachments: NoteAttachmentStore) async throws -> [[Int]] {
+        let webView = await load(NoteHTMLRenderer.page(body: body), configuration: NoteMarkdownView.makeConfiguration(attachments: attachments))
+        return try await webView.evaluateJavaScript("[...document.images].map(i => [i.naturalWidth, i.naturalHeight])", in: nil,
+                                                    contentWorld: .defaultClient) as? [[Int]] ?? []
+    }
+
+    /// The store and the container it lives in; the store needs the container alive.
+    private func makeStore() throws -> (store: NoteAttachmentStore, container: ModelContainer) {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let directory = FileManager.default.temporaryDirectory.appending(path: "webview-" + UUID().uuidString, directoryHint: .isDirectory)
+        return (NoteAttachmentStore(context: container.mainContext, directory: directory), container)
+    }
+
+    @Test func schemeHandler_servesFirstPageOfPDF() async throws {
+        let (attachments, container) = try makeStore()
+        defer { withExtendedLifetime(container) {} }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let page = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 400), format: format).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 300, height: 400))
+        }
+        let scan = try attachments.addData(ScanPDFBuilder.pdf(pages: [page, page]), fileName: "Scan.pdf", type: .pdf, role: .scan, to: UUID(), pageCount: 2)
+        let sizes = try await naturalSizes("<img src=\"tagwerk-attachment://\(scan.id.uuidString)\">", attachments: attachments)
+        #expect(sizes.count == 1)
+        // The first page, portrait, with the longer side at the preview edge.
+        #expect(sizes.first?[1] == Int(NoteMarkdownView.AttachmentSchemeHandler.pdfPreviewEdge))
+        #expect(sizes.first?[0] == 768)
+    }
+
+    @Test func schemeHandler_stillRejectsOtherFiles() async throws {
+        let (attachments, container) = try makeStore()
+        defer { withExtendedLifetime(container) {} }
+        let text = try attachments.addData(Data("Hallo".utf8), fileName: "Notiz.txt", type: .plainText, role: .plain, to: UUID())
+        let strokes = try attachments.addData(Data([1, 2, 3]), fileName: "Zeichnung.strokes", type: .data, role: .strokes, to: UUID(), companionOf: UUID())
+        let body = [text.id, strokes.id, UUID()].map { "<img src=\"tagwerk-attachment://\($0.uuidString)\">" }.joined()
+        let sizes = try await naturalSizes(body, attachments: attachments)
+        #expect(sizes == [[0, 0], [0, 0], [0, 0]])
+    }
+
     // MARK: Taps on the page
 
     private func makeCoordinator(delay: Duration = .milliseconds(20)) -> NoteMarkdownView.Coordinator {

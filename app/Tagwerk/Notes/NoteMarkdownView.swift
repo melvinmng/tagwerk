@@ -11,7 +11,8 @@ import WebKit
 /// - The page has no base URL and the web view only follows the links this view lets through: web, mail and phone
 ///   links open outside the app, attachments open in Quick Look, checkbox links flip the checkbox, table links open
 ///   the table editor.
-/// - Images come from `tagwerk-attachment://<id>`, answered from `NoteAttachmentStore` and nowhere else.
+/// - Images come from `tagwerk-attachment://<id>`, answered from `NoteAttachmentStore` and nowhere else; for a PDF the
+///   answer is the picture of its first page.
 struct NoteMarkdownView: UIViewRepresentable {
     let markdown: String
     let attachments: NoteAttachmentStore?
@@ -254,29 +255,47 @@ struct NoteMarkdownView: UIViewRepresentable {
 
     // MARK: Attachment images
 
-    /// Answers `tagwerk-attachment://<id>` with the picture of that attachment. Everything else is a 404: unknown IDs and
-    /// files that are not pictures.
+    /// Answers `tagwerk-attachment://<id>` with the picture of that attachment, or the first page of a PDF. Everything else is
+    /// a 404: unknown IDs and files that are neither.
     @MainActor
     final class AttachmentSchemeHandler: NSObject, WKURLSchemeHandler {
         private let attachments: NoteAttachmentStore?
 
         init(attachments: NoteAttachmentStore?) { self.attachments = attachments }
 
+        /// The first page of a PDF as it is shown in the page (the longer side in pixels).
+        static let pdfPreviewEdge: CGFloat = 1024
+        private let previews = NSCache<NSString, NSData>()
+
         func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
             let url = urlSchemeTask.request.url
             guard let url, let host = url.host(), let id = UUID(uuidString: host), let record = attachments?.record(id: id),
-                  let type = UTType(record.typeIdentifier), type.conforms(to: .image), let data = attachments?.data(for: id) else {
+                  let type = UTType(record.typeIdentifier), let served = served(id: id, record: record, type: type) else {
                 fail(urlSchemeTask, url: url)
                 return
             }
-            let headers = ["Content-Type": type.preferredMIMEType ?? "image/jpeg", "Content-Length": String(data.count)]
+            let headers = ["Content-Type": served.mimeType, "Content-Length": String(served.data.count)]
             if let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers) {
                 urlSchemeTask.didReceive(response)
-                urlSchemeTask.didReceive(data)
+                urlSchemeTask.didReceive(served.data)
                 urlSchemeTask.didFinish()
             } else {
                 fail(urlSchemeTask, url: url)
             }
+        }
+
+        /// What the page may show for an attachment: a picture as it is, a PDF as the picture of its first page, nothing else.
+        private func served(id: UUID, record: NoteAttachmentRecord, type: UTType) -> (data: Data, mimeType: String)? {
+            if type.conforms(to: .image) {
+                return attachments?.data(for: id).map { ($0, type.preferredMIMEType ?? "image/jpeg") }
+            }
+            guard type.conforms(to: .pdf) else { return nil }
+            // The record's size changes when the file does, so a replaced file is not served from the cache.
+            let key = "\(id.uuidString)-\(record.byteCount)" as NSString
+            if let cached = previews.object(forKey: key) { return (cached as Data, "image/jpeg") }
+            guard let page = attachments?.thumbnail(for: id, edge: Self.pdfPreviewEdge), let jpeg = page.jpegData(compressionQuality: 0.8) else { return nil }
+            previews.setObject(jpeg as NSData, forKey: key)
+            return (jpeg, "image/jpeg")
         }
 
         func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}

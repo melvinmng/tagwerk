@@ -3,7 +3,8 @@ import Markdown
 
 /// What the page needs to know about an attachment of the note.
 public struct NoteAttachmentDisplay: Sendable, Equatable {
-    public enum Kind: Sendable, Equatable { case image, file }
+    /// `scan` is a PDF with a preview of its first page; `pages` is its number of pages.
+    public enum Kind: Sendable, Equatable { case image, file, scan(pages: Int) }
     public var name: String
     /// "1,2 MB", already formatted by the app.
     public var detail: String
@@ -106,6 +107,12 @@ public enum NoteHTMLRenderer {
         a.chip::before { content: "▤"; }
         a.chip .name { min-width: 0; overflow-wrap: anywhere; }
         a.chip .detail { color: var(--muted); font-size: .85em; }
+        a.scan { display: flex; align-items: center; gap: .8em; min-height: 44px; box-sizing: border-box; max-width: 100%; margin: .3em 0; padding: .5em;
+                 background: var(--code); border: 1px solid var(--line); border-radius: 10px; color: var(--text); }
+        a.scan img { flex: none; width: 64px; max-height: none; border-radius: 4px; border: 1px solid var(--line); background: #fff; }
+        a.scan .meta { display: flex; flex-direction: column; min-width: 0; }
+        a.scan .name { font-weight: 600; overflow-wrap: anywhere; }
+        a.scan .detail { color: var(--muted); font-size: .85em; }
         blockquote { margin: .6em 0; padding: 0 0 0 .9em; border-left: 3px solid var(--line); color: var(--muted); }
         code { font: .9em ui-monospace, Menlo, monospace; background: var(--code); border-radius: 4px; padding: .05em .3em; }
         pre { background: var(--code); border-radius: 8px; padding: .6em .8em; overflow-x: auto; }
@@ -318,6 +325,12 @@ public enum NoteHTMLRenderer {
             if let id = HTMLSanitizer.attachmentID(inReference: target) {
                 let display = options.attachments[id]
                 let name = label.isEmpty ? NoteHTMLRenderer.escape(display?.name ?? String(id.uuidString.prefix(8))) : label
+                if let display, case .scan(let pages) = display.kind {
+                    // A scan: the first page as a preview, the name and what the app says about it (pages, size, recognition).
+                    let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
+                    return "<a class=\"scan\" href=\"\(target)\" data-pages=\"\(pages)\"><img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\">"
+                        + "<span class=\"meta\"><span class=\"name\">\(name)</span>\(detail)</span></a>"
+                }
                 if let display, display.kind == .file {
                     let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
                     return "<a class=\"chip\" href=\"\(target)\"><span class=\"name\">\(name)</span>\(detail)</a>"

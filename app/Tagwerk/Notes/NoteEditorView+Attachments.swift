@@ -7,8 +7,58 @@ import UniformTypeIdentifiers
 extension NoteEditorView {
     var insertMenu: some View {
         NoteInsertMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
-                       onScanDocument: {}, onPaste: { providers in Task { await addPasted(providers) } },
+                       onScanDocument: startScan, onPaste: { providers in Task { await addPasted(providers) } },
                        onChooseFile: { isChoosingFile = true }, onDrawing: {}, onTable: {})
+    }
+
+    // MARK: Scanning
+
+    /// Opens the document camera (in the UI tests the test pages stand in for it).
+    func startScan() {
+        if let count = UITestMode.scanPageCount {
+            addScan(pages: DocumentScanner.testPages(count: count))
+        } else {
+            inserts.isScanning = true
+        }
+    }
+
+    /// Stores the scanned pages as one PDF, named by the day, and puts its reference at the cursor. No pages (the scan was
+    /// cancelled) change nothing.
+    func addScan(pages: [UIImage]) {
+        guard !pages.isEmpty, let attachments = store.attachments else { return }
+        let day = PlanDay(date: UITestMode.now(), calendar: environment.planning.calendar)
+        let name = ScanPDFBuilder.fileName(for: day, existing: attachments.attachments(of: noteID).map(\.fileName))
+        let pdf = ScanPDFBuilder.pdf(pages: pages)
+        run {
+            try attachments.addData(pdf, fileName: name, type: .pdf, role: .scan, to: noteID, pageCount: pages.count)
+        } insert: { record in
+            MarkdownText.reference(for: record.id, name: (name as NSString).deletingPathExtension, isImage: false)
+        }
+    }
+
+    /// The menu of a long press on a scan card in the page: open, rename, share.
+    func attachmentMenu(for url: URL) -> UIMenu? {
+        guard url.scheme?.lowercased() == MarkdownText.attachmentScheme, let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString),
+              let record = store.attachments?.record(id: id), record.roleRaw == NoteAttachmentStore.Role.scan.rawValue else { return nil }
+        return UIMenu(children: [
+            UIAction(title: String(localized: "Öffnen"), image: UIImage(systemName: "doc.viewfinder")) { _ in openAttachment(id) },
+            UIAction(title: String(localized: "Umbenennen"), image: UIImage(systemName: "pencil")) { _ in
+                inserts.renaming = NoteInsertState.Renaming(id: id, name: (record.fileName as NSString).deletingPathExtension)
+            },
+            UIAction(title: String(localized: "Teilen"), image: UIImage(systemName: "square.and.arrow.up")) { _ in
+                if let url = store.attachments?.exportURL(for: id) { inserts.sharing = NoteInsertState.Sharing(urls: [url]) }
+            }
+        ])
+    }
+
+    /// Renames a scan and the label of its reference in the text, so the page shows the new name. It is an own save of the page.
+    func renameAttachment(_ id: UUID, to name: String) {
+        guard let attachments = store.attachments else { return }
+        attachments.rename(id, to: name)
+        guard let renamed = attachments.record(id: id) else { return }
+        text = MarkdownText.renamingReference(of: id, to: (renamed.fileName as NSString).deletingPathExtension, in: text)
+        saveText()
+        refreshShareURLs()
     }
 
     // MARK: Actions

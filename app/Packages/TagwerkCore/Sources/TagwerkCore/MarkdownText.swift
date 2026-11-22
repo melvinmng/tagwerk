@@ -83,11 +83,29 @@ public enum MarkdownText {
     /// The Markdown reference to an attachment: `![name](attachment:ID)` for an image, `[name](attachment:ID)` for a file.
     /// Brackets, parentheses and backslashes in the name are escaped.
     public static func reference(for id: UUID, name: String, isImage: Bool) -> String {
-        let escaped = name.reduce(into: "") { result, character in
+        "\(isImage ? "!" : "")[\(escapedLabel(name))](\(attachmentScheme):\(id.uuidString))"
+    }
+
+    private static func escapedLabel(_ name: String) -> String {
+        name.reduce(into: "") { result, character in
             if "\\[]()".contains(character) { result.append("\\") }
             result.append(character)
         }
-        return "\(isImage ? "!" : "")[\(escaped)](\(attachmentScheme):\(id.uuidString))"
+    }
+
+    /// The text with the label of every reference to the attachment `id` replaced by `name` (a renamed scan); the rest of the
+    /// text, other attachments and the kind of reference (picture or link) stay as they are.
+    public static func renamingReference(of id: UUID, to name: String, in markdown: String) -> String {
+        let pattern = #"(\[)((?:\\.|[^\]\\\n])*)(\]\(attachment:"# + id.uuidString + #"\))"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return markdown }
+        var result = markdown
+        let matches = expression.matches(in: markdown, range: NSRange(markdown.startIndex..., in: markdown))
+        // Back to front, so the ranges of the earlier matches stay valid.
+        for match in matches.reversed() {
+            guard let target = Range(match.range(at: 2), in: result) else { continue }
+            result.replaceSubrange(target, with: escapedLabel(name))
+        }
+        return result
     }
 
     // MARK: Checkboxes

@@ -489,4 +489,17 @@ struct NoteAttachmentStoreTests {
         attachments.setRecognizedText("", for: scan.id)
         #expect(attachments.record(id: scan.id)?.recognizedText == "")
     }
+
+    @Test func displays_scanHasPagesAndDetail() throws {
+        let note = try #require(notes.create(text: "Scan"))
+        let scan = try attachments.addData(makePDF(pageColors: [.red, .blue]), fileName: "Scan.pdf", type: .pdf, role: .scan, to: note.id, pageCount: 2)
+        let one = try attachments.addData(makePDF(pageColors: [.red]), fileName: "Eins.pdf", type: .pdf, role: .scan, to: note.id, pageCount: 1)
+        let plain = try attachments.addFile(at: makeFile(named: "a.pdf", bytes: 10), to: note.id)
+        let displays = attachments.displays(of: note.id)
+        #expect(displays[scan.id]?.kind == .scan(pages: 2))
+        #expect(displays[scan.id]?.detail.hasPrefix("2 Seiten · ") == true && displays[scan.id]?.detail.hasSuffix(" · PDF") == true)
+        #expect(displays[one.id]?.detail.hasPrefix("1 Seite · ") == true)
+        // A PDF that was attached as a file stays a file.
+        #expect(displays[plain.id]?.kind == .file)
+    }
 }

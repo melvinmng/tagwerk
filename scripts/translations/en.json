@@ -2483,5 +2483,7 @@
   "Dokument scannen": "Scan document",
   "Zeichnung": "Drawing",
   "Tabelle": "Table",
-  "Einfügen": "Insert"
+  "Einfügen": "Insert",
+  "%lld Seiten": "%lld pages",
+  "1 Seite": "1 page"
 }
