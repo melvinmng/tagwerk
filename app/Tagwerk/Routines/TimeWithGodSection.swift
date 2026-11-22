@@ -49,6 +49,9 @@ struct TimeWithGodSection: View {
             }
         }
         .tint(.primary)
+        // The name stays the label and the state is the value, so the row keeps its name with a state next to it.
+        .accessibilityLabel(title)
+        .accessibilityValue(detail ?? "")
     }
 }
 
