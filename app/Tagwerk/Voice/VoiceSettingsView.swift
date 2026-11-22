@@ -93,6 +93,7 @@ struct VoiceSettingsView: View {
                 Text("Vorlesen")
             } footer: {
                 Text("Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {

@@ -235,6 +235,11 @@ struct NoteField: View {
             : ("Brain Dump", NotesFoldersView.symbol(for: .brainDump), .brainDump)
     }
 
+    /// The text that stands in the empty field.
+    private static func placeholder(for kind: NoteKind) -> LocalizedStringKey {
+        kind == .dream ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken."
+    }
+
     var body: some View {
         Section {
             // One row, so the lifecycle and the sheet below attach once and not to every row of the section.
@@ -322,17 +327,15 @@ struct NoteField: View {
     /// is a single condition here.
     private var editorRow: some View {
             HStack(alignment: .top, spacing: 4) {
-                TextEditor(text: Bindable(model).text, selection: Bindable(model).selection)
+                // A multi-line text field with a prompt: the placeholder is part of the field. A text laid over a `TextEditor` as its
+                // placeholder is a second element for VoiceOver and for the accessibility audit, which reports it as clipped and as
+                // not scaling with the text size; `accessibilityHidden` did not remove it from the tree.
+                TextField(isDreamLog ? "Was hast du geträumt?" : "Brain Dump", text: Bindable(model).text,
+                          selection: Bindable(model).selection, prompt: Text(Self.placeholder(for: model.kind)), axis: .vertical)
+                    .lineLimit(5...)
                     .keyboardDoneButton()
-                    .frame(minHeight: 110)
+                    .frame(minHeight: 110, alignment: .topLeading)
                     .accessibilityLabel(isDreamLog ? "Was hast du geträumt?" : "Brain Dump")
-                    .overlay(alignment: .topLeading) {
-                        if model.text.isEmpty {
-                            Text(isDreamLog ? "Was hast du geträumt?" : "Schreib auf, was in deinen Kopf kommt. Sortier deine Gedanken.")
-                                .foregroundStyle(.secondaryText).padding(.top, 8).padding(.leading, 5)
-                                .allowsHitTesting(false)
-                        }
-                    }
                 if environment.settings.voiceInputEnabled, let voice {
                     VoiceMicrophoneButton(voice: voice, isEnabled: true,
                                           language: environment.settings.dictationLanguage(at: .notes))

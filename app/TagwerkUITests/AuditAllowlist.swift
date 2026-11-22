@@ -57,7 +57,7 @@ enum AuditAllowlist {
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
             "Ganztägig", "Leitfragen einfügen", "Punkte in den Einstellungen anlegen",
-            "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
+            "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
             "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*",
         ], reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
