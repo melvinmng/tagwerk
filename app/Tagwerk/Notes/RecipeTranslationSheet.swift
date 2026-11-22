@@ -133,9 +133,8 @@ struct RecipeTranslationSheet: View {
             .padding(.vertical, 8)
             // Both texts refer to the attachments of the note; nothing in the preview can be tapped.
             NoteMarkdownView(markdown: showsOriginal ? original : translated, attachments: store.attachments,
-                             attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: model.noteID) ?? []).map { ($0.id, $0.fileName) }),
+                             attachmentDisplays: store.attachments?.displays(of: model.noteID) ?? [:],
                              onToggleCheckbox: { _ in }, onOpenAttachment: { _ in })
-                .padding(.horizontal, 16)
                 .allowsHitTesting(false)
             Text("Vorschlag von ChatGPT. Mengen bleiben unverändert; bitte kurz prüfen. Anmerkungen und Anhänge der Notiz bleiben erhalten.")
                 .font(.footnote).foregroundStyle(.secondary)

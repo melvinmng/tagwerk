@@ -41,7 +41,7 @@ struct NoteHTMLRendererTests {
         #expect(output.contains("<th>Name</th><th class=\"right\">Menge</th>"))
         #expect(output.contains("<td>Milch</td><td class=\"right\">2</td>"))
         #expect(output.contains("<hr>"))
-        #expect(output.contains("data-index=\"0\"") && output.contains("☐") && output.contains("data-index=\"1\"") && output.contains("☑"))
+        #expect(output.contains("data-index=\"0\"") && output.contains("aria-checked=\"false\"") && output.contains("data-index=\"1\"") && output.contains("aria-checked=\"true\""))
     }
 
     @Test func renderer_codeIsEscaped() {
@@ -81,9 +81,56 @@ struct NoteHTMLRendererTests {
         #expect(html("<img src=\"attachment:\(id.uuidString)\" alt=\"A\">").contains("<img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"A\">"))
     }
 
-    @Test func renderer_fileLink_becomesAChip() {
+    @Test func renderer_fileLink_withoutKnownAttachment_keepsPlainLink() {
         #expect(html("[Rechnung.pdf](attachment:\(id.uuidString))").contains("<a class=\"file\" href=\"attachment:\(id.uuidString)\">📎 Rechnung.pdf</a>"))
-        #expect(html("[](attachment:\(id.uuidString))", names: [id: "Plan <1>.pdf"]).contains("📎 Plan &lt;1&gt;.pdf</a>"))
+    }
+
+    @Test func renderer_unknownAttachmentKeepsPlainLink() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [UUID(): NoteAttachmentDisplay(name: "Anderes.pdf", detail: "1 KB", kind: .file)]
+        let output = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<a class=\"file\" href=\"attachment:\(id.uuidString)\">📎 \(String(id.uuidString.prefix(8)))</a>"))
+        #expect(!output.contains("class=\"chip\""))
+    }
+
+    @Test func renderer_fileReferenceBecomesChipWithNameAndSize() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Plan <1>.pdf", detail: "1,2 MB", kind: .file)]
+        // Without a label the chip names the file; a label of the link wins.
+        let unlabeled = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(unlabeled.contains("<a class=\"chip\" href=\"attachment:\(id.uuidString)\"><span class=\"name\">Plan &lt;1&gt;.pdf</span><span class=\"detail\">1,2 MB</span></a>"))
+        let labeled = NoteHTMLRenderer.html(markdown: "[Mietvertrag](attachment:\(id.uuidString))", options: options)
+        #expect(labeled.contains("<span class=\"name\">Mietvertrag</span><span class=\"detail\">1,2 MB</span>"))
+    }
+
+    @Test func renderer_chipWithoutDetail_omitsTheDetailSpan() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "a.pdf", detail: "", kind: .file)]
+        let output = NoteHTMLRenderer.html(markdown: "[](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<span class=\"name\">a.pdf</span></a>") && !output.contains("class=\"detail\""))
+    }
+
+    @Test func renderer_imageKeepsImgTag() {
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Foto.jpg", detail: "300 KB", kind: .image)]
+        let output = NoteHTMLRenderer.html(markdown: "![Urlaub](attachment:\(id.uuidString))", options: options)
+        #expect(output.contains("<img src=\"tagwerk-attachment://\(id.uuidString)\" alt=\"Urlaub\">"))
+        // A link to a picture is not turned into a file chip.
+        #expect(!NoteHTMLRenderer.html(markdown: "[Foto](attachment:\(id.uuidString))", options: options).contains("class=\"chip\""))
+    }
+
+    @Test func renderer_checkedItemGetsDoneClass() {
+        let output = html("- [ ] offen\n- [x] erledigt\n- Punkt")
+        #expect(output.contains("<li class=\"task\">") && output.contains("<li class=\"task done\">"))
+        #expect(output.components(separatedBy: "class=\"task done\"").count - 1 == 1)
+        #expect(output.contains("<li>Punkt</li>"))
+    }
+
+    @Test func legacyHtmlSignature_matchesOptionsVariant() {
+        let markdown = "# Titel\n\n[](attachment:\(id.uuidString))\n\n- [x] a"
+        var options = NoteHTMLRenderer.RenderOptions()
+        options.attachments = [id: NoteAttachmentDisplay(name: "Plan.pdf")]
+        #expect(NoteHTMLRenderer.html(markdown: markdown, attachmentNames: [id: "Plan.pdf"]) == NoteHTMLRenderer.html(markdown: markdown, options: options))
     }
 
     @Test func renderer_checkboxIndicesMatchToggling() {
@@ -136,6 +183,31 @@ struct NoteHTMLRendererTests {
         #expect(page.contains("default-src 'none'; img-src tagwerk-attachment:; style-src 'unsafe-inline'"))
         #expect(!page.contains("<script"))
         #expect(page.contains("<p>x</p>"))
+    }
+
+    @Test func page_limitsImageHeight() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("max-height:40vh") && page.contains("object-fit:contain") && page.contains("max-width:100%"))
+    }
+
+    @Test func page_headingSizes() {
+        let page = NoteHTMLRenderer.page(body: "")
+        // 24 pt and 17 pt over the 17 pt body text, so both follow the text size.
+        #expect(page.contains("h1 { font-size: 1.41em; font-weight: 700; }"))
+        #expect(page.contains("h2 { font-size: 1em; font-weight: 600; }"))
+        #expect(page.contains("line-height") && page.contains("/1.45"))
+    }
+
+    @Test func page_checkboxHitAreaIs44Points() {
+        let page = NoteHTMLRenderer.page(body: "")
+        #expect(page.contains("min-width:44px") && page.contains("min-height:44px"))
+        #expect(page.contains("li.done") && !page.contains("line-through"))
+    }
+
+    @Test func page_chipTextUsesNormalTextColorOnTintedBackground() {
+        let page = NoteHTMLRenderer.page(body: "")
+        let rule = page.components(separatedBy: "a.chip {").dropFirst().first?.components(separatedBy: "}").first ?? ""
+        #expect(rule.contains("var(--code)") && rule.contains("color: var(--text)"))
     }
 
     @Test func page_followsSchemeAndTextSize() {

@@ -14,8 +14,8 @@ import WebKit
 struct NoteMarkdownView: UIViewRepresentable {
     let markdown: String
     let attachments: NoteAttachmentStore?
-    /// The attachments of the note by ID, for links without a label.
-    let attachmentNames: [UUID: String]
+    /// The attachments of the note by ID: names links without a label and shows files as chips.
+    var attachmentDisplays: [UUID: NoteAttachmentDisplay] = [:]
     let onToggleCheckbox: (Int) -> Void
     let onOpenAttachment: (UUID) -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -50,7 +50,7 @@ struct NoteMarkdownView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.onToggleCheckbox = onToggleCheckbox
         context.coordinator.onOpenAttachment = onOpenAttachment
-        let body = NoteHTMLRenderer.html(markdown: markdown, attachmentNames: attachmentNames)
+        let body = NoteHTMLRenderer.html(markdown: markdown, options: NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays))
         context.coordinator.show(NoteHTMLRenderer.page(body: body, textScale: Self.textScale(for: dynamicTypeSize)))
     }
 

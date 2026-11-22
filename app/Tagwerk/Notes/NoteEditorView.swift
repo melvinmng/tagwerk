@@ -146,9 +146,8 @@ struct NoteEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 NoteMarkdownView(markdown: text, attachments: store.attachments,
-                                 attachmentNames: Dictionary(uniqueKeysWithValues: (store.attachments?.attachments(of: noteID) ?? []).map { ($0.id, $0.fileName) }),
+                                 attachmentDisplays: store.attachments?.displays(of: noteID) ?? [:],
                                  onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment)
-                    .padding(.horizontal, 16)
             }
         }
     }
