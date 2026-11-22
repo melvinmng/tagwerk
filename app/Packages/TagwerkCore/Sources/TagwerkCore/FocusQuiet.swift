@@ -28,10 +28,8 @@ public struct FocusCatchUp: Sendable, Hashable {
 /// ends, never when it will end. So the app keeps the start, holds notifications back to a known target, and after the
 /// end lets those that came due meanwhile fire once.
 public enum FocusQuiet {
-    /// With quiet hours set up: held notifications wait this long after the start when iOS never reports the end.
+    /// Held notifications wait this long after the start when iOS never reports the end, with or without quiet hours.
     public static let unreportedEndHold: TimeInterval = 4 * 3600
-    /// Without quiet hours: 8 hours, so a sleep Focus does not end in the middle of the night.
-    public static let openEndedHold: TimeInterval = 8 * 3600
     /// A start older than this is treated as lost: a missed end must never silence the app for good.
     public static let maximumAge: TimeInterval = 24 * 3600
 
@@ -99,10 +97,11 @@ public enum FocusQuiet {
     }
 
     /// Where held notifications go when the end is never reported: `unreportedEndHold` after the start, moved to the end
-    /// of the quiet hours when that moment lies inside them; `openEndedHold` after the start without quiet hours.
+    /// of the quiet hours when that moment lies inside them.
     public static func fallbackTarget(since: Date, quietHours: QuietHours?, calendar: Calendar) -> Date {
-        guard let quietHours, !quietHours.isEmpty else { return since.addingTimeInterval(openEndedHold) }
-        return quietHours.shifted(since.addingTimeInterval(unreportedEndHold), calendar: calendar)
+        let target = since.addingTimeInterval(unreportedEndHold)
+        guard let quietHours, !quietHours.isEmpty else { return target }
+        return quietHours.shifted(target, calendar: calendar)
     }
 
     /// Where notifications go while the filter is active: to `fallbackTarget`, which the reported end of the filter

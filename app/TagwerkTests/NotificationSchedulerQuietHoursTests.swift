@@ -92,11 +92,11 @@ struct NotificationSchedulerQuietHoursTests {
 
     // MARK: Focus filter
 
-    @Test func focusActive_holdsNotificationsBack_untilEightHoursAfterTheStart() async {
+    @Test func focusActive_withoutQuietHours_holdsForFourHours() async {
         settings.focusQuietSince = at(18, 9)
         local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 17))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
     }
 
     @Test func focusActive_withQuietHours_holdsForFourHours() async {

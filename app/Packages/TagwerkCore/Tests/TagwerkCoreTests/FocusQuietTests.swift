@@ -106,11 +106,11 @@ struct FocusQuietTests {
         #expect(atTarget == FocusQuiet.State())
     }
 
-    @Test func applying_endAfterTheTarget_withoutQuietHours_usesEightHours() {
+    @Test func applying_endAfterTheTarget_withoutQuietHours_usesFourHours() {
         let started = FocusQuiet.State(since: at(18, 9))
-        let early = FocusQuiet.applying(active: false, now: at(18, 16), to: started, quietHours: nil, calendar: calendar)
+        let early = FocusQuiet.applying(active: false, now: at(18, 12), to: started, quietHours: nil, calendar: calendar)
         #expect(early.catchUpFrom == at(18, 9))
-        let late = FocusQuiet.applying(active: false, now: at(18, 17), to: started, quietHours: nil, calendar: calendar)
+        let late = FocusQuiet.applying(active: false, now: at(18, 13), to: started, quietHours: nil, calendar: calendar)
         #expect(late == FocusQuiet.State())
     }
 
@@ -132,10 +132,10 @@ struct FocusQuietTests {
         #expect(FocusQuiet.fallbackTarget(since: at(18, 19), quietHours: night, calendar: calendar) == at(19, 7))
     }
 
-    @Test func fallbackTarget_withoutQuietHours_isEightHours() {
-        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: nil, calendar: calendar) == at(18, 21))
+    @Test func fallbackTarget_withoutQuietHours_isFourHours() {
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: nil, calendar: calendar) == at(18, 17))
         let empty = QuietHours(startMinutes: 300, endMinutes: 300)
-        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: empty, calendar: calendar) == at(18, 21))
+        #expect(FocusQuiet.fallbackTarget(since: at(18, 13), quietHours: empty, calendar: calendar) == at(18, 17))
     }
 
     // MARK: Hold
@@ -151,10 +151,10 @@ struct FocusQuietTests {
         #expect(FocusQuiet.hold(since: at(18, 13), now: at(18, 17), quietHours: night, calendar: calendar) == nil)
     }
 
-    @Test func hold_withoutQuietHours_lastsEightHoursFromTheStart() {
+    @Test func hold_withoutQuietHours_lastsFourHoursFromTheStart() {
         let hold = FocusQuiet.hold(since: at(18, 13), now: at(18, 14), quietHours: nil, calendar: calendar)
-        #expect(hold == FocusHold(from: at(18, 13), until: at(18, 21)))
-        #expect(FocusQuiet.hold(since: at(18, 13), now: at(18, 21), quietHours: nil, calendar: calendar) == nil)
+        #expect(hold == FocusHold(from: at(18, 13), until: at(18, 17)))
+        #expect(FocusQuiet.hold(since: at(18, 13), now: at(18, 17), quietHours: nil, calendar: calendar) == nil)
     }
 
     @Test func hold_inactiveOrStale_isNil() {
@@ -165,6 +165,6 @@ struct FocusQuietTests {
     @Test func hold_emptyQuietHours_actLikeNone() {
         let empty = QuietHours(startMinutes: 300, endMinutes: 300)
         let hold = FocusQuiet.hold(since: at(18, 13), now: at(18, 14), quietHours: empty, calendar: calendar)
-        #expect(hold?.until == at(18, 21))
+        #expect(hold?.until == at(18, 17))
     }
 }

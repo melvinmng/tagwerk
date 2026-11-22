@@ -2433,7 +2433,7 @@
   "Ruhezeit von %@ bis %@": "Quiet hours from %1$@ to %2$@",
   "Schalte „Aufgaben und Deadlines zurückhalten“ ein.": "Turn on “Hold tasks and deadlines”.",
   "So richtest du ihn ein": "How to set it up",
-  "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest, or after 8 hours when no quiet hours are set up. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped.",
+  "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped.",
   "Tippe unter „Fokusfilter“ auf „Filter hinzufügen“ und wähle „Tagwerk“.": "Under “Focus filters”, tap “Add filter” and choose “Tagwerk”.",
   "Was passiert": "What happens",
   "Wird zurückgehalten": "Held back",
