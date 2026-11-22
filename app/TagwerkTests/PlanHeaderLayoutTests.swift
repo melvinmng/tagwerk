@@ -9,17 +9,24 @@ import TagwerkCore
 /// six times for the same check.
 ///
 /// What is rendered here is the title as the header builds it (`PageTitleLabel`, hosted with `ImageRenderer`); what is not rendered
-/// is the system navigation bar. Its geometry is taken from the measurements of the real bar that the UI test printed (the lines
-/// "HEADER ..." of PL16b, iPhone 17e, 18 Pro and 18 Pro Max) and is written down in `RealBar`. If the bar changes (a new
-/// iOS version, a fourth button), measure it again with `PlanHeaderLayoutUITests/testTitleNeverTouchesTheBarButtons`, which stays in
-/// the nightly run for this reason, and update `RealBar`.
+/// is the system navigation bar. Its geometry is taken from the measurements of the real bar that the UI test prints (the lines
+/// "HEADER ..." of PL16b) and is written down in `RealBar`. If the bar changes (a new iOS version, a fourth button), measure it again
+/// with `PlanHeaderLayoutUITests/testTitleNeverTouchesTheBarButtons`, which stays in the nightly run for this reason, and update `RealBar`.
+///
+/// Calibration (22 Nov 2026, simulator iPhone 18 Pro, window 402 pt, German and English, Standard, XXXL and AX1, five days each): the
+/// width of the hosted header button is 1 to 2.5 pt below the width the UI test measured on the real bar (for example "Sonntag, 22. Nov.":
+/// 179 pt hosted, 180.7 pt real; "So. 22. Nov." at XXXL: 148 pt hosted at the XXL cap, 149.5 pt real), and the real bar buttons start
+/// 169 pt (Standard) and 180.7 pt (XXXL, AX1) from the trailing edge, the title 16 to 16.2 pt from the leading edge. `RealBar` keeps the
+/// larger values of the first measurements on three models (173 / 185 pt and 20 pt), which leave about 8 pt of reserve in total and so cover
+/// the narrower render and the other window widths; adding the render difference on top would make the test fail for titles that fit.
 @MainActor
 struct PlanHeaderLayoutTests {
     /// Geometry of the real navigation bar, measured with the UI test.
     private enum RealBar {
-        /// Distance of the first trailing bar button from the trailing edge: up to 173 pt at the default text size, up to 185 pt above it.
+        /// Distance of the first trailing bar button from the trailing edge: up to 173 pt at the default text size, up to 185 pt above it
+        /// (the calibration run measured 169 and 180.7 pt on the iPhone 18 Pro).
         static func trailingButtonsWidth(_ size: DynamicTypeSize) -> CGFloat { size > .large ? 185 : 173 }
-        /// The title starts 16 to 20 pt from the leading edge.
+        /// The title starts 16 to 20 pt from the leading edge (16 to 16.2 pt on the iPhone 18 Pro).
         static let leadingMargin: CGFloat = 20
         /// Smallest distance the title may come to the first bar button.
         static let minimumGap: CGFloat = 8
