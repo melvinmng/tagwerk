@@ -198,7 +198,7 @@ struct TableEditorSheet: View {
         let binding = Binding(get: { model.text(row: row, column: column) }, set: { model.setText($0, row: row, column: column) })
         return TextField("", text: binding)
             .font(row == 0 ? .body.weight(.semibold) : .body)
-            .multilineTextAlignment(Self.textAlignment(model.table.alignments[column]))
+            .multilineTextAlignment(Self.textAlignment(model.table.alignments.indices.contains(column) ? model.table.alignments[column] : .none))
             .focused($focusedCell, equals: Cell(row: row, column: column))
             .submitLabel(.next)
             .onSubmit { model.advance() }
@@ -219,7 +219,18 @@ struct TableEditorSheet: View {
 
     // MARK: Bar above the keyboard
 
+    /// The buttons fit side by side at the usual text sizes, with "Weiter" at the right; at larger sizes the bar scrolls sideways
+    /// like the bar of the note editor instead of clipping its buttons.
     private var bar: some View {
+        ViewThatFits(in: .horizontal) {
+            barContent(fillsWidth: true)
+            ScrollView(.horizontal, showsIndicators: false) { barContent(fillsWidth: false) }
+        }
+        .background(.bar)
+        .overlay(alignment: .top) { Divider() }
+    }
+
+    private func barContent(fillsWidth: Bool) -> some View {
         HStack(spacing: 0) {
             Button { model.addRow() } label: { Label("Zeile", systemImage: "plus").frame(minHeight: 44).padding(.horizontal, 8).contentShape(Rectangle()) }
             Button { model.addColumn() } label: { Label("Spalte", systemImage: "plus").frame(minHeight: 44).padding(.horizontal, 8).contentShape(Rectangle()) }
@@ -245,11 +256,9 @@ struct TableEditorSheet: View {
                 Image(systemName: "ellipsis").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
             }
             .accessibilityLabel("Mehr")
-            Spacer(minLength: 0)
+            if fillsWidth { Spacer(minLength: 0) }
             Button { model.advance() } label: { Label("Weiter", systemImage: "arrow.right.to.line").frame(minHeight: 44).padding(.horizontal, 8).contentShape(Rectangle()) }
         }
         .padding(.horizontal, 8)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
     }
 }
