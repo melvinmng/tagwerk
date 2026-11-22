@@ -6488,6 +6488,27 @@
         }
       }
     },
+    "Bleibt auf dem iPhone: Gesperrte Notizen gehen nicht an ChatGPT. Entsperrt kann der Assistent sie lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on the iPhone: locked notes do not go to ChatGPT. Unlocked, the assistant can read and edit them until you leave Tagwerk."
+          }
+        }
+      }
+    },
+    "Bleibt auf dem iPhone: Gesperrte Notizen gehen nie an ChatGPT, auch nicht entsperrt.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays on the iPhone: locked notes never go to ChatGPT, not even when unlocked."
+          }
+        }
+      }
+    },
     "Bleibt auf diesem iPhone, geht nie an ChatGPT.": {
       "localizations": {
         "en": {
@@ -7645,6 +7666,16 @@
         }
       }
     },
+    "Der Titel ist die erste Zeile der Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The title is the first line of the note."
+          }
+        }
+      }
+    },
     "Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.": {
       "localizations": {
         "en": {
@@ -8387,6 +8418,16 @@
         }
       }
     },
+    "Die Sperre schützt vor Mitlesen in Tagwerk, nicht die Sicherungsdatei. Bewahre die Datei an einem geschützten Ort auf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The lock protects against reading along in Tagwerk, not the backup file. Keep the file in a protected place."
+          }
+        }
+      }
+    },
     "Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.": {
       "localizations": {
         "en": {
@@ -8719,6 +8760,16 @@
         }
       }
     },
+    "Diese Notiz ist gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This note is locked."
+          }
+        }
+      }
+    },
     "Diese Quelle ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -8881,6 +8932,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This folder has a fixed purpose and can’t be deleted or moved."
+          }
+        }
+      }
+    },
+    "Dieser Ordner ist gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is locked."
           }
         }
       }
@@ -9466,6 +9527,16 @@
         }
       }
     },
+    "Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocking once opens everything locked until you leave Tagwerk. Private folders: %@."
+          }
+        }
+      }
+    },
     "Einplanen": {
       "localizations": {
         "en": {
@@ -9743,6 +9814,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Removes the item from the input"
+          }
+        }
+      }
+    },
+    "Entsperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        }
+      }
+    },
+    "Entsperrt: Der Assistent kann diese Notiz lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked: the assistant can read and edit this note until you leave Tagwerk."
           }
         }
       }
@@ -11382,6 +11473,27 @@
         }
       }
     },
+    "Geht nie an ChatGPT": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never goes to ChatGPT"
+          }
+        }
+      }
+    },
+    "Geht nur entsperrt an ChatGPT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only goes to ChatGPT when unlocked"
+          }
+        }
+      }
+    },
     "Gehören zum Kalendertermin und erscheinen auf allen Geräten. Ruhezeiten gelten dafür nicht.": {
       "localizations": {
         "en": {
@@ -11680,6 +11792,77 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saved: %@"
+          }
+        }
+      }
+    },
+    "Gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked"
+          }
+        }
+      }
+    },
+    "Gesperrt sieht der Assistent die Notiz nicht. Entsperrt kann er sie lesen und ändern, bis du Tagwerk verlässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant does not see the note while it is locked. Unlocked, it can read and edit it until you leave Tagwerk."
+          }
+        }
+      }
+    },
+    "Gesperrt: Diese Notiz geht nicht an ChatGPT. Entsperre sie, wenn der Assistent sie lesen soll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked: this note does not go to ChatGPT. Unlock it if the assistant should read it."
+          }
+        }
+      }
+    },
+    "Gesperrt: Diese Notiz geht nicht an ChatGPT. Hebe die Sperre auf, wenn der Assistent sie lesen soll.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked: this note does not go to ChatGPT. Remove the lock if the assistant should read it."
+          }
+        }
+      }
+    },
+    "Gesperrte Notizen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes"
+          }
+        }
+      }
+    },
+    "Gesperrte Notizen werden nur über den Titel gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes are only found by their title."
+          }
+        }
+      }
+    },
+    "Gesperrte Notizen · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locked notes · %lld"
           }
         }
       }
@@ -12039,6 +12222,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Applies to everything without reminders of its own. For calendar events only when created in Tagwerk."
+          }
+        }
+      }
+    },
+    "Gilt für gesperrte Notizen und private Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to locked notes and private folders."
           }
         }
       }
@@ -13117,6 +13310,16 @@
         }
       }
     },
+    "In Listen und Suche bleibt der Titel sichtbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The title stays visible in lists and search"
+          }
+        }
+      }
+    },
     "In Planen anzeigen": {
       "localizations": {
         "en": {
@@ -13360,6 +13563,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back up now"
+          }
+        }
+      }
+    },
+    "Jetzt sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock now"
           }
         }
       }
@@ -14024,6 +14237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No deleted notes."
+          }
+        }
+      }
+    },
+    "Keine gesperrten Notizen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No locked notes."
           }
         }
       }
@@ -15229,6 +15452,7 @@
       }
     },
     "Menge, z. B. „500 g“": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15510,6 +15734,66 @@
         }
       }
     },
+    "Mit Face ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Face ID"
+          }
+        }
+      }
+    },
+    "Mit Face ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Face ID"
+          }
+        }
+      }
+    },
+    "Mit Face ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Face ID"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with device passcode"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with device passcode"
+          }
+        }
+      }
+    },
+    "Mit Gerätecode öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with device passcode"
+          }
+        }
+      }
+    },
     "Mit GitHub anmelden": {
       "localizations": {
         "en": {
@@ -15526,6 +15810,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan with AI"
+          }
+        }
+      }
+    },
+    "Mit Optic ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Optic ID"
+          }
+        }
+      }
+    },
+    "Mit Optic ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Optic ID"
+          }
+        }
+      }
+    },
+    "Mit Optic ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Optic ID"
           }
         }
       }
@@ -15556,6 +15870,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Talk to Tagwerk"
+          }
+        }
+      }
+    },
+    "Mit Touch ID schützen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect with Touch ID"
+          }
+        }
+      }
+    },
+    "Mit Touch ID sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock with Touch ID"
+          }
+        }
+      }
+    },
+    "Mit Touch ID öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with Touch ID"
           }
         }
       }
@@ -16630,6 +16974,16 @@
         }
       }
     },
+    "Notiz sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock note"
+          }
+        }
+      }
+    },
     "Notiz „%@“ löschen": {
       "localizations": {
         "en": {
@@ -16721,7 +17075,18 @@
         }
       }
     },
+    "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Gesperrte Notizen sieht der Assistent nur, solange du sie entsperrt hast, bis du Tagwerk verlässt. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie, auch nicht entsperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes go to the assistant only with the switch “Notes with ChatGPT”: title and excerpt of the hits of its search, the whole text of a note when needed and, in the notes chat, changes to it. The names of a note’s attachments go with its text; the attachments themselves and deleted notes never go to ChatGPT. The assistant sees locked notes only while you have them unlocked, until you leave Tagwerk. With the switch off, the assistant only learns how many notes match a search. What the assistant reads from notes applies only to the current conversation and is lost when the app is quit, when you switch chats and when you clear the history. The assistant's replies and your messages stay in the history and can quote note content. Journal, Bible Study and Dream Log never leave the iPhone, not even when unlocked."
+          }
+        }
+      }
+    },
     "Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17837,6 +18202,16 @@
         }
       }
     },
+    "Private Ordner sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock private folders"
+          }
+        }
+      }
+    },
     "Probe hören": {
       "localizations": {
         "en": {
@@ -18293,6 +18668,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recipe text"
+          }
+        }
+      }
+    },
+    "Richte zuerst einen Code für dein iPhone ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up a passcode for your iPhone first."
           }
         }
       }
@@ -19261,11 +19646,22 @@
       }
     },
     "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest, or after 8 hours when no quiet hours are set up. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped."
+          }
+        }
+      }
+    },
+    "Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While the Focus is running, Tagwerk holds back notifications for tasks and deadline events. They arrive as soon as the Focus ends. If iOS does not report the end, they arrive after 4 hours at the latest. If that moment falls into the quiet hours, they arrive at the end of them. Nothing is dropped."
           }
         }
       }
@@ -19327,6 +19723,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete column"
+          }
+        }
+      }
+    },
+    "Sperre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
+          }
+        }
+      }
+    },
+    "Sperre aufheben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove lock"
+          }
+        }
+      }
+    },
+    "Sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
           }
         }
       }
@@ -19761,6 +20187,16 @@
         }
       }
     },
+    "Steht unverschlüsselt in der Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is unencrypted in the backup"
+          }
+        }
+      }
+    },
     "Stelle, z. B. 3,21-31": {
       "localizations": {
         "en": {
@@ -20111,6 +20547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk isn’t allowed to write to Health. Your entries stay in Tagwerk. You can change this in the Health app under Profile › Apps › Tagwerk."
+          }
+        }
+      }
+    },
+    "Tagwerk entsperrt damit gesperrte Notizen und private Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk uses this to unlock locked notes and private folders."
           }
         }
       }
@@ -21089,6 +21535,16 @@
         }
       }
     },
+    "Verbirgt den Inhalt gesperrter Notizen und privater Ordner in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides the content of locked notes and private folders in Tagwerk."
+          }
+        }
+      }
+    },
     "Vergangen": {
       "localizations": {
         "en": {
@@ -21231,6 +21687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move: %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does not encrypt: the database and backups hold locked notes as plain text."
           }
         }
       }
@@ -21878,6 +22344,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for confirmation …"
+          }
+        }
+      }
+    },
+    "Was die Sperre tut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the lock does"
           }
         }
       }
@@ -24123,6 +24599,26 @@
         }
       }
     },
+    "enthalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "included"
+          }
+        }
+      }
+    },
+    "entsperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unlocked"
+          }
+        }
+      }
+    },
     "erinnert": {
       "localizations": {
         "en": {
@@ -24281,6 +24777,16 @@
         }
       }
     },
+    "gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "locked"
+          }
+        }
+      }
+    },
     "gesprochen": {
       "localizations": {
         "en": {
@@ -24427,6 +24933,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "in der Datei unverschlüsselt enthalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "included unencrypted in the file"
           }
         }
       }
@@ -25513,6 +26029,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Face ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Face ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Optic ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Optic ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit Touch ID oder Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with Touch ID or device passcode"
+          }
+        }
+      }
+    },
+    "Öffnen nur mit dem Gerätecode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens only with the device passcode"
           }
         }
       }

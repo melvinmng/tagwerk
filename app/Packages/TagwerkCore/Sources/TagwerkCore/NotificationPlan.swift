@@ -101,7 +101,7 @@ public struct NotificationRules: Sendable, Hashable {
     /// is active, and finally moved out of the quiet hours. Unchanged when none of the three applies.
     func deliveryDate(for fire: Date, calendar: Calendar) -> Date {
         var delivery = fire
-        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.at { delivery = catchUp.at }
+        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.windowEnd { delivery = catchUp.at }
         if let hold = focusHold, delivery >= hold.from, delivery < hold.until { delivery = hold.until }
         if let quietHours { delivery = quietHours.shifted(delivery, calendar: calendar) }
         return delivery

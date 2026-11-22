@@ -26,6 +26,14 @@ struct BackupSettingsView: View {
                 Text("Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.")
             }
 
+            if environment.notes.lockedCount > 0 {
+                Section {
+                    LabeledContent("Gesperrte Notizen · \(environment.notes.lockedCount)", value: Self.lockedNotesValue(encrypted: false))
+                } footer: {
+                    Text("Die Sperre schützt vor Mitlesen in Tagwerk, nicht die Sicherungsdatei. Bewahre die Datei an einem geschützten Ort auf.")
+                }
+            }
+
             Section {
                 Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
             } footer: {
@@ -73,6 +81,11 @@ struct BackupSettingsView: View {
             if let pendingRestore { Text(Self.summary(pendingRestore)) }
         }
         .alert(alertText ?? "", isPresented: alertBinding) { Button("OK", role: .cancel) {} }
+    }
+
+    /// The value of the row "Gesperrte Notizen": the file holds them as plain text unless the backup is encrypted.
+    static func lockedNotesValue(encrypted: Bool) -> String {
+        encrypted ? String(localized: "enthalten") : String(localized: "in der Datei unverschlüsselt enthalten")
     }
 
     /// "12 · 34 MB"; `nil` without attachments, so the row only shows when it matters for the file size.

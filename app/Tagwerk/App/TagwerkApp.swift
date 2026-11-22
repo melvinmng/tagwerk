@@ -90,6 +90,7 @@ struct TagwerkApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
                     case .active:
+                        environment.noteLock.refresh()
                         // Items shared from other apps; the root view opens their sheets once nothing else is open.
                         environment.shareInbox.appBecameActive()
                         Task {
@@ -108,6 +109,8 @@ struct TagwerkApp: App {
                             await environment.capture.syncPending()
                         }
                     case .background:
+                        // Everything protected is closed again, before anything else runs.
+                        environment.noteLock.appDidEnterBackground()
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
                         // The snapshot reads the store directly, so it is written first, before any await.
                         environment.writeSnapshot()

@@ -200,4 +200,60 @@ struct NoteFieldModelTests {
         older.text = "Kopf voll"
         #expect(older.changeCard == NoteFieldModel.ChangeCard(offersSuggestions: false, footer: .none))
     }
+
+    // MARK: Lock
+
+    /// The field of a hidden note holds no text. Saving it (the sheet closing, the debounce) must not replace the stored note
+    /// with that empty text, which would delete it.
+    @Test func hiddenNote_isNeverOverwrittenOrDeleted() async throws {
+        let stored = try #require(store.saveThought("Geheime Gedanken", kind: .morning, dayKey: "2026-11-18", wasDictated: false))
+        store.setLocked([stored.id], true)
+        let model = NoteFieldModel(store: store, kind: .morning, day: day, debounce: .milliseconds(1), sleep: { _ in },
+                                   isConcealed: { $0.isLocked })
+        #expect(model.isConcealed && model.text.isEmpty)
+        model.textChanged()
+        await model.waitForSave()
+        model.flush()
+        #expect(store.note(id: stored.id)?.text == "Geheime Gedanken")
+        // Even text that gets into the field by a bug is not written while the note is hidden.
+        model.text = "Ersatz"
+        model.textChanged()
+        await model.waitForSave()
+        model.flush()
+        #expect(store.note(id: stored.id)?.text == "Geheime Gedanken" && store.count == 1)
+        // The questions that would change the text are not offered.
+        #expect(!model.offersGuidingQuestions)
+    }
+
+    /// Closing the lock saves what was typed and takes it out of the field; opening it loads the stored text again.
+    @Test func lockClosing_savesTheTextAndEmptiesTheField_unlockingLoadsItAgain() async throws {
+        let stored = try #require(store.saveThought("Alt", kind: .evening, dayKey: "2026-11-18", wasDictated: false))
+        store.setLocked([stored.id], true)
+        var isOpen = true
+        let model = NoteFieldModel(store: store, kind: .evening, day: day, debounce: .seconds(60), sleep: { _ in try? await Task.sleep(for: .seconds(60)) },
+                                   isConcealed: { $0.isLocked && !isOpen })
+        #expect(!model.isConcealed && model.text == "Alt")
+        model.text = "Alt und neu"
+        model.textChanged()
+        isOpen = false
+        model.updateConcealment()
+        #expect(model.isConcealed && model.text.isEmpty)
+        #expect(store.note(id: stored.id)?.text == "Alt und neu")
+        model.flush()
+        #expect(store.note(id: stored.id)?.text == "Alt und neu")
+        isOpen = true
+        model.updateConcealment()
+        #expect(!model.isConcealed && model.text == "Alt und neu")
+        // Saving works again.
+        model.text = "Alt und neu und mehr"
+        model.flush()
+        #expect(store.note(id: stored.id)?.text == "Alt und neu und mehr")
+    }
+
+    @Test func noteWithoutLock_isNotConcealed() async throws {
+        let stored = try #require(store.saveThought("Offen", kind: .evening, dayKey: "2026-11-18", wasDictated: false))
+        let model = NoteFieldModel(store: store, kind: .evening, day: day, debounce: .milliseconds(1), sleep: { _ in },
+                                   isConcealed: { $0.isLocked })
+        #expect(!model.isConcealed && model.text == "Offen" && stored.id == model.noteID)
+    }
 }

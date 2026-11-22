@@ -107,13 +107,21 @@ final class NoteSuggestionModel {
         card.status == .pending && !card.needsTarget && !AssistantModel.needsSingleConfirmation(card.call, me: gitHubDirectory()?.login)
     }
 
+    /// Whether the stored note may go to ChatGPT: its stored kind allows suggestions and it is not private (a locked note
+    /// never is, unlocked or not). A note that is not stored yet counts as sendable; the kind the caller names is checked
+    /// separately.
+    func maySend(noteID: UUID) -> Bool {
+        guard let note = notes.note(id: noteID) else { return true }
+        return note.kind.allowsSuggestions && !notes.isPrivate(note)
+    }
+
     // MARK: Request
 
     /// One request. Without consent nothing happens, not even the model list is loaded.
     func fetch(noteID: UUID, text: String, kind: NoteKind) async {
         // Only the thought notes go to ChatGPT. Private notes (journal, Bible Study) and the dream log never do, whatever the
         // consent says. The stored kind counts as well as the one the caller names.
-        guard kind.allowsSuggestions, notes.note(id: noteID)?.kind.allowsSuggestions != false else { return }
+        guard kind.allowsSuggestions, maySend(noteID: noteID) else { return }
         guard hasConsent() else { return }
         generation += 1
         let mine = generation
@@ -426,7 +434,7 @@ extension NoteSuggestionModel {
     /// kind and the kind the caller names say. Done and declined cards stay as they are and are not sent.
     func revise(noteID: UUID, text: String, kind: NoteKind, comment: String) async {
         let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard kind.allowsSuggestions, notes.note(id: noteID)?.kind.allowsSuggestions != false, hasConsent(),
+        guard kind.allowsSuggestions, maySend(noteID: noteID), hasConsent(),
               !isRevising, !comment.isEmpty else { return }
         let open = cards.filter { $0.status == .pending }
         guard !open.isEmpty else { return }
@@ -600,7 +608,7 @@ extension NoteSuggestionModel: CardAdjusting {
     /// note that may be sent.
     var cardFollowUpHasConsent: Bool {
         guard hasConsent() else { return false }
-        return noteID.flatMap { notes.note(id: $0)?.kind.allowsSuggestions } != false
+        return noteID.map(maySend(noteID:)) != false
     }
 
     /// One request about one card (`CardReviser`): the function, its values, the marks and the message; no note text and no

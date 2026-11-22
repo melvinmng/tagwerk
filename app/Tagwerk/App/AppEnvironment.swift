@@ -34,6 +34,8 @@ final class AppEnvironment {
     /// Notes stored on this device only (phase 5); never sent to ChatGPT.
     let notes: NoteStore
     let backup: BackupService
+    /// The lock session of the notes (NL1a): hides locked notes and private folders until the device owner is checked.
+    let noteLock: NoteLock
     let taskList: TaskListModel
     let planning: PlanningModel
     /// Travel times before events with a place; asks Apple Maps only for addresses (#168).
@@ -140,6 +142,14 @@ final class AppEnvironment {
         return TravelTimeService()
     }
 
+    /// The device check of the note lock; the UI tests can fix its answer.
+    private static func makeDeviceOwnerAuthenticator() -> any DeviceOwnerAuthenticating {
+        #if DEBUG && targetEnvironment(simulator)
+        if let answers = UITestMode.lockAuthentication { return FixedDeviceOwnerAuthenticator(answers: answers) }
+        #endif
+        return SystemDeviceOwnerAuthenticator()
+    }
+
     private static func makeAddressSuggester() -> any AddressSuggesting {
         #if DEBUG && targetEnvironment(simulator)
         if DemoTravelEstimator.isRequested { return DemoAddressSuggester() }
@@ -152,7 +162,8 @@ final class AppEnvironment {
          reminderStore: (any ReminderStore)? = nil, eventSearcher: (any EventSearching)? = nil,
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
          travelTimes: TravelTimeService? = nil, addressSuggester: (any AddressSuggesting)? = nil, shareInbox: ShareInbox? = nil,
-         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) throws {
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil,
+         deviceOwnerAuthenticator: (any DeviceOwnerAuthenticating)? = nil) throws {
         self.modelContainer = modelContainer
         self.controlState = controlState
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
@@ -177,7 +188,10 @@ final class AppEnvironment {
         noteStore.ensureDefaultFolders()
         attachments.purgeOrphans(existingNoteIDs: Set(noteStore.allNotes().map(\.id)))
         self.notes = noteStore
-        self.backup = BackupService(context: context, settings: settings, attachments: attachments, afterRestore: { [noteStore] in
+        let authenticator: any DeviceOwnerAuthenticating = deviceOwnerAuthenticator ?? Self.makeDeviceOwnerAuthenticator()
+        self.noteLock = NoteLock(settings: settings, authenticator: authenticator)
+        self.backup = BackupService(context: context, settings: settings, attachments: attachments,
+                                    canProtectNotes: { authenticator.canAuthenticate() }, afterRestore: { [noteStore] in
             noteStore.ensureDefaultFolders()
             noteStore.save()
         })
@@ -251,6 +265,8 @@ final class AppEnvironment {
         let voiceOutput = self.voiceOutput
         // Withdrawing the consent ends the note session, from the settings screen as well as from a backup restore.
         assistant.watchNoteConsent { settings.noteAssistantConsent }
+        // Locking a note ends the note session: the chat forgets what it read of notes before.
+        noteStore.onNoteLocked = { [weak assistant] in assistant?.endNoteSession() }
         // The notes chat: the tools wrap the app tools and select notes only through `NoteToolAccess`.
         let noteAccess = NoteToolAccess(store: noteStore)
         assistant.noteTools = NoteChatTools(base: tools, access: noteAccess, hasConsent: { settings.noteAssistantConsent })
@@ -401,6 +417,12 @@ final class AppEnvironment {
             if !taskList.items.contains(where: { $0.id == id }) { await loadTasksInBackground() }
             await taskList.complete(id)
         }
+        // Closing the lock rebuilds the rows of an open search, so no passage of a hidden note stays in the model (NL4a).
+        noteLock.onLock = { [weak self] in self?.activeSearch?.evaluate() }
+        // A locked note is open to the assistant while the lock session is open (NoteStore.lockHoldsBack). When the session ends,
+        // the assistant's note session ends with it, so no text of an unlocked note stays in the chat.
+        noteLock.attach(to: noteStore, endingNoteSessionOf: assistant)
+        noteStore.onLockMarksChanged = { [weak self] in self?.activeSearch?.evaluate() }
     }
 
     /// The model of the sheet "Mail zu Aufgabe" for a shared item: the mail if the extension parsed one, else its text.
@@ -647,13 +669,17 @@ final class AppEnvironment {
 
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
     /// `gratitude` is the gratitude of the day of a morning note; the app search appends it to the text, the assistant never gets it.
+    /// A hidden note (`isConcealed`: protected and not unlocked) carries its title line only, and no gratitude and no scan text, so the
+    /// search finds it by its title and nothing of the note stays in the search model (NL4a).
     /// `scanText` is the text recognised in the scans of the note; the app search passes it, the assistant never does.
-    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = [], scanText: String = "") -> NoteSearchItem {
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = [], scanText: String = "",
+                           isConcealed: Bool = false) -> NoteSearchItem {
         let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
-        let text = ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
+        let text = isConcealed ? NoteText.title(note.text)
+            : ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
         return NoteSearchItem(id: note.id, text: text, kindLabel: folderName ?? kindLabel(of: note.kind),
                               updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey,
-                              scanText: scanText)
+                              isConcealed: isConcealed, scanText: isConcealed ? "" : scanText)
     }
 
     /// The notes the assistant's `search` may read: only what `NoteToolAccess` shows, never the gratitude of a day.
@@ -667,15 +693,18 @@ final class AppEnvironment {
     /// note's text, and every day that only has gratitude as an item of its own. `scanTexts` gives the text recognised in the
     /// scans of a note (by note ID); the search finds a scan by it.
     static func appSearchNotes(live: [NoteRecord], folderNames: [UUID: String], gratitudeDays: [PlanDay: [String]],
-                               calendar: Calendar, scanTexts: [UUID: String] = [:]) -> [NoteSearchItem] {
+                               calendar: Calendar, scanTexts: [UUID: String] = [:],
+                               isConcealed: (NoteRecord) -> Bool = { _ in false }) -> [NoteSearchItem] {
         var morningDays = Set<PlanDay>()
         var items = live.map { note -> NoteSearchItem in
             var gratitude: [String] = []
+            let concealed = isConcealed(note)
             if note.kind == .morning, let day = note.dayKey.flatMap(NoteDayKey.day) {
                 morningDays.insert(day)
-                gratitude = gratitudeDays[day] ?? []
+                gratitude = concealed ? [] : gratitudeDays[day] ?? []
             }
-            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude, scanText: scanTexts[note.id] ?? "")
+            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude, scanText: scanTexts[note.id] ?? "",
+                              isConcealed: concealed)
         }
         items += gratitudeSearchItems(gratitudeDays: gratitudeDays, morningNoteDays: morningDays, calendar: calendar)
         return items
@@ -770,6 +799,7 @@ final class AppEnvironment {
         let reminders = self.remindersProvider
         let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
         let notes = self.notes
+        let noteLock = self.noteLock
         let routines = self.routines
         let shopping = self.shopping
         var sources = SearchSources(
@@ -781,9 +811,12 @@ final class AppEnvironment {
                 // A note in a folder shows the folder name as its label; the trash is not searched. The gratitude of the
                 // morning routine is searched here and nowhere else (never by the assistant).
                 let folderNames = Self.folderNames(notes)
+                // Hidden notes are found by their title only, until the lock is open (NL4a).
+                let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: notes.folders().map(\.info))
                 let live = notes.notes()
                 return Self.appSearchNotes(live: live, folderNames: folderNames, gratitudeDays: routines.gratitudeDays(),
-                                           calendar: planning.calendar, scanTexts: Self.scanTexts(of: live, attachments: notes.attachments))
+                                           calendar: planning.calendar, scanTexts: Self.scanTexts(of: live, attachments: notes.attachments),
+                                           isConcealed: { noteLock.isConcealed($0, privateFolderIDs: privateFolderIDs) })
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
             searchOnline: searchOnline)

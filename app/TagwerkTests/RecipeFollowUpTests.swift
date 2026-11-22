@@ -117,24 +117,24 @@ struct RecipeFollowUpTests {
 
     // MARK: Rows
 
-    @Test func row_edit_nameQuantityCategory() {
+    @Test func row_edit_nameAndCategory_leavesTheAmountAlone() {
         let row = RecipeRow(candidate: RecipeImporter.Candidate(name: "Eier", quantity: "2 Stück",
                                                                 line: IngredientLine.parse("2 Eier"), category: "Sonstiges", alreadyOnList: false))
-        let edited = row.edited(name: "  Bio-Eier ", quantity: "6 Stück", category: "Kühlregal")
-        #expect(edited.id == row.id && edited.candidate.name == "Bio-Eier" && edited.candidate.quantity == "6 Stück")
-        #expect(edited.candidate.category == "Kühlregal" && edited.candidate.line == nil)
-        // An unchanged amount keeps the structured amount; a blank name changes nothing.
-        let same = row.edited(name: " ", quantity: "2 Stück", category: "Sonstiges")
-        #expect(same == row)
-        #expect(row.edited(name: "Eier", quantity: "", category: "Sonstiges").candidate.quantity == nil)
+        let edited = row.edited(name: "  Bio-Eier ", category: "Kühlregal")
+        #expect(edited.id == row.id && edited.candidate.name == "Bio-Eier" && edited.candidate.category == "Kühlregal")
+        // The sheet has no amount: the amount and its structured form (which scaling works on) stay as they were.
+        #expect(edited.candidate.quantity == "2 Stück" && edited.candidate.line == row.candidate.line)
+        // A blank name changes nothing.
+        #expect(row.edited(name: " ", category: "Sonstiges") == row)
     }
 
     @Test func row_edit_ofARowWithASecondName_changesTheListName() {
         var candidate = candidate("Eggs", "2")
         candidate.shoppingName = "Eier"
         candidate.shoppingUnit = "Stück"
-        let edited = RecipeRow(candidate: candidate).edited(name: "Bio-Eier", quantity: "4", category: "Sonstiges")
-        #expect(edited.candidate.listName == "Bio-Eier" && edited.candidate.name == "Eggs" && edited.candidate.shoppingUnit == nil)
+        let edited = RecipeRow(candidate: candidate).edited(name: "Bio-Eier", category: "Sonstiges")
+        #expect(edited.candidate.listName == "Bio-Eier" && edited.candidate.name == "Eggs" && edited.candidate.shoppingUnit == "Stück")
+        #expect(edited.candidate.quantity == "2")
     }
 
     @Test func row_edit_categoryFromOwnListOnly() {
@@ -184,7 +184,7 @@ struct RecipeFollowUpTests {
             return answer
         }
         model.toggle(model.rows[1].id)       // Mehl unchecked
-        model.edit(model.rows[0].edited(name: "Bio-Eier", quantity: "2", category: "Sonstiges"))
+        model.edit(model.rows[0].edited(name: "Bio-Eier", category: "Sonstiges"))
 
         await model.send("Süß machen")
 
@@ -215,15 +215,16 @@ struct RecipeFollowUpTests {
 
     @Test func editedRow_keepsMarkThroughServingsScaling() {
         let model = draft([RecipeImporter.Candidate(name: "Eier", quantity: "2", line: IngredientLine.parse("2 Eier"), category: "Sonstiges", alreadyOnList: false)])
-        model.edit(model.rows[0].edited(name: "Eier", quantity: "3", category: "Sonstiges"))
+        model.edit(model.rows[0].edited(name: "Bio-Eier", category: "Sonstiges"))
         let scaled = RecipeResultView.scaled(candidates: model.candidates, base: 2, target: 4, locale: Locale(identifier: "de_DE"))
-        // Scaling is a view of the rows: the identity and the mark stay with the row, the amount typed by hand is scaled as text.
+        // Scaling is a view of the rows: the identity and the mark stay with the row, and the amount of the recipe still scales.
         #expect(model.followUp.mark(of: model.rows[0].id) == .byUser && scaled.count == 1)
+        #expect(scaled[0].line?.amount != model.candidates[0].line?.amount)
     }
 
     @Test func apply_usesEditedCandidates_andNoteSave_usesTheSameRevisedResult() {
         let model = draft([candidate("Eier", "2", category: "Sonstiges"), candidate("Mehl", "200 g")])
-        model.edit(model.rows[0].edited(name: "Bio-Eier", quantity: "6", category: "Kühlregal"))
+        model.edit(model.rows[0].edited(name: "Bio-Eier", category: "Kühlregal"))
         model.toggle(model.rows[1].id)
 
         #expect(model.selectedCandidates.map(\.listName) == ["Bio-Eier"] && model.selectedCandidates[0].category == "Kühlregal")
