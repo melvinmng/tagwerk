@@ -39,6 +39,8 @@ Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 
 
 - 22.11. ca. 08:00–10:30: NE-Hilfsskript rief `xcrun simctl shutdown all` auf – Fehler anderer Agents in dieser Zeit nicht belastbar. Briefs verbieten `shutdown all` jetzt ausdrücklich.
 
+- Wackeltest `VoiceInputModelTests.finish_appendsRecognizedTextToDraft_andMarksSpoken` (main): `settle()` = 20× `Task.yield()`, auf CI bei #284 nur „Bitte“ statt „Bitte leg die Mail“ → auf Bedingung warten statt Yields zählen (kleiner Fix, nächster freier Platz).
+
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
 
 - Start: `git fetch origin`; neuer Branch von `origin/main` bzw. `origin/main` in den vorhandenen Branch mergen (auch Job 2 eines verketteten Auftrags). Existiert der Branchname lokal mit fremden Commits: anderen Namen nehmen und melden, nichts zurücksetzen.
