@@ -24,6 +24,8 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 
 - Nach #274: #273 und #275 vor dem Merge auf `check-colors.py` bringen (keine Systemfarben als Text), sonst bricht der schnelle Job auf `main`.
 
+- 22.11. ca. 08:00–10:30: NE-Hilfsskript rief `xcrun simctl shutdown all` auf – Fehler anderer Agents in dieser Zeit nicht belastbar. Briefs verbieten `shutdown all` jetzt ausdrücklich.
+
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
 
 - Start: `git fetch origin`; neuer Branch von `origin/main` bzw. `origin/main` in den vorhandenen Branch mergen (auch Job 2 eines verketteten Auftrags). Existiert der Branchname lokal mit fremden Commits: anderen Namen nehmen und melden, nichts zurücksetzen.
@@ -31,7 +33,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Ab GitHub-Pflicht-Check (nach #261): `main` nur beim Start holen, kein Nachziehen vor dem Abschlusslauf; GitHub testet das Merge-Ergebnis; nachziehen nur bei Konflikt oder rotem CI (Nutzer 21.11.).
 - Determinismus: Datums-Tests zeitzonenunabhängig (Formatierung mit `calendar.timeZone`); GitHub-CI läuft in UTC auf iPhone 18 Pro.
 - Kataloge: kompaktes Format; `sync-strings.sh` erst nutzen, wenn #261 auf `main` ist (danach formattreu); `check-strings.py`; Englisch in `scripts/translations/en.json`; „Projekt“ statt „Project“.
-- Rechner: keine künstliche Last, keine Prozesse beenden, nur ein Testlauf je Arbeitskopie, Simulator nach UI-Lauf herunterfahren; am Ende eigenen Simulator, DerivedData und Xcode-DerivedData mit Pfad in die Arbeitskopie löschen.
+- Rechner: keine künstliche Last, keine Prozesse beenden, nie `simctl shutdown all` (nur den eigenen Simulator), nur ein Testlauf je Arbeitskopie, Simulator nach UI-Lauf herunterfahren; am Ende eigenen Simulator, DerivedData und Xcode-DerivedData mit Pfad in die Arbeitskopie löschen.
 - Grenzen: nicht pushen, keine PRs/Issues/TODO.md/`t3gh`; Commits englisch, ohne KI-Hinweis, ohne Co-Authored-By.
 
 ## Entscheidungen (verbindlich, auf GitHub)
@@ -99,6 +101,8 @@ Festlegungen der Hauptsitzung zum G3-Plan: offene Fragen nach Empfehlung; Zeilen
 | `feat/week-all-events-2` | #259 Wochenansicht mit allen Terminen | **gemergt (#271, `main` = `04b50fb`)**; PR #271; geprüft, Head `7796c1f`, voll grün (40 UI-Tests); warte auf GitHub-Checks. Offen: Audit „Planen (Woche)“ zeigt vorhandene Kontrastbefunde (Kopfzeile „DIESE WOCHE · KW“, Kapazitätstext, Schublade) – an K/Nachfolger |
 | `feat/ai-proposal-previews` | #255 Stränge C–E | PR #273; fertig, Head `e7098a2`, voll grün (46 UI-Tests); main `258907a` eingearbeitet (Head `f0008a9`), schnell grün, gepusht, warte auf GitHub; nach Merge von #274 Texttöne nachziehen |
 | `feat/g1-quiet-hours` | G1 Strang R (R1–R4) | PR #275, Head `43b1ece`; Pakete/App grün, UI lokal rot (Sonntags-DT „Wochenplanung starten“, Abbrüche unter Last) → Gate GitHub. Offen: Fokus-Filter-Text „4 h“ vs. 8 h ohne Ruhezeit; seltene Doppelzustellung bei Fokus B < 1 min nach A |
+| `feat/g2-note-editor` | G2 Strang NE (NE1–NE4) | PR #276, Head `c42dd56`; schnell grün, UI lokal nur Sonntags-DT „Wochenplanung starten“ |
+| (Integration) | #273, #275, #276 auf main + Texttöne; Fix Sonntags-DT und „+4 weitere“ (`fix/audit-sunday-and-collapsed`) | läuft (Sonnet, nur schnelle Tests) |
 | (G2 NF) | G2 Welle 1, Strang NF | läuft (Sonnet) |
 | (G2 BS1–BS2) | G2 Welle 1, Bible Study Recherche + Regeln | läuft (Sonnet) |
 | (G2 NE) | G2 Welle 1, Strang NE | läuft (Sonnet) |
