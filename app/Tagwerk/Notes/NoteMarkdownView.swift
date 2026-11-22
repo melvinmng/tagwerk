@@ -169,6 +169,13 @@ struct NoteMarkdownView: UIViewRepresentable {
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                                shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 
+        /// A touch that lands while the page still scrolls (a tap that stops a fling) is not a tap on the text. Decided at
+        /// touch-down: by the end of the tap the page has already stopped.
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            guard let scrollView = webView?.scrollView else { return true }
+            return !scrollView.isDragging && !scrollView.isDecelerating
+        }
+
         // MARK: Context menu
 
         func webView(_ webView: WKWebView, contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
