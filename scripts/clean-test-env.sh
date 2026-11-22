@@ -3,7 +3,9 @@
 #
 # Every worktree used to get its own simulator "Tagwerk Tests <checkout key>" and its own derived data folder
 # ~/Library/Developer/Tagwerk/DerivedData-tests-<checkout key> (see scripts/test-env.sh). Simulators now come from a pool
-# ("Tagwerk Tests Slot N"), but derived data is still kept per checkout, and removed worktrees leave both behind.
+# ("Tagwerk Tests Slot N"), but derived data is still kept per checkout, and removed worktrees leave both behind. The
+# package stages of app/test-all.sh also build in Xcode's default DerivedData folder, one folder per package and checkout
+# (named <Package>-<hash>); those are found through the WorkspacePath in their info.plist.
 #
 # Usage: scripts/clean-test-env.sh [--apply] [--legacy-simulators]
 #   (no option)           dry run: lists what would be deleted, deletes nothing
@@ -13,11 +15,14 @@
 # What counts as an orphan: a simulator "Tagwerk Tests <checkout key>" or a folder DerivedData-tests-<checkout key> whose
 # key belongs to none of the worktrees that `git worktree list` reports for this repository (the main checkout included).
 # Never touched: the pool simulators "Tagwerk Tests Slot N", simulators that are booted or booting (shut them down first),
-# and the environment of a checkout whose test run is active (its run lock names a live process). The script never ends
+# and the environment of a checkout whose test run is active (its run lock names a live process). A package folder in
+# Xcode's DerivedData counts as an orphan only when the checkout it was built from (the folder above app/Packages/<Package>
+# of its WorkspacePath) no longer exists on disk. The script never ends
 # a process. Other clones of the repository are not worktrees of this one, so their environments count as orphans too;
 # they are rebuilt on the next run.
 #
-# Environment (for the tests in scripts/tests/clean-test-env.zsh): TAGWERK_CLEAN_ROOT replaces ~/Library/Developer/Tagwerk.
+# Environment (for the tests in scripts/tests/clean-test-env.zsh): TAGWERK_CLEAN_ROOT replaces ~/Library/Developer/Tagwerk,
+# TAGWERK_CLEAN_XCODE_DERIVED replaces ~/Library/Developer/Xcode/DerivedData.
 # Exit codes: 0 done (or nothing to do), 1 a deletion failed, 2 usage error or the worktree list could not be read.
 
 set -uo pipefail
@@ -39,6 +44,7 @@ for argument in "$@"; do
 done
 
 DERIVED_ROOT="${TAGWERK_CLEAN_ROOT:-$HOME/Library/Developer/Tagwerk}"
+XCODE_DERIVED_ROOT="${TAGWERK_CLEAN_XCODE_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData}"
 LOG_ROOT="${TMPDIR:-/tmp}/tagwerk-tests"
 
 # Checkout keys of all worktrees that exist: the key is the folder name plus a hash of the full path.
@@ -75,6 +81,7 @@ run_is_active() {
 failures=0
 simulators_listed=0
 folders_listed=0
+package_folders_listed=0
 
 echo
 echo "Pool slots (kept):"
@@ -156,9 +163,34 @@ done
 (( folders_listed > 0 )) || echo "  nothing to delete"
 
 echo
+echo "Package DerivedData folders ($XCODE_DERIVED_ROOT):"
+# Names of the packages of this repository; a folder counts only if its workspace is one of them.
+typeset -A package_names
+for package_dir in "$REPO_ROOT"/app/Packages/*(/N); do package_names[${package_dir:t}]=1; done
+for folder in "$XCODE_DERIVED_ROOT"/*(/N); do
+  workspace=$(/usr/libexec/PlistBuddy -c 'Print :WorkspacePath' "$folder/info.plist" 2>/dev/null) || continue
+  [[ "$workspace" == */app/Packages/* && -n "${package_names[${workspace:t}]:-}" ]] || continue
+  checkout="${workspace%/app/Packages/*}"
+  [[ ! -d "$checkout" ]] || continue
+  package_folders_listed=$((package_folders_listed + 1))
+  size=$(du -sh "$folder" 2>/dev/null | cut -f1)
+  if (( APPLY )); then
+    if rm -rf "$folder"; then
+      echo "  deleted  ${folder:t} (${size:-?}, checkout $checkout is gone)"
+    else
+      echo "  FAILED   ${folder:t}: rm failed" >&2
+      failures=$((failures + 1))
+    fi
+  else
+    echo "  would delete  ${folder:t} (${size:-?}, checkout $checkout is gone)"
+  fi
+done
+(( package_folders_listed > 0 )) || echo "  nothing to delete"
+
+echo
 if (( APPLY )); then
-  echo "Done: $simulators_listed simulator(s) and $folders_listed folder(s) processed, $failures failure(s)."
+  echo "Done: $simulators_listed simulator(s), $folders_listed test DerivedData folder(s) and $package_folders_listed package folder(s) processed, $failures failure(s)."
 else
-  echo "Dry run: $simulators_listed simulator(s) and $folders_listed folder(s) would be deleted. Run with --apply to delete them."
+  echo "Dry run: $simulators_listed simulator(s), $folders_listed test DerivedData folder(s) and $package_folders_listed package folder(s) would be deleted. Run with --apply to delete them."
 fi
 (( failures == 0 )) || exit 1

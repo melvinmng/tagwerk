@@ -74,6 +74,7 @@ export PATH="$STUB_BIN:$PATH"
 export STUB_XCRUN_CALLS="$WORK_DIR/xcrun-calls.txt"
 export TMPDIR="$WORK_DIR/tmp"
 export TAGWERK_CLEAN_ROOT="$WORK_DIR/Tagwerk"
+export TAGWERK_CLEAN_XCODE_DERIVED="$WORK_DIR/XcodeDerivedData"
 
 # A live process that stands for the test run of the busy checkout.
 sleep 120 &
@@ -82,7 +83,28 @@ LIVE_PIDS+=("$RUNNING_PID")
 mkdir -p "$TMPDIR/tagwerk-tests/$BUSY_KEY/run.lock"
 print -r -- "$RUNNING_PID" > "$TMPDIR/tagwerk-tests/$BUSY_KEY/run.lock/pid"
 
+# Xcode's own DerivedData folder: one folder per workspace, named in info.plist.
+make_xcode_folder() { # folder-name workspace-path
+  local folder="$TAGWERK_CLEAN_XCODE_DERIVED/$1"
+  mkdir -p "$folder/Build"
+  plutil -create xml1 "$folder/info.plist" && plutil -insert WorkspacePath -string "$2" "$folder/info.plist"
+}
+GONE_CHECKOUT="$WORK_DIR/checkouts/gone-checkout"          # no such folder: its package builds are orphans
+make_package_folders() {
+  rm -rf "$TAGWERK_CLEAN_XCODE_DERIVED"
+  mkdir -p "$TAGWERK_CLEAN_XCODE_DERIVED"
+  make_xcode_folder "TagwerkCore-gone" "$GONE_CHECKOUT/app/Packages/TagwerkCore"
+  make_xcode_folder "AIKit-gone" "$GONE_CHECKOUT/app/Packages/AIKit"
+  make_xcode_folder "TagwerkCore-live" "$LIVE_WORKTREE/app/Packages/TagwerkCore"
+  make_xcode_folder "Tagwerk-app-gone" "$GONE_CHECKOUT/app/Tagwerk.xcodeproj"
+  make_xcode_folder "SomethingElse-gone" "$GONE_CHECKOUT/app/Packages/SomethingElse"
+  make_xcode_folder "OtherProject-gone" "$WORK_DIR/checkouts/other-project/Package.swift"
+  mkdir -p "$TAGWERK_CLEAN_XCODE_DERIVED/NoPlist-folder"
+}
+xcode_exists() { [[ -d "$TAGWERK_CLEAN_XCODE_DERIVED/$1" ]] && print yes || print no; }
+
 reset_folders() {
+  make_package_folders
   rm -rf "$TAGWERK_CLEAN_ROOT"
   local key
   for key in "$MAIN_KEY" "$LIVE_KEY" "$REMOVED_KEY" "$ORPHAN_KEY" "$BUSY_KEY"; do
@@ -112,7 +134,11 @@ check "pool slots are reported as kept" "1" "$([[ "$output" == *"Tagwerk Tests S
 check "a booted simulator is skipped with a hint" "1" "$([[ "$output" == *"skipped  Tagwerk Tests $BOOTED_KEY (Booted, shut it down first)"* ]] && print 1 || print 0)"
 check "a checkout with an active run is skipped" "1" \
   "$([[ "$output" == *"skipped  Tagwerk Tests $BUSY_KEY (a test run of this checkout is active)"* && "$output" == *"skipped  DerivedData-tests-$BUSY_KEY (a test run"* ]] && print 1 || print 0)"
-check "the summary says it was a dry run" "1" "$([[ "$output" == *"Dry run: 2 simulator(s) and 2 folder(s) would be deleted. Run with --apply"* ]] && print 1 || print 0)"
+check "dry run lists the package folders of a checkout that is gone" "1 1" \
+  "$([[ "$output" == *"would delete  TagwerkCore-gone"* ]] && print 1 || print 0) $([[ "$output" == *"would delete  AIKit-gone"* ]] && print 1 || print 0)"
+check "dry run keeps every package folder" "yes yes yes yes yes yes yes" \
+  "$(xcode_exists TagwerkCore-gone) $(xcode_exists AIKit-gone) $(xcode_exists TagwerkCore-live) $(xcode_exists Tagwerk-app-gone) $(xcode_exists SomethingElse-gone) $(xcode_exists OtherProject-gone) $(xcode_exists NoPlist-folder)"
+check "the summary says it was a dry run" "1" "$([[ "$output" == *"Dry run: 2 simulator(s), 2 test DerivedData folder(s) and 2 package folder(s) would be deleted. Run with --apply"* ]] && print 1 || print 0)"
 
 print -- "-- --apply"
 reset_folders
@@ -125,7 +151,10 @@ check "apply deletes the orphan folders" "no no" "$(exists DerivedData-tests-$OR
 check "apply keeps folders of existing worktrees, the busy checkout and other DerivedData" "yes yes yes yes yes" \
   "$(exists DerivedData-tests-$MAIN_KEY) $(exists DerivedData-tests-$LIVE_KEY) $(exists DerivedData-tests-$BUSY_KEY) $(exists DerivedData-dev) $(exists DerivedData-ci)"
 check "the active run is still alive" "1" "$(kill -0 "$RUNNING_PID" 2>/dev/null && print 1 || print 0)"
-check "the summary reports the deletions" "1" "$([[ "$output" == *"Done: 2 simulator(s) and 2 folder(s) processed, 0 failure(s)."* ]] && print 1 || print 0)"
+check "apply deletes the package folders of a checkout that is gone" "no no" "$(xcode_exists TagwerkCore-gone) $(xcode_exists AIKit-gone)"
+check "apply keeps the package folder of an existing checkout and every foreign folder" "yes yes yes yes yes" \
+  "$(xcode_exists TagwerkCore-live) $(xcode_exists Tagwerk-app-gone) $(xcode_exists SomethingElse-gone) $(xcode_exists OtherProject-gone) $(xcode_exists NoPlist-folder)"
+check "the summary reports the deletions" "1" "$([[ "$output" == *"Done: 2 simulator(s), 2 test DerivedData folder(s) and 2 package folder(s) processed, 0 failure(s)."* ]] && print 1 || print 0)"
 
 print -- "-- --legacy-simulators"
 reset_folders
