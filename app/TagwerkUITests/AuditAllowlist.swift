@@ -6,8 +6,9 @@ import XCTest
 @MainActor
 enum AuditAllowlist {
     /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
-    /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable.
-    static let fixedClockArguments = UITestCase.morningClockArguments
+    /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable. The weekday is pinned to
+    /// Sunday, so "Tagesabschluss" always contains the section "Wochenplanung starten" instead of only on the Sundays of the runs.
+    static let fixedClockArguments = UITestCase.morningSundayClockArguments
 
     /// One accepted group of findings of one audit type. `labels` are regular expressions that must match the whole label
     /// (or the identifier) of the element; there is no entry without labels.

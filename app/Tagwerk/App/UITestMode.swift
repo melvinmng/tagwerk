@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import TagwerkCore
 
 /// Simulator-only mode for the UI tests, enabled with the launch argument `-TagwerkUITest`.
 /// It opens an in-memory SwiftData store (every launch starts fresh), creates the demo data including a
@@ -10,6 +11,10 @@ import SwiftUI
 /// Two more arguments serve the accessibility audit: `-TagwerkUITestTextSize <size>` forces a Dynamic Type size
 /// (e.g. `accessibility5`) and `-TagwerkUITestDark` forces dark mode, both only for the app, not for the simulator.
 /// `-TagwerkUITestScreen <name>` opens a screen directly at launch (see `UITestScreen`).
+/// `-TagwerkUITestNow HH:mm` pins the time of day of the app (the date stays today's). `-TagwerkUITestWeekday <1...7>` (1 = Sunday)
+/// is the weekday that the parts of the app that offer something only on one weekday ("Tagesabschluss" offers the weekly planning
+/// on Sundays) take for the day they show, so they look the same on every day of the run. The date itself does not move: models that
+/// count with the real date (the task list) would otherwise show other tasks.
 enum UITestMode {
     static let launchArgument = "-TagwerkUITest"
     static let textSizeArgument = "-TagwerkUITestTextSize"
@@ -17,6 +22,7 @@ enum UITestMode {
     static let clockArgument = "-TagwerkUITestNow"
     static let lockAuthenticationArgument = "-TagwerkUITestLockAuthentication"
     static let screenArgument = "-TagwerkUITestScreen"
+    static let weekdayArgument = "-TagwerkUITestWeekday"
     /// `-TagwerkUITestScan <pages>`: "Dokument scannen" delivers that many test pages instead of opening the document camera.
     static let scanArgument = "-TagwerkUITestScan"
 
@@ -32,6 +38,13 @@ enum UITestMode {
         let parts = arguments[index + 1].split(separator: ":").compactMap { Int($0) }
         guard parts.count == 2 else { return Date() }
         return Calendar.tagwerk.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) ?? Date()
+    }
+
+    /// The weekday that `-TagwerkUITestWeekday` names, `nil` without the argument.
+    static var weekdayOverride: Int? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isActive, let index = arguments.firstIndex(of: weekdayArgument), index + 1 < arguments.count else { return nil }
+        return Int(arguments[index + 1])
     }
 
     /// The fixed answers of the device check for the note lock: a comma separated list of `succeed` and `fail` ("succeed,fail":
@@ -76,12 +89,25 @@ enum UITestMode {
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
+    static var weekdayOverride: Int? { nil }
     static var lockAuthentication: [Bool]? { nil }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
     static var screen: UITestScreen? { nil }
     static var scanPageCount: Int? { nil }
     #endif
+
+    /// The weekday (1 = Sunday ... 7 = Saturday) a part of the app takes for a day: the pinned weekday of the UI test mode when it is
+    /// a valid weekday, else the real one.
+    static func weekday(actual: Int, pinned: Int?) -> Int {
+        if let pinned, (1...7).contains(pinned) { return pinned }
+        return actual
+    }
+
+    /// The weekday of a day for the parts of the app that offer something on one weekday only.
+    static func weekday(of day: PlanDay, calendar: Calendar) -> Int {
+        weekday(actual: day.weekday(in: calendar), pinned: weekdayOverride)
+    }
 }
 
 /// Applies the text size and color scheme of the UI test mode; changes nothing without those launch arguments.

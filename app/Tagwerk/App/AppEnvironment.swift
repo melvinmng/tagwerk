@@ -314,7 +314,7 @@ final class AppEnvironment {
         goals.migrateIfNeeded()
         self.goals = goals
         self.healthMirror = mirror
-        self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
+        self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, now: { UITestMode.now() })
         self.routineStore = RoutineStore(context: context)
         // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
         let routineDays = self.routineStore
@@ -322,7 +322,8 @@ final class AppEnvironment {
         self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings,
                                   daySources: HabitDaySources(closedDays: { routineDays.closedDays(in: $0) },
                                                               journalDays: { noteDays.journalDays(in: $0) },
-                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
+                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }),
+                                  now: { UITestMode.now() })
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
@@ -347,6 +348,8 @@ final class AppEnvironment {
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
             },
+            // The same clock as the plan, so the wrap-up belongs to the day and the weekday the plan shows (the UI tests pin both).
+            now: { UITestMode.now() },
             // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
             closedIssueCount: { [taskList] in
                 guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
