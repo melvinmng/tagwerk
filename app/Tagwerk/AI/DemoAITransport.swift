@@ -112,7 +112,7 @@ final class DemoAITransport: AIHTTPTransport {
         if text.contains("tisch") {
             return #"{"title":"","items":[]}"#
         }
-        return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+        return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":4,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":0,"sugar_g":null,"saturated_fat_g":9,"salt_g":1.2}]}"#
     }
 
     /// Follow-up about one action card (task B4): the same arguments with "(später)" behind the title, and a sentence about it.

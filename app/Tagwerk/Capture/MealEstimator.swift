@@ -115,6 +115,9 @@ final class MealEstimator {
         - Zerlege die Mahlzeit in ihre Bestandteile (Posten) mit einer üblichen Mengenangabe auf \(language.promptName), z. B. \(language == .german ? "„2 Stück“, „1 Teller (300 g)“" : "„2 pieces“, „1 plate (300 g)“").
         - Gib je Posten kcal als wahrscheinlichsten Wert sowie eine ehrliche Spanne (kcal_min, kcal_max) und Eiweiß, \
         Kohlenhydrate und Fett in Gramm an. Die Spanne soll die typische Unsicherheit einer Schätzung abbilden.
+        - Gib außerdem Ballaststoffe (fiber_g), Zucker (sugar_g), gesättigte Fettsäuren (saturated_fat_g) und Salz (salt_g, nicht \
+        Natrium) in Gramm an. Weißt du einen dieser Werte nicht ausreichend sicher, gib null an; null ist besser als geraten. 0 \
+        bedeutet, dass der Posten den Stoff nicht enthält.
         - Mengenangaben in der Beschreibung haben Vorrang vor dem Foto.
         - title: kurzer \(language.promptAdjective) Name der Mahlzeit (höchstens 40 Zeichen).
         - Ist kein Essen oder Getränk zu erkennen, gib eine leere Liste items zurück. Erfinde nichts.
@@ -138,9 +141,14 @@ final class MealEstimator {
               "kcal_max": { "type": "number" },
               "protein_g": { "type": "number" },
               "carbs_g": { "type": "number" },
-              "fat_g": { "type": "number" }
+              "fat_g": { "type": "number" },
+              "fiber_g": { "type": ["number", "null"] },
+              "sugar_g": { "type": ["number", "null"] },
+              "saturated_fat_g": { "type": ["number", "null"] },
+              "salt_g": { "type": ["number", "null"] }
             },
-            "required": ["name", "amount", "kcal_min", "kcal", "kcal_max", "protein_g", "carbs_g", "fat_g"],
+            "required": ["name", "amount", "kcal_min", "kcal", "kcal_max", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g",
+                         "saturated_fat_g", "salt_g"],
             "additionalProperties": false
           }
         }
