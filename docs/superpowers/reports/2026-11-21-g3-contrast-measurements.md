@@ -59,3 +59,7 @@ Ein Muster wurde nur gestrichen, wenn es in K1 in allen drei Wiederholungen traf
 - `AccessibilityAuditEveningUITests`: „Audit failed to complete in time“ in allen drei Versuchen (Iteration 3). Die Maschine war mit weiteren Läufen anderer Strände belastet (Iterationen von 1151 s bis 1513 s statt 1038 s bis 1090 s in K1).
 
 Beide Läufe fehlen in der Auswertung der jeweiligen Iteration; die Abend-Einträge stützen sich damit auf zwei von drei Wiederholungen.
+
+## Nachträge nach den vollen Läufen (22.11.2026)
+
+Die Messung entstand an einem Samstag vor dem Merge von #268 (Tageskarte mit Kapazitätszeile). Die vollen Läufe danach (Sonntag, Maschinenlast 300 bis 700) meldeten zusätzlich und wurden eingetragen: „Wochenplanung starten“ (nur sonntags im Tagesabschluss), die Zeilen der Tageskarte („9:00–18:00 · 1 h Pause · …“, „Tagesabschluss“, „3 h 30 noch frei“), „morgen“, „Klausur Statistik“, „Anmeldung Abschlussarbeit“ und die vorher gestrichenen Abend-Muster. Lastbedingt scheiterten immer wieder Läufe an Audit-Zeitüberschreitungen („Audit failed to complete in time“, „Timed out while fetching snapshot from testmanagerd“), „does not have a process ID“ und an Dynamic-Type-Befunden auf wechselnden SwiftUI-Knoten der Rezept-Seiten („Portionen“, „Rezepttext“, „Füge die Zutatenliste …“); diese Befunde traten nur bei hoher Last auf und wanderten von Lauf zu Lauf.
