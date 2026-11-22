@@ -11,6 +11,9 @@ import XCTest
 class RecipeScreensAuditCase: UITestCase {
     override var extraLaunchArguments: [String] { ["-TagwerkDemoAI"] + AuditAllowlist.fixedClockArguments }
 
+    /// The settings audit starts the app once per page, so the launch of `setUp` is not needed for it.
+    override var launchesInSetUp: Bool { invocation.map { NSStringFromSelector($0.selector) != "testAuditSettings" } ?? true }
+
     typealias Audit = (String) throws -> Void
 
     /// Notes › Rezepte: the folder with the demo recipe, the recipe note itself, and the ingredient result of
@@ -100,36 +103,31 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkaufsliste › Übersetzung")
     }
 
-    /// Einstellungen › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water),
-    /// › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
+    /// The settings pages of G2/G3, one app launch each with `-TagwerkUITestScreen <name>` (the app opens the page itself, see
+    /// `UITestScreen`): › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings), › Erfassen (goal water),
+    /// › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3). A launch costs less than the scroll to the row of a page
+    /// further down the list; the way through the list is covered by `SettingsNavigationUITests`.
     func auditSettings(_ audit: Audit) throws {
-        tab("Einstellungen")
-        openSettingsRow("Sprachen")
+        launchApp(extraArguments: ["-TagwerkUITestScreen", "settings.languages"])
         XCTAssertTrue(app.navigationBars["Sprachen"].waitForExistence(timeout: Self.timeout), "Language settings did not open")
         try audit("Einstellungen › Sprachen")
-        app.navigationBars.buttons.firstMatch.tap()
 
-        openSettingsRow("KI")
-        openSettingsRow("Spracheingabe und Vorlesen")
+        launchApp(extraArguments: ["-TagwerkUITestScreen", "settings.ai.voice"])
         XCTAssertTrue(app.navigationBars["Spracheingabe und Vorlesen"].waitForExistence(timeout: Self.timeout), "Voice settings did not open")
         // The rows "Sprachpaket …" show "…" until the state of the language packs is known and then a longer text (more lines in
         // the large text size). The audit must not run in between.
         waitUntilGone(app.staticTexts["…"].firstMatch)
         try audit("Einstellungen › KI › Sprache")
-        app.navigationBars.buttons.firstMatch.tap()
-        app.navigationBars.buttons.firstMatch.tap()
 
-        openSettingsRow("Erfassen")
-        XCTAssertTrue(app.navigationBars["Erfassen"].waitForExistence(timeout: Self.timeout))
+        launchApp(extraArguments: ["-TagwerkUITestScreen", "settings.capture"])
+        XCTAssertTrue(app.navigationBars["Erfassen"].waitForExistence(timeout: Self.timeout), "Capture settings did not open")
         try audit("Einstellungen › Erfassen")
-        app.navigationBars.buttons.firstMatch.tap()
 
-        openSettingsRow("Einkaufsliste")
+        launchApp(extraArguments: ["-TagwerkUITestScreen", "settings.shopping"])
         XCTAssertTrue(app.navigationBars["Einkaufsliste"].waitForExistence(timeout: Self.timeout), "Shopping settings did not open")
         try audit("Einstellungen › Einkaufsliste")
-        app.navigationBars.buttons.firstMatch.tap()
 
-        openSettingsRow("Siri & Kurzbefehle")
+        launchApp(extraArguments: ["-TagwerkUITestScreen", "settings.siri"])
         XCTAssertTrue(app.navigationBars["Siri & Kurzbefehle"].waitForExistence(timeout: Self.timeout), "Siri settings did not open")
         try audit("Einstellungen › Siri & Kurzbefehle")
     }
@@ -147,24 +145,6 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout), "Folder Rezepte missing")
         folder.tap()
         XCTAssertTrue(app.navigationBars["Rezepte"].waitForExistence(timeout: Self.timeout))
-    }
-
-    /// Scrolls the settings list in small steps (a lazy list only creates the rows near the screen, and a full-page swipe can jump
-    /// over a row) to the row that starts with this title and opens it. The scroll position stays when a page is left, so
-    /// the search goes to the top first.
-    private func openSettingsRow(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
-        // Only rows of the list: the tab bar has a button "Erfassen" as well.
-        let row = app.cells.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
-        for _ in 0..<4 { app.swipeDown() }
-        var steps = 0
-        while !(row.exists && row.isHittable), steps < 20 {
-            let list = app.collectionViews.firstMatch
-            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
-                .press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)))
-            steps += 1
-        }
-        XCTAssertTrue(row.exists && row.isHittable, "Settings row \(title) is not reachable by scrolling", file: file, line: line)
-        row.tap()
     }
 }
 

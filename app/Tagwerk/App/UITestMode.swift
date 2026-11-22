@@ -9,11 +9,13 @@ import SwiftUI
 ///
 /// Two more arguments serve the accessibility audit: `-TagwerkUITestTextSize <size>` forces a Dynamic Type size
 /// (e.g. `accessibility5`) and `-TagwerkUITestDark` forces dark mode, both only for the app, not for the simulator.
+/// `-TagwerkUITestScreen <name>` opens a screen directly at launch (see `UITestScreen`).
 enum UITestMode {
     static let launchArgument = "-TagwerkUITest"
     static let textSizeArgument = "-TagwerkUITestTextSize"
     static let darkArgument = "-TagwerkUITestDark"
     static let clockArgument = "-TagwerkUITestNow"
+    static let screenArgument = "-TagwerkUITestScreen"
 
     #if DEBUG && targetEnvironment(simulator)
     static var isActive: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
@@ -41,11 +43,17 @@ enum UITestMode {
     static var colorScheme: ColorScheme? {
         isActive && ProcessInfo.processInfo.arguments.contains(darkArgument) ? .dark : nil
     }
+
+    /// The screen to open at launch; `nil` without the argument or with a name that is not known.
+    static var screen: UITestScreen? {
+        isActive ? UITestScreen.named(in: ProcessInfo.processInfo.arguments) : nil
+    }
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
     static var dynamicTypeSize: DynamicTypeSize? { nil }
     static var colorScheme: ColorScheme? { nil }
+    static var screen: UITestScreen? { nil }
     #endif
 }
 
