@@ -452,6 +452,22 @@
         }
       }
     },
+    "%@ ist zu Ende gelesen (%@ am %@). Wähle ein anderes Buch oder beginne %@ neu.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ ist zu Ende gelesen (%2$@ am %3$@). Wähle ein anderes Buch oder beginne %4$@ neu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is finished (%2$@ on %3$@). Choose another book or start %4$@ again."
+          }
+        }
+      }
+    },
     "%@ jetzt erfassen": {
       "localizations": {
         "en": {
@@ -4631,6 +4647,16 @@
         }
       }
     },
+    "Anderes …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other …"
+          }
+        }
+      }
+    },
     "Angeheftet": {
       "localizations": {
         "en": {
@@ -6378,6 +6404,16 @@
         }
       }
     },
+    "Buch suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search books"
+          }
+        }
+      }
+    },
     "Bus und Bahn": {
       "localizations": {
         "en": {
@@ -7396,6 +7432,7 @@
       }
     },
     "Der Text deiner Notizen bleibt auf deinem iPhone und geht nie an ChatGPT.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -11162,6 +11199,16 @@
         }
       }
     },
+    "Geht nie an ChatGPT.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never goes to ChatGPT."
+          }
+        }
+      }
+    },
     "Geht nur entsperrt an ChatGPT": {
       "localizations": {
         "en": {
@@ -13346,6 +13393,32 @@
         }
       }
     },
+    "Kapitel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter"
+          }
+        }
+      }
+    },
+    "Kapitel %lld ist gelesen (bis %@ am %@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kapitel %1$lld ist gelesen (bis %2$@ am %3$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter %1$lld is read (up to %2$@ on %3$@)"
+          }
+        }
+      }
+    },
     "Kategorie": {
       "localizations": {
         "en": {
@@ -13445,6 +13518,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No Brain Dump on this day."
+          }
+        }
+      }
+    },
+    "Kein Buch gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No book found."
           }
         }
       }
@@ -17074,6 +17157,16 @@
         }
       }
     },
+    "Offen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave open"
+          }
+        }
+      }
+    },
     "Offene Vorschläge": {
       "localizations": {
         "en": {
@@ -18368,6 +18461,16 @@
         }
       }
     },
+    "Räder zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show wheels"
+          }
+        }
+      }
+    },
     "Rückblick": {
       "localizations": {
         "en": {
@@ -19161,6 +19264,16 @@
         }
       }
     },
+    "Sitzung starten · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start session · %@"
+          }
+        }
+      }
+    },
     "So lange vor der Fälligkeit erinnert Tagwerk an Aufgaben und Deadline-Termine der eingeschalteten Quellen. Deadline-Termine sind Termine aus Deadline-Kalendern und als Deadline markierte Termine. An Aufgaben ohne Uhrzeit erinnert Tagwerk am Fälligkeitstag um 9:00. An ganztägige Deadline-Termine erinnert Tagwerk am Vortag um 18:00.": {
       "extractionState": "stale",
       "localizations": {
@@ -19744,12 +19857,43 @@
         }
       }
     },
+    "Stelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passage"
+          }
+        }
+      }
+    },
+    "Stelle frei eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter passage as text"
+          }
+        }
+      }
+    },
     "Stelle, z. B. 3,21-31": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Passage, e.g. 3,21-31"
+          }
+        }
+      }
+    },
+    "Stelle, z. B. 3,21–31": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passage, e.g. 3,21–31"
           }
         }
       }
@@ -21179,6 +21323,16 @@
         }
       }
     },
+    "Vers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verse"
+          }
+        }
+      }
+    },
     "Verschieben": {
       "localizations": {
         "en": {
@@ -21301,6 +21455,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maybe the brain dump gave you some clarity."
+          }
+        }
+      }
+    },
+    "Von": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
           }
         }
       }
@@ -22020,6 +22184,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continue"
+          }
+        }
+      }
+    },
+    "Weiter ab %@ (Sitzung vom %@ ist noch offen)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Weiter ab %1$@ (Sitzung vom %2$@ ist noch offen)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue at %1$@ (session of %2$@ is still open)"
+          }
+        }
+      }
+    },
+    "Weiter ab %@ (Sitzung vom %@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Weiter ab %1$@ (Sitzung vom %2$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue at %1$@ (session of %2$@)"
+          }
+        }
+      }
+    },
+    "Weiter nach %@ vom %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Weiter nach %1$@ vom %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue after %1$@ of %2$@"
           }
         }
       }

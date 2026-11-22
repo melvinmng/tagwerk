@@ -76,6 +76,18 @@ public enum BibleBooks {
         return candidates.count == 1 ? candidates[0] : nil
     }
 
+    /// The books that match what is typed into the search field of the book list (BS2b): the typed text is part of the
+    /// German or English name, or the start of an abbreviation ("Offb", "1 Kor"). Spelling is folded as in `book(matching:)`.
+    /// Empty text returns every book. The result keeps the order of the canon.
+    public static func search(_ text: String) -> [BibleBook] {
+        let wanted = normalize(text)
+        guard !wanted.isEmpty else { return all }
+        return all.filter { book in
+            [book.german, book.english].contains { normalize($0).contains(wanted) }
+                || book.aliases.contains { normalize($0).hasPrefix(wanted) }
+        }
+    }
+
     private static func names(of book: BibleBook) -> Set<String> {
         Set(([book.german, book.english] + book.aliases).map(normalize))
     }
