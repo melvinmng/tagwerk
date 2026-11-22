@@ -2496,5 +2496,8 @@
   "%@: knapp, %@ frei, %@ nötig": "%1$@: tight, %2$@ free, %3$@ needed",
   "Kein freier Platz in den nächsten Tagen": "No free place in the next days",
   "Kein freier Platz vor der Fälligkeit (%@)": "No free place before the due date (%@)",
-  "Trotzdem auf morgen": "Move to tomorrow anyway"
+  "Trotzdem auf morgen": "Move to tomorrow anyway",
+  "Rückblick": "Review",
+  "Rückblick auf KW %lld, dann KW %lld planen · etwa 10 min": "Review of week %1$lld, then plan week %2$lld · about 10 min",
+  "Schritt %lld von %lld · danach: %@": "Step %1$lld of %2$lld · next: %3$@"
 }

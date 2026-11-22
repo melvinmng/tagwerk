@@ -111,4 +111,20 @@ final class RoutineUITests: UITestCase {
         XCTAssertTrue(app.staticTexts["Was lief gut?"].firstMatch.exists, "The question disappeared with the answer")
         XCTAssertTrue(app.staticTexts["Belastet mich etwas?"].firstMatch.exists)
     }
+
+    /// RO12b: "Überspringen" goes on to the next step; the bar and the heading name it.
+    func testSkipAdvancesWithoutSaving() {
+        tab("Erfassen")
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        let start = app.buttons["Wochenplanung starten"].firstMatch
+        scrollTo(start)
+        start.tap()
+        XCTAssertTrue(app.navigationBars["Wochenplanung"].waitForExistence(timeout: Self.timeout), "The weekly planning did not open")
+        func step(_ text: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        }
+        XCTAssertTrue(step("Schritt 1 von 5").waitForExistence(timeout: Self.timeout))
+        tapButton("Überspringen")
+        XCTAssertTrue(step("Schritt 2 von 5 · danach: Fälligkeiten der neuen Woche").waitForExistence(timeout: Self.timeout))
+    }
 }
