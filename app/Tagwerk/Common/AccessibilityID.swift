@@ -37,6 +37,10 @@ enum AccessibilityID {
         static let drawingDone = "noteEditor.drawingDone"
         /// "Bearbeiten" of the drawing viewer.
         static let drawingEdit = "noteEditor.drawingEdit"
+        /// "Fertig" of the table editor sheet.
+        static let tableDone = "noteEditor.tableDone"
+        /// The table button of the bar above the keyboard, shown while the cursor is in a table.
+        static let tableButton = "noteEditor.tableButton"
     }
 
     enum Common {

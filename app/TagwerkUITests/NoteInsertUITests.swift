@@ -112,4 +112,109 @@ final class NoteInsertUITests: UITestCase {
         XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: Self.timeout))
         XCTAssertEqual(occurrences(of: "attachment:", in: editorText), 1, "Editing the drawing changed the number of references: \(editorText ?? "nil")")
     }
+
+    // MARK: Tables
+
+    /// Types into the cell fields of the table sheet, one after the other ("Weiter" moves on).
+    private func fillCells(_ values: [String]) {
+        for (offset, value) in values.enumerated() {
+            let field = app.textFields.element(boundBy: offset)
+            XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The cell \(offset) is missing")
+            field.tap()
+            field.typeText(value)
+        }
+    }
+
+    private func tapTableDone() {
+        let done = app.buttons[AccessibilityID.NoteEditor.tableDone]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "The table sheet did not open")
+        done.tap()
+        eventually("The table sheet did not close") { !done.exists }
+    }
+
+    func testNewTableFromInsertMenu() {
+        openDemoNoteForWriting()
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Tabelle")
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableDone].waitForExistence(timeout: Self.timeout), "The table sheet did not open")
+        // A new table has three columns, a header row and two rows.
+        XCTAssertEqual(app.textFields.count, 9, "A new table does not have three columns and three rows")
+        fillCells(["Firma", "Preis", "Termin", "Möbel-Taxi", "480 €"])
+        tapTableDone()
+        eventually("The table is not in the text: \(editorText ?? "nil")") { editorText?.contains("| Möbel-Taxi ") == true }
+        // The columns are padded and a blank line separates the table from the next line.
+        XCTAssertTrue(editorText?.contains("| Firma      | Preis | Termin |") == true, "The table is not written aligned: \(editorText ?? "nil")")
+        XCTAssertTrue(editorText?.contains("|\n\nZwei weitere Quellen suchen") == true, "No blank line behind the table: \(editorText ?? "nil")")
+    }
+
+    func testCancelTableLeavesTheNoteAsItIs() {
+        openDemoNoteForWriting()
+        let before = editorText
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Tabelle")
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableDone].waitForExistence(timeout: Self.timeout))
+        fillCells(["Firma"])
+        tapButton("Abbrechen")
+        eventually("The sheet did not close") { !self.app.buttons[AccessibilityID.NoteEditor.tableDone].exists }
+        XCTAssertEqual(editorText, before, "A cancelled table changed the text")
+    }
+
+    func testEditTableFromView_writesBackAligned() {
+        openDemoNoteForWriting()
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Tabelle")
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableDone].waitForExistence(timeout: Self.timeout))
+        fillCells(["A", "B", "C", "eins"])
+        tapTableDone()
+        tapButton("Fertig")
+        // A tap on a cell of the rendered table opens the sheet with its values.
+        let cell = pageText("eins")
+        XCTAssertTrue(cell.waitForExistence(timeout: 3 * Self.timeout), "The page shows no table cell")
+        cell.tap()
+        let done = app.buttons[AccessibilityID.NoteEditor.tableDone]
+        XCTAssertTrue(done.waitForExistence(timeout: Self.timeout), "A tap on the table did not open the editor")
+        let field = app.textFields.element(boundBy: 3)
+        XCTAssertEqual(field.value as? String, "eins", "The sheet shows another cell")
+        field.tap()
+        field.typeText(" und mehr")
+        done.tap()
+        eventually("The sheet did not close") { !done.exists }
+        app.buttons["Mehr"].firstMatch.tap()
+        tapButton("Bearbeiten")
+        XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: Self.timeout))
+        XCTAssertTrue(editorText?.contains("| eins und mehr |") == true, "The change is not written back: \(editorText ?? "nil")")
+        // The rest of the note is as it was.
+        XCTAssertTrue(editorText?.hasPrefix("Ideen Hausarbeit\nGliederung überarbeiten\n\n| A ") == true, "The text before the table changed: \(editorText ?? "nil")")
+        XCTAssertTrue(editorText?.hasSuffix("|\n\nZwei weitere Quellen suchen") == true, "The text behind the table changed: \(editorText ?? "nil")")
+    }
+
+    func testTableButtonAppearsInsideTable() {
+        openDemoNoteForWriting()
+        XCTAssertFalse(app.buttons[AccessibilityID.NoteEditor.tableButton].exists, "The table button shows outside a table")
+        app.buttons[AccessibilityID.NoteEditor.insertMenu].tap()
+        tapButton("Tabelle")
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableDone].waitForExistence(timeout: Self.timeout))
+        tapTableDone()
+        eventually("The table is not in the text") { editorText?.contains("| --- ") == true }
+        // The cursor stands in the blank line behind the table: outside. One delete takes it back into the last row.
+        XCTAssertFalse(app.buttons[AccessibilityID.NoteEditor.tableButton].exists, "The table button shows behind the table")
+        app.typeText(XCUIKeyboardKey.delete.rawValue)
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableButton].waitForExistence(timeout: Self.timeout), "The table button does not show inside the table")
+        app.buttons[AccessibilityID.NoteEditor.tableButton].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.NoteEditor.tableDone].waitForExistence(timeout: Self.timeout), "The table button did not open the sheet")
+    }
+
+    func testWideTableShowsHint() {
+        openDemoNoteForWriting()
+        app.typeText("\n\n|1|2|3|4|5|6|7|8|9|\n|-|-|-|-|-|-|-|-|-|\n|a|b|c|d|e|f|g|h|i|")
+        tapButton("Fertig")
+        let cell = pageText("a")
+        XCTAssertTrue(cell.waitForExistence(timeout: 3 * Self.timeout), "The page shows no table cell")
+        cell.tap()
+        XCTAssertTrue(app.staticTexts["Diese Tabelle hat mehr als 8 Spalten. Bearbeite sie im Text."].waitForExistence(timeout: Self.timeout),
+                      "A table with nine columns showed no hint")
+        XCTAssertFalse(app.buttons[AccessibilityID.NoteEditor.tableDone].exists, "A table with nine columns opened the sheet")
+        tapButton("Im Text bearbeiten")
+        XCTAssertTrue(app.buttons["Fertig"].waitForExistence(timeout: Self.timeout), "\"Im Text bearbeiten\" did not start writing")
+    }
 }

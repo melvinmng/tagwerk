@@ -8,6 +8,9 @@ struct NoteFormattingBar: View {
     let onHideKeyboard: () -> Void
     /// The insert menu; `nil` when the note has no attachment store.
     let attachments: AnyView?
+    /// The cursor is in a table: the button for the table editor takes the place of the insert menu.
+    var isInTable = false
+    var onTable: () -> Void = {}
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -17,7 +20,15 @@ struct NoteFormattingBar: View {
                 button(.italic, symbol: "italic", label: "Kursiv")
                 button(.list, symbol: "list.bullet", label: "Liste")
                 button(.checkbox, symbol: "checklist", label: "Checkbox")
-                if let attachments { attachments.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }
+                if isInTable {
+                    Button(action: onTable) {
+                        Image(systemName: "tablecells").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Tabelle bearbeiten")
+                    .accessibilityIdentifier(AccessibilityID.NoteEditor.tableButton)
+                } else if let attachments {
+                    attachments.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                }
                 Button(action: onHideKeyboard) {
                     Image(systemName: "keyboard.chevron.compact.down").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                 }

@@ -226,4 +226,52 @@ struct MarkdownTableTests {
             #expect(MarkdownTable.index(inLink: url) == nil, "\(url)")
         }
     }
+
+    // MARK: Inserting
+
+    @Test func inserting_putsABlankLineOnBothSides() {
+        let table = MarkdownTable(header: ["A", "B"], rows: [["1", "2"]])
+        let text = "Eins\nZwei\nDrei"
+        let result = MarkdownTable.inserting(table, into: text, atOffset: "Eins\nZwei".count)
+        #expect(result.text == "Eins\nZwei\n\n" + table.markdown() + "\n\nDrei")
+        // The line behind the table is no row of it.
+        let blocks = MarkdownTable.blocks(in: result.text)
+        #expect(blocks.count == 1 && blocks[0].table == table)
+        #expect(blocks[0].table.rows == [["1", "2"]])
+        // The writing goes on in the blank line behind the table.
+        #expect(String(result.text.dropFirst(result.cursorOffset)) == "\nDrei")
+    }
+
+    @Test func inserting_atTheEndsAndWithExistingBlankLines() {
+        let table = MarkdownTable(header: ["A"], rows: [["1"]])
+        let block = table.markdown()
+        #expect(MarkdownTable.inserting(table, into: "", atOffset: 0).text == block + "\n")
+        #expect(MarkdownTable.inserting(table, into: "Text", atOffset: 4).text == "Text\n\n" + block + "\n")
+        #expect(MarkdownTable.inserting(table, into: "Text\n", atOffset: 5).text == "Text\n\n" + block + "\n")
+        #expect(MarkdownTable.inserting(table, into: "Text\n\nNach", atOffset: 6).text == "Text\n\n" + block + "\n\nNach")
+        // Beyond the text: at the end.
+        #expect(MarkdownTable.inserting(table, into: "Text", atOffset: 99).text == "Text\n\n" + block + "\n")
+    }
+
+    @Test func inserting_cursorStandsBehindTheBlock() {
+        let table = MarkdownTable(header: ["A"], rows: [["1"]])
+        let result = MarkdownTable.inserting(table, into: "Vor\nNach", atOffset: 3)
+        let index = result.text.index(result.text.startIndex, offsetBy: result.cursorOffset)
+        #expect(result.text[..<index].hasSuffix(table.markdown() + "\n"))
+        // The cursor line is not a line of the table.
+        let line = NoteEditTarget.line(atOffset: result.cursorOffset, in: result.text)
+        #expect(MarkdownTable.blockIndex(containingLine: line, in: result.text) == nil)
+    }
+
+    @Test func blockIndex_forCursorOffset() {
+        let text = "Text\n\n| A |\n|---|\n| 1 |\n\nEnde"
+        let tableStart = "Text\n\n".count
+        let tableEnd = "Text\n\n| A |\n|---|\n| 1 |".count
+        func index(at offset: Int) -> Int? { MarkdownTable.blockIndex(containingLine: NoteEditTarget.line(atOffset: offset, in: text), in: text) }
+        #expect(index(at: 2) == nil)
+        #expect(index(at: tableStart) == 0)
+        #expect(index(at: tableEnd) == 0)
+        #expect(index(at: tableEnd + 1) == nil)
+        #expect(index(at: text.count) == nil)
+    }
 }

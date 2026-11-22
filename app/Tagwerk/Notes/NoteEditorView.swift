@@ -58,7 +58,8 @@ struct NoteEditorView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if mode == .edit, isTextFocused {
                     NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
-                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil)
+                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil,
+                                      isInTable: tableIndexAtCursor != nil, onTable: openTableAtCursor)
                 }
             }
             .toolbar {
@@ -101,7 +102,8 @@ struct NoteEditorView: View {
             }
             .quickLookPreview($previewURL)
             .noteInsertPresentations(inserts, attachments: store.attachments,
-                                     actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment))
+                                     actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment,
+                                                                onTableFinished: finishTable, onEditTableAsText: { beginEditing(atLine: $0) }))
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -174,6 +176,7 @@ struct NoteEditorView: View {
                                  onUnansweredTap: Self.usesTapToEdit ? { fraction in
                                      beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
                                  } : nil,
+                                 onEditTable: openTable(at:),
                                  contextMenu: attachmentMenu)
                     .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }

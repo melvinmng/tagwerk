@@ -102,6 +102,21 @@ public struct MarkdownTable: Sendable, Equatable {
         return ([line(cells[0]), "| " + separator.joined(separator: " | ") + " |"] + cells.dropFirst().map(line)).joined(separator: "\n")
     }
 
+    /// The text with the table inserted at the character `offset` as a block of its own: a blank line separates it from the text
+    /// before and after it, because a text line that follows a table directly would become a row of it. Returns the new text and
+    /// the offset right behind the inserted block with its separators, where writing goes on.
+    public static func inserting(_ table: MarkdownTable, into text: String, atOffset offset: Int) -> (text: String, cursorOffset: Int) {
+        let at = text.index(text.startIndex, offsetBy: min(max(offset, 0), text.count))
+        let before = text[..<at]
+        let after = text[at...]
+        let prefix: String
+        if before.isEmpty || before.hasSuffix("\n\n") { prefix = "" } else if before.hasSuffix("\n") { prefix = "\n" } else { prefix = "\n\n" }
+        let suffix: String
+        if after.isEmpty { suffix = "\n" } else if after.hasPrefix("\n\n") { suffix = "" } else if after.hasPrefix("\n") { suffix = "\n" } else { suffix = "\n\n" }
+        let inserted = prefix + table.markdown() + suffix
+        return (String(before) + inserted + String(after), before.count + inserted.count)
+    }
+
     /// The text with the block at `index` replaced; everything outside the block is untouched, the line break style of the
     /// block is kept. An index without a block changes nothing.
     public static func replacing(blockAt index: Int, with table: MarkdownTable, in text: String) -> String {

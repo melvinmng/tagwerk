@@ -1,5 +1,6 @@
 import PencilKit
 import SwiftUI
+import TagwerkCore
 import UIKit
 
 /// What the insert features of the note editor put on screen on top of the page: the document camera, the drawing canvas and
@@ -39,10 +40,13 @@ final class NoteInsertState {
     var revision = 0
     var renaming: Renaming?
     var sharing: Sharing?
+    /// The table editor sheet, and the hint for a table that is too wide for it.
+    var tableSession: TableSession?
+    var wideTable: WideTableHint?
 
     /// Whether something covers the page. A cover makes SwiftUI report the page as gone, and the page must not remove an
     /// empty note or trim its attachments then (the result of the cover is what goes into the note).
-    var isPresenting: Bool { cover != nil || sharing != nil }
+    var isPresenting: Bool { cover != nil || sharing != nil || tableSession != nil || wideTable != nil }
 }
 
 /// What the covers and prompts report back to the editor.
@@ -52,6 +56,10 @@ struct NoteInsertActions {
     /// A finished drawing of the canvas, for a new drawing (`editing` is `nil`) or an existing one.
     var onDrawingFinished: (_ editing: UUID?, _ drawing: PKDrawing) -> Void
     var onRename: (_ id: UUID, _ name: String) -> Void
+    /// The table editor finished with this table.
+    var onTableFinished: (_ session: TableSession, _ table: MarkdownTable) -> Void
+    /// "Im Text bearbeiten" of the hint for a wide table: the cursor goes to this line.
+    var onEditTableAsText: (_ firstLine: Int) -> Void
 }
 
 /// Presents the covers and prompts of `NoteInsertState`; the editor adds it once.
@@ -83,6 +91,21 @@ struct NoteInsertPresentations: ViewModifier {
             }
             .sheet(item: $state.sharing) { sharing in
                 ShareSheet(items: sharing.urls).presentationDetents([.medium, .large])
+            }
+            .sheet(item: $state.tableSession) { session in
+                TableEditorSheet(table: session.table, onCancel: { state.tableSession = nil }, onDone: { table in
+                    state.tableSession = nil
+                    actions.onTableFinished(session, table)
+                })
+                .presentationDetents([.large])
+            }
+            .alert("Tabelle", isPresented: Binding(get: { state.wideTable != nil }, set: { if !$0 { state.wideTable = nil } })) {
+                Button("Im Text bearbeiten") {
+                    if let hint = state.wideTable { actions.onEditTableAsText(hint.firstLine) }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text("Diese Tabelle hat mehr als 8 Spalten. Bearbeite sie im Text.")
             }
             .alert("Umbenennen", isPresented: renamingBinding) {
                 TextField("Name", text: renamingName)

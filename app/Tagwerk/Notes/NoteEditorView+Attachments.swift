@@ -9,7 +9,7 @@ extension NoteEditorView {
     var insertMenu: some View {
         NoteInsertMenu(onChoosePhoto: { isChoosingPhotos = true }, onTakePhoto: { isTakingPhoto = true },
                        onScanDocument: startScan, onPaste: { providers in Task { await addPasted(providers) } },
-                       onChooseFile: { isChoosingFile = true }, onDrawing: startDrawing, onTable: {})
+                       onChooseFile: { isChoosingFile = true }, onDrawing: startDrawing, onTable: startNewTable)
     }
 
     // MARK: Scanning

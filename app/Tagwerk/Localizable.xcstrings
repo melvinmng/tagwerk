@@ -5559,6 +5559,16 @@
         }
       }
     },
+    "Ausrichtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alignment"
+          }
+        }
+      }
+    },
     "Auswählen": {
       "localizations": {
         "en": {
@@ -7772,6 +7782,16 @@
         }
       }
     },
+    "Die Notiz hat sich geändert. Die Tabelle wurde nicht übernommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The note has changed. The table was not applied."
+          }
+        }
+      }
+    },
     "Die Notiz ist zu lang (höchstens 12 000 Zeichen).": {
       "localizations": {
         "en": {
@@ -8173,6 +8193,16 @@
         }
       }
     },
+    "Die erste Zeile ist die Kopfzeile. In der Notiz steht die Tabelle als Markdown-Text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first row is the header row. In the note, the table is stored as Markdown text."
+          }
+        }
+      }
+    },
     "Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.": {
       "localizations": {
         "en": {
@@ -8269,6 +8299,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This backup comes from a newer version of Tagwerk. Update the app and try again."
+          }
+        }
+      }
+    },
+    "Diese Tabelle hat mehr als 8 Spalten. Bearbeite sie im Text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This table has more than 8 columns. Edit it in the text."
           }
         }
       }
@@ -12219,6 +12259,16 @@
         }
       }
     },
+    "Im Text bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit in text"
+          }
+        }
+      }
+    },
     "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
       "localizations": {
         "en": {
@@ -13605,6 +13655,16 @@
         }
       }
     },
+    "Kopfzeile, Spalte %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header row, column %lld"
+          }
+        }
+      }
+    },
     "Kopieren": {
       "localizations": {
         "en": {
@@ -13871,6 +13931,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Link to the mail"
+          }
+        }
+      }
+    },
+    "Links": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
           }
         }
       }
@@ -17143,6 +17213,16 @@
         }
       }
     },
+    "Rechts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        }
+      }
+    },
     "Reflexion": {
       "localizations": {
         "en": {
@@ -18306,6 +18386,36 @@
         }
       }
     },
+    "Spalte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Column"
+          }
+        }
+      }
+    },
+    "Spalte links einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert column on the left"
+          }
+        }
+      }
+    },
+    "Spalte löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete column"
+          }
+        }
+      }
+    },
     "Sprachchat-Antwort": {
       "localizations": {
         "en": {
@@ -18832,6 +18942,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Table"
+          }
+        }
+      }
+    },
+    "Tabelle bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit table"
           }
         }
       }
@@ -21663,6 +21783,72 @@
         }
       }
     },
+    "Zeile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Row"
+          }
+        }
+      }
+    },
+    "Zeile %lld, Spalte %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Zeile %1$lld, Spalte %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Row %1$lld, column %2$lld"
+          }
+        }
+      }
+    },
+    "Zeile darüber einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert row above"
+          }
+        }
+      }
+    },
+    "Zeile löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete row"
+          }
+        }
+      }
+    },
+    "Zeile nach oben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move row up"
+          }
+        }
+      }
+    },
+    "Zeile nach unten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move row down"
+          }
+        }
+      }
+    },
     "Zeit": {
       "localizations": {
         "en": {
@@ -21797,6 +21983,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Period"
+          }
+        }
+      }
+    },
+    "Zentriert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centered"
           }
         }
       }
