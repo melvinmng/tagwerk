@@ -67,6 +67,8 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator, router: router)
     /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.
     let intake: IntakeStore
+    /// Goal plans ("Zielstände"); the plan of a day is the goal that holds on it.
+    let goals: GoalStore
     let health: any HealthStoring
     let healthMirror: HealthMirror
     let capture: CaptureModel
@@ -290,6 +292,9 @@ final class AppEnvironment {
         let mirror = HealthMirror(store: intake, health: healthStore)
         self.health = healthStore
         self.intake = intake
+        let goals = GoalStore(context: context, settings: settings)
+        goals.migrateIfNeeded()
+        self.goals = goals
         self.healthMirror = mirror
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings)
         self.routineStore = RoutineStore(context: context)
