@@ -17,6 +17,11 @@ public protocol HealthStoring: Sendable {
     /// Workouts of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed.
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout]
 
+    /// Whether the system sheet of `group` was shown; independent of `access()` and of the other groups.
+    func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess
+    /// Shows the system sheet for `group` only. Call only after a user tap.
+    func requestAuthorization(for group: HealthAccessGroup) async throws
+
     /// Whether the step sheet was shown; independent of `access()`, which never looks at the step type.
     func stepsAccess() async -> StepsAccess
     /// Shows the system sheet for steps only. Call only after a user tap.

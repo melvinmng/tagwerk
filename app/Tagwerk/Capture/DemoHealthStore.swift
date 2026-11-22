@@ -17,6 +17,8 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
             stepsAsked = true
         }
     }
+    func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess { .notAsked }
+    func requestAuthorization(for group: HealthAccessGroup) async throws {}
     func stepsAccess() async -> StepsAccess { lock.withLock { stepsAsked ? .asked : .notAsked } }
     func requestStepsAuthorization() async throws { lock.withLock { stepsAsked = true } }
 

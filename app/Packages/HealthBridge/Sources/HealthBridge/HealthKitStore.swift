@@ -29,7 +29,8 @@ public final class HealthKitStore: HealthStoring, Sendable {
         }
     }
 
-    private static var shareTypes: Set<HKSampleType> { Set(HealthShareKind.allCases.map(type(of:))) }
+    /// Write types of `access()`: the core group. Must stay exactly as it is, see `HealthAccessGroup`.
+    static var shareTypes: Set<HKSampleType> { Set(HealthShareKind.allCases.map(type(of:))) }
     /// Read types of `access()`. The step type must never join them: a new type makes the status "should request"
     /// again, which would stop mirroring and hide Watch workouts for every existing user until they agree again.
     static var coreReadTypes: Set<HKObjectType> { [HKObjectType.workoutType()] }
@@ -39,8 +40,41 @@ public final class HealthKitStore: HealthStoring, Sendable {
     /// The Health card asks for everything in one sheet.
     static var connectReadTypes: Set<HKObjectType> { coreReadTypes.union(stepReadTypes) }
 
-    private func mayWrite(_ kind: HealthShareKind) -> Bool {
-        store.authorizationStatus(for: Self.type(of: kind)) == .sharingAuthorized
+    private static func sampleTypes(_ identifiers: [HKQuantityTypeIdentifier]) -> Set<HKSampleType> {
+        Set(identifiers.map { HKQuantityType($0) as HKSampleType })
+    }
+
+    private static func objectTypes(_ identifiers: [HKQuantityTypeIdentifier]) -> Set<HKObjectType> {
+        Set(identifiers.map { HKQuantityType($0) as HKObjectType })
+    }
+
+    /// Types a group writes; empty for groups that only read.
+    static func shareTypes(of group: HealthAccessGroup) -> Set<HKSampleType> {
+        switch group {
+        case .moreNutrients: sampleTypes([.dietaryFiber, .dietarySugar, .dietaryFatSaturated, .dietarySodium])
+        case .body: sampleTypes([.bodyMass, .bodyFatPercentage])
+        case .activeEnergy, .foreignNutrition, .bodyProfile: []
+        }
+    }
+
+    /// Types a group reads.
+    static func readTypes(of group: HealthAccessGroup) -> Set<HKObjectType> {
+        switch group {
+        case .moreNutrients: []
+        case .activeEnergy: objectTypes([.activeEnergyBurned])
+        case .body: objectTypes([.bodyMass, .bodyFatPercentage])
+        case .foreignNutrition:
+            objectTypes([.dietaryEnergyConsumed, .dietaryProtein, .dietaryCarbohydrates, .dietaryFatTotal, .dietaryFiber,
+                         .dietarySugar, .dietaryFatSaturated, .dietarySodium, .dietaryWater])
+        case .bodyProfile:
+            objectTypes([.height]).union([HKCharacteristicType(.dateOfBirth), HKCharacteristicType(.biologicalSex)])
+        }
+    }
+
+    private func mayWrite(_ kind: HealthShareKind) -> Bool { mayWrite(type: Self.type(of: kind)) }
+
+    private func mayWrite(type: HKSampleType) -> Bool {
+        store.authorizationStatus(for: type) == .sharingAuthorized
     }
 
     // MARK: Access
@@ -55,6 +89,18 @@ public final class HealthKitStore: HealthStoring, Sendable {
     public func requestAuthorization() async throws {
         guard Self.isAvailable else { return }
         try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.connectReadTypes)
+    }
+
+    public func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess {
+        guard Self.isAvailable else { return .unavailable }
+        let status = (try? await store.statusForAuthorizationRequest(toShare: Self.shareTypes(of: group),
+                                                                     read: Self.readTypes(of: group))) ?? .unknown
+        return HealthMapping.groupAccess(status)
+    }
+
+    public func requestAuthorization(for group: HealthAccessGroup) async throws {
+        guard Self.isAvailable else { return }
+        try await store.requestAuthorization(toShare: Self.shareTypes(of: group), read: Self.readTypes(of: group))
     }
 
     public func stepsAccess() async -> StepsAccess {

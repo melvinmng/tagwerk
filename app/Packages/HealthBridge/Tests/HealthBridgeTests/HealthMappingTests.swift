@@ -91,3 +91,65 @@ struct HealthMappingTests {
         #expect(result == [DailySteps(start: monday, count: 8240), DailySteps(start: wednesday, count: 0)])
     }
 }
+
+struct HealthAccessGroupTests {
+    private func identifiers(_ types: Set<HKSampleType>) -> Set<String> { Set(types.map(\.identifier)) }
+    private func identifiers(_ types: Set<HKObjectType>) -> Set<String> { Set(types.map(\.identifier)) }
+
+    @Test func coreTypes_unchanged() {
+        // The status of the core group must not change for existing users: a new type here would stop the mirroring.
+        let expectedShare: Set<String> = [
+            HKQuantityTypeIdentifier.dietaryEnergyConsumed.rawValue, HKQuantityTypeIdentifier.dietaryProtein.rawValue,
+            HKQuantityTypeIdentifier.dietaryCarbohydrates.rawValue, HKQuantityTypeIdentifier.dietaryFatTotal.rawValue,
+            HKQuantityTypeIdentifier.dietaryWater.rawValue, HKQuantityTypeIdentifier.activeEnergyBurned.rawValue,
+            HKObjectType.workoutType().identifier,
+        ]
+        #expect(identifiers(HealthKitStore.shareTypes) == expectedShare)
+        #expect(identifiers(HealthKitStore.coreReadTypes) == [HKObjectType.workoutType().identifier])
+        #expect(identifiers(HealthKitStore.connectReadTypes)
+            == [HKObjectType.workoutType().identifier, HKQuantityTypeIdentifier.stepCount.rawValue])
+        #expect(identifiers(HealthKitStore.stepReadTypes) == [HKQuantityTypeIdentifier.stepCount.rawValue])
+    }
+
+    @Test func group_status_notAskedThenAsked() {
+        #expect(HealthMapping.groupAccess(.shouldRequest) == .notAsked)
+        #expect(HealthMapping.groupAccess(.unnecessary) == .asked)
+        #expect(HealthMapping.groupAccess(.unknown) == .asked)
+    }
+
+    @Test func writeGroups_disjointFromCoreShareTypes() {
+        let core = identifiers(HealthKitStore.shareTypes)
+        for group in [HealthAccessGroup.moreNutrients, .body] {
+            let types = identifiers(HealthKitStore.shareTypes(of: group))
+            #expect(!types.isEmpty)
+            #expect(types.isDisjoint(with: core), "\(group) must not share a type with the core group")
+        }
+    }
+
+    @Test func foreignNutrition_readOnly_doesNotChangeShareStatus() {
+        // Reading the nutrition of other apps asks for read access only; the write status of the core group stays as it is.
+        #expect(HealthKitStore.shareTypes(of: .foreignNutrition).isEmpty)
+        #expect(HealthKitStore.shareTypes(of: .activeEnergy).isEmpty)
+        #expect(HealthKitStore.shareTypes(of: .bodyProfile).isEmpty)
+        #expect(!HealthKitStore.readTypes(of: .foreignNutrition).isEmpty)
+    }
+
+    @Test func readTypes_neverJoinTheCoreOrStepGroups() {
+        let core = identifiers(HealthKitStore.coreReadTypes).union(identifiers(HealthKitStore.stepReadTypes))
+        for group in HealthAccessGroup.allCases {
+            #expect(identifiers(HealthKitStore.readTypes(of: group)).isDisjoint(with: core), "\(group) read types overlap")
+        }
+    }
+
+    @Test func groups_coverTheTypesOfThePlan() {
+        #expect(identifiers(HealthKitStore.readTypes(of: .activeEnergy)) == [HKQuantityTypeIdentifier.activeEnergyBurned.rawValue])
+        #expect(identifiers(HealthKitStore.shareTypes(of: .moreNutrients)) == [
+            HKQuantityTypeIdentifier.dietaryFiber.rawValue, HKQuantityTypeIdentifier.dietarySugar.rawValue,
+            HKQuantityTypeIdentifier.dietaryFatSaturated.rawValue, HKQuantityTypeIdentifier.dietarySodium.rawValue])
+        #expect(identifiers(HealthKitStore.shareTypes(of: .body)) == identifiers(HealthKitStore.readTypes(of: .body)))
+        #expect(identifiers(HealthKitStore.readTypes(of: .bodyProfile)) == [
+            HKQuantityTypeIdentifier.height.rawValue, HKCharacteristicTypeIdentifier.dateOfBirth.rawValue,
+            HKCharacteristicTypeIdentifier.biologicalSex.rawValue])
+        #expect(identifiers(HealthKitStore.readTypes(of: .foreignNutrition)).count == 9)
+    }
+}

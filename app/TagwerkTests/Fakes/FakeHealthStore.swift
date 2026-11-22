@@ -12,6 +12,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _deleted: [UUID] = []
     private var _foreign: [ForeignWorkout] = []
     private var _steps: [DailySteps] = []
+    private var _groupAccess: [HealthAccessGroup: HealthGroupAccess] = [:]
+    private var _groupRequests: [HealthAccessGroup: Int] = [:]
     private var _authorizationRequests = 0
     private var _stepsAuthorizationRequests = 0
     private var _foreignReads: [DateInterval] = []
@@ -84,6 +86,22 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func stepsAccess() async -> StepsAccess { currentStepsAccess }
+
+    /// Groups start as not asked, like on a device that has never shown their sheet.
+    func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess { lock.withLock { _groupAccess[group] ?? .notAsked } }
+
+    func setGroupAccess(_ access: HealthGroupAccess, for group: HealthAccessGroup) {
+        lock.withLock { _groupAccess[group] = access }
+    }
+
+    func groupRequests(_ group: HealthAccessGroup) -> Int { lock.withLock { _groupRequests[group] ?? 0 } }
+
+    func requestAuthorization(for group: HealthAccessGroup) async throws {
+        lock.withLock {
+            _groupRequests[group, default: 0] += 1
+            if (_groupAccess[group] ?? .notAsked) == .notAsked { _groupAccess[group] = .asked }
+        }
+    }
 
     func requestStepsAuthorization() async throws {
         lock.withLock {

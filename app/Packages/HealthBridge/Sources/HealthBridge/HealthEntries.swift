@@ -119,6 +119,30 @@ public enum StepsAccess: Sendable, Hashable {
     case asked
 }
 
+/// A group of Health types with its own authorization status and its own request. Each group is asked for separately and only
+/// after a tap. A new type never joins the core group of `HealthStoring.access()` (meals, water, workouts): that would put its
+/// status back to "should request", stop the mirroring and hide the Watch workouts for every existing user.
+public enum HealthAccessGroup: String, Sendable, CaseIterable, Hashable {
+    /// Writes fibre, sugar, saturated fat and sodium of meals.
+    case moreNutrients
+    /// Reads the active energy.
+    case activeEnergy
+    /// Reads and writes body weight and body fat percentage.
+    case body
+    /// Reads the nutrition entries of other apps.
+    case foreignNutrition
+    /// Reads height, date of birth and biological sex.
+    case bodyProfile
+}
+
+/// Whether the system sheet of a group was shown. iOS never tells whether reading was allowed: `asked` only means the sheet is
+/// no longer due, and a read that returns nothing may be a denied read or a day without data.
+public enum HealthGroupAccess: Sendable, Hashable {
+    case unavailable
+    case notAsked
+    case asked
+}
+
 /// The step sum of one day as Health reports it (iPhone and Apple Watch merged by Health's source order).
 public struct DailySteps: Sendable, Hashable {
     /// Start of the day in the calendar of the query.

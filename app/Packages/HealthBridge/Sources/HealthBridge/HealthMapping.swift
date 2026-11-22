@@ -134,6 +134,11 @@ public enum HealthMapping {
         return .partial(HealthShareKind.allCases.filter(denied.contains))
     }
 
+    /// A group counts as asked once iOS would no longer show its sheet; an unknown status does not bring the button back.
+    static func groupAccess(_ status: HKAuthorizationRequestStatus) -> HealthGroupAccess {
+        status == .shouldRequest ? .notAsked : .asked
+    }
+
     /// Steps count as asked once iOS would no longer show the sheet; an unknown status does not bring the button back.
     static func stepsAccess(_ status: HKAuthorizationRequestStatus) -> StepsAccess {
         status == .shouldRequest ? .notAsked : .asked
