@@ -185,7 +185,7 @@ private struct EventProposalFields: View {
                 momentRows(title: "Beginn", changeTitle: "Beginn ändern", moment: $editor.start, fallback: 9 * 60)
                 momentRows(title: "Ende", changeTitle: "Ende ändern", moment: $editor.end, fallback: 10 * 60)
             } footer: {
-                if !editor.orderIsValid { Text("Das Ende liegt nicht nach dem Beginn.").foregroundStyle(.red) }
+                if !editor.orderIsValid { Text("Das Ende liegt nicht nach dem Beginn.").foregroundStyle(.redText) }
             }
             Section {
                 Picker("Kalender", selection: $editor.calendarID) {

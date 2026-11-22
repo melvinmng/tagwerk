@@ -57,13 +57,13 @@ struct PageTitleLabel: View {
             // sizes, so it wraps there instead of being cut off; at the other sizes it stays on one line.
             Text(caption)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
+                .foregroundStyle(isCurrent ? Color.accentColor : Color.secondaryText)
                 .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                 .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.8)
                 .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(title).font(titleFont).lineLimit(1).minimumScaleFactor(titleScales ? 0.8 : 1)
-                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondaryText)
             }
         }
     }

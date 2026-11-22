@@ -12,7 +12,7 @@ struct DayPagePreview: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(PlanHeaderText.caption(scope: .day, anchor: day, today: model.today, range: range, calendar: model.calendar))
-                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondaryText)
                 Text(PlanHeaderText.title(scope: .day, anchor: day, range: range, calendar: model.calendar))
                     .font(.title3.bold())
             }
@@ -47,7 +47,7 @@ struct WeekPagePreview: View {
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             Text(CapacityText.summary(plan.capacity)).font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? .red : .secondary)
+                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
                         weekRows(of: plan)
@@ -83,7 +83,7 @@ struct WeekPagePreview: View {
             }
             ForEach(plan.assigned) { task in Text(task.title).font(.subheadline).lineLimit(1) }
             ForEach(content.deadlines) { deadline in
-                Text(deadline.title).font(.subheadline).foregroundStyle(.red).lineLimit(1)
+                Text(deadline.title).font(.subheadline).foregroundStyle(.redText).lineLimit(1)
             }
         }
     }

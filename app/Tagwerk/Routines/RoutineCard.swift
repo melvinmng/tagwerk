@@ -33,7 +33,7 @@ struct RoutineCard: View {
                 .controlSize(.small)
             Button { model.dismissMorningCard() } label: { Image(systemName: "xmark") }
                 .buttonStyle(.borderless)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityLabel("Heute ausblenden")
         }
         .padding(.horizontal, 12)
@@ -53,7 +53,7 @@ struct RoutineCard: View {
                     Button { Task { await model.completeFocus(mark) } } label: {
                         Image(systemName: mark.doneAt == nil ? "circle" : "checkmark.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(mark.doneAt == nil ? Color.secondary : Color.green)
+                            .foregroundStyle(mark.doneAt == nil ? Color.secondaryText : Color.green)
                     }
                     .buttonStyle(.plain)
                     .disabled(mark.doneAt != nil)
@@ -61,9 +61,9 @@ struct RoutineCard: View {
                     .accessibilityValue(mark.doneAt == nil ? String(localized: "offen") : String(localized: "erledigt"))
                     .accessibilityHint(mark.doneAt == nil ? String(localized: "Hakt die Aufgabe ab") : "")
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(mark.title).strikethrough(mark.doneAt != nil).foregroundStyle(mark.doneAt != nil ? .secondary : .primary)
+                        Text(mark.title).strikethrough(mark.doneAt != nil).foregroundStyle(mark.doneAt != nil ? Color.secondaryText : Color.primary)
                             .lineLimit(1)
-                        if let block = blockText(mark) { Text(block).font(.caption).foregroundStyle(.secondary) }
+                        if let block = blockText(mark) { Text(block).font(.caption).foregroundStyle(.secondaryText) }
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "star.fill").font(.caption).foregroundStyle(.yellow).accessibilityHidden(true)

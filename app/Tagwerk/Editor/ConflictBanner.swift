@@ -16,7 +16,7 @@ struct ConflictBanner: View {
                     Text("Auf \(sourceName) geändert").font(.headline)
                     Text(changes.isEmpty ? String(localized: "Seit dem Öffnen wurde die Aufgabe geändert.")
                                          : String(localized: "Seit dem Öffnen wurden \(changes.count) Felder geändert."))
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                 }
             } icon: {
                 Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(.orange)
@@ -27,14 +27,14 @@ struct ConflictBanner: View {
                 VStack(alignment: .leading, spacing: 2) {
                     LabeledContent(change.field) {
                         HStack(spacing: 4) {
-                            Text(change.before).strikethrough().foregroundStyle(.secondary)
-                            Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondary)
+                            Text(change.before).strikethrough().foregroundStyle(.secondaryText)
+                            Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondaryText)
                             Text(change.after)
                         }
                     }
                     if let mine = change.mine {
                         Label("Du hast \(mine) gewählt", systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption).foregroundStyle(.orange)
+                            .font(.caption).foregroundStyle(.orangeText)
                     }
                 }
                 .font(.subheadline)
@@ -46,7 +46,7 @@ struct ConflictBanner: View {
                 VStack(alignment: .leading) { buttons }
             }
 
-            Text(footer).font(.caption).foregroundStyle(.secondary)
+            Text(footer).font(.caption).foregroundStyle(.secondaryText)
         }
         .padding(14)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16))

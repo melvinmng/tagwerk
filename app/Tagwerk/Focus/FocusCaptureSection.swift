@@ -16,7 +16,7 @@ struct FocusCaptureSection: View {
                             Spacer()
                             if let snapshot = focus.snapshot(at: context.date) {
                                 Text(snapshot.phase == .finished ? FocusTimerText.phaseName(.finished) : FocusTimerText.clock(snapshot.remainingSeconds))
-                                    .monospacedDigit().foregroundStyle(.secondary)
+                                    .monospacedDigit().foregroundStyle(.secondaryText)
                             }
                         }
                     }

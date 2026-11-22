@@ -26,11 +26,11 @@ struct TimelineLine<Accessory: View>: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text(time)
-                .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
+                .font(.caption.monospacedDigit()).foregroundStyle(.secondaryText).frame(width: 48, alignment: .leading)
             RoundedRectangle(cornerRadius: 2).fill(color).frame(width: isRunning ? 6 : 4)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail).font(.caption).foregroundStyle(.secondaryText)
                 accessory
             }
         }
@@ -66,7 +66,7 @@ struct TimelineTrips: View {
         ForEach(trips) { trip in
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Label(TravelText.gridText(trip, departure: clock(trip.range.lowerBound)), systemImage: TravelText.symbol(trip.transport ?? transport))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
                     .accessibilityLabel(TravelText.accessibilityLabel(trip, transport: trip.transport ?? transport))
                 if trip.isTight { TravelWarningCapsule(minutes: trip.overlapMinutes) }
             }

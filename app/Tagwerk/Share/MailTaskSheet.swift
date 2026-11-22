@@ -62,14 +62,14 @@ struct MailTaskSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.subject.isEmpty ? String(localized: "Ohne Betreff") : model.subject).font(.headline)
                 if let byline {
-                    Text(byline).font(.subheadline).foregroundStyle(.secondary)
+                    Text(byline).font(.subheadline).foregroundStyle(.secondaryText)
                 }
                 if !model.bodyText.isEmpty { bodyText }
             }
             summaryControl
         } footer: {
             if case .failed(let message) = model.phase {
-                Text(message).foregroundStyle(.red)
+                Text(message).foregroundStyle(.redText)
             } else if environment.settings.mailSummaryConsent {
                 Text("Gesendet werden nur Betreff, Absendername und Text, nur auf dein Tippen.")
             }
@@ -126,7 +126,7 @@ struct MailTaskSheet: View {
             .disabled(model.phase == .loading || model.bodyText.isEmpty)
         } else {
             Text("Für die Zusammenfassung melde dich unter Einstellungen › KI bei ChatGPT an.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -143,7 +143,7 @@ struct MailTaskSheet: View {
             }
             if let reference {
                 // Sender and link go into the notes of the task as before; here they are only shown.
-                Text(reference).font(.footnote).foregroundStyle(.secondary)
+                Text(reference).font(.footnote).foregroundStyle(.secondaryText)
             }
         } header: {
             Text("Aufgabe")

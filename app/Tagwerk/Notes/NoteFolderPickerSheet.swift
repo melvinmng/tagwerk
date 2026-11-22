@@ -54,13 +54,13 @@ struct NoteFolderPickerSheet: View {
             HStack {
                 Label(name, systemImage: symbol)
                 Spacer()
-                if id == currentFolderID { Image(systemName: "checkmark").foregroundStyle(.secondary) }
+                if id == currentFolderID { Image(systemName: "checkmark").foregroundStyle(.secondaryText) }
             }
             .padding(.leading, CGFloat(depth - 1) * 18)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(isEnabled ? Color.primary : Color.secondary)
+        .foregroundStyle(isEnabled ? Color.primary : Color.secondaryText)
         .disabled(!isEnabled)
     }
 }

@@ -50,7 +50,7 @@ struct QuietHoursSettingsView: View {
                     LabeledContent {
                         Text(verbatim: "Apple")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
                             .overlay(Capsule().strokeBorder(.secondary))
@@ -103,7 +103,7 @@ struct QuietHoursBar: View {
                 ForEach(Self.tickHours, id: \.self) { hour in
                     Text(verbatim: String(hour))
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }

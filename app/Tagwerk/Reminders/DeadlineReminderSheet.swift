@@ -19,7 +19,7 @@ struct DeadlineReminderSheet: View {
             Form {
                 if let model {
                     if let errorMessage {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                     }
                     let quietContext: (anchor: Date, quietHours: QuietHours?) = (event.start, environment.settings.quietHours)
                     Section {
@@ -43,7 +43,7 @@ struct DeadlineReminderSheet: View {
                                 Text(ReminderText.describe(offset, subject: .deadline, isAllDay: event.isAllDay, locale: .current,
                                                            calendar: calendar))
                             }
-                            if model.calendarAlarms.offsets.isEmpty { Text("Keine").foregroundStyle(.secondary) }
+                            if model.calendarAlarms.offsets.isEmpty { Text("Keine").foregroundStyle(.secondaryText) }
                         }
                     } header: {
                         Label("Hinweise im Kalender (Apple)", systemImage: "alarm")

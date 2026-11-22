@@ -316,22 +316,22 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 6))) {
                 if !toSchedule.isEmpty {
                     let rest = toSchedule.compactMap { model.sessionProgress[$0.id]?.remaining }.reduce(0, +)
-                    Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.green)
+                    Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.greenText)
                 }
                 Text("Ohne Uhrzeit").font(.subheadline.weight(.semibold))
                 Text(toSchedule.isEmpty ? "\(planned.count) · \(CapacityText.duration(minutes))" : "\(planned.count)")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
                 if !openToday.isEmpty {
-                    Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondary)
+                    Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondaryText)
                 }
                 if !leftovers.isEmpty {
                     Text("\(leftovers.count) von heute").font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
                 }
                 if !overdueToday.isEmpty {
-                    Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orangeText)
                 }
                 if !stacked { Spacer() }
-                Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondary)
+                Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondaryText)
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 52)
@@ -347,7 +347,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @ViewBuilder
     private func panelSection(_ title: String, _ tasks: [TaskItem], commit: Commit?, isOverdue: Bool = false) -> some View {
         if !tasks.isEmpty {
-            Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? .orange : .secondary)
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? Color.orangeText : Color.secondaryText)
                 .padding(.top, 8).padding(.bottom, 2)
             ForEach(tasks) { task in panelRow(task, commit: commit, isOverdue: isOverdue) }
         }
@@ -390,11 +390,11 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title).font(.subheadline).lineLimit(2)
-                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
             }
             Spacer(minLength: 4)
             if let progress = model.sessionProgress[task.id], toScheduleIDs.contains(task.id) {
-                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.greenText)
             }
             if let priority = task.priority {
                 Text(priority.label).font(.caption2.weight(.semibold))
@@ -445,7 +445,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// Drags at once (no hold), so the list itself keeps scrolling; the preview starts after 8 pt.
     private func grip(_ task: TaskItem) -> some View {
         Image(systemName: "line.3.horizontal")
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
             .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("screen"))
@@ -585,7 +585,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         return VStack(alignment: .leading, spacing: 8) {
             Label("Derselbe Termin?", systemImage: "rectangle.on.rectangle").font(.subheadline.weight(.semibold))
             Text("„\(suggestion.placeholderTitle)“ aus „\(calendarName)“ liegt zur selben Zeit wie „\(kept?.title ?? "")“.")
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
             Toggle("Künftig immer bei „\(suggestion.placeholderTitle)“ aus „\(calendarName)“",
                    isOn: Binding(get: { alwaysMerge.contains(suggestion.id) },
                                  set: { on in if on { alwaysMerge.insert(suggestion.id) } else { alwaysMerge.remove(suggestion.id) } }))

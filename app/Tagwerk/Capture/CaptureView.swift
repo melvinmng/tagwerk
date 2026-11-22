@@ -112,7 +112,7 @@ struct CaptureView: View {
                         HStack {
                             Label("Wochenrückblick", systemImage: "chart.bar")
                             Spacer()
-                            Text("Woche").foregroundStyle(.secondary)
+                            Text("Woche").foregroundStyle(.secondaryText)
                             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                         }
                     }
@@ -232,10 +232,10 @@ struct CaptureView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Wasser")
-                            Text(drinkCaption(data)).font(.caption).foregroundStyle(.secondary)
+                            Text(drinkCaption(data)).font(.caption).foregroundStyle(.secondaryText)
                         }
                         Spacer()
-                        Text(IntakeFormat.liters(data.intake.waterMilliliters)).foregroundStyle(.secondary)
+                        Text(IntakeFormat.liters(data.intake.waterMilliliters)).foregroundStyle(.secondaryText)
                         Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                     }
                 }
@@ -363,7 +363,7 @@ private struct DaySummary: View {
                     Text("\(IntakeFormat.kcalNumber(intake.kcal, estimated: intake.hasEstimate)) / \(IntakeFormat.grouped(settings.goalKilocalories)) kcal")
                         .font(.title3.weight(.semibold))
                     Spacer()
-                    Text(remaining.text).font(.subheadline).foregroundStyle(remaining.isOver ? .orange : .secondary)
+                    Text(remaining.text).font(.subheadline).foregroundStyle(remaining.isOver ? Color.orangeText : Color.secondaryText)
                 }
                 ProgressView(value: min(1, intake.kcal / Double(max(1, settings.goalKilocalories))))
                     .tint(remaining.isOver ? .orange : .green)
@@ -412,7 +412,7 @@ private struct DaySummary: View {
             EmptyView()
         case .allow:
             VStack(alignment: .leading, spacing: 3) {
-                Text("Schritte").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                Text("Schritte").font(.caption).foregroundStyle(.secondaryText).accessibilityHidden(true)
                 Button { Task { await model.allowSteps() } } label: {
                     Text("In Health erlauben \(Image(systemName: "chevron.right"))")
                         .font(.subheadline.weight(.medium))
@@ -439,7 +439,7 @@ private struct DaySummary: View {
     private func metric(_ title: LocalizedStringResource, _ value: String, progress: Double?, tint: Color,
                         spokenLabel: String? = nil, spokenValue: String? = nil) -> some View {
         let tile = VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(.secondaryText)
             Text(value).font(.subheadline.weight(.medium)).monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -469,13 +469,13 @@ struct MealRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(meal.title).lineLimit(2)
                 Text("\(meal.kind.displayName) · \(CaptureText.time(meal.date, calendar: calendar))")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).monospacedDigit()
                 Text(meal.hasEstimate ? IntakeFormat.shortRange(min: meal.kcalMin, max: meal.kcalMax) : String(localized: "eingetragen"))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
         }
     }
@@ -490,11 +490,11 @@ struct WorkoutRow: View {
             Image(systemName: workout.activity.symbolName).foregroundStyle(.mint).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(workout.displayName)
-                Text(caption).font(.caption).foregroundStyle(.secondary)
+                Text(caption).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             if let kilocalories = workout.kilocalories, kilocalories > 0 {
-                Text("\(Int(kilocalories.rounded())) kcal").monospacedDigit().foregroundStyle(.secondary)
+                Text("\(Int(kilocalories.rounded())) kcal").monospacedDigit().foregroundStyle(.secondaryText)
             }
         }
     }

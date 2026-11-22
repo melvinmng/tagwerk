@@ -101,7 +101,7 @@ private struct ShoppingProposalFields: View {
             ForEach($editor.additions) { $addition in
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Artikel", text: $addition.name)
-                    TextField("Menge", text: $addition.quantity).font(.subheadline).foregroundStyle(.secondary)
+                    TextField("Menge", text: $addition.quantity).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             .onDelete { editor.removeAdditions(at: $0) }

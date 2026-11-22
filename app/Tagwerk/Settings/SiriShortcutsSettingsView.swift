@@ -41,7 +41,7 @@ private struct SiriPhraseRow: View {
             Text("„\(String(localized: phrase.phrase))“")
             if let alternative = phrase.alternative {
                 Text("auch: „\(String(localized: alternative))“")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
             HStack(spacing: 6) {
                 Text(phrase.effect)
@@ -50,7 +50,7 @@ private struct SiriPhraseRow: View {
                         .labelStyle(.titleAndIcon)
                 }
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).foregroundStyle(.secondaryText)
         }
         .accessibilityElement(children: .combine)
     }

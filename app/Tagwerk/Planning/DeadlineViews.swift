@@ -101,17 +101,17 @@ struct DeadlineRowLabel: View {
                     Text(deadline.title).font(.subheadline.weight(.semibold)).lineLimit(distanceBelow ? nil : 2)
                     if let badge = text.badge(deadline) { DeadlineBadge(text: badge) }
                 }
-                Text(text.detail(deadline, calendarName: calendarName)).font(.caption).foregroundStyle(.secondary)
+                Text(text.detail(deadline, calendarName: calendarName)).font(.caption).foregroundStyle(.secondaryText)
                 if let line = text.preparation(preparation) {
-                    Label(line, systemImage: "link").font(.caption).foregroundStyle(.secondary)
+                    Label(line, systemImage: "link").font(.caption).foregroundStyle(.secondaryText)
                 }
                 if showsDistance && distanceBelow {
-                    Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.red)
+                    Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.redText)
                 }
             }
             Spacer()
             if showsDistance && !distanceBelow {
-                Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.red)
+                Text(text.relative(deadline.day, today: model.today)).font(.caption.weight(.semibold)).foregroundStyle(.redText)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -127,7 +127,7 @@ struct DeadlineBadge: View {
     var body: some View {
         Text(text).font(.caption2.weight(.semibold))
             .padding(.horizontal, 6).padding(.vertical, 1)
-            .foregroundStyle(.red)
+            .foregroundStyle(.redText)
             .overlay(Capsule().strokeBorder(Color.red.opacity(0.6), lineWidth: 1))
     }
 }
@@ -150,10 +150,10 @@ struct OrphanedMarkRow: View {
                         DeadlineBadge(text: String(localized: "markiert"))
                     }
                     Text(text.orphan(orphan, calendarName: model.calendarTitle(orphan.calendarID)))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 Spacer()
-                Text("prüfen").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                Text("prüfen").font(.caption.weight(.semibold)).foregroundStyle(.orangeText)
             }
             HStack(spacing: 8) {
                 if let candidate = orphan.candidate {
@@ -212,12 +212,12 @@ struct DeadlineSuggestionCard: View {
             let text = DeadlineText(calendar: model.calendar)
             VStack(alignment: .leading, spacing: 8) {
                 Label("Sieht nach einer Prüfung aus", systemImage: "flag")
-                    .font(.caption.weight(.bold)).foregroundStyle(.red)
+                    .font(.caption.weight(.bold)).foregroundStyle(.redText)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(event.title).font(.subheadline.weight(.semibold))
                     Text(text.moment(event.start, isAllDay: event.isAllDay)
                          + (model.calendarTitle(event.calendarID).map { " · " + $0 } ?? ""))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 HStack(spacing: 8) {
                     Button("Als Deadline markieren") {
@@ -260,7 +260,7 @@ struct EventPickRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.title + (event.isRecurring ? " ↻" : "")).lineLimit(2)
                 Text(timeText(text) + (model.calendarTitle(event.calendarID).map { " · " + $0 } ?? ""))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             if isLinked { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
@@ -358,7 +358,7 @@ struct EventLinkPicker: View {
                     }
                     .foregroundStyle(.primary)
                 }
-                if filtered.isEmpty { Text("Keine Termine bis zur Deadline").foregroundStyle(.secondary) }
+                if filtered.isEmpty { Text("Keine Termine bis zur Deadline").foregroundStyle(.secondaryText) }
             }
         }
         .scrollDismissesKeyboard(.interactively)
@@ -417,7 +417,7 @@ struct DeadlinePicker: View {
                 Button { pick(deadline) } label: { DeadlineRowLabel(deadline: deadline, model: model) }
                     .foregroundStyle(.primary)
             }
-            if deadlines.isEmpty { Text("Keine Deadline nach diesem Termin").foregroundStyle(.secondary) }
+            if deadlines.isEmpty { Text("Keine Deadline nach diesem Termin").foregroundStyle(.secondaryText) }
         }
         .navigationTitle("Deadline wählen")
         .confirmationDialog(String(localized: "„\(event.title)“ wiederholt sich"),

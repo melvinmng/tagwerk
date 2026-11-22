@@ -100,7 +100,7 @@ struct NewTaskSheet: View {
             Form {
                 if let remindersError {
                     Section {
-                        Label(remindersError, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                        Label(remindersError, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
                     } footer: {
                         Text("Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.")
                     }
@@ -322,7 +322,7 @@ extension NewTaskSheet {
             } label: {
                 Label("Wiederholen", systemImage: "repeat")
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .accessibilityHint(reason)
         }
     }

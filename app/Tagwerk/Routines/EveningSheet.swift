@@ -50,20 +50,20 @@ struct EveningSheet: View {
 
                 Section {
                     if items.isEmpty {
-                        Text("Punkte in den Einstellungen anlegen").foregroundStyle(.secondary)
+                        Text("Punkte in den Einstellungen anlegen").foregroundStyle(.secondaryText)
                     }
                     ForEach(items) { item in
                         Button { model.toggleItem(item.id, on: day) } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: value.checkedItemIDs.contains(item.id) ? "checkmark.circle.fill" : "circle")
                                     .font(.title3)
-                                    .foregroundStyle(value.checkedItemIDs.contains(item.id) ? Color.green : Color.secondary)
+                                    .foregroundStyle(value.checkedItemIDs.contains(item.id) ? Color.green : Color.secondaryText)
                                 Text(item.title)
                                 Spacer()
                                 if let offset = item.offsetMinutes {
                                     Text(DateText.time(minutes: RoutineSchedule.anchorMinutes(
                                         bedtimeMinutes: model.settings.bedtimeMinutes, offsetMinutes: offset), calendar: model.calendar))
-                                        .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                        .font(.caption.monospacedDigit()).foregroundStyle(.secondaryText)
                                 }
                             }
                         }
@@ -134,7 +134,7 @@ struct EveningSheet: View {
                                 Label(DayPanelText.eveningTitle(day: next, today: model.planning.today, calendar: model.calendar),
                                       systemImage: "moon.stars")
                                 Spacer()
-                                Text(DateText.numericDay(next, calendar: model.calendar)).foregroundStyle(.secondary)
+                                Text(DateText.numericDay(next, calendar: model.calendar)).foregroundStyle(.secondaryText)
                                 Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                             }
                         }
@@ -219,7 +219,7 @@ struct RoutinesSection: View {
                 HStack {
                     Label("Tagesstart", systemImage: "sun.max")
                     Spacer()
-                    Text(model.captureStartDetail(day)).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                    Text(model.captureStartDetail(day)).font(.subheadline).foregroundStyle(.secondaryText).multilineTextAlignment(.trailing)
                     Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                 }
             }
@@ -228,7 +228,7 @@ struct RoutinesSection: View {
                 HStack {
                     Label("Tagesabschluss", systemImage: "bed.double")
                     Spacer()
-                    Text(model.captureEveningDetail(day)).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                    Text(model.captureEveningDetail(day)).font(.subheadline).foregroundStyle(.secondaryText).multilineTextAlignment(.trailing)
                     Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                 }
             }

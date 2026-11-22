@@ -66,7 +66,7 @@ struct TravelSettingsView: View {
                     Button {
                         Task { await model.clear() }
                     } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondaryText)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Adresse löschen")
@@ -80,7 +80,7 @@ struct TravelSettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(suggestion.title).foregroundStyle(.primary)
                         if !suggestion.subtitle.isEmpty {
-                            Text(suggestion.subtitle).font(.subheadline).foregroundStyle(.secondary)
+                            Text(suggestion.subtitle).font(.subheadline).foregroundStyle(.secondaryText)
                         }
                     }
                 }
@@ -97,16 +97,16 @@ struct TravelSettingsView: View {
         case .idle:
             EmptyView()
         case .searching:
-            HStack(spacing: 8) { ProgressView(); Text("Adresse wird gesucht …").foregroundStyle(.secondary) }
+            HStack(spacing: 8) { ProgressView(); Text("Adresse wird gesucht …").foregroundStyle(.secondaryText) }
         case .noSuggestions:
-            Text("Keine Vorschläge").foregroundStyle(.secondary)
+            Text("Keine Vorschläge").foregroundStyle(.secondaryText)
             Button("Adresse trotzdem prüfen") { Task { await model.checkTypedAddress() } }
         case .saved(let description):
             Label(String(localized: "Gesichert: \(description)"), systemImage: "checkmark.circle.fill")
-                .font(.subheadline).foregroundStyle(.green)
+                .font(.subheadline).foregroundStyle(.greenText)
         case .failed:
             Label("Adresse nicht gefunden", systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline).foregroundStyle(.orange)
+                .font(.subheadline).foregroundStyle(.orangeText)
         }
     }
 }

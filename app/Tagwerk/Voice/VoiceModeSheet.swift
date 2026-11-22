@@ -41,7 +41,7 @@ struct VoiceModePanel: View {
             Button("Beenden") { mode.end() }.buttonStyle(.bordered)
         }
         .overlay(alignment: .bottomLeading) {
-            Text(contextText).font(.caption).foregroundStyle(.secondary).offset(y: 18)
+            Text(contextText).font(.caption).foregroundStyle(.secondaryText).offset(y: 18)
         }
         .padding(.bottom, 14)
     }
@@ -50,12 +50,12 @@ struct VoiceModePanel: View {
     private var statusLine: some View {
         switch mode.phase {
         case .starting:
-            status(String(localized: "Startet …"), symbol: "mic", tint: .secondary)
+            status(String(localized: "Startet …"), symbol: "mic", tint: .secondaryText)
         case .listening:
             VStack(alignment: .leading, spacing: 6) {
                 status(mode.machine.openCards.isEmpty ? String(localized: "Hört zu … · auf dem iPhone")
                                                        : String(localized: "Hört zu … · sag ja, nein oder was anders sein soll"),
-                       symbol: "waveform", tint: .red)
+                       symbol: "waveform", tint: .redText)
                 heardText
                 LevelMeter(level: mode.level)
             }
@@ -64,7 +64,7 @@ struct VoiceModePanel: View {
                 heardText
                 TimelineView(.periodic(from: .now, by: 0.25)) { _ in
                     HStack {
-                        Label("Sendet in \(mode.remaining()) s", systemImage: "timer").font(.subheadline).foregroundStyle(.secondary)
+                        Label("Sendet in \(mode.remaining()) s", systemImage: "timer").font(.subheadline).foregroundStyle(.secondaryText)
                         Spacer()
                         Button("Nicht senden") { mode.doNotSend() }.buttonStyle(.borderedProminent)
                     }
@@ -74,28 +74,28 @@ struct VoiceModePanel: View {
             VStack(alignment: .leading, spacing: 6) {
                 heardText
                 HStack {
-                    Label("Sendet …", systemImage: "arrow.up.circle").font(.subheadline).foregroundStyle(.secondary)
+                    Label("Sendet …", systemImage: "arrow.up.circle").font(.subheadline).foregroundStyle(.secondaryText)
                     Spacer()
                     Button("Nicht senden") { mode.doNotSend() }.buttonStyle(.borderedProminent)
                 }
             }
         case .sending:
-            status(String(localized: "Sendet an ChatGPT …"), symbol: "arrow.up.circle", tint: .secondary)
+            status(String(localized: "Sendet an ChatGPT …"), symbol: "arrow.up.circle", tint: .secondaryText)
         case .speaking:
             status(String(localized: "ChatGPT spricht … · Mikrofon aus"), symbol: "speaker.wave.2", tint: .accentColor)
         case .tone:
-            status(String(localized: "Gleich hört Tagwerk wieder zu"), symbol: "bell", tint: .secondary)
+            status(String(localized: "Gleich hört Tagwerk wieder zu"), symbol: "bell", tint: .secondaryText)
         case .confirming:
             TimelineView(.periodic(from: .now, by: 0.25)) { _ in
                 HStack {
                     Label("Wird in \(mode.remaining()) s ausgeführt", systemImage: "checkmark.circle")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(.purple)
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(.purpleText)
                     Spacer()
                     Button("Abbrechen") { mode.cancelConfirmation() }.buttonStyle(.borderedProminent)
                 }
             }
         case .paused(let reason):
-            status(Self.text(reason), symbol: "pause.circle", tint: .orange)
+            status(Self.text(reason), symbol: "pause.circle", tint: .orangeText)
         case .idle, .ended:
             EmptyView()
         }
@@ -105,7 +105,7 @@ struct VoiceModePanel: View {
         let text = mode.machine.text
         return Text(text.isEmpty ? String(localized: "Sprich jetzt.") : text)
             .font(.title3)
-            .foregroundStyle(text.isEmpty ? .secondary : .primary)
+            .foregroundStyle(text.isEmpty ? Color.secondaryText : Color.primary)
             .lineLimit(4)
     }
 
@@ -120,21 +120,21 @@ struct VoiceModePanel: View {
         if let user = messages.last(where: { if case .user = $0.content { true } else { false } }),
            case .user(let text) = user.content {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Du").font(.caption).foregroundStyle(.secondary)
+                Text("Du").font(.caption).foregroundStyle(.secondaryText)
                 Text(text)
             }
             let answers = messages.filter { $0.id > user.id }
             ForEach(answers) { message in
                 if case .assistant(let answer) = message.content {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("ChatGPT").font(.caption).foregroundStyle(.secondary)
+                        Text("ChatGPT").font(.caption).foregroundStyle(.secondaryText)
                         SpokenAnswerText(id: "message-\(message.id)", text: answer)
                     }
                 }
             }
         }
         if let streaming = assistant.conversation?.streamingText, !streaming.isEmpty {
-            ChatMarkdownView(text: streaming).foregroundStyle(.secondary)
+            ChatMarkdownView(text: streaming).foregroundStyle(.secondaryText)
         }
     }
 
@@ -194,9 +194,9 @@ struct VoiceModeExplanation: View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Sprechmodus", systemImage: "waveform").font(.subheadline.weight(.semibold))
             Text("Tagwerk hört zu und sendet, was du sagst, nach einer kurzen Pause an ChatGPT. Bis dahin kannst du „Nicht senden“ tippen. Die Antwort wird vorgelesen, danach hört Tagwerk wieder zu.")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
             Text("Der Ton wird auf dem iPhone in Text umgewandelt. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
             HStack {
                 Button("Abbrechen", action: onCancel).buttonStyle(.bordered)
                 Spacer()
