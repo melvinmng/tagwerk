@@ -52,6 +52,9 @@ enum DemoData {
                 for (day, value) in uiTestWorkdayOverrides(today: today, calendar: planning.calendar) {
                     planning.planStore.setOverride(value, on: day)
                 }
+                // The card "Wochenplanung" shows on the planning weekday (Sunday by default); the tests keep it hidden, so the screens
+                // do not depend on the weekday of the run. The rules of the card are covered by unit tests.
+                settings.weekPlanningCardDismissedDayKey = today.dayKey
             }
             await environment.taskList.reload()
             await planSamples(environment)

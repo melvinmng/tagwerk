@@ -40,6 +40,8 @@ struct NoteEditorView: View {
     @State var notice: String?
     /// The note waits for the explanation before its first lock (`NoteLockIntroSheet`).
     @State var lockIntroIDs: [UUID] = []
+    /// What the insert features put on top of the page (scanner, share sheet, rename prompt).
+    @State var inserts = NoteInsertState()
 
     /// Stage C switch of the line mapping: `false` renders the page without edit links and shows the pencil button again,
     /// so the editor opens with the cursor at the end. A constant, not a setting (decided by the device check).
@@ -84,7 +86,8 @@ struct NoteEditorView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if mode == .edit, isTextFocused {
                     NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
-                                      attachments: store.attachments != nil ? AnyView(attachMenu) : nil)
+                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil,
+                                      isInTable: tableIndexAtCursor != nil, onTable: openTableAtCursor)
                 }
             }
             .toolbar {
@@ -104,10 +107,6 @@ struct NoteEditorView: View {
                         }
                         .accessibilityLabel(mode == .edit ? "Ansicht" : "Bearbeiten")
                     }
-                }
-                // The bar above the keyboard has its own attachment menu; this one stays for the writing page without a keyboard.
-                if store.attachments != nil, mode == .edit || !Self.usesTapToEdit {
-                    ToolbarItem(placement: .topBarTrailing) { attachMenu }
                 }
                 ToolbarItem(placement: .topBarTrailing) { moreMenu(note) }
             }
@@ -130,6 +129,9 @@ struct NoteEditorView: View {
                 if case .success(let urls) = result { for url in urls { addFile(url) } }
             }
             .quickLookPreview($previewURL)
+            .noteInsertPresentations(inserts, attachments: store.attachments,
+                                     actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment,
+                                                                onTableFinished: finishTable, onEditTableAsText: { beginEditing(atLine: $0) }))
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -157,6 +159,7 @@ struct NoteEditorView: View {
                 // A running Bible Study session starts with the cursor below its new section.
                 if isRunningSession { selection = TextSelection(insertionPoint: text.endIndex) }
                 refreshShareURLs()
+                resumeTextRecognition()
             }
             // Debounced saving: every keystroke restarts the wait.
             .task(id: text) {
@@ -172,7 +175,7 @@ struct NoteEditorView: View {
                 saveText()
                 // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
                 // neither an empty one to remove nor an attachment list to trim while one of them is open.
-                guard !isTakingPhoto, previewURL == nil else { return }
+                guard !isTakingPhoto, previewURL == nil, !inserts.isPresenting else { return }
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
@@ -203,15 +206,23 @@ struct NoteEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 NoteMarkdownView(markdown: text, attachments: store.attachments,
-                                 attachmentDisplays: store.attachments?.displays(of: noteID) ?? [:],
+                                 attachmentDisplays: attachmentDisplays,
                                  onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment,
                                  onEdit: Self.usesTapToEdit ? { beginEditing(atLine: $0) } : nil,
                                  onUnansweredTap: Self.usesTapToEdit ? { fraction in
                                      beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
-                                 } : nil)
+                                 } : nil,
+                                 onEditTable: openTable(at:),
+                                 contextMenu: attachmentMenu)
                     .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
+    }
+
+    /// Name, size and kind of the attachments for the page; read again when recognition of a scan finished (`inserts.revision`).
+    private var attachmentDisplays: [UUID: NoteAttachmentDisplay] {
+        _ = inserts.revision
+        return store.attachments?.displays(of: noteID) ?? [:]
     }
 
     /// The gratitude of a morning entry stays in the routine record; the editor only shows it as a card above the text.
@@ -314,8 +325,13 @@ struct NoteEditorView: View {
         saveText()
     }
 
-    private func openAttachment(_ id: UUID) {
-        previewURL = store.attachments?.exportURL(for: id)
+    /// A drawing opens in its own large view, everything else in Quick Look.
+    func openAttachment(_ id: UUID) {
+        if store.attachments?.record(id: id)?.roleRaw == NoteAttachmentStore.Role.drawing.rawValue {
+            inserts.cover = .drawingViewer(id)
+        } else {
+            previewURL = store.attachments?.exportURL(for: id)
+        }
     }
 
     // MARK: Texts

@@ -657,16 +657,17 @@ final class AppEnvironment {
 
     /// A note as the search sees it. The search reads the plain text only: no Markdown, no HTML, no attachment references.
     /// `gratitude` is the gratitude of the day of a morning note; the app search appends it to the text, the assistant never gets it.
-    /// A hidden note (`isConcealed`: protected and not unlocked) carries its title line only, and no gratitude, so the search finds
-    /// it by its title and nothing of the text stays in the search model (NL4a).
-    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = [],
+    /// A hidden note (`isConcealed`: protected and not unlocked) carries its title line only, and no gratitude and no scan text, so the
+    /// search finds it by its title and nothing of the note stays in the search model (NL4a).
+    /// `scanText` is the text recognised in the scans of the note; the app search passes it, the assistant never does.
+    static func searchItem(for note: NoteRecord, folderNames: [UUID: String], gratitude: [String] = [], scanText: String = "",
                            isConcealed: Bool = false) -> NoteSearchItem {
         let folderName = note.kind == .free ? note.folderID.flatMap { folderNames[$0] } : nil
         let text = isConcealed ? NoteText.title(note.text)
             : ([MarkdownText.plainText(note.text)] + gratitude).joined(separator: "\n")
         return NoteSearchItem(id: note.id, text: text, kindLabel: folderName ?? kindLabel(of: note.kind),
                               updatedAt: note.updatedAt, dayKey: note.kind == .free || note.kind == .bibleStudy ? nil : note.dayKey,
-                              isConcealed: isConcealed)
+                              isConcealed: isConcealed, scanText: isConcealed ? "" : scanText)
     }
 
     /// The notes the assistant's `search` may read: only what `NoteToolAccess` shows, never the gratitude of a day.
@@ -677,9 +678,11 @@ final class AppEnvironment {
     }
 
     /// What the app search reads (not the assistant): the live notes, the gratitude of a day with a morning note appended to that
-    /// note's text, and every day that only has gratitude as an item of its own.
+    /// note's text, and every day that only has gratitude as an item of its own. `scanTexts` gives the text recognised in the
+    /// scans of a note (by note ID); the search finds a scan by it.
     static func appSearchNotes(live: [NoteRecord], folderNames: [UUID: String], gratitudeDays: [PlanDay: [String]],
-                               calendar: Calendar, isConcealed: (NoteRecord) -> Bool = { _ in false }) -> [NoteSearchItem] {
+                               calendar: Calendar, scanTexts: [UUID: String] = [:],
+                               isConcealed: (NoteRecord) -> Bool = { _ in false }) -> [NoteSearchItem] {
         var morningDays = Set<PlanDay>()
         var items = live.map { note -> NoteSearchItem in
             var gratitude: [String] = []
@@ -688,10 +691,21 @@ final class AppEnvironment {
                 morningDays.insert(day)
                 gratitude = concealed ? [] : gratitudeDays[day] ?? []
             }
-            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude, isConcealed: concealed)
+            return searchItem(for: note, folderNames: folderNames, gratitude: gratitude, scanText: scanTexts[note.id] ?? "",
+                              isConcealed: concealed)
         }
         items += gratitudeSearchItems(gratitudeDays: gratitudeDays, morningNoteDays: morningDays, calendar: calendar)
         return items
+    }
+
+    /// The text recognised in the scans of each note that has any, by note ID.
+    static func scanTexts(of notes: [NoteRecord], attachments: NoteAttachmentStore?) -> [UUID: String] {
+        guard let attachments else { return [:] }
+        let index = attachments.index()
+        return notes.reduce(into: [:]) { result, note in
+            let text = NoteAttachmentStore.scanText(text: note.text, index: index)
+            if !text.isEmpty { result[note.id] = text }
+        }
     }
 
     /// The days that only have gratitude, one search item each: "Dankbar für: A · B", labelled "Tagesstart", with an id derived
@@ -787,8 +801,9 @@ final class AppEnvironment {
                 let folderNames = Self.folderNames(notes)
                 // Hidden notes are found by their title only, until the lock is open (NL4a).
                 let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: notes.folders().map(\.info))
-                return Self.appSearchNotes(live: notes.notes(), folderNames: folderNames, gratitudeDays: routines.gratitudeDays(),
-                                           calendar: planning.calendar,
+                let live = notes.notes()
+                return Self.appSearchNotes(live: live, folderNames: folderNames, gratitudeDays: routines.gratitudeDays(),
+                                           calendar: planning.calendar, scanTexts: Self.scanTexts(of: live, attachments: notes.attachments),
                                            isConcealed: { noteLock.isConcealed($0, privateFolderIDs: privateFolderIDs) })
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
@@ -874,6 +889,11 @@ final class AppEnvironment {
         guard routineUpdates == nil else { return }
         // An untouched three-point list of an earlier version is replaced before the first reminders are planned.
         routineStore.replaceLegacySuggestion()
+        // Once per installation: "Helle Lichter ausmachen" of an untouched five-point list reminds 60 minutes before bedtime.
+        if !settings.lightsOffsetUpgradeDone {
+            settings.lightsOffsetUpgradeDone = true
+            routineStore.upgradeLightsOffset()
+        }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()

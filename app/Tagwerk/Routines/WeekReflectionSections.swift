@@ -74,14 +74,25 @@ struct WeekReflectionFields: View {
 
     var body: some View {
         Section {
-            TextField("Was lief gut?", text: $reflection.wentWell, axis: .vertical).lineLimit(2...8).keyboardDoneButton()
-            TextField("Belastet mich etwas?", text: $reflection.burdens, axis: .vertical).lineLimit(2...8).keyboardDoneButton()
-            TextField("Wie laufen meine Ziele, Projekte und Tasks?", text: $reflection.goalsProgress, axis: .vertical)
-                .lineLimit(2...8).keyboardDoneButton()
+            question("Was lief gut?", text: $reflection.wentWell)
+            question("Belastet mich etwas?", text: $reflection.burdens)
+            question("Wie laufen meine Ziele, Projekte und Tasks?", text: $reflection.goalsProgress)
         } header: {
             Text("Reflexion")
         } footer: {
             Text("Alle Felder sind freiwillig. Die Reflexion liegt nur auf diesem iPhone.")
+        }
+    }
+}
+
+extension WeekReflectionFields {
+    /// One question: the question stays visible above its field, also once it holds an answer (RO8b). The field is named after
+    /// the question for VoiceOver.
+    private func question(_ title: LocalizedStringKey, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline.weight(.semibold))
+            TextField("Antwort", text: text, axis: .vertical).lineLimit(2...8).keyboardDoneButton()
+                .accessibilityLabel(title)
         }
     }
 }

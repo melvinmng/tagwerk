@@ -266,6 +266,21 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func backup_roundTripsOffer() throws {
+        sourceSettings.bibleStudyOffer = .both
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(target.settings.bibleStudyOffer == .both)
+        // An older backup without the field keeps the evening as the place of Bible Study.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["bibleStudyOfferRaw"] = nil
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(fresh.settings.bibleStudyOffer == .evening)
+    }
+
     @Test func focusStartSettings_roundTrip() throws {
         sourceSettings.focusAsksDurationAtStart = false
         sourceSettings.focusLastStartMinutes = 45
@@ -1057,6 +1072,48 @@ struct BackupTests {
         // A second restore replaces the files instead of doubling them.
         try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
         #expect(target.files.records().count == 2)
+    }
+
+    @Test func drawingAndScan_roundTripWithCompanionAndText() throws {
+        let context = source.mainContext
+        let note = NoteRecord(text: "Skizze", now: clock.now)
+        context.insert(note)
+        try context.save()
+        let picture = try sourceFiles.addData(Data((0..<300).map { UInt8(($0 * 5 + 1) % 251) }), fileName: "Zeichnung.png", type: .png, role: .drawing, to: note.id)
+        let strokes = try sourceFiles.addData(Data((0..<200).map { UInt8(($0 * 11 + 2) % 251) }), fileName: "Zeichnung.strokes", type: .data, role: .strokes,
+                                              to: note.id, companionOf: picture.id)
+        let scan = try sourceFiles.addData(Data((0..<400).map { UInt8(($0 * 13 + 4) % 251) }), fileName: "Scan 20.11.2026.pdf", type: .pdf, role: .scan,
+                                           to: note.id, pageCount: 3)
+        sourceFiles.setRecognizedText("Kündigungsfrist drei Monate", for: scan.id)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        for original in [picture, strokes, scan] {
+            let restored = try #require(target.files.record(id: original.id))
+            #expect(restored.roleRaw == original.roleRaw && restored.companionOfID == original.companionOfID)
+            #expect(restored.pageCount == original.pageCount && restored.recognizedText == original.recognizedText && restored.noteID == note.id)
+            #expect(target.files.data(for: original.id) == sourceFiles.data(for: original.id))
+        }
+        #expect(target.files.companion(of: picture.id, role: .strokes)?.id == strokes.id)
+        #expect(target.files.record(id: scan.id)?.recognizedText == "Kündigungsfrist drei Monate" && target.files.record(id: scan.id)?.pageCount == 3)
+    }
+
+    @Test func olderAttachmentWithoutNewFields_restores() throws {
+        // A file written before scans and drawings carries none of the new keys.
+        let data = try backup.makeBackupData(includePrivate: true)
+        var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        var attachments = try #require(entities["noteAttachments"] as? [[String: Any]])
+        for index in attachments.indices {
+            for key in ["roleRaw", "companionOfID", "recognizedText", "pageCount"] { attachments[index].removeValue(forKey: key) }
+        }
+        entities["noteAttachments"] = attachments
+        object["entities"] = entities
+        let older = try JSONSerialization.data(withJSONObject: object)
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(older))
+        let restored = target.files.records()
+        #expect(Set(restored.map(\.fileName)) == ["Plan.pdf", "Gebet.pdf"])
+        #expect(restored.allSatisfy { $0.roleRaw == "" && $0.companionOfID == nil && $0.recognizedText == nil && $0.pageCount == 0 })
     }
 
     @Test func restore_ofOlderFileWithoutAttachments_works() throws {

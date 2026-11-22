@@ -9,8 +9,10 @@ import WebKit
 /// - The page carries a Content Security Policy (`NoteHTMLRenderer.contentSecurityPolicy`).
 /// - A content rule list blocks every load over http, https, ws, wss, ftp, data and blob.
 /// - The page has no base URL and the web view only follows the links this view lets through: web, mail and phone
-///   links open outside the app, attachments open in Quick Look, checkbox links flip the checkbox.
-/// - Images come from `tagwerk-attachment://<id>`, answered from `NoteAttachmentStore` and nowhere else.
+///   links open outside the app, attachments open in Quick Look, checkbox links flip the checkbox, table links open
+///   the table editor.
+/// - Images come from `tagwerk-attachment://<id>`, answered from `NoteAttachmentStore` and nowhere else; for a PDF the
+///   answer is the picture of its first page.
 struct NoteMarkdownView: UIViewRepresentable {
     let markdown: String
     let attachments: NoteAttachmentStore?
@@ -22,6 +24,8 @@ struct NoteMarkdownView: UIViewRepresentable {
     var onEdit: ((_ line: Int?) -> Void)?
     /// A tap the page did not answer: the fraction of the page height (stage B of the line mapping).
     var onUnansweredTap: ((_ fraction: Double) -> Void)?
+    /// A tap on a table: its number among the tables of the note (`MarkdownTable.blocks`). Without it the tables have no links.
+    var onEditTable: ((_ index: Int) -> Void)?
     /// Native context menu for a long press on a link of the page (attachments, checkboxes); `nil` shows none.
     var contextMenu: ((_ url: URL) -> UIMenu?)?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -30,6 +34,7 @@ struct NoteMarkdownView: UIViewRepresentable {
         let coordinator = Coordinator(onToggleCheckbox: onToggleCheckbox, onOpenAttachment: onOpenAttachment)
         coordinator.onEdit = onEdit
         coordinator.onUnansweredTap = onUnansweredTap
+        coordinator.onEditTable = onEditTable
         coordinator.contextMenu = contextMenu
         return coordinator
     }
@@ -68,8 +73,9 @@ struct NoteMarkdownView: UIViewRepresentable {
         context.coordinator.onOpenAttachment = onOpenAttachment
         context.coordinator.onEdit = onEdit
         context.coordinator.onUnansweredTap = onUnansweredTap
+        context.coordinator.onEditTable = onEditTable
         context.coordinator.contextMenu = contextMenu
-        let options = NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays, editLinks: onEdit != nil)
+        let options = NoteHTMLRenderer.RenderOptions(attachments: attachmentDisplays, editLinks: onEdit != nil, tableLinks: onEditTable != nil)
         let body = NoteHTMLRenderer.html(markdown: markdown, options: options)
         context.coordinator.show(NoteHTMLRenderer.page(body: body, textScale: Self.textScale(for: dynamicTypeSize)))
     }
@@ -118,6 +124,7 @@ struct NoteMarkdownView: UIViewRepresentable {
         var onOpenAttachment: (UUID) -> Void
         var onEdit: ((Int?) -> Void)?
         var onUnansweredTap: ((Double) -> Void)?
+        var onEditTable: ((Int) -> Void)?
         var contextMenu: ((URL) -> UIMenu?)?
         weak var webView: WKWebView?
         private var rulesReady = false
@@ -234,6 +241,8 @@ struct NoteMarkdownView: UIViewRepresentable {
                 if let index = Int(url.absoluteString.dropFirst(NoteHTMLRenderer.toggleScheme.count + 1)) { onToggleCheckbox(index) }
             case NoteEditTarget.scheme:
                 if let target = NoteEditTarget.parse(url.absoluteString) { onEdit?(target.isEnd ? nil : target.line) }
+            case MarkdownTable.scheme:
+                if let index = MarkdownTable.index(inLink: url.absoluteString) { onEditTable?(index) }
             case MarkdownText.attachmentScheme:
                 if let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString) { onOpenAttachment(id) }
             case "http", "https", "mailto", "tel":
@@ -246,29 +255,47 @@ struct NoteMarkdownView: UIViewRepresentable {
 
     // MARK: Attachment images
 
-    /// Answers `tagwerk-attachment://<id>` with the picture of that attachment. Everything else is a 404: unknown IDs and
-    /// files that are not pictures.
+    /// Answers `tagwerk-attachment://<id>` with the picture of that attachment, or the first page of a PDF. Everything else is
+    /// a 404: unknown IDs and files that are neither.
     @MainActor
     final class AttachmentSchemeHandler: NSObject, WKURLSchemeHandler {
         private let attachments: NoteAttachmentStore?
 
         init(attachments: NoteAttachmentStore?) { self.attachments = attachments }
 
+        /// The first page of a PDF as it is shown in the page (the longer side in pixels).
+        static let pdfPreviewEdge: CGFloat = 1024
+        private let previews = NSCache<NSString, NSData>()
+
         func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
             let url = urlSchemeTask.request.url
             guard let url, let host = url.host(), let id = UUID(uuidString: host), let record = attachments?.record(id: id),
-                  let type = UTType(record.typeIdentifier), type.conforms(to: .image), let data = attachments?.data(for: id) else {
+                  let type = UTType(record.typeIdentifier), let served = served(id: id, record: record, type: type) else {
                 fail(urlSchemeTask, url: url)
                 return
             }
-            let headers = ["Content-Type": type.preferredMIMEType ?? "image/jpeg", "Content-Length": String(data.count)]
+            let headers = ["Content-Type": served.mimeType, "Content-Length": String(served.data.count)]
             if let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers) {
                 urlSchemeTask.didReceive(response)
-                urlSchemeTask.didReceive(data)
+                urlSchemeTask.didReceive(served.data)
                 urlSchemeTask.didFinish()
             } else {
                 fail(urlSchemeTask, url: url)
             }
+        }
+
+        /// What the page may show for an attachment: a picture as it is, a PDF as the picture of its first page, nothing else.
+        private func served(id: UUID, record: NoteAttachmentRecord, type: UTType) -> (data: Data, mimeType: String)? {
+            if type.conforms(to: .image) {
+                return attachments?.data(for: id).map { ($0, type.preferredMIMEType ?? "image/jpeg") }
+            }
+            guard type.conforms(to: .pdf) else { return nil }
+            // The record's size changes when the file does, so a replaced file is not served from the cache.
+            let key = "\(id.uuidString)-\(record.byteCount)" as NSString
+            if let cached = previews.object(forKey: key) { return (cached as Data, "image/jpeg") }
+            guard let page = attachments?.thumbnail(for: id, edge: Self.pdfPreviewEdge), let jpeg = page.jpegData(compressionQuality: 0.8) else { return nil }
+            previews.setObject(jpeg as NSData, forKey: key)
+            return (jpeg, "image/jpeg")
         }
 
         func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}

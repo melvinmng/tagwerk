@@ -32,6 +32,19 @@ public enum NoteEditTarget {
         return offset
     }
 
+    /// The 1-based source line that contains the cursor at the character `offset` (the inverse of `offset(endOfLine:in:)`):
+    /// the line breaks before the cursor plus one. A cursor behind the text is on the last line.
+    public static func line(atOffset offset: Int, in text: String) -> Int {
+        var line = 1
+        var position = 0
+        for character in text {
+            if position >= offset { break }
+            if isLineBreak(character) { line += 1 }
+            position += 1
+        }
+        return line
+    }
+
     /// Stage B: the source line for a tap at `fraction` (0…1) of the page height: the nearest non-empty line to
     /// `fraction × lineCount`, searching downwards first. Empty text gives line 1.
     public static func approximateLine(fraction: Double, in text: String) -> Int {

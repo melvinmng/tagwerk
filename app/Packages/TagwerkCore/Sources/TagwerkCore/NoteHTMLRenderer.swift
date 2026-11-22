@@ -3,16 +3,22 @@ import Markdown
 
 /// What the page needs to know about an attachment of the note.
 public struct NoteAttachmentDisplay: Sendable, Equatable {
-    public enum Kind: Sendable, Equatable { case image, file }
+    /// `scan` is a PDF with a preview of its first page; `pages` is its number of pages. `drawing` is the picture of a drawing,
+    /// shown on a light sheet of paper.
+    public enum Kind: Sendable, Equatable { case image, file, scan(pages: Int), drawing }
     public var name: String
     /// "1,2 MB", already formatted by the app.
     public var detail: String
     public var kind: Kind
+    /// Changes when the bytes of the attachment change under the same ID (a drawing that was edited). It goes into the address
+    /// of the picture, so the page loads it again.
+    public var version: Int
 
-    public init(name: String, detail: String = "", kind: Kind = .file) {
+    public init(name: String, detail: String = "", kind: Kind = .file, version: Int = 0) {
         self.name = name
         self.detail = detail
         self.kind = kind
+        self.version = version
     }
 }
 
@@ -32,10 +38,14 @@ public enum NoteHTMLRenderer {
         public var attachments: [UUID: NoteAttachmentDisplay] = [:]
         /// Wraps the text of the page in links that open the editor at that source line.
         public var editLinks = false
+        /// Wraps the text of every table cell in a link `tagwerk-table:<index>` that opens the table editor. The index is the
+        /// position among `MarkdownTable.blocks(in:)`; tables inside quotes and lists have no link.
+        public var tableLinks = false
 
-        public init(attachments: [UUID: NoteAttachmentDisplay] = [:], editLinks: Bool = false) {
+        public init(attachments: [UUID: NoteAttachmentDisplay] = [:], editLinks: Bool = false, tableLinks: Bool = false) {
             self.attachments = attachments
             self.editLinks = editLinks
+            self.tableLinks = tableLinks
         }
     }
 
@@ -91,6 +101,8 @@ public enum NoteHTMLRenderer {
         a.e.block { display: block; }
         a.e.tail { display: block; min-height: 50vh; }
         a.img { display: inline-block; max-width: 100%; }
+        a.img.paper { display: block; }
+        a.img.paper img { width: 100%; background: #fff; border: 1px solid var(--line); box-sizing: border-box; }
         a.task-box { display: inline-flex; min-width:44px; min-height:44px; align-items: center; justify-content: center;
                      vertical-align: top; margin: calc((1.45em - 44px) / 2) calc(.4em + (1.1em - 44px) / 2) calc((1.45em - 44px) / 2) calc((1.1em - 44px) / 2); }
         a.task-box .box { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 1.1em; height: 1.1em;
@@ -102,14 +114,24 @@ public enum NoteHTMLRenderer {
         a.chip::before { content: "▤"; }
         a.chip .name { min-width: 0; overflow-wrap: anywhere; }
         a.chip .detail { color: var(--muted); font-size: .85em; }
+        a.scan { display: flex; align-items: center; gap: .8em; min-height: 44px; box-sizing: border-box; max-width: 100%; margin: .3em 0; padding: .5em;
+                 background: var(--code); border: 1px solid var(--line); border-radius: 10px; color: var(--text); }
+        a.scan img { flex: none; width: 64px; max-height: none; border-radius: 4px; border: 1px solid var(--line); background: #fff; }
+        a.scan .meta { display: flex; flex-direction: column; min-width: 0; }
+        a.scan .name { font-weight: 600; overflow-wrap: anywhere; }
+        a.scan .detail { color: var(--muted); font-size: .85em; }
         blockquote { margin: .6em 0; padding: 0 0 0 .9em; border-left: 3px solid var(--line); color: var(--muted); }
         code { font: .9em ui-monospace, Menlo, monospace; background: var(--code); border-radius: 4px; padding: .05em .3em; }
         pre { background: var(--code); border-radius: 8px; padding: .6em .8em; overflow-x: auto; }
         pre code { background: none; padding: 0; }
         hr { border: 0; border-top: 1px solid var(--line); margin: 1em 0; }
-        table { border-collapse: collapse; margin: .6em 0; max-width: 100%; display: block; overflow-x: auto; }
-        th, td { border: 1px solid var(--line); padding: .3em .6em; vertical-align: top; }
-        th { background: var(--code); }
+        div.table { margin: .6em 0; overflow-x: auto; padding-right: 16px;
+                    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+                    mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent); }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid var(--line); padding: .3em .6em; vertical-align: top; max-width: 200pt; white-space: normal; }
+        th { background: var(--code); font-weight: 600; }
+        a.t { color: inherit; -webkit-touch-callout: none; }
         td.right, th.right { text-align: right; } td.center, th.center { text-align: center; }
         img { max-width:100%; max-height:40vh; width: auto; height: auto; object-fit:contain; border-radius: 8px; }
         mark { background: #ffe66d; color: #1c1c1e; }
@@ -122,6 +144,12 @@ public enum NoteHTMLRenderer {
     }
 
     private static let darkVariables = "--text: #f2f2f7; --muted: #aeaeb2; --line: #48484a; --code: #2c2c2e; --accent: #0a84ff;"
+
+    /// Where the page loads the picture of an attachment from. `version` goes into the query, which the app ignores, so an
+    /// edited picture under the same ID reaches the page as new content.
+    static func pictureAddress(of id: UUID, version: Int) -> String {
+        "\(HTMLSanitizer.imageScheme)://\(id.uuidString)" + (version > 0 ? "?v=\(version)" : "")
+    }
 
     // MARK: Escaping
 
@@ -147,8 +175,14 @@ public enum NoteHTMLRenderer {
         /// The checkboxes are numbered in document order, like `MarkdownText.togglingCheckbox` counts them.
         var checkboxIndex = 0
         var sanitizer = HTMLSanitizer()
-        /// Greater than zero inside a real link or a table: no edit link there (no anchor inside an anchor).
+        /// Greater than zero inside a real link: no other link there (no anchor inside an anchor).
         var anchorDepth = 0
+        /// Inside a table: no edit link there; a table is edited in its own sheet.
+        var insideTable = false
+        /// The number of the next table that gets a link; tables are numbered in document order like `MarkdownTable.blocks`.
+        var tableIndex = 0
+        /// The link number of the table whose cells are being written, `nil` without links.
+        var tableLink: Int?
 
         init(options: RenderOptions) { self.options = options }
 
@@ -194,10 +228,17 @@ public enum NoteHTMLRenderer {
         }
 
         /// Whether the next piece of text may become an edit link.
-        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !sanitizer.isSuppressing }
+        private var canLinkForEditing: Bool { options.editLinks && anchorDepth == 0 && !insideTable && !sanitizer.isSuppressing }
 
-        /// Wraps an inline piece in the edit link of the source line of `markup`.
+        /// The link of a piece of a table cell: it opens the table editor.
+        private func tableLinked(_ html: String) -> String {
+            guard let index = tableLink, anchorDepth == 0, !sanitizer.isSuppressing, !html.isEmpty else { return html }
+            return "<a class=\"t\" href=\"\(MarkdownTable.scheme):\(index)\">\(html)</a>"
+        }
+
+        /// Wraps an inline piece in the edit link of the source line of `markup`, or in the table link inside a table.
         private func editLinked(_ html: String, for markup: Markup) -> String {
+            if insideTable { return tableLinked(html) }
             guard canLinkForEditing, !html.isEmpty, let line = markup.range?.lowerBound.line else { return html }
             return "<a class=\"e\" href=\"\(NoteEditTarget.scheme):\(line)\">\(html)</a>"
         }
@@ -234,9 +275,14 @@ public enum NoteHTMLRenderer {
         }
 
         mutating func visitTable(_ table: Table) -> String {
-            // A table is edited in its own sheet (NX); there is no edit link inside.
-            anchorDepth += 1
-            defer { anchorDepth -= 1 }
+            // Only a table that stands on its own is numbered, as `MarkdownTable.blocks(in:)` finds it.
+            let isBlock = table.parent is Document
+            if isBlock {
+                if options.tableLinks { tableLink = tableIndex }
+                tableIndex += 1
+            }
+            insideTable = true
+            defer { insideTable = false; tableLink = nil }
             let alignments = table.columnAlignments
             func row(_ cells: some Sequence<Table.Cell>, tag: String) -> String {
                 var output = "<tr>"
@@ -249,13 +295,15 @@ public enum NoteHTMLRenderer {
                     }
                     var inner = ""
                     for child in cell.children { inner += visit(child) }
+                    // An empty cell still needs something to tap.
+                    if inner.isEmpty { inner = tableLinked("&nbsp;") }
                     output += "<\(tag)\(cssClass)>\(inner)</\(tag)>"
                 }
                 return output + "</tr>\n"
             }
-            var output = "<table>\n<thead>\n\(row(table.head.cells, tag: "th"))</thead>\n<tbody>\n"
+            var output = "<div class=\"table\">\n<table>\n<thead>\n\(row(table.head.cells, tag: "th"))</thead>\n<tbody>\n"
             for bodyRow in table.body.rows { output += row(bodyRow.cells, tag: "td") }
-            return output + "</tbody>\n</table>\n"
+            return output + "</tbody>\n</table>\n</div>\n"
         }
 
         // Inlines
@@ -290,6 +338,12 @@ public enum NoteHTMLRenderer {
             if let id = HTMLSanitizer.attachmentID(inReference: target) {
                 let display = options.attachments[id]
                 let name = label.isEmpty ? NoteHTMLRenderer.escape(display?.name ?? String(id.uuidString.prefix(8))) : label
+                if let display, case .scan(let pages) = display.kind {
+                    // A scan: the first page as a preview, the name and what the app says about it (pages, size, recognition).
+                    let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
+                    return "<a class=\"scan\" href=\"\(target)\" data-pages=\"\(pages)\"><img src=\"\(NoteHTMLRenderer.pictureAddress(of: id, version: display.version))\" alt=\"\">"
+                        + "<span class=\"meta\"><span class=\"name\">\(name)</span>\(detail)</span></a>"
+                }
                 if let display, display.kind == .file {
                     let detail = display.detail.isEmpty ? "" : "<span class=\"detail\">\(NoteHTMLRenderer.escape(display.detail))</span>"
                     return "<a class=\"chip\" href=\"\(target)\"><span class=\"name\">\(name)</span>\(detail)</a>"
@@ -303,9 +357,12 @@ public enum NoteHTMLRenderer {
             guard !sanitizer.isSuppressing else { return "" }
             // Only attachments are shown; a remote or any other image source is never put on the page.
             guard let id = image.source.flatMap(HTMLSanitizer.attachmentID(inReference:)) else { return "[Bild]" }
-            let picture = "<img src=\"\(HTMLSanitizer.imageScheme)://\(id.uuidString)\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
-            // A tap opens the picture large (Quick Look); it never starts writing.
-            return anchorDepth == 0 ? "<a class=\"img\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
+            let display = options.attachments[id]
+            let picture = "<img src=\"\(NoteHTMLRenderer.pictureAddress(of: id, version: display?.version ?? 0))\" alt=\"\(HTMLSanitizer.escapeAttribute(image.plainText))\">"
+            if insideTable { return tableLinked(picture) }
+            // A tap opens the picture large; it never starts writing. A drawing lies on a light sheet of paper.
+            let cssClass = display?.kind == .drawing ? "img paper" : "img"
+            return anchorDepth == 0 ? "<a class=\"\(cssClass)\" href=\"\(MarkdownText.attachmentScheme):\(id.uuidString)\">\(picture)</a>" : picture
         }
 
         private mutating func wrap(_ tag: String, _ markup: Markup) -> String {
