@@ -59,7 +59,7 @@ struct ShoppingListView: View {
             }
             .confirmationDialog(Self.removeCompletedQuestion(count: completedTotal), isPresented: $confirmsRemoveCompleted,
                                 titleVisibility: .visible) {
-                Button("Alle erledigten löschen", role: .destructive) {
+                Button("Entfernen", role: .destructive) {
                     Task {
                         await model.removeAllCompleted()
                         completedTotal = await model.allCompletedCount()
@@ -127,7 +127,14 @@ struct ShoppingListView: View {
             .onChange(of: model.openItems.count) { translation?.refreshOffer() }
             .onChange(of: model.state) { translation?.refreshOffer() }
             .onChange(of: environment.settings.contentLanguages.shoppingLanguage()) { translation?.refreshOffer() }
-            .onChange(of: scenePhase) { _, phase in if phase == .active { translation?.refreshOffer() } }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    translation?.refreshOffer()
+                    refreshCompletedTotal()
+                }
+            }
+            // The menu names the number of completed items, so it follows every check-off and removal.
+            .onChange(of: model.completedItems.count) { refreshCompletedTotal() }
             .onChange(of: translation?.notice) { _, line in
                 guard let line else { return }
                 notice = line
@@ -258,7 +265,10 @@ struct ShoppingListView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .listStyle(.insetGrouped)
-        .refreshable { await model.reload() }
+        .refreshable {
+            await model.reload()
+            completedTotal = await model.allCompletedCount()
+        }
     }
 
     private func sectionHeader(_ section: ShoppingSection) -> some View {
@@ -343,37 +353,46 @@ struct ShoppingListView: View {
 
     // MARK: Menu
 
+    /// The menu "⋯" in three groups (EK1b): adding, ordering, tidying up. The tidying entries carry the number of items they touch,
+    /// and only "Liste leeren", the one with the larger damage, is red.
     private var menu: some View {
-        Menu {
-            Button(action: startSorting) {
-                Label("Mit ChatGPT sortieren", systemImage: "sparkles")
-                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+        let busy = sorting != nil || translation?.isTranslating == true
+        let completedCount = Self.completedCount(total: completedTotal, shown: model.completedItems.count)
+        let listCount = model.openItems.count + completedCount
+        return Menu {
+            Section {
+                Button { showsRecipe = true } label: {
+                    Label("Rezept hinzufügen …", systemImage: "fork.knife")
+                    if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+                }
+                .disabled(!environment.ai.isSignedIn)
             }
-            .disabled(!environment.ai.isSignedIn || sorting != nil || translation?.isTranslating == true)
-            Button(action: startTranslating) {
-                Label("Artikel übersetzen …", systemImage: "globe")
-                Text(environment.ai.isSignedIn ? Self.translateSubtitle(environment.settings.contentLanguages.shoppingLanguage())
-                                               : String(localized: "Anmeldung unter Einstellungen › KI"))
+            Section {
+                Button(action: startSorting) {
+                    Label("Mit ChatGPT sortieren", systemImage: "sparkles")
+                    if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+                }
+                .disabled(!environment.ai.isSignedIn || busy)
+                Button(action: startTranslating) {
+                    Label("Artikel übersetzen …", systemImage: "globe")
+                    Text(environment.ai.isSignedIn ? Self.translateSubtitle(environment.settings.contentLanguages.shoppingLanguage())
+                                                   : String(localized: "Anmeldung unter Einstellungen › KI"))
+                }
+                .disabled(!environment.ai.isSignedIn || model.openItems.isEmpty || busy)
+                Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
             }
-            .disabled(!environment.ai.isSignedIn || model.openItems.isEmpty || sorting != nil || translation?.isTranslating == true)
-            Button { showsRecipe = true } label: {
-                Label("Rezept hinzufügen …", systemImage: "fork.knife")
-                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+            Section {
+                Button(action: askRemoveCompleted) {
+                    Label(Self.removeCompletedTitle(count: completedCount), systemImage: "checkmark.circle")
+                }
+                .disabled(completedCount == 0)
+                .accessibilityIdentifier(AccessibilityID.Shopping.removeCompleted)
+                Button(role: .destructive, action: askClearList) {
+                    Label(Self.clearListTitle(count: listCount), systemImage: "trash")
+                }
+                .disabled(listCount == 0)
+                .accessibilityIdentifier(AccessibilityID.Shopping.clearList)
             }
-            .disabled(!environment.ai.isSignedIn)
-            Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
-            Button(role: .destructive) {
-                askRemoveCompleted()
-            } label: {
-                Label("Alle erledigten löschen", systemImage: "trash")
-            }
-            .disabled(model.completedItems.isEmpty && completedTotal == 0)
-            Button(role: .destructive) {
-                askClearList()
-            } label: {
-                Label("Liste leeren", systemImage: "trash.slash")
-            }
-            .disabled(model.openItems.isEmpty && model.completedItems.isEmpty && completedTotal == 0)
         } label: {
             Image(systemName: "ellipsis")
         }
@@ -382,9 +401,23 @@ struct ShoppingListView: View {
 
     // MARK: Clearing
 
-    /// "12 erledigte Artikel löschen?"
+    /// "Erledigte entfernen (5)": the menu entry. Without completed items there is no number; the entry is greyed out.
+    static func removeCompletedTitle(count: Int) -> String {
+        count > 0 ? String(localized: "Erledigte entfernen (\(count))") : String(localized: "Erledigte entfernen")
+    }
+
+    /// "Liste leeren (17) …": the menu entry; the dots announce the confirmation.
+    static func clearListTitle(count: Int) -> String {
+        count > 0 ? String(localized: "Liste leeren (\(count)) …") : String(localized: "Liste leeren …")
+    }
+
+    /// How many completed items the menu names: the total of the whole list, or the section "Erledigt" if that is larger (a
+    /// check-off shows in the section before the total is read again).
+    static func completedCount(total: Int, shown: Int) -> Int { max(total, shown) }
+
+    /// "12 erledigte Artikel entfernen?"
     static func removeCompletedQuestion(count: Int) -> String {
-        String(localized: "\(count) erledigte Artikel löschen?")
+        String(localized: "\(count) erledigte Artikel entfernen?")
     }
 
     /// "Gesamte Liste leeren? 20 Artikel werden gelöscht."
@@ -393,6 +426,10 @@ struct ShoppingListView: View {
     }
 
     static var remindersNotice: String { String(localized: "Sie verschwinden auch aus Apple Erinnerungen.") }
+
+    private func refreshCompletedTotal() {
+        Task { completedTotal = await model.allCompletedCount() }
+    }
 
     /// Reads the number first, so the question names what is really deleted, including items older than seven days.
     private func askRemoveCompleted() {

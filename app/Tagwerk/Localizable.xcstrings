@@ -2268,7 +2268,18 @@
         }
       }
     },
+    "%lld erledigte Artikel entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %lld completed items?"
+          }
+        }
+      }
+    },
     "%lld erledigte Artikel löschen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4120,6 +4131,7 @@
       }
     },
     "Alle erledigten löschen": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -9244,12 +9256,21 @@
       }
     },
     "Erledigte entfernen": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove Completed"
+          }
+        }
+      }
+    },
+    "Erledigte entfernen (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove completed (%lld)"
           }
         }
       }
@@ -13285,6 +13306,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clear list"
+          }
+        }
+      }
+    },
+    "Liste leeren (%lld) …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear list (%lld) …"
+          }
+        }
+      }
+    },
+    "Liste leeren …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear list …"
           }
         }
       }

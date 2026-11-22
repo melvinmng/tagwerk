@@ -18,6 +18,12 @@ enum AccessibilityID {
         static let planButton = "focus.planButton"
     }
 
+    enum Shopping {
+        /// The entries "Erledigte entfernen (N)" and "Liste leeren (N) …" of the menu; the number in the title changes.
+        static let removeCompleted = "shopping.removeCompleted"
+        static let clearList = "shopping.clearList"
+    }
+
     enum Tasks {
         /// A task row (task list, search results); the title makes it unique.
         static func row(_ title: String) -> String { "tasks.row.\(title)" }
