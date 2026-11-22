@@ -572,8 +572,9 @@ struct RecipeInputView: View {
 
 // MARK: Result
 
-/// The ingredients found: a checkmark per row, items that are on the list already start unselected. At the top the question
-/// for how many servings to buy; the amounts follow it.
+/// The ingredients found: a checkmark per row. New items come first and start selected; items that are on the list already stand
+/// in their own section, start unselected and say what checking them does (EK4b). At the top the question for how many servings
+/// to buy; the amounts follow it, and each amount can be changed with a tap.
 struct RecipeResultView: View {
     @Environment(AppEnvironment.self) private var environment
     let result: RecipeImporter.Result
@@ -589,6 +590,11 @@ struct RecipeResultView: View {
     @State private var cookingServings: Int?
     @State private var savesNote: Bool
     @State private var isAdding = false
+    /// Amounts the user typed instead of the scaled ones, by candidate id. They stay when the servings change afterwards.
+    @State private var quantityOverrides: [String: String] = [:]
+    /// The ingredient whose amount the small field changes, and the text in it.
+    @State private var quantityEditID: String?
+    @State private var quantityDraft = ""
 
     init(result: RecipeImporter.Result, fromNote: Bool, model: ShoppingModel, onAdded: @escaping (String) -> Void,
          onDiscard: @escaping () -> Void) {
@@ -597,7 +603,7 @@ struct RecipeResultView: View {
         self.model = model
         self.onAdded = onAdded
         self.onDiscard = onDiscard
-        _deselected = State(initialValue: Set(result.candidates.filter(\.alreadyOnList).map(\.id)))
+        _deselected = State(initialValue: Self.initiallyDeselected(result.candidates))
         _baseServings = State(initialValue: result.servings)
         _savesNote = State(initialValue: Self.defaultSavesNote(fromNote: fromNote))
     }
@@ -608,6 +614,11 @@ struct RecipeResultView: View {
     private var locale: Locale { result.language.locale }
     /// The language the items go on the list in: the second language of the import, else the recipe's.
     private var listLocale: Locale { (result.shoppingLanguage ?? result.language).locale }
+
+    /// Items that are on the list already start unselected: checking one is a decision (raise or second entry), not a default.
+    static func initiallyDeselected(_ candidates: [RecipeImporter.Candidate]) -> Set<String> {
+        Set(candidates.filter(\.alreadyOnList).map(\.id))
+    }
 
     /// What "hinzufügen" puts on the list.
     static func selection(_ candidates: [RecipeImporter.Candidate], deselected: Set<String>) -> [RecipeImporter.Candidate] {
@@ -645,6 +656,47 @@ struct RecipeResultView: View {
         }
     }
 
+    /// The candidates as they go on the list: scaled for the servings, with the amounts the user typed instead (a typed amount
+    /// is free text: the amount in numbers and the unit of the shopping language are dropped, so it goes on the list as typed).
+    static func effective(_ candidates: [RecipeImporter.Candidate], base: Int?, target: Int?, locale: Locale,
+                          overrides: [String: String]) -> [RecipeImporter.Candidate] {
+        scaled(candidates: candidates, base: base, target: target, locale: locale).map { candidate in
+            guard let typed = overrides[candidate.id] else { return candidate }
+            var changed = candidate
+            let text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+            changed.quantity = text.isEmpty ? nil : text
+            changed.line = nil
+            changed.shoppingUnit = nil
+            return changed
+        }
+    }
+
+    // MARK: Items that are on the list
+
+    /// The line under an item that is on the list already: what is there and what checking it does.
+    static func existingLine(listed: ShoppingItem?, added: String?, locale: Locale) -> String {
+        guard let listed else { return String(localized: "schon auf der Liste") }
+        let current = listed.quantity
+        let merge = ShoppingQuantity.merge(existing: current, added: added, hasLongNotes: listed.hasLongNotes, locale: locale)
+        switch (merge, current) {
+        case (.raise(let total), let current?): return String(localized: "auf der Liste: \(current) · anhaken erhöht auf \(total)")
+        case (.raise(let total), nil): return String(localized: "auf der Liste: ohne Menge · anhaken setzt \(total)")
+        case (.secondEntry, let current?): return String(localized: "auf der Liste: \(current) · anhaken legt einen zweiten Eintrag an")
+        case (.secondEntry, nil): return String(localized: "auf der Liste: ohne Menge · anhaken legt einen zweiten Eintrag an")
+        case (.keep, let current?): return String(localized: "auf der Liste: \(current) · bleibt unverändert")
+        case (.keep, nil): return String(localized: "schon auf der Liste · bleibt unverändert")
+        }
+    }
+
+    /// "Neu · 3" and "Schon auf der Liste · 1": the headers of the two sections.
+    static func newHeader(count: Int) -> String { String(localized: "Neu · \(count)") }
+    static func listedHeader(count: Int) -> String { String(localized: "Schon auf der Liste · \(count)") }
+
+    /// "Portionen · 4 im Rezept": the header of the servings, which names the number the recipe is written for.
+    static func servingsHeader(recipeServings: Int?) -> String {
+        recipeServings.map { String(localized: "Portionen · \($0) im Rezept") } ?? String(localized: "Portionen")
+    }
+
     // MARK: Recipe note
 
     /// Whether "Auch als Rezept-Notiz sichern" starts on: not for a recipe that came from a note.
@@ -660,36 +712,27 @@ struct RecipeResultView: View {
     // MARK: Body
 
     var body: some View {
-        let shown = Self.scaled(candidates: candidates, base: baseServings, target: target, locale: locale)
+        let shown = Self.effective(candidates, base: baseServings, target: target, locale: locale, overrides: quantityOverrides)
+        let fresh = shown.filter { !$0.alreadyOnList }
+        let listed = shown.filter(\.alreadyOnList)
         List {
-            Section {
-                ValueStepper("Rezept für", value: $baseServings, start: Self.startServings, in: Self.servingsRange)
-                ValueStepper("Ich koche für", value: Binding(get: { target }, set: { cookingServings = $0 }),
-                             start: Self.startServings, in: Self.servingsRange)
-            } header: {
-                Text("Portionen")
-            } footer: {
-                if baseServings == nil {
-                    Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
+            servingsSection
+            if !fresh.isEmpty {
+                Section {
+                    ForEach(fresh) { candidate in row(candidate) }
+                } header: {
+                    Text(Self.newHeader(count: fresh.count))
+                } footer: {
+                    if listed.isEmpty { categoryFooter }
                 }
             }
-            Section {
-                ForEach(shown) { candidate in
-                    Button {
-                        if deselected.contains(candidate.id) { deselected.remove(candidate.id) } else { deselected.insert(candidate.id) }
-                    } label: {
-                        row(candidate, isOn: !deselected.contains(candidate.id))
-                    }
-                    .accessibilityAddTraits(deselected.contains(candidate.id) ? [] : .isSelected)
-                }
-            } footer: {
-                if result.readLocally {
-                    Text("Die Kategorien kommen aus deiner Einkaufsliste.")
-                    if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
-                        Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
-                    }
-                } else {
-                    Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
+            if !listed.isEmpty {
+                Section {
+                    ForEach(listed) { candidate in row(candidate) }
+                } header: {
+                    Text(Self.listedHeader(count: listed.count))
+                } footer: {
+                    categoryFooter
                 }
             }
             if !fromNote {
@@ -699,6 +742,14 @@ struct RecipeResultView: View {
                     Text("Legt eine Notiz im Ordner „Rezepte“ an, mit den Zutaten in den Mengen des Rezepts.")
                 }
             }
+        }
+        .alert(quantityEditTitle, isPresented: Binding(get: { quantityEditID != nil }, set: { if !$0 { quantityEditID = nil } })) {
+            TextField("Menge", text: $quantityDraft)
+            Button("Übernehmen") {
+                if let id = quantityEditID { quantityOverrides[id] = quantityDraft }
+                quantityEditID = nil
+            }
+            Button("Abbrechen", role: .cancel) { quantityEditID = nil }
         }
         .navigationTitle("Zutaten")
         .navigationBarTitleDisplayMode(.inline)
@@ -718,26 +769,85 @@ struct RecipeResultView: View {
         }
     }
 
-    private func row(_ candidate: RecipeImporter.Candidate, isOn: Bool) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(candidate.listName).foregroundStyle(.primary)
-                    // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
-                    if let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity {
-                        Text(quantity).foregroundStyle(Color.secondaryText)
-                    }
-                }
-                if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
-                    Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
-                }
-                Text(candidate.alreadyOnList ? candidate.category + " · " + String(localized: "schon auf der Liste") : candidate.category)
-                    .font(.subheadline).foregroundStyle(Color.secondaryText)
+    /// One row for the servings when the recipe names them: "Ich koche für" with the recipe's number in the header. Without a
+    /// number in the recipe there are two rows, because "Rezept für" has to be set first.
+    private var servingsSection: some View {
+        Section {
+            if result.servings == nil {
+                ValueStepper("Rezept für", value: $baseServings, start: Self.startServings, in: Self.servingsRange)
             }
-            Spacer(minLength: 0)
+            ValueStepper("Ich koche für", value: Binding(get: { target }, set: { cookingServings = $0 }),
+                         start: Self.startServings, in: Self.servingsRange)
+        } header: {
+            Text(Self.servingsHeader(recipeServings: result.servings))
+        } footer: {
+            if baseServings == nil {
+                Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
+            }
         }
+    }
+
+    @ViewBuilder private var categoryFooter: some View {
+        if result.readLocally {
+            Text("Die Kategorien kommen aus deiner Einkaufsliste.")
+            if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
+                Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
+            }
+        } else {
+            Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
+        }
+    }
+
+    /// The row: a checkmark and the name with its second line, and the amount as a button of its own that opens the small field.
+    private func row(_ candidate: RecipeImporter.Candidate) -> some View {
+        let isOn = !deselected.contains(candidate.id)
+        let quantity = RecipeImporter.listItem(for: candidate, locale: listLocale).quantity
+        return HStack(spacing: 0) {
+            Button {
+                if isOn { deselected.insert(candidate.id) } else { deselected.remove(candidate.id) }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(isOn ? Color.accentColor : Color.secondaryText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(candidate.listName).foregroundStyle(.primary)
+                        if candidate.shoppingName != nil, candidate.shoppingName != candidate.name {
+                            Text("Rezept: \(candidate.name)").font(.footnote).foregroundStyle(Color.secondaryText)
+                        }
+                        // A fixed grey: the hierarchical `.secondary` takes the tint of the button around the row and fails the contrast audit.
+                        Text(secondLine(candidate, quantity: quantity)).font(.subheadline).foregroundStyle(Color.secondaryText)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)  // inside a list row, default buttons all fire together
+            .accessibilityAddTraits(isOn ? .isSelected : [])
+            Button {
+                quantityDraft = quantity ?? ""
+                quantityEditID = candidate.id
+            } label: {
+                Text(quantity ?? String(localized: "Menge"))
+                    .foregroundStyle(quantity == nil ? AnyShapeStyle(Color.secondaryText) : AnyShapeStyle(.tint))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(String(localized: "Menge ändern, \(candidate.listName)"))
+            .accessibilityValue(quantity ?? String(localized: "ohne Menge"))
+        }
+    }
+
+    /// Under the name: the category, or for an item on the list what is there and what checking it does.
+    private func secondLine(_ candidate: RecipeImporter.Candidate, quantity: String?) -> String {
+        guard candidate.alreadyOnList else { return candidate.category }
+        let listed = model.openItems.first { ShoppingName.key($0.name) == candidate.id }
+        return Self.existingLine(listed: listed, added: quantity, locale: listLocale)
+    }
+
+    private var quantityEditTitle: String {
+        let name = candidates.first { $0.id == quantityEditID }?.listName ?? ""
+        return String(localized: "Menge von \(name)")
     }
 
     static func addTitle(count: Int) -> String {
@@ -747,7 +857,7 @@ struct RecipeResultView: View {
     private func add() {
         guard Self.canAdd(base: baseServings, selectedCount: selected.count) else { return }
         isAdding = true
-        let chosen = Self.scaled(candidates: selected, base: baseServings, target: target, locale: locale)
+        let chosen = Self.effective(selected, base: baseServings, target: target, locale: locale, overrides: quantityOverrides)
         // The note keeps the title, the servings and the amounts of the recipe, not the scaled ones.
         let note = Self.noteToSave(result, fromNote: fromNote, savesNote: savesNote, servings: baseServings)
         Task {
@@ -762,7 +872,7 @@ struct RecipeResultView: View {
 
     /// The line on the shopping page afterwards: how many went on the list, or the first error.
     static func resultLine(_ report: ShoppingModel.AddReport) -> String {
-        let count = report.added.count + report.reopened.count
+        let count = report.added.count + report.reopened.count + report.raised.count
         if let error = report.errorMessage, count == 0 { return error }
         return String(localized: "\(count) Artikel aus dem Rezept hinzugefügt.")
     }

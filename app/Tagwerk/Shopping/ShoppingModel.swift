@@ -24,6 +24,8 @@ final class ShoppingModel {
         var added: [String] = []
         var reopened: [String] = []
         var alreadyOnList: [String] = []
+        /// Names of open items whose quantity a recipe raised (EK4b); a second entry counts as added.
+        var raised: [String] = []
         /// Names that could not be written.
         var failed: [String] = []
         /// Text of the first failure.
@@ -156,10 +158,20 @@ final class ShoppingModel {
 
     // MARK: Adding
 
-    /// Adds items without creating duplicates: an open item of the same name stays (a given quantity replaces
+    /// What `add` does with an open item of the same name.
+    enum ExistingItemPolicy {
+        /// The item stays and a given quantity replaces its quantity (the input bar, Siri, the assistant).
+        case replaceQuantity
+        /// A recipe (EK4b): the quantity is raised by the given one when the two can be added; otherwise a second entry of the
+        /// same name is made. An item whose notes hold more than the quantity line is never overwritten, it gets the second
+        /// entry as well. The decimal separator of a raised quantity follows `locale`.
+        case raiseOrAppend(locale: Locale)
+    }
+
+    /// Adds items without creating duplicates: an open item of the same name stays (with `existing` deciding what happens to
     /// its quantity), a recently completed one is reopened, anything else becomes a new plain reminder.
     /// A caller that loaded the list just before passes `reloadFirst: false` to save the second read.
-    func add(_ items: [ParsedItem], reloadFirst: Bool = true) async -> AddReport {
+    func add(_ items: [ParsedItem], reloadFirst: Bool = true, existing policy: ExistingItemPolicy = .replaceQuantity) async -> AddReport {
         if reloadFirst { await reload() }
         var report = AddReport()
         guard state == .ready, let listID = settings.shoppingListID else {
@@ -177,8 +189,28 @@ final class ShoppingModel {
             guard !key.isEmpty else { continue }
             do {
                 if let existing = open[key] {
-                    open[key] = try settingQuantity(item.quantity, on: existing, reopening: false)
-                    report.alreadyOnList.append(existing.title)
+                    switch policy {
+                    case .replaceQuantity:
+                        open[key] = try settingQuantity(item.quantity, on: existing, reopening: false)
+                        report.alreadyOnList.append(existing.title)
+                    case .raiseOrAppend(let locale):
+                        let listed = ShoppingItem.quantity(fromNotes: existing.notes)
+                        switch ShoppingQuantity.merge(existing: listed.quantity, added: item.quantity, hasLongNotes: listed.hasLongNotes,
+                                                      locale: locale) {
+                        case .keep:
+                            report.alreadyOnList.append(existing.title)
+                        case .raise(let total):
+                            var raised = existing
+                            raised.notes = total
+                            open[key] = try store.save(raised, recurrence: .unchanged)
+                            report.raised.append(existing.title)
+                        case .secondEntry:
+                            // The first entry stays the one the name stands for; the new one only carries the recipe's quantity.
+                            _ = try store.create(title: item.name, notes: item.quantity, due: nil, ekPriority: 0, listID: listID,
+                                                 recurrence: nil)
+                            report.added.append(item.name)
+                        }
+                    }
                 } else if let existing = completed[key] {
                     open[key] = try settingQuantity(item.quantity, on: existing, reopening: true)
                     completed[key] = nil

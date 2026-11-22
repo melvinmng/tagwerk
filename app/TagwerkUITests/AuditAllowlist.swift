@@ -178,7 +178,7 @@ enum AuditAllowlist {
         // MARK: Recipe screens and settings (G1, G2)
         Entry(auditType: .contrast, labels: [
             "Rezepttext", "Füge die Zutatenliste oder das ganze Rezept ein\\. .*", "Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert\\. .*",
-            "Portionen", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Vorlesen", "ChatGPT", "Notiz",
+            "Portionen", "Portionen · \\d+ im Rezept", "Neu · \\d+", "Schon auf der Liste · \\d+", "Die Kategorien kommen aus deiner Einkaufsliste\\.", "Vorlesen", "ChatGPT", "Notiz",
             "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*",
             "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",

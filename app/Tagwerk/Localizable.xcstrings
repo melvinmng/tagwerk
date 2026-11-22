@@ -13823,6 +13823,26 @@
         }
       }
     },
+    "Menge von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount of %@"
+          }
+        }
+      }
+    },
+    "Menge ändern, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change amount, %@"
+          }
+        }
+      }
+    },
     "Menge, z. B. „2 Stück“": {
       "localizations": {
         "en": {
@@ -14504,6 +14524,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimate again"
+          }
+        }
+      }
+    },
+    "Neu · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New · %lld"
           }
         }
       }
@@ -16099,6 +16129,16 @@
         }
       }
     },
+    "Portionen · %lld im Rezept": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings · %lld in the recipe"
+          }
+        }
+      }
+    },
     "Posten": {
       "localizations": {
         "en": {
@@ -16784,6 +16824,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Schon auf der Liste · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on the list · %lld"
           }
         }
       }
@@ -21407,6 +21457,62 @@
         }
       }
     },
+    "auf der Liste: %@ · anhaken erhöht auf %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "auf der Liste: %1$@ · anhaken erhöht auf %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · checking raises it to %@"
+          }
+        }
+      }
+    },
+    "auf der Liste: %@ · anhaken legt einen zweiten Eintrag an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · checking adds a second entry"
+          }
+        }
+      }
+    },
+    "auf der Liste: %@ · bleibt unverändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: %@ · stays as it is"
+          }
+        }
+      }
+    },
+    "auf der Liste: ohne Menge · anhaken legt einen zweiten Eintrag an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: no amount · checking adds a second entry"
+          }
+        }
+      }
+    },
+    "auf der Liste: ohne Menge · anhaken setzt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on the list: no amount · checking sets it to %@"
+          }
+        }
+      }
+    },
     "aus": {
       "localizations": {
         "en": {
@@ -22294,6 +22400,16 @@
         }
       }
     },
+    "ohne Menge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no amount"
+          }
+        }
+      }
+    },
     "ohne Project": {
       "extractionState": "stale",
       "localizations": {
@@ -22361,6 +22477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "already on the list"
+          }
+        }
+      }
+    },
+    "schon auf der Liste · bleibt unverändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "already on the list · stays as it is"
           }
         }
       }
