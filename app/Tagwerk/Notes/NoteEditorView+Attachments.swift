@@ -29,26 +29,66 @@ extension NoteEditorView {
         let day = PlanDay(date: UITestMode.now(), calendar: environment.planning.calendar)
         let name = ScanPDFBuilder.fileName(for: day, existing: attachments.attachments(of: noteID).map(\.fileName))
         let pdf = ScanPDFBuilder.pdf(pages: pages)
-        run {
-            try attachments.addData(pdf, fileName: name, type: .pdf, role: .scan, to: noteID, pageCount: pages.count)
+        var scanID: UUID?
+        run { () throws -> NoteAttachmentRecord in
+            let record = try attachments.addData(pdf, fileName: name, type: .pdf, role: .scan, to: noteID, pageCount: pages.count)
+            scanID = record.id
+            return record
         } insert: { record in
             MarkdownText.reference(for: record.id, name: (name as NSString).deletingPathExtension, isImage: false)
         }
+        if let scanID { recognizeText(ofScan: scanID) }
+    }
+
+    /// Recognises the text of a scan in the background; the page shows "Text erkannt" when it is done.
+    func recognizeText(ofScan id: UUID) {
+        guard let attachments = store.attachments else { return }
+        ScanTextRecognition.start(for: id, store: attachments) { [inserts] in inserts.revision += 1 }
+    }
+
+    /// Starts recognition for the scans of this note that have none yet, e.g. after the app was closed during a run.
+    func resumeTextRecognition() {
+        for id in store.attachments?.scansAwaitingRecognition(of: noteID) ?? [] { recognizeText(ofScan: id) }
+    }
+
+    /// Puts the recognised text of a scan into the note as a paragraph below the reference. An own save of the page.
+    func insertRecognizedText(ofScan id: UUID) {
+        guard let recognized = store.attachments?.record(id: id)?.recognizedText, !recognized.isEmpty else { return }
+        let updated = MarkdownText.insertingParagraph(recognized, belowReferenceTo: id, in: text)
+        guard updated != text else { return }
+        text = updated
+        saveText()
     }
 
     /// The menu of a long press on a scan card in the page: open, rename, share.
     func attachmentMenu(for url: URL) -> UIMenu? {
         guard url.scheme?.lowercased() == MarkdownText.attachmentScheme, let id = HTMLSanitizer.attachmentID(inReference: url.absoluteString),
               let record = store.attachments?.record(id: id), record.roleRaw == NoteAttachmentStore.Role.scan.rawValue else { return nil }
-        return UIMenu(children: [
-            UIAction(title: String(localized: "Öffnen"), image: UIImage(systemName: "doc.viewfinder")) { _ in openAttachment(id) },
-            UIAction(title: String(localized: "Umbenennen"), image: UIImage(systemName: "pencil")) { _ in
-                inserts.renaming = NoteInsertState.Renaming(id: id, name: (record.fileName as NSString).deletingPathExtension)
-            },
-            UIAction(title: String(localized: "Teilen"), image: UIImage(systemName: "square.and.arrow.up")) { _ in
-                if let url = store.attachments?.exportURL(for: id) { inserts.sharing = NoteInsertState.Sharing(urls: [url]) }
-            }
-        ])
+        var actions = [UIAction(title: String(localized: "Öffnen"), image: UIImage(systemName: "doc.viewfinder")) { _ in openAttachment(id) }]
+        if let recognized = record.recognizedText, !recognized.isEmpty {
+            actions.append(UIAction(title: String(localized: "Erkannten Text einfügen"), image: UIImage(systemName: "text.append")) { _ in
+                insertRecognizedText(ofScan: id)
+            })
+            actions.append(UIAction(title: String(localized: "Erkannten Text kopieren"), image: UIImage(systemName: "doc.on.doc")) { _ in
+                UIPasteboard.general.string = recognized
+            })
+        } else if record.recognizedText != nil {
+            // Recognition found nothing or failed: a new try.
+            actions.append(UIAction(title: String(localized: "Text erkennen"), image: UIImage(systemName: "text.viewfinder")) { _ in
+                if let attachments = store.attachments {
+                    attachments.setRecognizedTextPending(for: id)
+                    inserts.revision += 1
+                    recognizeText(ofScan: id)
+                }
+            })
+        }
+        actions.append(UIAction(title: String(localized: "Umbenennen"), image: UIImage(systemName: "pencil")) { _ in
+            inserts.renaming = NoteInsertState.Renaming(id: id, name: (record.fileName as NSString).deletingPathExtension)
+        })
+        actions.append(UIAction(title: String(localized: "Teilen"), image: UIImage(systemName: "square.and.arrow.up")) { _ in
+            if let url = store.attachments?.exportURL(for: id) { inserts.sharing = NoteInsertState.Sharing(urls: [url]) }
+        })
+        return UIMenu(children: actions)
     }
 
     /// Renames a scan and the label of its reference in the text, so the page shows the new name. It is an own save of the page.

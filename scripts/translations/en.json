@@ -2485,5 +2485,11 @@
   "Tabelle": "Table",
   "Einfügen": "Insert",
   "%lld Seiten": "%lld pages",
-  "1 Seite": "1 page"
+  "1 Seite": "1 page",
+  "Erkannten Text einfügen": "Insert recognized text",
+  "Erkannten Text kopieren": "Copy recognized text",
+  "Im Scan": "In scan",
+  "Text erkannt": "Text recognized",
+  "Text erkennen": "Recognize text",
+  "Text wird erkannt …": "Recognizing text …"
 }

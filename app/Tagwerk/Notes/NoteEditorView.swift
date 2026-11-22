@@ -128,6 +128,7 @@ struct NoteEditorView: View {
                 // A running Bible Study session starts with the cursor below its new section.
                 if isRunningSession { selection = TextSelection(insertionPoint: text.endIndex) }
                 refreshShareURLs()
+                resumeTextRecognition()
             }
             // Debounced saving: every keystroke restarts the wait.
             .task(id: text) {
@@ -166,7 +167,7 @@ struct NoteEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 gratitudeHeader
                 NoteMarkdownView(markdown: text, attachments: store.attachments,
-                                 attachmentDisplays: store.attachments?.displays(of: noteID) ?? [:],
+                                 attachmentDisplays: attachmentDisplays,
                                  onToggleCheckbox: toggleCheckbox, onOpenAttachment: openAttachment,
                                  onEdit: Self.usesTapToEdit ? { beginEditing(atLine: $0) } : nil,
                                  onUnansweredTap: Self.usesTapToEdit ? { fraction in
@@ -176,6 +177,12 @@ struct NoteEditorView: View {
                     .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
+    }
+
+    /// Name, size and kind of the attachments for the page; read again when recognition of a scan finished (`inserts.revision`).
+    private var attachmentDisplays: [UUID: NoteAttachmentDisplay] {
+        _ = inserts.revision
+        return store.attachments?.displays(of: noteID) ?? [:]
     }
 
     /// The gratitude of a morning entry stays in the routine record; the editor only shows it as a card above the text.

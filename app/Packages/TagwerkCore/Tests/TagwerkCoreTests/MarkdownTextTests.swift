@@ -164,4 +164,21 @@ struct MarkdownTextTests {
         let picture = MarkdownText.reference(for: id, name: "Zeichnung", isImage: true)
         #expect(MarkdownText.renamingReference(of: id, to: "Skizze", in: picture) == "![Skizze](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)")
     }
+
+    @Test func insertRecognizedText_putsParagraphBelowReference() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let reference = "[Scan](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)"
+        // Between two lines: the paragraph gets blank lines on both sides.
+        #expect(MarkdownText.insertingParagraph("Erkannt\nin zwei Zeilen", belowReferenceTo: id, in: "Vor\n\(reference)\nNach")
+            == "Vor\n\(reference)\n\nErkannt\nin zwei Zeilen\n\nNach")
+        // At the end of the text.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: id, in: reference) == "\(reference)\n\nErkannt")
+        // With a blank line below the reference already.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: id, in: "\(reference)\n\nNach") == "\(reference)\n\nErkannt\n\nNach")
+        // Surrounding whitespace of the paragraph goes.
+        #expect(MarkdownText.insertingParagraph("  Erkannt \n\n", belowReferenceTo: id, in: reference) == "\(reference)\n\nErkannt")
+        // No reference, another attachment or no text: nothing changes.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: UUID(), in: reference) == reference)
+        #expect(MarkdownText.insertingParagraph("  ", belowReferenceTo: id, in: reference) == reference)
+    }
 }

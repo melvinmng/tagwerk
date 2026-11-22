@@ -93,6 +93,22 @@ public enum MarkdownText {
         }
     }
 
+    /// The text with `paragraph` inserted as its own paragraph below the line that holds the reference to the attachment `id`
+    /// (the recognised text of a scan). A blank line separates it from the reference and from what follows. Text without that
+    /// reference, or an empty paragraph, stays as it is.
+    public static func insertingParagraph(_ paragraph: String, belowReferenceTo id: UUID, in markdown: String) -> String {
+        let body = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !body.isEmpty,
+              let expression = try? NSRegularExpression(pattern: #"attachment:"# + id.uuidString, options: [.caseInsensitive]),
+              let match = expression.firstMatch(in: markdown, range: NSRange(markdown.startIndex..., in: markdown)),
+              let matched = Range(match.range, in: markdown) else { return markdown }
+        let lineEnd = markdown[matched.upperBound...].firstIndex(of: "\n") ?? markdown.endIndex
+        let rest = markdown[lineEnd...]
+        // What follows starts with a line break: one more makes the blank line, unless it is there already.
+        let closing = rest.hasPrefix("\n\n") || rest.isEmpty ? "" : "\n"
+        return String(markdown[..<lineEnd]) + "\n\n" + body + closing + String(rest)
+    }
+
     /// The text with the label of every reference to the attachment `id` replaced by `name` (a renamed scan); the rest of the
     /// text, other attachments and the kind of reference (picture or link) stay as they are.
     public static func renamingReference(of id: UUID, to name: String, in markdown: String) -> String {

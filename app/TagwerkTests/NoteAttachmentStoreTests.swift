@@ -497,8 +497,10 @@ struct NoteAttachmentStoreTests {
         let plain = try attachments.addFile(at: makeFile(named: "a.pdf", bytes: 10), to: note.id)
         let displays = attachments.displays(of: note.id)
         #expect(displays[scan.id]?.kind == .scan(pages: 2))
-        #expect(displays[scan.id]?.detail.hasPrefix("2 Seiten · ") == true && displays[scan.id]?.detail.hasSuffix(" · PDF") == true)
+        #expect(displays[scan.id]?.detail.hasPrefix("2 Seiten · ") == true && displays[scan.id]?.detail.hasSuffix(" · PDF · Text wird erkannt …") == true)
         #expect(displays[one.id]?.detail.hasPrefix("1 Seite · ") == true)
+        attachments.setRecognizedText("Wort", for: scan.id)
+        #expect(attachments.displays(of: note.id)[scan.id]?.detail.hasSuffix(" · PDF · Text erkannt") == true)
         // A PDF that was attached as a file stays a file.
         #expect(displays[plain.id]?.kind == .file)
     }

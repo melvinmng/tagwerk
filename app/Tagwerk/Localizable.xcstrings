@@ -9356,6 +9356,26 @@
     "Erkannt: %@": {
       "shouldTranslate": false
     },
+    "Erkannten Text einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert recognized text"
+          }
+        }
+      }
+    },
+    "Erkannten Text kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy recognized text"
+          }
+        }
+      }
+    },
     "Erkenner": {
       "shouldTranslate": false
     },
@@ -12155,6 +12175,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The recipe doesn’t state a number of servings. You can add it to the note later."
+          }
+        }
+      }
+    },
+    "Im Scan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In scan"
           }
         }
       }
@@ -19493,6 +19523,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text"
+          }
+        }
+      }
+    },
+    "Text erkannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text recognized"
+          }
+        }
+      }
+    },
+    "Text erkennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognize text"
+          }
+        }
+      }
+    },
+    "Text wird erkannt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text …"
           }
         }
       }

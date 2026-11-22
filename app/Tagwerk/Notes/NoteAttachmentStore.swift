@@ -137,6 +137,13 @@ final class NoteAttachmentStore {
         save()
     }
 
+    /// Marks a scan as not recognised yet, before a new try.
+    func setRecognizedTextPending(for id: UUID) {
+        guard let record = record(id: id) else { return }
+        record.recognizedText = nil
+        save()
+    }
+
     /// The file of the given role that belongs to an attachment (the strokes of a drawing).
     func companion(of id: UUID, role: Role) -> NoteAttachmentRecord? {
         records().first { $0.companionOfID == id && $0.roleRaw == role.rawValue }
@@ -188,7 +195,8 @@ final class NoteAttachmentStore {
             let isImage = UTType(record.typeIdentifier)?.conforms(to: .image) == true
             let size = ByteCountFormatter.string(fromByteCount: Int64(record.byteCount), countStyle: .file)
             if record.roleRaw == Role.scan.rawValue {
-                result[record.id] = NoteAttachmentDisplay(name: record.fileName, detail: Self.scanDetail(pages: record.pageCount, size: size),
+                result[record.id] = NoteAttachmentDisplay(name: record.fileName,
+                                                          detail: Self.scanDetail(pages: record.pageCount, size: size, recognizedText: record.recognizedText),
                                                           kind: .scan(pages: record.pageCount))
             } else {
                 result[record.id] = NoteAttachmentDisplay(name: record.fileName, detail: size, kind: isImage ? .image : .file)
@@ -196,13 +204,33 @@ final class NoteAttachmentStore {
         }
     }
 
-    /// "8 Seiten · 3,1 MB · PDF": the line under the name of a scan.
-    static func scanDetail(pages: Int, size: String) -> String {
+    /// "8 Seiten · 3,1 MB · PDF · Text erkannt": the line under the name of a scan. Recognition that has not run yet says so;
+    /// recognition that found nothing (or failed) says nothing, the menu of the scan offers a new try.
+    static func scanDetail(pages: Int, size: String, recognizedText: String?) -> String {
         var parts: [String] = []
         if pages == 1 { parts.append(String(localized: "1 Seite")) } else if pages > 1 { parts.append(String(localized: "\(pages) Seiten")) }
         parts.append(size)
         parts.append("PDF")
+        switch recognizedText {
+        case nil: parts.append(String(localized: "Text wird erkannt …"))
+        case let text? where !text.isEmpty: parts.append(String(localized: "Text erkannt"))
+        default: break
+        }
         return parts.joined(separator: " · ")
+    }
+
+    /// The text recognised in the scans a note's text refers to, one paragraph per scan, for the app search. Empty for a note
+    /// without a recognised scan. It is the attachment's text, not the note's: it never goes to the assistant.
+    static func scanText(text: String, index: [UUID: NoteAttachmentRecord]) -> String {
+        MarkdownText.attachmentReferences(in: text).compactMap { id -> String? in
+            guard let record = index[id], record.roleRaw == Role.scan.rawValue, let recognized = record.recognizedText, !recognized.isEmpty else { return nil }
+            return recognized
+        }.joined(separator: "\n\n")
+    }
+
+    /// The scans of a note that recognition has not looked at yet (a run that was cut short by closing the app).
+    func scansAwaitingRecognition(of noteID: UUID) -> [UUID] {
+        attachments(of: noteID).filter { $0.roleRaw == Role.scan.rawValue && $0.recognizedText == nil }.map(\.id)
     }
 
     func record(id: UUID) -> NoteAttachmentRecord? {
@@ -279,15 +307,18 @@ final class NoteAttachmentStore {
         url(for: id).flatMap { try? Data(contentsOf: $0) }
     }
 
-    /// The first page of a PDF as a picture whose longer side is `edge` points.
+    /// The first page of a PDF as a picture whose longer side is `edge` pixels.
     static func firstPage(ofPDFAt url: URL, edge: CGFloat) -> UIImage? {
-        guard let page = PDFDocument(url: url)?.page(at: 0) else { return nil }
+        PDFDocument(url: url)?.page(at: 0).flatMap { render($0, edge: edge) }
+    }
+
+    /// One page of a PDF as a picture on white, exactly `edge` pixels on its longer side, whatever the screen scale is.
+    nonisolated static func render(_ page: PDFPage, edge: CGFloat) -> UIImage? {
         let bounds = page.bounds(for: .mediaBox)
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let scale = edge / max(bounds.width, bounds.height)
         let size = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
         let thumbnail = page.thumbnail(of: size, for: .mediaBox)
-        // The picture has exactly `edge` pixels on its longer side, whatever the screen scale is.
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true

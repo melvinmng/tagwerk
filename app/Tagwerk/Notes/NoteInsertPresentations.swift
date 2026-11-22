@@ -17,6 +17,9 @@ final class NoteInsertState {
     }
 
     var isScanning = false
+    /// Counts what changed about the attachments without the text changing (the text of a scan was recognised), so the page
+    /// shows it again.
+    var revision = 0
     var renaming: Renaming?
     var sharing: Sharing?
 
