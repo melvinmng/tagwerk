@@ -4,6 +4,7 @@ import TagwerkCore
 /// Settings → Notizen: the order of the note lists and the import from Notion.
 struct NotesSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
+    @State private var isImporting = false
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -23,7 +24,7 @@ struct NotesSettingsView: View {
                 Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.")
             }
             Section {
-                NavigationLink("Aus Notion importieren") { NotionImportView() }
+                Button("Aus Notion importieren") { isImporting = true }
             } header: {
                 Text("Import")
             } footer: {
@@ -32,6 +33,16 @@ struct NotesSettingsView: View {
         }
         .navigationTitle("Notizen")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isImporting) {
+            NotionImportView(onShowFolder: showImportedFolder)
+        }
+    }
+
+    /// After "Zum Tagebuch" / "Zu Bible Study": the list of the folder in the tab "Aufgaben".
+    private func showImportedFolder(_ target: NotionImportTarget) {
+        let store = environment.notes
+        let folder = target == .journal ? store.ensureJournalFolder() : store.folder(role: .bibleStudy)
+        if let folder { environment.showNotes(.folder(folder.id)) }
     }
 
     static func sortName(_ order: NoteSortOrder) -> String {

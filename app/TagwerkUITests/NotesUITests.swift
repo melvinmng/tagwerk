@@ -32,6 +32,30 @@ final class NotesUITests: UITestCase {
         XCTAssertTrue(app.buttons["Brain Dump, 0"].waitForExistence(timeout: Self.timeout), "The empty note was kept")
     }
 
+    /// TB4b: the empty journal folder offers "Aus Notion importieren"; the sheet opens on step 1 with the target already chosen
+    /// (no choice between journal and Bible Study) and closes with "Schließen".
+    func testEmptyJournalFolderOffersImport() {
+        openNotes()
+        let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch mit Gott")).firstMatch
+        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout), "The folder of the journal is missing")
+        folder.tap()
+        XCTAssertFalse(app.buttons["Aus Notion importieren"].exists, "A folder with an entry offers the import")
+        // The demo data has one entry; the trash empties the folder.
+        let entry = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ruhig und dankbar")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The demo entry of the journal is missing")
+        entry.swipeLeft()
+        tapButton("Löschen")
+        let importRow = app.buttons["Aus Notion importieren"].firstMatch
+        XCTAssertTrue(importRow.waitForExistence(timeout: Self.timeout), "The empty journal folder has no import row")
+        importRow.tap()
+        XCTAssertTrue(app.staticTexts["1 · Export wählen"].waitForExistence(timeout: Self.timeout), "The sheet did not open on step 1")
+        XCTAssertTrue(app.buttons["Ordner wählen"].exists, "The folder choice is missing")
+        XCTAssertEqual(app.segmentedControls.count, 0, "The target choice is shown although the target is fixed")
+        tapButton("Schließen")
+        XCTAssertTrue(app.buttons["Aus Notion importieren"].firstMatch.waitForExistence(timeout: Self.timeout), "The sheet did not close")
+        XCTAssertFalse(app.staticTexts["1 · Export wählen"].exists, "The sheet is still open")
+    }
+
     func testShowNoteInFolderFromSearchHit() {
         openNotes()
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Brain Dump")).firstMatch
