@@ -61,7 +61,9 @@ public enum IntakeFormat {
 
     /// Row value of a further nutrient: "14 g", "14 / 30 g" against a goal, "–" when no meal knows it (never 0).
     /// With missing values the sum is a lower bound: "mind. 14 g · 2 von 3 Mahlzeiten".
-    public static func nutrient(_ nutrient: Nutrient, sum: NutrientSum, goal: Double? = nil, locale: Locale = .current) -> String {
+    /// `isLimitGoal` writes the goal as an upper limit: "38 / max. 50 g".
+    public static func nutrient(_ nutrient: Nutrient, sum: NutrientSum, goal: Double? = nil, isLimitGoal: Bool = false,
+                                locale: Locale = .current) -> String {
         guard let value = sum.value else { return "–" }
         let formatter = NumberFormatter()
         formatter.locale = locale
@@ -69,7 +71,10 @@ public enum IntakeFormat {
         formatter.maximumFractionDigits = nutrient.fractionDigits
         formatter.roundingMode = .halfUp
         func number(_ amount: Double) -> String { formatter.string(from: NSNumber(value: amount)) ?? "\(amount)" }
-        let figures = goal.map { "\(number(value)) / \(number($0))" } ?? number(value)
+        let figures = goal.map { goal -> String in
+            let goalText = isLimitGoal ? String(localized: "max. \(number(goal))", bundle: .module) : number(goal)
+            return "\(number(value)) / \(goalText)"
+        } ?? number(value)
         let text = String(localized: "\(figures) g", bundle: .module)
         if sum.isComplete { return text }
         let minimum = String(localized: "mind. \(text)", bundle: .module)

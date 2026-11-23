@@ -17,6 +17,8 @@ struct CaptureView: View {
         case drinks
         case newWorkout(activity: WorkoutActivity? = nil, minutes: Int? = nil)
         case workout(WorkoutValue)
+        case activeBreakdown
+        case foreignIntake
 
         var id: String {
             switch self {
@@ -25,6 +27,8 @@ struct CaptureView: View {
             case .drinks: "drinks"
             case .newWorkout(let activity, let minutes): "newWorkout-\(activity?.rawValue ?? "")-\(minutes ?? 0)"
             case .workout(let workout): "workout-\(workout.id)"
+            case .activeBreakdown: "activeBreakdown"
+            case .foreignIntake: "foreignIntake"
             }
         }
     }
@@ -89,6 +93,9 @@ struct CaptureView: View {
                 case .newWorkout(let activity, let minutes):
                     WorkoutSheet(model: model, existing: nil, initialActivity: activity, initialMinutes: minutes)
                 case .workout(let workout): WorkoutSheet(model: model, existing: workout)
+                case .activeBreakdown: BudgetBreakdownSheet(model: model)
+                case .foreignIntake:
+                    if let foreign = model.current.figures.totals.foreign { ForeignIntakeSheet(foreign: foreign) }
                 }
             }
         }
@@ -106,7 +113,7 @@ struct CaptureView: View {
         List {
                 Section {
                     DayNavigation(model: model, day: data.day)
-                    DaySummary(model: model, data: data)
+                    DaySummary(model: model, data: data, onShowActive: { sheet = .activeBreakdown })
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
@@ -132,6 +139,8 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
                 drinkSection(data)
                 workoutSection(data)
@@ -207,18 +216,25 @@ struct CaptureView: View {
 
     @ViewBuilder
     private func mealSection(_ data: CaptureDay) -> some View {
-        if !data.meals.isEmpty {
+        let foreign = data.figures.totals.foreign
+        if !data.meals.isEmpty || foreign != nil {
             Section {
                 ForEach(data.meals) { meal in
                     Button { sheet = .meal(meal) } label: { MealRow(meal: meal, calendar: model.calendar) }
                         .tint(.primary)
                         .contextMenu { deleteButton(meal.id) }
                 }
+                // Entries of other apps: one row with the day total and the app names; it has no editor and no delete.
+                if let foreign {
+                    Button { sheet = .foreignIntake } label: { ForeignIntakeRow(foreign: foreign) }
+                        .tint(.primary)
+                }
             } header: {
                 HStack {
                     Text("Essen")
                     Spacer()
-                    Text(IntakeFormat.kcal(data.intake.kcal, estimated: data.intake.hasEstimate))
+                    // Everything the day counts as eaten, the entries of other apps included.
+                    Text(IntakeFormat.kcal(data.figures.totals.kcal, estimated: data.figures.totals.hasEstimate))
                 }
             }
         }
@@ -352,25 +368,15 @@ extension CaptureModel {
 private struct DaySummary: View {
     let model: CaptureModel
     let data: CaptureDay
+    let onShowActive: () -> Void
 
     var body: some View {
-        let settings = model.settings
-        let intake = data.intake
-        let remaining = IntakeFormat.remaining(goal: settings.goalKilocalories, intake: intake)
+        let budget = data.figures.budget
         VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(IntakeFormat.kcalNumber(intake.kcal, estimated: intake.hasEstimate)) / \(IntakeFormat.grouped(settings.goalKilocalories)) kcal")
-                        .font(.title3.weight(.semibold))
-                    Spacer()
-                    Text(remaining.text).font(.subheadline).foregroundStyle(remaining.isOver ? Color.orangeText : Color.secondaryText)
-                }
-                ProgressView(value: min(1, intake.kcal / Double(max(1, settings.goalKilocalories))))
-                    .tint(remaining.isOver ? .orange : .green)
-            }
-            .accessibilityElement(children: .combine)
+            BudgetHead(budget: budget, offersAllow: model.offersActiveEnergy(for: budget), onShowActive: onShowActive,
+                       onAllow: { Task { await model.allowActiveEnergy() } })
             // ST1: water and protein, then steps and the weekly training; single tiles share one row.
-            ForEach(Array(model.summaryRows(steps: data.steps).enumerated()), id: \.offset) { _, row in
+            ForEach(Array(model.summaryRows(steps: data.steps, plan: data.figures.plan).enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(row, id: \.self) { tile($0) }
                 }
@@ -383,20 +389,16 @@ private struct DaySummary: View {
 
     @ViewBuilder
     private func tile(_ tile: CaptureModel.SummaryTile) -> some View {
-        let settings = model.settings
-        let intake = data.intake
+        let plan = data.figures.plan
+        let totals = data.figures.totals
         switch tile {
         case .water:
-            metric("Wasser", "\(IntakeFormat.liters(intake.waterMilliliters)) / \(IntakeFormat.liters(settings.goalWaterMilliliters))",
-                   progress: Double(intake.waterMilliliters) / Double(max(1, settings.goalWaterMilliliters)), tint: .cyan)
-        case .protein:
-            metric("Eiweiß", "\(IntakeFormat.grams(intake.protein, estimated: intake.hasEstimate)) / \(settings.goalProteinGrams) g"
-                .replacingOccurrences(of: " g /", with: " /"),
-                   progress: intake.protein / Double(max(1, settings.goalProteinGrams)), tint: .pink)
+            metric("Wasser", "\(IntakeFormat.liters(totals.waterMilliliters)) / \(IntakeFormat.liters(plan.waterMilliliters))",
+                   progress: Double(totals.waterMilliliters) / Double(max(1, plan.waterMilliliters)), tint: .cyan)
         case .steps:
             stepsTile
         case .training:
-            let goal = settings.goalWorkoutMinutesPerWeek
+            let goal = plan.workoutMinutesPerWeek
             metric("Training · Woche", IntakeFormat.duration(minutes: data.weekMinutes, goal: goal),
                    progress: Double(data.weekMinutes) / Double(max(1, goal)), tint: .mint,
                    spokenLabel: String(localized: "Training diese Woche"),
@@ -406,7 +408,7 @@ private struct DaySummary: View {
 
     @ViewBuilder
     private var stepsTile: some View {
-        let goal = model.settings.goalStepsPerDay
+        let goal = data.figures.plan.stepsPerDay
         switch model.stepsTile(for: data.steps) {
         case .hidden:
             EmptyView()

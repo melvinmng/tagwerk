@@ -129,4 +129,53 @@ struct GoalStoreTests {
                              activeKcalPerDay: 400, targetWeightKg: 70, paceKgPerWeek: -0.3, origin: .assistant, note: "Plan")
         #expect(GoalPlanRecord(value).value == value)
     }
+
+    // MARK: Reconciliation with the single goal fields
+
+    @Test func reconcile_equalValues_changeNothing() {
+        let store = makeStore()
+        store.migrateIfNeeded()
+        let before = store.plans()
+        store.reconcileWithSettings()
+        #expect(store.plans() == before)
+    }
+
+    @Test func reconcile_editedSettings_adoptAPlanFromToday() {
+        let store = makeStore()
+        store.adopt(GoalPlan(validFrom: today.adding(days: -30, calendar: calendar), kcal: 2300, proteinGrams: 120, carbsGrams: 250,
+                             fatGrams: 78, fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2000, stepsPerDay: 8000,
+                             workoutMinutesPerWeek: 150))
+        // The user changed the goals in the old settings screen after the plan was made.
+        settings.goalKilocalories = 2000
+        settings.goalStepsPerDay = 10_000
+        settings.proteinGoalEnabled = false
+        store.reconcileWithSettings()
+        let plans = store.plans()
+        #expect(plans.count == 2)
+        let adopted = plans.last
+        #expect(adopted?.validFrom == today && adopted?.kcal == 2000 && adopted?.stepsPerDay == 10_000)
+        #expect(adopted?.proteinGrams == nil)
+        // Macro, fibre and sugar goals of the former plan survive; the old plan keeps its days.
+        #expect(adopted?.carbsGrams == 250 && adopted?.fatGrams == 78 && adopted?.fiberGrams == 30 && adopted?.sugarLimitGrams == 50)
+        #expect(plans.first?.kcal == 2300)
+        #expect(store.current(on: today.adding(days: -1, calendar: calendar))?.kcal == 2300)
+    }
+
+    @Test func reconcile_samePlanDay_replacesInsteadOfAddingAPlan() {
+        let store = makeStore()
+        store.migrateIfNeeded()
+        settings.goalWaterMilliliters = 3000
+        store.reconcileWithSettings()
+        #expect(store.plans().count == 1)
+        #expect(store.plans().first?.waterMilliliters == 3000)
+    }
+
+    @Test func reconcile_isIdempotent() {
+        let store = makeStore()
+        store.migrateIfNeeded()
+        settings.goalKilocalories = 1900
+        store.reconcileWithSettings()
+        store.reconcileWithSettings()
+        #expect(store.plans().count == 1 && store.plans().first?.kcal == 1900)
+    }
 }

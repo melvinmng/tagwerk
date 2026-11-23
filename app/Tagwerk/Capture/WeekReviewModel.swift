@@ -20,7 +20,9 @@ final class WeekReviewModel {
 
     private let store: IntakeStore
     private let health: any HealthStoring
-    private let settings: AppSettings
+    let settings: AppSettings
+    /// Goal plan, Health values and budget of each day (shared with "Erfassen", "Planen" and the widget).
+    private let budgets: DayBudgets
     let calendar: Calendar
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let completedReminders: (DateInterval) async -> [Date]
@@ -32,8 +34,8 @@ final class WeekReviewModel {
     /// is not connected.
     @ObservationIgnored private let closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
 
-    init(store: IntakeStore, health: any HealthStoring, settings: AppSettings, calendar: Calendar = .tagwerk,
-         now: @escaping () -> Date = Date.init,
+    init(store: IntakeStore, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init,
          completedReminders: @escaping (DateInterval) async -> [Date],
          completedLocalTasks: @escaping (DateInterval) -> [Date],
          habits: HabitsModel? = nil, routineStore: RoutineStore? = nil, openPlanWeek: ((PlanDay) -> Void)? = nil,
@@ -45,6 +47,8 @@ final class WeekReviewModel {
         self.store = store
         self.health = health
         self.settings = settings
+        self.budgets = budgets ?? DayBudgets(intake: store, goals: nil, dayHealth: nil, health: health, settings: settings,
+                                             calendar: calendar, now: now)
         self.calendar = calendar
         self.now = now
         self.completedReminders = completedReminders
@@ -120,19 +124,34 @@ final class WeekReviewModel {
             let sums = (try? await health.dailySteps(in: interval, calendar: calendar)) ?? []
             for sum in sums { steps[PlanDay(date: sum.start, calendar: calendar)] = sum.count }
         }
+        // Active energy and other apps' nutrition of the week go into the store; each day then reads its own figures from there, so a
+        // past day keeps the plan that held on it and the Health values it had.
+        await budgets.refreshHealth(in: interval)
         let completed = await completedReminders(interval) + completedLocalTasks(interval)
         // A later navigation already moved on.
         guard weekStart == requested else { return }
-        let goals = WeekReview.Goals(kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
-                                     workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek,
-                                     stepsPerDay: settings.goalStepsPerDay,
-                                     proteinGrams: settings.proteinGoalEnabled ? settings.goalProteinGrams : nil)
+        var totals: [PlanDay: IntakeTotals] = [:], dayBudgets: [PlanDay: EnergyBudget] = [:], plans: [PlanDay: GoalPlan] = [:]
+        for day in days {
+            let own = IntakeRules.dayIntake(meals: meals.filter { PlanDay(date: $0.date, calendar: calendar) == day },
+                                            drinks: drinks.filter { PlanDay(date: $0.date, calendar: calendar) == day })
+            let figures = budgets.figures(on: day, own: own)
+            totals[day] = figures.totals
+            dayBudgets[day] = figures.budget
+            plans[day] = figures.plan
+        }
+        // The week's goals are those of its last day up to today: the training and protein goal of the plan that holds now.
+        let goalDay = min(requested.adding(days: 6, calendar: calendar), today)
+        let goalPlan = plans[goalDay] ?? budgets.plan(on: goalDay)
+        let goals = WeekReview.Goals(kcal: goalPlan.kcal, waterMilliliters: goalPlan.waterMilliliters,
+                                     workoutMinutesPerWeek: goalPlan.workoutMinutesPerWeek, stepsPerDay: goalPlan.stepsPerDay,
+                                     proteinGrams: goalPlan.proteinGrams)
         showsSteps = stepsAsked
         loadRoutineParts(for: requested)
         /// `completedDates` are the completions of reminders, local tasks and (once they arrived) closed GitHub issues.
         func makeReview(completedDates: [Date]) -> WeekReview {
             WeekReview.make(weekStart: requested, now: now(), meals: meals, drinks: drinks, workouts: workouts,
-                            steps: steps, completedDates: completedDates, goals: goals, calendar: calendar)
+                            steps: steps, completedDates: completedDates, goals: goals, totals: totals, budgets: dayBudgets,
+                            plans: plans, calendar: calendar)
         }
         review = makeReview(completedDates: completed)
         guard let closedIssueDates else {

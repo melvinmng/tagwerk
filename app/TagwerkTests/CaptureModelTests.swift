@@ -31,6 +31,164 @@ struct CaptureModelTests {
                             now: { clock.now }, waitsForHealth: true)
     }
 
+    /// A model with stored goal plans and stored Health values, like the app builds it.
+    func makeWithBudget(_ health: FakeHealthStore, plans: [GoalPlan] = []) -> CaptureModel {
+        let clock = self.clock
+        let context = container.mainContext
+        let goals = GoalStore(context: context, settings: settings, calendar: calendar, now: { clock.now })
+        for plan in plans { goals.adopt(plan) }
+        let budgets = DayBudgets(intake: store, goals: goals, dayHealth: DayHealthStore(context: context, now: { clock.now }),
+                                 health: health, settings: settings, calendar: calendar, now: { clock.now })
+        let mirror = HealthMirror(store: store, health: health, now: { clock.now })
+        return CaptureModel(store: store, mirror: mirror, health: health, settings: settings, budgets: budgets, calendar: calendar,
+                            now: { clock.now }, waitsForHealth: true)
+    }
+
+    func plan(from day: PlanDay, kcal: Int) -> GoalPlan {
+        GoalPlan(validFrom: day, kcal: kcal, waterMilliliters: 2000, stepsPerDay: 8000, workoutMinutesPerWeek: 150)
+    }
+
+    // MARK: Budget (nutrition plan, C1)
+
+    @Test func budget_usesPlanOfShownDay() async {
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let model = makeWithBudget(FakeHealthStore(), plans: [plan(from: today.adding(days: -30, calendar: calendar), kcal: 2300),
+                                                              plan(from: today, kcal: 2000)])
+        await model.reload()
+        #expect(model.figures.budget.base == 2000)
+        await model.goBack()
+        #expect(model.figures.budget.base == 2300)
+        #expect(model.todayFigures.budget.base == 2000, "today's figures do not follow the shown day")
+    }
+
+    @Test func budget_healthSumArrivesWithTheReload_andPagesShareIt() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let yesterday = today.adding(days: -1, calendar: calendar)
+        health.activeEnergy = [DailyActiveEnergy(start: today.startDate(in: calendar), kilocalories: 520),
+                               DailyActiveEnergy(start: yesterday.startDate(in: calendar), kilocalories: 400)]
+        settings.activityCreditPercent = 100
+        let model = makeWithBudget(health, plans: [plan(from: today.adding(days: -30, calendar: calendar), kcal: 2300)])
+        #expect(model.figures.active.healthKcal == nil, "before the first read there is no Health value, and no 0")
+        await model.reload()
+        #expect(model.figures.budget.credited == 520 && model.figures.budget.budget == 2820)
+        // The neighbour page reads the stored value of that day, so it shows what it will show once it arrives.
+        let neighbour = model.page(for: yesterday)
+        #expect(neighbour.figures.active.healthKcal == 400)
+        await model.goBack()
+        #expect(model.current.figures == neighbour.figures)
+    }
+
+    @Test func eaten_ownPlusForeign_whenSwitchedOn_otherwiseOwnOnly() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .foreignNutrition)
+        health.addForeignNutrition(day: clock.now.addingTimeInterval(-3600), kilocalories: 400, source: "Yazio")
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.saveMeal(meal("Müsli", at: clock.now.addingTimeInterval(-7200)), estimatedAt: nil, isNew: true)
+        settings.countsForeignNutrition = false
+        await model.reload()
+        #expect(model.figures.totals.kcal == 400, "own meal only (the 400 kcal meal helper)")
+        settings.countsForeignNutrition = true
+        await model.reload()
+        #expect(model.figures.totals.kcal == 800)
+        #expect(model.figures.totals.foreign?.sources == ["Yazio"])
+    }
+
+    @Test func activeEnergyTile_isOfferedUntilTheGroupWasAsked_andRequestsOnce() async {
+        let health = FakeHealthStore()
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.offersActiveEnergy(for: model.figures.budget))
+        await model.allowActiveEnergy()
+        #expect(health.groupRequests(.activeEnergy) == 1)
+        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        await model.reload()
+        #expect(health.groupRequests(.activeEnergy) == 1, "a reload never asks again")
+    }
+
+    @Test func activeEnergyTile_isHiddenWhenCreditingIsOff() async {
+        settings.activityCreditPercent = 0
+        let model = makeWithBudget(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+    }
+
+    @Test func summaryRows_followThePlanOfThePage() async {
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let old = GoalPlan(validFrom: today.adding(days: -30, calendar: calendar), kcal: 2300, waterMilliliters: 2000, stepsPerDay: 8000,
+                           workoutMinutesPerWeek: 150)
+        var current = old
+        current.validFrom = today
+        current.workoutMinutesPerWeek = 0
+        current.id = UUID()
+        let model = makeWithBudget(FakeHealthStore(), plans: [old, current])
+        await model.reload()
+        #expect(model.summaryRows(steps: nil, plan: model.figures.plan).flatMap { $0 }.contains(.training) == false)
+        let yesterday = model.page(for: today.adding(days: -1, calendar: calendar))
+        #expect(model.summaryRows(steps: nil, plan: yesterday.figures.plan).flatMap { $0 }.contains(.training))
+    }
+
+    // MARK: Card "Nährwerte" and the row of other apps (D3)
+
+    @Test func nutrientRows_followThePlanAndTheSwitches() async {
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let plan = GoalPlan(validFrom: today.adding(days: -30, calendar: calendar), kcal: 2300, proteinGrams: 140, carbsGrams: 250,
+                            fatGrams: 78, fiberGrams: 30, sugarLimitGrams: 50, waterMilliliters: 2000, stepsPerDay: 8000,
+                            workoutMinutesPerWeek: 150)
+        let model = makeWithBudget(FakeHealthStore(), plans: [plan])
+        await model.reload()
+        #expect(model.nutrientRows(for: model.figures).map(\.kind) == [.protein, .carbohydrates, .fat, .further(.fiber), .further(.sugar)])
+        settings.saltEnabled = true
+        #expect(model.nutrientRows(for: model.figures).last?.kind == .further(.salt))
+        settings.saltEnabled = false
+    }
+
+    @Test func foreignRow_hiddenWithoutForeignValues() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .foreignNutrition)
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.setCountsForeignNutrition(true)
+        #expect(model.figures.totals.foreign == nil, "switched on but nothing there: no row, no error")
+    }
+
+    @Test func foreignRow_namesSources() async {
+        let health = FakeHealthStore()
+        health.addForeignNutrition(day: clock.now.addingTimeInterval(-3600), kilocalories: 400, source: "Yazio")
+        health.addForeignNutrition(day: clock.now.addingTimeInterval(-7200), kilocalories: 200, source: "Lose It")
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.setCountsForeignNutrition(true)
+        let foreign = model.figures.totals.foreign
+        #expect(foreign?.kcal == 600)
+        #expect(IntakeFormat.foreignSources(foreign?.sources ?? []) == "Lose It, Yazio")
+    }
+
+    @Test func reload_keepsBudgetWhileHealthAnswers() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        health.activeEnergy = [DailyActiveEnergy(start: today.startDate(in: calendar), kilocalories: 500)]
+        let model = makeWithBudget(health, plans: [plan(from: today.adding(days: -30, calendar: calendar), kcal: 2300)])
+        await model.reload()
+        let before = model.figures
+        health.failActiveEnergyReads = true
+        await model.reload()
+        #expect(model.figures == before, "a failed read (locked device) leaves the budget as it was")
+    }
+
+    @Test func pastDay_usesStoredDayHealthWhenHealthSilent() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        let today = PlanDay(year: 2026, month: 11, day: 18)
+        let yesterday = today.adding(days: -1, calendar: calendar)
+        health.activeEnergy = [DailyActiveEnergy(start: yesterday.startDate(in: calendar), kilocalories: 700)]
+        let model = makeWithBudget(health, plans: [plan(from: today.adding(days: -30, calendar: calendar), kcal: 2300)])
+        await model.reload()
+        health.activeEnergy = []
+        await model.goBack()
+        #expect(model.figures.active.healthKcal == 700)
+    }
+
     @Test func drinkPresets_ofTheSettings_driveTheQuickButtons() async {
         let model = make()
         await model.reload()
@@ -263,7 +421,7 @@ struct CaptureModelTests {
         await model.goBack()
         #expect(model.steps == 8240)
         #expect(model.todaySteps == 6412)
-        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l · 6.412 Schritte")
+        #expect(model.planHeaderLine == "noch 2.300 kcal · 0,5 / 2,0 l · 6.412 Schritte")
     }
 
     @Test func todaySteps_dropAfterMidnight() async {
@@ -306,14 +464,11 @@ struct CaptureModelTests {
     // MARK: Summary layout
 
     @Test func summaryRows_layout() {
-        typealias Tile = CaptureModel.SummaryTile
-        #expect(CaptureModel.summaryRows(protein: true, steps: true, training: true) == [[.water, .protein], [.steps, .training]])
-        #expect(CaptureModel.summaryRows(protein: false, steps: true, training: true) == [[.water], [.steps, .training]])
-        #expect(CaptureModel.summaryRows(protein: false, steps: false, training: true) == [[.water, .training]])
-        #expect(CaptureModel.summaryRows(protein: false, steps: true, training: false) == [[.water, .steps]])
-        #expect(CaptureModel.summaryRows(protein: true, steps: true, training: false) == [[.water, .protein], [.steps]])
-        #expect(CaptureModel.summaryRows(protein: true, steps: false, training: false) == [[.water, .protein]])
-        #expect(CaptureModel.summaryRows(protein: false, steps: false, training: false) == [[.water]])
+        // Protein is on the card "Nährwerte" now: water, steps and training make the tiles, two to a row at most.
+        #expect(CaptureModel.summaryRows(steps: true, training: true) == [[.water, .steps], [.training]])
+        #expect(CaptureModel.summaryRows(steps: false, training: true) == [[.water, .training]])
+        #expect(CaptureModel.summaryRows(steps: true, training: false) == [[.water, .steps]])
+        #expect(CaptureModel.summaryRows(steps: false, training: false) == [[.water]])
     }
 
     @Test func pastDay_readsThatWeek() async {
@@ -472,7 +627,7 @@ struct CaptureModelTests {
         let model = make()
         await model.reload()
         await model.addWater(500)
-        #expect(model.planHeaderLine == "0 / 2.300 kcal · 0,5 / 2,0 l")
+        #expect(model.planHeaderLine == "noch 2.300 kcal · 0,5 / 2,0 l")
         settings.showsIntakeInPlan = false
         #expect(model.planHeaderLine == nil)
     }

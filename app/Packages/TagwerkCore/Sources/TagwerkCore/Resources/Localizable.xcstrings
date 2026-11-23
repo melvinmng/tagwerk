@@ -18,6 +18,7 @@
       }
     },
     "%@ / %@ kcal · %@ / %@": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -29,6 +30,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ / %2$@ kcal · %3$@ / %4$@"
+          }
+        }
+      }
+    },
+    "%@ / %lld g": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ / %2$lld g"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / %2$lld g"
+          }
+        }
+      }
+    },
+    "%@ Gramm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ grams"
+          }
+        }
+      }
+    },
+    "%@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories over budget"
           }
         }
       }
@@ -127,6 +164,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ von %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$lld grams"
+          }
+        }
+      }
+    },
+    "%@ von höchstens %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von höchstens %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of at most %2$lld grams"
           }
         }
       }
@@ -259,6 +328,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Gramm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld grams"
           }
         }
       }
@@ -607,6 +686,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld min"
+          }
+        }
+      }
+    },
+    "%lld von %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld grams"
           }
         }
       }
@@ -1157,6 +1252,16 @@
         }
       }
     },
+    "Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein"
+          }
+        }
+      }
+    },
     "Erinnerungen für welche Fälligkeiten ändern?": {
       "localizations": {
         "en": {
@@ -1173,6 +1278,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change reminders for which events?"
+          }
+        }
+      }
+    },
+    "Etwa %@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories over budget"
+          }
+        }
+      }
+    },
+    "Fett": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fat"
           }
         }
       }
@@ -1501,6 +1626,16 @@
         }
       }
     },
+    "Kohlenhydrate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carbs"
+          }
+        }
+      }
+    },
     "Kommentare gibt es nur bei GitHub-Issues.": {
       "localizations": {
         "en": {
@@ -1601,6 +1736,16 @@
         }
       }
     },
+    "Noch %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories left"
+          }
+        }
+      }
+    },
     "Noch %lld min bis zur Schlafzeit (%@)": {
       "localizations": {
         "de": {
@@ -1613,6 +1758,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld min until bedtime (%2$@)"
+          }
+        }
+      }
+    },
+    "Noch etwa %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories left"
           }
         }
       }
@@ -2025,6 +2180,16 @@
         }
       }
     },
+    "Ziel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal %@"
+          }
+        }
+      }
+    },
     "Ziel an %lld von %lld Tagen": {
       "localizations": {
         "de": {
@@ -2137,6 +2302,16 @@
         }
       }
     },
+    "etwa %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about %@"
+          }
+        }
+      }
+    },
     "gestern": {
       "localizations": {
         "en": {
@@ -2157,12 +2332,62 @@
         }
       }
     },
+    "keine Angabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no value"
+          }
+        }
+      }
+    },
+    "max. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "max. %@"
+          }
+        }
+      }
+    },
     "mind. %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "at least %@"
+          }
+        }
+      }
+    },
+    "mindestens %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
+          }
+        }
+      }
+    },
+    "minus %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus %@ eaten"
+          }
+        }
+      }
+    },
+    "minus etwa %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus about %@ eaten"
           }
         }
       }
@@ -2193,6 +2418,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal left"
+          }
+        }
+      }
+    },
+    "plus %@ aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus %@ active"
+          }
+        }
+      }
+    },
+    "plus aktiv ohne Werte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus active without values"
           }
         }
       }

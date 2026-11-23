@@ -23,23 +23,25 @@ public struct ActiveEnergy: Sendable, Hashable {
 /// An own workout as the active energy needs it.
 public struct OwnWorkoutEnergy: Sendable, Hashable {
     public var kilocalories: Double?
-    /// The workout was written to Health (`healthSynced`).
-    public var isMirrored: Bool
+    /// The calories of this workout are inside the Health sum: the workout was written to Health together with its calories.
+    /// A workout that is not mirrored yet, or was mirrored while Health refused the calories, is not.
+    public var energyInHealth: Bool
 
-    public init(kilocalories: Double?, isMirrored: Bool) {
+    public init(kilocalories: Double?, energyInHealth: Bool) {
         self.kilocalories = kilocalories
-        self.isMirrored = isMirrored
+        self.energyInHealth = energyInHealth
     }
 }
 
 extension ActiveEnergy {
     /// The active energy of a day from the Health sum and the own workouts of that day.
     ///
-    /// An own workout is inside the Health sum only when it was mirrored with its calories (`healthAcceptsEnergy`: the energy
-    /// type may be written). Such a workout is not added again; the others are the gap filler. Without a Health sum nothing
-    /// contains the own workouts, so all of them count.
-    public static func make(healthKcal: Double?, ownWorkouts: [OwnWorkoutEnergy], healthAcceptsEnergy: Bool) -> ActiveEnergy {
-        let missingInHealth = ownWorkouts.filter { healthKcal == nil || !$0.isMirrored || !healthAcceptsEnergy }
+    /// An own workout is inside the Health sum only when its calories were written to Health (`energyInHealth`, decided per
+    /// workout when it was mirrored, so a later change of the permission cannot count it twice or not at all). Such a workout is
+    /// not added again; the others are the gap filler. Without a Health sum nothing contains the own workouts, so all of them
+    /// count.
+    public static func make(healthKcal: Double?, ownWorkouts: [OwnWorkoutEnergy]) -> ActiveEnergy {
+        let missingInHealth = ownWorkouts.filter { healthKcal == nil || !$0.energyInHealth }
         return ActiveEnergy(healthKcal: healthKcal, unsyncedOwnKcal: missingInHealth.compactMap(\.kilocalories).reduce(0, +))
     }
 }

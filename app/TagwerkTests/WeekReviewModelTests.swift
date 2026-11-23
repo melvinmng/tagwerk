@@ -225,6 +225,60 @@ struct WeekReviewModelTests {
         #expect(model.review?.averageProtein == 40)
     }
 
+    // MARK: Budget, goal plans and stored Health values (nutrition plan, C4)
+
+    private func makeWithBudgets(_ health: FakeHealthStore, plans: [GoalPlan]) -> WeekReviewModel {
+        let now = self.now
+        let context = container.mainContext
+        let goals = GoalStore(context: context, settings: settings, calendar: calendar, now: { now })
+        for plan in plans { goals.adopt(plan) }
+        let budgets = DayBudgets(intake: store, goals: goals, dayHealth: DayHealthStore(context: context, now: { now }), health: health,
+                                 settings: settings, calendar: calendar, now: { now })
+        return WeekReviewModel(store: store, health: health, settings: settings, budgets: budgets, calendar: calendar, now: { now },
+                               completedReminders: { _ in [] }, completedLocalTasks: { _ in [] })
+    }
+
+    private func plan(from day: PlanDay, kcal: Int) -> GoalPlan {
+        GoalPlan(validFrom: day, kcal: kcal, waterMilliliters: 2000, stepsPerDay: 8000, workoutMinutesPerWeek: 150)
+    }
+
+    @Test func weekReview_dayWithinBudget_usesPlanAndStoredHealthOfThatDay() async {
+        let monday = PlanDay(year: 2026, month: 11, day: 16)
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        health.activeEnergy = [DailyActiveEnergy(start: monday.startDate(in: calendar), kilocalories: 800)]
+        settings.activityCreditPercent = 100
+        // The goal rose from Tuesday on; Monday keeps its old plan and its stored activity.
+        let model = makeWithBudgets(health, plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2000),
+                                                    plan(from: monday.adding(days: 1, calendar: calendar), kcal: 2600)])
+        await model.reload()
+        let days = model.review?.days
+        #expect(days?[0].goalKcal == 2800, "2.000 of the old plan plus the 800 credited that day")
+        #expect(days?[1].goalKcal == 2600)
+        health.activeEnergy = []
+        await model.reload()
+        #expect(model.review?.days[0].goalKcal == 2800, "a later silent Health does not change the past day")
+    }
+
+    @Test func weekReview_unknownActivity_fallsBackToBaseGoal() async {
+        let model = makeWithBudgets(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2100)])
+        await model.reload()
+        #expect(model.review?.days.map(\.goalKcal) == Array(repeating: 2100, count: 7))
+    }
+
+    @Test func weekReview_foreignEntries_countOnlyWhenSwitchedOn() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .foreignNutrition)
+        health.addForeignNutrition(day: PlanDay(year: 2026, month: 11, day: 17).startDate(in: calendar).addingTimeInterval(11 * 3600),
+                                   kilocalories: 600, source: "Yazio")
+        let model = makeWithBudgets(health, plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.review?.daysWithMeals == 0 && health.nutritionReads.isEmpty)
+        settings.countsForeignNutrition = true
+        await model.reload()
+        #expect(model.review?.days[1].kcal == 600)
+    }
+
     // MARK: Habits and reflection (phase 7)
 
     private func makePhase7(_ habits: HabitsModel, routines: RoutineStore, opened: Opened = Opened()) -> WeekReviewModel {

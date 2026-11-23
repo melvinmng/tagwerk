@@ -22,6 +22,7 @@ struct NotesListView: View {
     @State private var isStartingBibleStudy = false
     @State private var endingSession: BibleSessionEndModel?
     @State private var isCreatingRecipe = false
+    @State private var importTarget: NotionImportTarget?
     /// Notes that wait for the explanation before their first lock (`NoteLockIntroSheet`).
     @State var lockIntroIDs: [UUID] = []
 
@@ -124,6 +125,14 @@ struct NotesListView: View {
                     .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
+                if let target = notionImportTarget {
+                    Section {
+                        Button { importTarget = target } label: {
+                            Label("Aus Notion importieren", systemImage: "square.and.arrow.down").foregroundStyle(.tint)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
             ForEach(sections) { section in
                 Section {
@@ -201,6 +210,10 @@ struct NotesListView: View {
         }
         .sheet(isPresented: $isStartingBibleStudy) {
             BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
+        }
+        .sheet(item: $importTarget) { target in
+            // The list is already the folder, so "Zum Tagebuch" only closes the sheet.
+            NotionImportView(fixedTarget: target)
         }
         .sheet(isPresented: movingBinding) {
             NoteFolderPickerSheet(store: store, title: "Bewegen nach") { target in
@@ -298,6 +311,12 @@ struct NotesListView: View {
         case .trash: String(localized: "Zuletzt gelöscht")
         case .folder(let id): store.folder(id: id)?.name ?? String(localized: "Notizen")
         }
+    }
+
+    /// TB4b: the empty journal or Bible Study folder offers the import with its target already chosen.
+    private var notionImportTarget: NotionImportTarget? {
+        guard searchText.isEmpty, !isTrash, !editMode.isEditing else { return nil }
+        return isJournal ? .journal : isBibleStudy ? .bibleStudy : nil
     }
 
     private var emptyText: String {

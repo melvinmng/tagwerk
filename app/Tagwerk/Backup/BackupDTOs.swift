@@ -572,6 +572,8 @@ struct WorkoutBackup: BackupEntity {
     var kilocalories: Double?
     var healthVersion: Int
     var healthSynced: Bool
+    /// Optional, so a backup written before it still decodes; `nil` lets the current permission decide.
+    var energyInHealth: Bool?
 
     init(_ record: WorkoutRecord) {
         id = record.id
@@ -581,6 +583,7 @@ struct WorkoutBackup: BackupEntity {
         kilocalories = record.kilocalories
         healthVersion = record.healthVersion
         healthSynced = record.healthSynced
+        energyInHealth = record.energyInHealth
     }
 
     func makeRecord() -> WorkoutRecord {
@@ -592,6 +595,7 @@ struct WorkoutBackup: BackupEntity {
         record.kilocalories = kilocalories
         record.healthVersion = healthVersion
         record.healthSynced = healthSynced
+        record.energyInHealth = energyInHealth
         return record
     }
 }
@@ -1329,6 +1333,9 @@ struct AppSettingsBackup: Codable, Equatable {
     /// Optional, so a backup written before the goal plans still decodes; a missing value keeps the device's value.
     var goalPlansMigrated: Bool?
     var activityCreditPercent: Int?
+    var countsForeignNutrition: Bool?
+    var saturatedFatEnabled: Bool?
+    var saltEnabled: Bool?
     var mealEstimationConsent: Bool
     var shoppingListID: String?
     var shoppingSuggestionDismissed: Bool
@@ -1439,6 +1446,9 @@ struct AppSettingsBackup: Codable, Equatable {
         goalProteinGrams = record.goalProteinGrams
         goalPlansMigrated = record.goalPlansMigrated
         activityCreditPercent = record.activityCreditPercent
+        countsForeignNutrition = record.countsForeignNutrition
+        saturatedFatEnabled = record.saturatedFatEnabled
+        saltEnabled = record.saltEnabled
         mealEstimationConsent = record.mealEstimationConsent
         shoppingListID = record.shoppingListID
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
@@ -1532,6 +1542,9 @@ struct AppSettingsBackup: Codable, Equatable {
         record.goalProteinGrams = goalProteinGrams
         if let goalPlansMigrated { record.goalPlansMigrated = goalPlansMigrated }
         if let activityCreditPercent { record.activityCreditPercent = activityCreditPercent }
+        if let countsForeignNutrition { record.countsForeignNutrition = countsForeignNutrition }
+        if let saturatedFatEnabled { record.saturatedFatEnabled = saturatedFatEnabled }
+        if let saltEnabled { record.saltEnabled = saltEnabled }
         record.mealEstimationConsent = mealEstimationConsent
         record.shoppingListID = shoppingListID
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed

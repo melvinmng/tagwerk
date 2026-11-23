@@ -107,6 +107,25 @@ struct WidgetSnapshotTests {
         #expect(intake.goalSteps == nil)
     }
 
+    @Test func snapshot_oldFileWithoutCredit_decodes_andCountsTheBaseGoalAlone() throws {
+        let json = """
+        {"createdAt":1795000000,"days":[{"day":{"day":18,"month":11,"year":2026},"deadlineCount":0,"entries":[],
+        "intake":{"goalKcal":2300,"goalWaterMilliliters":2000,"hasEstimate":true,"kcal":1240,"waterMilliliters":1200}}],
+        "schemaVersion":1}
+        """
+        let snapshot = try #require(WidgetSnapshot.decode(Data(json.utf8)))
+        let intake = try #require(snapshot.days.first?.intake)
+        #expect(intake.creditedKcal == nil && intake.budgetKcal == 2300)
+    }
+
+    @Test func snapshot_credit_raisesTheBudget_andSurvivesEncoding() throws {
+        let intake = SnapshotIntake(kcal: 1240, hasEstimate: true, goalKcal: 2300, waterMilliliters: 1200, goalWaterMilliliters: 2000,
+                                    creditedKcal: 260)
+        #expect(intake.budgetKcal == 2560)
+        let decoded = try JSONDecoder().decode(SnapshotIntake.self, from: JSONEncoder().encode(intake))
+        #expect(decoded == intake)
+    }
+
     @Test func builder_intakeOnlyToday() {
         let snapshot = make(intake: intake())
         #expect(snapshot.days[0].intake != nil)

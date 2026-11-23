@@ -73,6 +73,17 @@ final class IntakeStore {
         return ((try? context.fetch(descriptor)) ?? []).map(\.value)
     }
 
+    /// The own workouts that start on `day`, as the active energy needs them. A workout counts as inside the Health sum when it
+    /// was mirrored with its calories; for one mirrored before that was recorded (`energyInHealth == nil`) the current permission
+    /// decides (`mayWriteEnergy`).
+    func ownWorkoutEnergy(on day: PlanDay, calendar: Calendar, mayWriteEnergy: Bool) -> [OwnWorkoutEnergy] {
+        let (start, end) = bounds(day, calendar)
+        let descriptor = FetchDescriptor<WorkoutRecord>(predicate: #Predicate { $0.start >= start && $0.start < end })
+        return ((try? context.fetch(descriptor)) ?? []).map {
+            OwnWorkoutEnergy(kilocalories: $0.kilocalories, energyInHealth: $0.healthSynced && ($0.energyInHealth ?? mayWriteEnergy))
+        }
+    }
+
     /// The most recent own workout, for the defaults of a new one.
     func latestWorkout() -> WorkoutValue? {
         var descriptor = FetchDescriptor<WorkoutRecord>(sortBy: [SortDescriptor(\.start, order: .reverse)])
@@ -215,11 +226,15 @@ final class IntakeStore {
         return count
     }
 
-    /// Marks the entry as mirrored, unless it was edited (higher version) or deleted meanwhile.
-    func markSynced(_ id: UUID, version: Int) {
+    /// Marks the entry as mirrored, unless it was edited (higher version) or deleted meanwhile. `energyInHealth` is the state of
+    /// the calories permission at the time of the write; it only matters for workouts.
+    func markSynced(_ id: UUID, version: Int, energyInHealth: Bool? = nil) {
         if let record = mealRecord(id), record.healthVersion == version { record.healthSynced = true }
         if let record = drinkRecord(id), record.healthVersion == version { record.healthSynced = true }
-        if let record = workoutRecord(id), record.healthVersion == version { record.healthSynced = true }
+        if let record = workoutRecord(id), record.healthVersion == version {
+            record.healthSynced = true
+            record.energyInHealth = energyInHealth
+        }
         save()
     }
 
