@@ -232,15 +232,15 @@ struct BackupSettingsView: View {
         guard let data = fileAwaitingPassword else { return }
         let password = typedPassword
         typedPassword = ""
+        // The alert closes at once; it comes back only when the file still needs a password (nothing else holds it open while the
+        // slow key derivation runs).
+        fileAwaitingPassword = nil
         Task {
             do {
                 pendingRestore = try await service.inspectFile(data, typedPassword: password)
-                fileAwaitingPassword = nil
             } catch let error as BackupService.BackupError {
-                fileAwaitingPassword = nil
                 alertText = BackupService.message(for: error)
             } catch {
-                fileAwaitingPassword = nil
                 alertText = BackupService.message(for: .unreadable)
             }
         }
