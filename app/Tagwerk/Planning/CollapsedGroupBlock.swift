@@ -55,7 +55,10 @@ struct CollapsedGroupBlock: View {
             }
             .padding(Self.padding)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            // The grey fill lies on the page background, not on whatever the hour grid draws behind the block (grid lines, entries
+            // that scroll under the translucent bars): the audit measures text on the translucent fill against that changing background.
             .background(Color.gray.opacity(0.24), in: RoundedRectangle(cornerRadius: 7))
+            .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 7))
             .overlay {
                 RoundedRectangle(cornerRadius: 7)
                     .strokeBorder(isRunning ? Color.gray : .clear, lineWidth: 2)

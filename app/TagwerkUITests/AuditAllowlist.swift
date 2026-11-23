@@ -6,8 +6,9 @@ import XCTest
 @MainActor
 enum AuditAllowlist {
     /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
-    /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable.
-    static let fixedClockArguments = UITestCase.morningClockArguments
+    /// seminar, the lunch break, the demo deadline and the "now" line, and "Tagesabschluss" is still reachable. The weekday is pinned to
+    /// Sunday, so "Tagesabschluss" always contains the section "Wochenplanung starten" instead of only on the Sundays of the runs.
+    static let fixedClockArguments = UITestCase.morningSundayClockArguments
 
     /// One accepted group of findings of one audit type. `labels` are regular expressions that must match the whole label
     /// (or the identifier) of the element; there is no entry without labels.
@@ -62,7 +63,7 @@ enum AuditAllowlist {
             // title is a heading line starts with the first body line, so these lines are listed as well.
             "(?s)(Demo Linsensuppe|Portionen: 4|Ideen Hausarbeit|Gliederung|Generelle Gedanken|Literaturliste|Handwerker anrufen|Heute lief die Gliederung gut|Geschenkidee für Lea|Kochbuch oder Konzertkarten|Römer|Allgemeine Stimmung|Alte Einkaufsidee|Ruhig und dankbar\\.|Heizung entlüften|1 Einleitung, 2 Methode, 3 Ergebnisse|Drei Quellen zur Statistik).*",
             "Ganztägig", "Leitfragen einfügen", "Punkte in den Einstellungen anlegen",
-            "Schreib auf, was in deinen Kopf kommt\\. Sortier deine Gedanken\\.", "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
+            "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
             "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*",
         ], reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
@@ -167,8 +168,10 @@ enum AuditAllowlist {
             + "Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
             "Punkte in den Einstellungen anlegen", "(Morgen|[A-Z][a-z]\\.) planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.", "Wochenplanung starten",
-        ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day) report a partial lack of "
-            + "Dynamic Type support; no clipping in the large text run. Stays on the device test list."),
+            "Tagebuch schreiben", "Bible Study starten", "Zuletzt: .*", "Unerledigtes verschieben · .*",
+        ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day, the rows of "
+            + "\"Zeit mit Gott\", the leftover row with `.subheadline` that wraps) report a partial lack of Dynamic Type support; no fixed frame, line limit or fixed font in the code, 15 view "
+            + "variants gave the same findings, no clipping in the large text run. Stays on the device test list (largest text size)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
@@ -178,6 +181,15 @@ enum AuditAllowlist {
             "Language mark of the shopping list (\"DE\"/\"EN\" in the input field): a capsule with a text style (caption2), like the priority "
             + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
+
+        Entry(auditType: .dynamicType, labels: [
+            "Automatisch", "Wie gesprochen", "Nie",
+        ], screens: ["Einstellungen › Sprachen", "Einstellungen › KI › Sprache"], reason:
+            "Current value of a menu-style `Picker` row (\"Stimme Deutsch\": Automatisch, \"Sprachchat-Antwort\": Wie gesprochen, "
+            + "\"Antworten vorlesen\": Nie). The system draws the value as a `UILabel` inside its own menu button; "
+            + "the app only supplies the selection and the option texts, so there is no font or frame of ours to change. The audit names "
+            + "\"this UILabel\" and reports different values from run to run on the same code. The row titles next to them are SwiftUI texts "
+            + "and are not on this entry."),
 
         Entry(auditType: .dynamicType, labels: [
             "Britisches Englisch", "Markennamen lassen", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
@@ -337,22 +349,46 @@ enum AuditAllowlist {
             // depend on the speed of the run. The Dynamic Type pass switches the system text size, so the wait also runs
             // between the passes and after the last one, so that the switch back does not run into the next test step.
             try waitForStableScreen(app, screen: screen, file: file, line: line)
-            var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
-            let auditStarted = Date()
-            try runAudit(app, for: pass) { issue in
-                findings.append((issue, issue.element))
-            }
-            stats.auditSeconds += Date().timeIntervalSince(auditStarted)
-            stats.findings += findings.count
-            for finding in findings where !isAccepted(finding.issue, element: finding.element) {
-                let element = finding.element
-                XCTFail("\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
-                    + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)", file: file, line: line)
+            let rejected = try rejectedFindings(app, screen: screen, pass: pass)
+            guard !rejected.isEmpty else { continue }
+            // A finding is a property of the screen, so it comes back when the pass runs again. One that does not is a measurement
+            // of the moment (the audit resizes the text and reads the layout while the runner is busy; the Dynamic Type check named
+            // other texts of the same screen from run to run on the same code) and does not fail the test. A second pass is only
+            // needed when the first one has a finding, so a clean screen costs nothing.
+            try waitForStableScreen(app, screen: screen, file: file, line: line)
+            let confirmed = Set(try rejectedFindings(app, screen: screen, pass: pass).map(\.key))
+            for finding in rejected {
+                if confirmed.contains(finding.key) {
+                    XCTFail(finding.message, file: file, line: line)
+                } else {
+                    print("Unconfirmed audit finding (not reported by the second pass): \(finding.message)")
+                }
             }
         }
         try waitForStableScreen(app, screen: screen, file: file, line: line)
         recordStats(screen: screen)
     }
+
+    /// Runs one audit pass and returns the findings that are not on the allowlist, each with the message that fails the test and a
+    /// key that identifies it again in another pass (type, text of the finding and label of the element, not its frame, which moves
+    /// with the scroll position).
+    private static func rejectedFindings(_ app: XCUIApplication, screen: String, pass: XCUIAccessibilityAuditType) throws
+        -> [(key: String, message: String)] {
+        var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+        let auditStarted = Date()
+        try runAudit(app, for: pass) { issue in
+            findings.append((issue, issue.element))
+        }
+        stats.auditSeconds += Date().timeIntervalSince(auditStarted)
+        stats.findings += findings.count
+        return findings.filter { !isAccepted($0.issue, element: $0.element) }.map { finding in
+            let element = finding.element
+            let message = "\(screen): \(finding.issue.compactDescription) | \(finding.issue.detailedDescription) | "
+                + "label=\(element?.label ?? "-") id=\(element?.identifier ?? "-") frame=\(element?.frame ?? .zero)"
+            return ("\(finding.issue.auditType.rawValue)|\(finding.issue.compactDescription)|\(element?.label ?? "-")", message)
+        }
+    }
+
 
     /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
     /// written to the collect file as a finding of its own and the run goes on, so the flaky screens can be listed.

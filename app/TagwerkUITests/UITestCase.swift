@@ -16,10 +16,19 @@ class UITestCase: XCTestCase {
     /// at every hour of the day, also shortly before midnight, when the next full hour is already the next day.
     static let morningClockArguments = ["-TagwerkUITestNow", "09:30"]
 
+    /// The morning clock with the weekday pinned to Sunday, the day on which the wrap-up offers "Wochenplanung starten": the accessibility
+    /// audits use it, so their screens contain the same elements on every day of the run (the audit of "Tagesabschluss" used to find
+    /// other texts on a Sunday than on the other days).
+    static let morningSundayClockArguments = morningClockArguments + sundayArguments
+
     /// Pins the time of day to the evening, after the end of work (18:00): "heute ist vorbei", so "Planen" and "Tagesabschluss" show the
     /// leftover row ("Unerledigtes verschieben"). With `-TagwerkUITest` today is a working day on every weekday (see
     /// `DemoData.uiTestWorkdayOverrides`), so only the clock decides, not the weekday.
-    static let eveningClockArguments = ["-TagwerkUITestNow", "19:30"]
+    /// The weekday is pinned to Sunday as in `morningSundayClockArguments`; only the accessibility audits use this clock.
+    static let eveningClockArguments = ["-TagwerkUITestNow", "19:30"] + sundayArguments
+
+    /// Pins the weekday of the app to Sunday (1): the day is the latest Sunday up to and including today (see `UITestMode.pinnedNow`).
+    static let sundayArguments = ["-TagwerkUITestWeekday", "1"]
 
     /// Extra launch arguments of a test class (e.g. a large text size).
     var extraLaunchArguments: [String] { [] }

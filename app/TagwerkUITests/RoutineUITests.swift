@@ -8,7 +8,7 @@ final class RoutineUITests: UITestCase {
         tab("Erfassen")
         onScreen(label: "Tagesstart.*", matching: true).tap()
         XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
-        let brainDump = app.textViews["Brain Dump"]
+        let brainDump = app.textFields["Brain Dump"]
         XCTAssertTrue(brainDump.waitForExistence(timeout: Self.timeout))
         brainDump.tap()
         brainDump.typeText("UI-Test")
@@ -89,7 +89,7 @@ final class RoutineUITests: UITestCase {
         tab("Erfassen")
         onScreen(label: "Tagesstart.*", matching: true).tap()
         XCTAssertTrue(app.navigationBars["Tagesstart"].waitForExistence(timeout: Self.timeout), "The morning sheet did not open")
-        let brainDump = app.textViews["Brain Dump"]
+        let brainDump = app.textFields["Brain Dump"]
         scrollTo(brainDump)
         XCTAssertFalse(app.staticTexts["Willst du etwas ändern?"].exists, "The card shows before there is any text")
         brainDump.tap()
