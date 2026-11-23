@@ -106,4 +106,41 @@ final class CaptureUITests: UITestCase {
         tapButton("Rückgängig")
         eventually("The confirmation did not disappear after undoing") { !confirmation.exists }
     }
+
+    /// Decision LM1b and LM4b: a food with values per 100 g is created, chosen with a typed amount in grams, and its item is exact.
+    func testAddOwnFood_withGrams_addsExactItem() {
+        tab("Erfassen")
+        XCTAssertTrue(budgetLine.waitForExistence(timeout: Self.timeout), "The budget line is missing")
+        let before = budgetLine.label
+        onScreen(label: "Essen").tap()
+
+        // "Zuletzt" is the default list; the second segment holds the own foods.
+        selectSegment("Meine Lebensmittel", inSheetTitled: "Essen")
+        tapButton(AccessibilityID.Food.newButton)
+        typeIn(AccessibilityID.Food.nameField, text: "Skyr natur")
+        let kcal = app.textFields["Kalorien"].firstMatch
+        XCTAssertTrue(kcal.waitForExistence(timeout: Self.timeout), "The food form did not open")
+        kcal.tap()
+        kcal.typeText("62")
+        let hideKeyboard = app.buttons[AccessibilityID.Common.hideKeyboard].firstMatch
+        XCTAssertTrue(hideKeyboard.waitForExistence(timeout: Self.timeout), "The button above the keyboard is missing")
+        hideKeyboard.tap()
+        tapButton(AccessibilityID.Food.saveButton)
+
+        // The new food is in the list; choosing it asks for the amount (100 g to start with).
+        let row = app.buttons.matching(identifier: AccessibilityID.Food.row)
+            .matching(NSPredicate(format: "label CONTAINS 'Skyr natur'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The saved food is not in the list")
+        row.tap()
+        let amount = app.textFields[AccessibilityID.Food.amountField].firstMatch
+        XCTAssertTrue(amount.waitForExistence(timeout: Self.timeout), "The amount field is missing")
+        replaceText(of: amount, with: "250")
+        tapButton(AccessibilityID.Food.addButton)
+
+        // The meal view shows the item with its amount and the exact energy (250 g of 62 kcal per 100 g).
+        XCTAssertTrue(app.staticTexts["250 g"].firstMatch.waitForExistence(timeout: Self.timeout), "The amount of the item is missing")
+        XCTAssertTrue(app.staticTexts["155 kcal"].firstMatch.exists, "The item is not exact: 155 kcal without a tilde expected")
+        tapButton("Sichern")
+        eventually("The meal was not saved: the budget did not change from \(before)") { budgetLine.label != before }
+    }
 }

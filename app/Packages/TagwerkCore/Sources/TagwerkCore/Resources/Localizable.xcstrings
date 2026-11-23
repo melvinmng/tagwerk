@@ -60,6 +60,16 @@
         }
       }
     },
+    "%@ Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ protein"
+          }
+        }
+      }
+    },
     "%@ Gramm": {
       "localizations": {
         "en": {
@@ -1034,6 +1044,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imported from Notion"
+          }
+        }
+      }
+    },
+    "Ausgangswerte aus Open Food Facts, von dir geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting values from Open Food Facts, changed by you"
           }
         }
       }
@@ -2384,6 +2404,16 @@
         }
       }
     },
+    "Open Food Facts, abgerufen am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts, retrieved on %@"
+          }
+        }
+      }
+    },
     "Portionen": {
       "localizations": {
         "en": {
@@ -2532,6 +2562,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start %@"
+          }
+        }
+      }
+    },
+    "Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pc."
           }
         }
       }
@@ -2940,12 +2980,52 @@
         }
       }
     },
+    "je 100 g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 g"
+          }
+        }
+      }
+    },
+    "je 100 ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 ml"
+          }
+        }
+      }
+    },
+    "je Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece"
+          }
+        }
+      }
+    },
+    "je Stück (%@ g)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece (%@ g)"
+          }
+        }
+      }
+    },
     "keine Angabe": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "no value"
+            "value": "not stated"
           }
         }
       }

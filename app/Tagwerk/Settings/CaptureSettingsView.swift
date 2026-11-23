@@ -14,6 +14,7 @@ struct CaptureSettingsView: View {
 private struct CaptureSettingsForm: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var editor: GoalPlanEditor
+    @State private var showsLookupConsent = false
 
     init(goals: GoalStore) {
         _editor = State(initialValue: GoalPlanEditor(goals: goals))
@@ -128,10 +129,28 @@ private struct CaptureSettingsForm: View {
                 Text("Schätzung")
             } footer: {
                 if environment.ai.isSignedIn {
-                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
+                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ tippst oder ein Foto für ein Etikett aufnimmst oder auswählst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
                 } else {
                     Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
                 }
+            }
+
+            Section {
+                Toggle("Online-Suche in Open Food Facts", isOn: Binding(
+                    get: { settings.isFoodLookupEnabled },
+                    set: { enabled in
+                        // Switching on asks for the consent and the contact address again; switching off keeps the address.
+                        if enabled { showsLookupConsent = true } else { settings.foodLookupConsent = false }
+                    }))
+                    .accessibilityIdentifier(AccessibilityID.FoodLookup.toggle)
+                if settings.isFoodLookupEnabled {
+                    FoodLookupContactField()
+                }
+                Link("Daten: Open Food Facts (ODbL)", destination: Self.openFoodFactsURL)
+            } header: {
+                Text("Online-Suche")
+            } footer: {
+                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
             }
 
             Section {
@@ -145,7 +164,17 @@ private struct CaptureSettingsForm: View {
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showsLookupConsent) {
+            FoodLookupConsentSheet {
+                showsLookupConsent = false
+            } onDecline: {
+                showsLookupConsent = false
+            }
+        }
     }
+
+    /// The home page of the data source named in the attribution.
+    private static let openFoodFactsURL = URL(string: "https://world.openfoodfacts.org")!
 
     /// A goal that can be switched off (`nil`): the toggle sets `start` when it is switched on.
     private func optionalGoal(_ keyPath: WritableKeyPath<GoalPlan, Int?>, start: Int) -> Binding<Bool> {
