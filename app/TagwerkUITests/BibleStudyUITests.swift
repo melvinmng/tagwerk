@@ -42,10 +42,15 @@ final class BibleStudyUITests: UITestCase {
         search.typeText("Offb")
         let book = app.buttons["Offenbarung"].firstMatch
         XCTAssertTrue(book.waitForExistence(timeout: Self.timeout), "The search did not find Offenbarung by its abbreviation")
+        // While the keyboard is open, the first tap on the row only closes it (the window-wide tap of `KeyboardDismissal.swift` runs
+        // while the sheet shrinks back to its medium detent). The keyboard is closed first with a tap on the section header.
+        app.staticTexts["Neues Testament"].firstMatch.tap()
+        waitUntilGone(app.keyboards.firstMatch)
+        waitUntilScreenIsStable()
         book.tap()
         let start = app.buttons["bibleStudy.start"]
-        XCTAssertTrue(start.waitForExistence(timeout: Self.timeout))
-        XCTAssertEqual(start.label, "Sitzung starten · Offenbarung 1,1")
+        XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "The start sheet did not come back after choosing the book")
+        XCTAssertEqual(start.label, "Sitzung starten · Offenbarung 1,1", "The start button does not name the chosen book")
     }
 
     // MARK: Running session (BS1b, BV2b)
@@ -76,7 +81,7 @@ final class BibleStudyUITests: UITestCase {
         XCTAssertTrue(app.staticTexts["Sitzung abgeschlossen ✓"].waitForExistence(timeout: Self.timeout), "The bar did not confirm the end")
         waitUntilGone(app.buttons["bibleSession.complete"])
         let heading = app.textViews.firstMatch
-        XCTAssertTrue(heading.waitForExistence(timeout: Self.timeout))
+        XCTAssertTrue(heading.waitForExistence(timeout: Self.timeout), "The note of the session has no text view")
         XCTAssertTrue((heading.value as? String)?.range(of: "· 4,1–[0-9]+", options: .regularExpression) != nil,
                       "The heading of the section was not completed")
     }
