@@ -76,17 +76,21 @@ struct GoalDataSheet: View {
                 } footer: {
                     Text("Durchschnitte über \(draft.package.periodDays) Tage; Tage ohne Eintrag zählen nicht mit. Tagwerk gibt keine medizinische Beratung.")
                 }
-                Section {
-                    Button {
-                        onBegin(selected)
-                        dismiss()
-                    } label: {
-                        Text("Gespräch beginnen").fontWeight(.semibold).frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .accessibilityIdentifier(AccessibilityID.GoalPlanning.begin)
+            }
+            // Always in reach, whatever the length of the list above it: the user decides on this sheet, so the button must not sit
+            // below the fold.
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    onBegin(selected)
+                    dismiss()
+                } label: {
+                    Text("Gespräch beginnen").fontWeight(.semibold).frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding(.horizontal).padding(.vertical, 8)
+                .background(.bar)
+                .accessibilityIdentifier(AccessibilityID.GoalPlanning.begin)
             }
             .navigationTitle("Ziele planen")
             .navigationBarTitleDisplayMode(.inline)
