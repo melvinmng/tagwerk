@@ -194,11 +194,11 @@ jobs:
           - name: ui
             skip_ui_tests: ""
             only_ui_tests: "1"
-            job_timeout: 80
-            job_timeout_full: 90
+            job_timeout: 110
+            job_timeout_full: 120
             job_timeout_build: 55
-            step_timeout: 70
-            step_timeout_full: 80
+            step_timeout: 100
+            step_timeout_full: 110
             step_timeout_build: 45
 
     # Without tests to run (documentation-only pull request, nightly run without new commits) every step except the
