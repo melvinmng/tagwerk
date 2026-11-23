@@ -43,6 +43,8 @@ Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 
 
 - Erster Tipp bei offener Tastatur geht verloren (Buchsuche, Lebensmittel-Segment): Tastatur-Schließen per Fenster-Geste, Blatt schrumpft → **gemergt (#301)** (`endEditing` nach der Berührung, Ursache per Kontrollversuch belegt; `test-all.sh` bettet Appex neu ein, Gerätebuild enthält Bündel); #295 Head `66b1fc5` mit gleichem Fix ohne Test-Umgehung. Offen: Release-Build bricht beim Linken ab (`ProposalRevision.State` Metadaten, aus `MealSheet.o`/`PreviewFollowUpModel.o`) – Installation nutzt Debug, nicht betroffen.
 
+- CI-Rest (Plan `2026-11-23-ci-audit-rest.md`, Fable): PR #302 – Sprachseite nicht mehr auf dem Hauptthread, gezielte Wiederholung (GitHub und lokal), Einstellungs-Audit je Seite, Dynamic Type erst nach 3 Durchläufen (Nutzer 23.11.), Hang-Sample. Danach CI als Pflichtprüfung.
+
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
 
 - Start: `git fetch origin`; neuer Branch von `origin/main` bzw. `origin/main` in den vorhandenen Branch mergen (auch Job 2 eines verketteten Auftrags). Existiert der Branchname lokal mit fremden Commits: anderen Namen nehmen und melden, nichts zurücksetzen.
