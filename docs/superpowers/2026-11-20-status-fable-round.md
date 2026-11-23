@@ -41,7 +41,7 @@ Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 
 
 - Wackeltest `VoiceInputModelTests.finish_appendsRecognizedTextToDraft_andMarksSpoken` (main): `settle()` = 20× `Task.yield()`, auf CI bei #284 nur „Bitte“ statt „Bitte leg die Mail“ → auf Bedingung warten statt Yields zählen (kleiner Fix, nächster freier Platz).
 
-- Erster Tipp bei offener Tastatur geht verloren (Buchsuche, Lebensmittel-Segment): Tastatur-Schließen per Fenster-Geste, Blatt schrumpft → PR #301 (`endEditing` nach der Berührung, Ursache per Kontrollversuch belegt; `test-all.sh` bettet Appex neu ein, Gerätebuild enthält Bündel); #295 Head `66b1fc5` mit gleichem Fix ohne Test-Umgehung. Offen: Release-Build bricht beim Linken ab (`ProposalRevision.State` Metadaten, aus `MealSheet.o`/`PreviewFollowUpModel.o`) – Installation nutzt Debug, nicht betroffen.
+- Erster Tipp bei offener Tastatur geht verloren (Buchsuche, Lebensmittel-Segment): Tastatur-Schließen per Fenster-Geste, Blatt schrumpft → **gemergt (#301)** (`endEditing` nach der Berührung, Ursache per Kontrollversuch belegt; `test-all.sh` bettet Appex neu ein, Gerätebuild enthält Bündel); #295 Head `66b1fc5` mit gleichem Fix ohne Test-Umgehung. Offen: Release-Build bricht beim Linken ab (`ProposalRevision.State` Metadaten, aus `MealSheet.o`/`PreviewFollowUpModel.o`) – Installation nutzt Debug, nicht betroffen.
 
 ## Baustein „Vorbereitung“ für jeden Sonnet-Auftrag (in jeden Auftrag übernehmen)
 
