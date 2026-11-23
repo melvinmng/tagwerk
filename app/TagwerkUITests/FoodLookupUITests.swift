@@ -47,5 +47,12 @@ final class FoodLookupUITests: UITestCase {
         let food = app.buttons.matching(identifier: AccessibilityID.Food.row)
             .matching(NSPredicate(format: "label CONTAINS 'Demo Skyr natur'")).firstMatch
         XCTAssertTrue(food.waitForExistence(timeout: Self.timeout), "The taken-over product is not in the list of own foods")
+
+        // Saved without a change, the product keeps its source note. The values have two decimal places (the scripted answer gives
+        // 11,37 g protein, 0,15 g salt and the energy in kilojoules): a number field that rounded them would count as a change.
+        food.swipeLeft()
+        tapButton("Bearbeiten")
+        let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Open Food Facts, abgerufen am'")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: Self.timeout), "The source note of the product is missing or says that the values were changed")
     }
 }

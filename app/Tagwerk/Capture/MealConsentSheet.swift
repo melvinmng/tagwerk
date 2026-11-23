@@ -16,7 +16,7 @@ struct MealConsentSheet: View {
                     Text("Zum Schätzen sendet Tagwerk deine Beschreibung und, wenn du eines aufnimmst, das Foto der Mahlzeit an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist. Zum Lesen eines Etiketts sendet Tagwerk das Foto der Nährwerttabelle.")
                     point("paperplane", "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit, beim Etikett nur das Foto der Nährwerttabelle. Fotos gehen verkleinert und ohne Ortsangabe raus.")
                     point("heart.slash", "**Nicht gesendet werden** Daten aus Health, deine Ziele und frühere Einträge.")
-                    point("hand.tap", "**Nur auf dein Tippen:** Ohne „Schätzen“ oder „Etikett lesen“ verlässt nichts das iPhone.")
+                    point("hand.tap", "**Nur auf dein Tippen:** Ohne „Schätzen“ und ohne ein Foto, das du für ein Etikett aufnimmst oder auswählst, verlässt nichts das iPhone.")
                     ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
                         .font(.footnote).foregroundStyle(.secondaryText)

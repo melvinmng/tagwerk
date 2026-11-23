@@ -3432,11 +3432,22 @@
       }
     },
     "**Nur auf dein Tippen:** Ohne „Schätzen“ oder „Etikett lesen“ verlässt nichts das iPhone.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** Without “Estimate” or “Read label”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Schätzen“ und ohne ein Foto, das du für ein Etikett aufnimmst oder auswählst, verlässt nichts das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Without “Estimate” and without a photo you take or choose for a label, nothing leaves the iPhone."
           }
         }
       }
@@ -7077,7 +7088,18 @@
         }
       }
     },
+    "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and the contact address go to the operator, never amounts, meals, goals or data from Health. Without a contact address no request goes out; if you empty the field, the search switches off. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images (CC BY-SA 3.0). A product you take over appears in “My foods” with a note about its source."
+          }
+        }
+      }
+    },
     "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -24835,11 +24857,22 @@
       }
     },
     "Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ oder „Etikett fotografieren“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "To estimate, Tagwerk sends only the text and photo of the respective meal to ChatGPT (OpenAI), and to read a label only its photo, and only when you tap “Estimate” or “Photograph label”. Data from Health, goals and earlier entries are never sent. Switched off, you enter values yourself."
+          }
+        }
+      }
+    },
+    "Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ tippst oder ein Foto für ein Etikett aufnimmst oder auswählst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To estimate, Tagwerk sends only the text and photo of the respective meal to ChatGPT (OpenAI), and to read a label only its photo, and only when you tap “Estimate” or take or choose a photo for a label. Data from Health, goals and earlier entries are never sent. Switched off, you enter values yourself."
           }
         }
       }

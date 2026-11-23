@@ -10,7 +10,7 @@ struct DemoProductTransport: HTTPTransport {
 
     static let searchBody = """
     {"count":2,"page":1,"page_size":20,"products":[\
-    {"code":"4000000000001","product_name":"Demo Skyr natur","brands":"Demomolkerei","quantity":"450 g","nutriments":{"energy-kcal_100g":62,"proteins_100g":11,"carbohydrates_100g":4,"fat_100g":0.2,"sugars_100g":4,"salt_100g":0.1}},\
+    {"code":"4000000000001","product_name":"Demo Skyr natur","brands":"Demomolkerei","quantity":"450 g","nutriments":{"energy-kj_100g":260,"proteins_100g":11.37,"carbohydrates_100g":4,"fat_100g":0.2,"sugars_100g":4,"salt_100g":0.15}},\
     {"code":"4000000000002","product_name":"Demo Skyr Vanille","brands":"Demomolkerei","quantity":"150 g","nutriments":{"proteins_100g":9}}]}
     """
 

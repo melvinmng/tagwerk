@@ -88,4 +88,80 @@ struct FoodStoreTests {
         let again = stored.item(amount: 1)
         #expect(again.kcal == 360 && !again.isEstimated)
     }
+
+    // MARK: Values the number fields round (the edit sheet)
+
+    /// What a number field shows for a value and writes back when it appears.
+    private func shown(_ value: Double) -> Double {
+        Double(DecimalField.format(value).replacingOccurrences(of: ",", with: ".")) ?? value
+    }
+
+    private func product() -> FoodValue {
+        FoodValue(name: "Skyr", reference: .per100g, kcal: 260 / 4.184, protein: 11.37, carbs: 4, fat: 0.2,
+                  nutrients: NutrientValues(fiber: nil, sugar: 4, saturatedFat: 0.123, salt: 0.15), origin: .openFoodFacts,
+                  barcode: "4000000000001", sourceNote: "Open Food Facts, abgerufen am 21.11.2026")
+    }
+
+    /// The fields of the sheet right after it opened: every value as the number field shows it.
+    private func fieldsAfterOpening(_ food: FoodValue) -> FoodValue {
+        var fields = food
+        fields.kcal = shown(food.kcal)
+        fields.protein = food.protein.map(shown)
+        fields.carbs = food.carbs.map(shown)
+        fields.fat = food.fat.map(shown)
+        for nutrient in Nutrient.allCases { fields.nutrients[nutrient] = food.nutrients[nutrient].map(shown) }
+        return fields
+    }
+
+    @Test func untouched_aValueTheFieldStillShowsIsTheOriginal() {
+        #expect(FoodEditSheet.untouched(shown(239.006), original: 239.006) == 239.006)
+        #expect(FoodEditSheet.untouched(shown(0.15), original: 0.15) == 0.15)
+        #expect(FoodEditSheet.untouched(62, original: 62) == 62)
+    }
+
+    @Test func untouched_aTypedValueWins_andUnknownStaysUnknown() {
+        #expect(FoodEditSheet.untouched(240, original: 239.006) == 240)
+        #expect(FoodEditSheet.untouched(5, original: nil) == 5, "a value typed into a field that was unknown")
+        #expect(FoodEditSheet.untouched(nil, original: 3) == nil, "a cleared field is unknown again")
+        #expect(FoodEditSheet.untouched(nil, original: nil) == nil)
+    }
+
+    @Test func resolved_aProductOpenedAndSavedWithoutChange_keepsItsValuesAndItsSource() {
+        let original = product()
+        #expect(fieldsAfterOpening(original) != original, "the fields really do show rounded values")
+        let result = FoodEditSheet.resolved(typed: fieldsAfterOpening(original), against: original, energyUnknown: false)
+        #expect(result == original, "no rounding, and the entry still counts as the data of Open Food Facts")
+        #expect(result.origin == .openFoodFacts && result.sourceNote == original.sourceNote)
+    }
+
+    @Test func resolved_oneTypedValue_changesOnlyThatValue_andEndsTheClaimOfTheThirdParty() {
+        let original = product()
+        var fields = fieldsAfterOpening(original)
+        fields.kcal = 70
+        let result = FoodEditSheet.resolved(typed: fields, against: original, energyUnknown: false)
+        #expect(result.kcal == 70)
+        #expect(result.protein == 11.37 && result.nutrients.salt == 0.15 && result.nutrients.saturatedFat == 0.123, "the other values stay exact")
+        #expect(result.origin == .typed && result.sourceNote != original.sourceNote)
+    }
+
+    @Test func resolved_anOwnFoodEditedWithoutChange_isNotRounded() {
+        let own = FoodValue(name: "Haferflocken", reference: .perPiece(grams: 33.333), kcal: 123.456, protein: 4.321, origin: .typed)
+        var fields = fieldsAfterOpening(own)
+        fields.reference = .perPiece(grams: shown(33.333))
+        #expect(FoodEditSheet.resolved(typed: fields, against: own, energyUnknown: false) == own)
+    }
+
+    @Test func resolved_newFood_isTakenAsTyped() {
+        let fresh = FoodValue(name: "Neu", reference: .per100g, kcal: 12.34)
+        #expect(FoodEditSheet.resolved(typed: fresh, against: nil, energyUnknown: false) == fresh)
+    }
+
+    @Test func resolved_productWithoutEnergy_takesTheTypedEnergy() {
+        let original = FoodValue(name: "Skyr", reference: .per100g, kcal: 0, protein: 9, origin: .openFoodFacts, sourceNote: "Open Food Facts")
+        var fields = fieldsAfterOpening(original)
+        fields.kcal = 55
+        let result = FoodEditSheet.resolved(typed: fields, against: original, energyUnknown: true)
+        #expect(result.kcal == 55 && result.protein == 9)
+        #expect(result.origin == .typed, "the energy was filled in by the user")
+    }
 }

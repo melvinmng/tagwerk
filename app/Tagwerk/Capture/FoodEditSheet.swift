@@ -93,7 +93,9 @@ struct FoodEditSheet: View {
         }
     }
 
-    private var draft: FoodValue {
+    /// The values of the fields. A `DecimalField` shows one decimal place and writes what it shows back, so a field the user did not
+    /// touch holds the rounded value; `resolved` puts the exact original back for such a field.
+    private var typed: FoodValue {
         var food = original ?? FoodValue(name: "", reference: .per100g, kcal: 0)
         food.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         food.reference = reference
@@ -240,6 +242,34 @@ struct FoodEditSheet: View {
         }
     }
 
+    // MARK: Result of the fields
+
+    /// `typed` is what the fields hold. A number field shows one decimal place, so a value the user left alone comes back rounded
+    /// (239.006 kcal as 239.0, 0.15 g of salt as 0.1). Such a value is the original again, so opening a food and saving it without a change
+    /// neither rounds its values nor, for a product of Open Food Facts, counts as a change of the third-party values.
+    static func resolved(typed: FoodValue, against original: FoodValue?, energyUnknown: Bool) -> FoodValue {
+        guard let original else { return typed }
+        var food = typed
+        food.kcal = untouched(typed.kcal, original: energyUnknown ? nil : original.kcal) ?? typed.kcal
+        food.protein = untouched(typed.protein, original: original.protein)
+        food.carbs = untouched(typed.carbs, original: original.carbs)
+        food.fat = untouched(typed.fat, original: original.fat)
+        for nutrient in Nutrient.allCases {
+            food.nutrients[nutrient] = untouched(typed.nutrients[nutrient], original: original.nutrients[nutrient])
+        }
+        if case .perPiece(let grams) = typed.reference, case .perPiece(let originalGrams) = original.reference {
+            food.reference = .perPiece(grams: untouched(grams, original: originalGrams))
+        }
+        return food.afterEditing(from: original)
+    }
+
+    /// `original` when `typed` is exactly what a number field shows for `original`; otherwise `typed`.
+    static func untouched(_ typed: Double?, original: Double?) -> Double? {
+        guard let typed, let original else { return typed }
+        let shown = Double(DecimalField.format(original).replacingOccurrences(of: ",", with: "."))
+        return shown == typed ? original : typed
+    }
+
     // MARK: Label photo
 
     /// "Etikett fotografieren": only with a ChatGPT sign-in; the photo is read on a tap, the result fills the fields.
@@ -335,8 +365,7 @@ struct FoodEditSheet: View {
     }
 
     private func save() {
-        var food = draft
-        if let original { food = food.afterEditing(from: original) }
+        var food = Self.resolved(typed: typed, against: original, energyUnknown: seed.energyUnknown)
         if readFromLabel {
             // Values read from a photo and confirmed by the user are the user's own table values, not those of a third party.
             food.origin = .label
