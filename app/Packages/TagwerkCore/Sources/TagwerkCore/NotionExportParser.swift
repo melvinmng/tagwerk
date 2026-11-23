@@ -255,7 +255,27 @@ public struct NotionImportPreview: Sendable, Equatable {
     }
 }
 
+/// A journal day that already has an entry: the imported text is appended to it. Carries short excerpts of both texts for
+/// the list in the preview; they stay on the device.
+public struct NotionImportConflict: Sendable, Equatable, Identifiable {
+    /// The id of the imported entry.
+    public let id: String
+    public let day: PlanDay
+    public let existingExcerpt: String
+    public let importedExcerpt: String
+
+    public init(id: String, day: PlanDay, existingExcerpt: String, importedExcerpt: String) {
+        self.id = id
+        self.day = day
+        self.existingExcerpt = existingExcerpt
+        self.importedExcerpt = importedExcerpt
+    }
+}
+
 public enum NotionImportPlanner {
+    /// The longest excerpt of a text in the list of conflicts, in characters (without the ellipsis).
+    public static let excerptLength = 40
+
     /// Sorts the entries into new ones, conflicts with an existing entry of the same day (or with an earlier entry of the same
     /// import) and entries that an earlier import already stored (`importedIDs`).
     public static func preview(entries: [NotionJournalEntry], existingDayKeys: Set<String>, importedIDs: Set<String>) -> NotionImportPreview {
@@ -272,6 +292,36 @@ public enum NotionImportPlanner {
             }
         }
         return preview
+    }
+
+    /// The entries of `preview` that count as conflicts, newest day first, with an excerpt of the text they are appended to.
+    /// `existingTexts` maps the day key of every day that has an entry with real content to its text (an entry that only holds
+    /// the unfilled template is not in it, so it is no conflict). An earlier entry of the same import counts as the text
+    /// of its day, like in `preview`.
+    public static func conflicts(entries: [NotionJournalEntry], existingTexts: [String: String], importedIDs: Set<String>) -> [NotionImportConflict] {
+        var taken = existingTexts
+        var conflicts: [NotionImportConflict] = []
+        for entry in entries where !importedIDs.contains(entry.id) {
+            if let existing = taken[entry.dayKey] {
+                conflicts.append(NotionImportConflict(id: entry.id, day: entry.day, existingExcerpt: excerpt(existing),
+                                                      importedExcerpt: excerpt(entry.text)))
+            } else {
+                taken[entry.dayKey] = entry.text
+            }
+        }
+        // Several entries of one day keep the order of the import.
+        return conflicts.enumerated().sorted { lhs, rhs in
+            lhs.element.day != rhs.element.day ? lhs.element.day > rhs.element.day : lhs.offset < rhs.offset
+        }.map(\.element)
+    }
+
+    /// The first line of a journal text with content (template headings and the guiding question are skipped), whitespace
+    /// collapsed and cut at `excerptLength` characters with an ellipsis. Empty when the text has no content line.
+    public static func excerpt(_ text: String) -> String {
+        guard let line = JournalTemplate.contentLines(text).first else { return "" }
+        let collapsed = line.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard collapsed.count > excerptLength else { return collapsed }
+        return String(collapsed.prefix(excerptLength)).trimmingCharacters(in: .whitespaces) + "…"
     }
 
     /// The same for Bible Study notes: a page for a book that has a note (`existingBookKeys`) is a conflict (its text is
