@@ -24,7 +24,7 @@ Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-
 - Fokus-Filter: immer 4 h → Folge-PR zu #275.
 - Doppelzustellung zwei Fokus-Phasen: direkt beheben → Folge-PR zu #275.
 
-Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 (gepusht, CI läuft), (2b) Folge-PR Mengen-Knopf + Fokus 4 h + Doppelzustellung (läuft), (2c) Sperre in RO/NX in #284 erledigt, (3) gebündelte Audit-Befunde (läuft, Sonnet, `fix/ci-audit-findings`).
+Warteschlange Xcode-Plätze: (1) #282/#283 Reparatur (läuft), (2a) #284 + #285 (gepusht, CI läuft), (2b) Folge-PR Mengen-Knopf + Fokus 4 h + Doppelzustellung (läuft), (2c) Sperre in RO/NX in #284 erledigt, (3) gebündelte Audit-Befunde: PR #299 (`b86d938`), 64/66 grün; offen Tagesabschluss-DT („Tagebuch schreiben“, „Zuletzt: Römer…“, „Bible Study starten“) ohne Code-Ursache → Nutzerentscheidung. PR #298 UI-Job-Zeitgrenze 110 min.
 
 ## Offene Kleinigkeiten
 
