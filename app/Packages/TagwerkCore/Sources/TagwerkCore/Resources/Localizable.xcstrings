@@ -90,6 +90,42 @@
         }
       }
     },
+    "%@ Schritte pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ steps per day"
+          }
+        }
+      }
+    },
+    "%@ Schritte pro Tag, %@ Training pro Woche": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ Schritte pro Tag, %2$@ Training pro Woche"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ steps per day, %@ of training per week"
+          }
+        }
+      }
+    },
+    "%@ Training pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of training per week"
+          }
+        }
+      }
+    },
     "%@ g": {
       "localizations": {
         "en": {
@@ -106,6 +142,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal"
+          }
+        }
+      }
+    },
+    "%@ kcal aktiv pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal active per day"
           }
         }
       }
@@ -194,6 +240,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ L"
+          }
+        }
+      }
+    },
+    "%@ pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per day"
           }
         }
       }
@@ -694,6 +750,26 @@
         }
       }
     },
+    "%lld g Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld g of fibre"
+          }
+        }
+      }
+    },
+    "%lld g Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld g of protein"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "en": {
@@ -908,6 +984,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "General mood"
+          }
+        }
+      }
+    },
+    "Alter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age"
+          }
+        }
+      }
+    },
+    "Alter %lld Jahre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age %lld years"
           }
         }
       }
@@ -1554,6 +1650,16 @@
         }
       }
     },
+    "Fehlt noch: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still missing: %@"
+          }
+        }
+      }
+    },
     "Fett": {
       "localizations": {
         "en": {
@@ -1692,6 +1798,26 @@
         }
       }
     },
+    "Geschlecht männlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex male"
+          }
+        }
+      }
+    },
+    "Geschlecht weiblich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex female"
+          }
+        }
+      }
+    },
     "Gestern %@": {
       "localizations": {
         "en": {
@@ -1732,12 +1858,32 @@
         }
       }
     },
+    "Grundziel %@ kcal ohne Aktivität": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base goal %@ kcal without activity"
+          }
+        }
+      }
+    },
     "Größe": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Height"
+          }
+        }
+      }
+    },
+    "Größe %lld cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height %lld cm"
           }
         }
       }
@@ -2380,6 +2526,16 @@
         }
       }
     },
+    "Start %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start %@"
+          }
+        }
+      }
+    },
     "Tag reflektieren": {
       "localizations": {
         "en": {
@@ -2426,12 +2582,32 @@
         }
       }
     },
+    "Tempo %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace %@"
+          }
+        }
+      }
+    },
     "Tiefkühl": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Frozen"
+          }
+        }
+      }
+    },
+    "Trend %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend %@"
           }
         }
       }
@@ -2612,6 +2788,16 @@
         }
       }
     },
+    "Zielgewicht %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target weight %@"
+          }
+        }
+      }
+    },
     "Zubereitung": {
       "localizations": {
         "en": {
@@ -2694,6 +2880,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "on %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "an %lld von %lld Tagen erfasst": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "an %1$lld von %2$lld Tagen erfasst"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "recorded on %lld of %lld days"
           }
         }
       }
@@ -2880,6 +3082,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "probably between %1$@ and %2$@ kcal"
+          }
+        }
+      }
+    },
+    "~%@ kcal pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%@ kcal per day"
           }
         }
       }

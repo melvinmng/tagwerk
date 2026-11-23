@@ -311,6 +311,15 @@ final class AppSettings {
     /// The consent "Ziele mit ChatGPT planen" (decision PV1b): only the chat "Ziele planen" and only the data package the user selects
     /// before each conversation. Off by default; a backup without the field restores it as off.
     var goalPlanningConsent: Bool = false
+    /// The groups of the data package the user switched off at the last conversation, as comma-separated `GoalDataGroup` raw values.
+    /// A device preference, not part of the backup.
+    var goalDataOffGroupsRaw: String? = nil
+
+    /// The groups that start switched off in the data sheet.
+    var goalDataOffGroups: Set<GoalDataGroup> {
+        get { Set((goalDataOffGroupsRaw ?? "").split(separator: ",").compactMap { GoalDataGroup(rawValue: String($0)) }) }
+        set { goalDataOffGroupsRaw = newValue.isEmpty ? nil : newValue.map(\.rawValue).sorted().joined(separator: ",") }
+    }
 
     /// The body values the user typed.
     var typedBodyValues: BodyProfileValues {

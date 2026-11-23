@@ -257,7 +257,7 @@ final class CaptureModel {
         weightOverview = WeightOverview.make(days, today: today, calendar: calendar)
     }
 
-    private static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
+    static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
         WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
                      minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
                      kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,

@@ -7315,6 +7315,16 @@
         }
       }
     },
+    "Das geht an ChatGPT, wenn du das Gespräch beginnst. Schalte aus, was nicht mitgehen soll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This goes to ChatGPT when you begin the conversation. Switch off what should not be shared."
+          }
+        }
+      }
+    },
     "Das gewählte Modell gibt es nicht mehr. Tagwerk plant mit „Automatisch“.": {
       "localizations": {
         "en": {
@@ -9427,6 +9437,16 @@
         }
       }
     },
+    "Durchschnitte über %lld Tage; Tage ohne Eintrag zählen nicht mit. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Averages over %lld days; days without an entry do not count. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
     "Durchsucht Termine und Aufgaben": {
       "localizations": {
         "en": {
@@ -10530,6 +10550,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try again"
+          }
+        }
+      }
+    },
+    "Ernährung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition"
           }
         }
       }
@@ -11956,6 +11986,16 @@
         }
       }
     },
+    "Geltende Ziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current goals"
+          }
+        }
+      }
+    },
     "Gelöscht": {
       "localizations": {
         "en": {
@@ -11988,6 +12028,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Measured from time blocks; focus timer time only counts outside the blocks, last 8 weeks."
+          }
+        }
+      }
+    },
+    "Genau diese Werte senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send exactly these values"
           }
         }
       }
@@ -12229,6 +12279,16 @@
         }
       }
     },
+    "Gespräch beginnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin conversation"
+          }
+        }
+      }
+    },
     "Gestern": {
       "localizations": {
         "en": {
@@ -12357,6 +12417,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weight in Health"
+          }
+        }
+      }
+    },
+    "Gewicht und Trend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight and trend"
           }
         }
       }
@@ -15118,6 +15188,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Body"
+          }
+        }
+      }
+    },
+    "Körperdaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body data"
           }
         }
       }
@@ -24365,6 +24445,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan goals with ChatGPT"
+          }
+        }
+      }
+    },
+    "Ziele planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan goals"
           }
         }
       }
