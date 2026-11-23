@@ -77,7 +77,9 @@ final class HealthMirror {
                 case .drink(let drink): try await health.save(drink)
                 case .workout(let workout): try await health.save(workout)
                 }
-                if complete { store.markSynced(unsynced.entry.id, version: unsynced.version) }
+                // The calories of a workout go to Health only while that type may be written; remember how it was at this moment.
+                let energyInHealth: Bool? = if case .workout = unsynced.entry { access.allowsWriting(.activeEnergy) } else { nil }
+                if complete { store.markSynced(unsynced.entry.id, version: unsynced.version, energyInHealth: energyInHealth) }
             } catch {
                 log(error, while: "save")
             }

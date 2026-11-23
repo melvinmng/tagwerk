@@ -27,9 +27,36 @@ private final class FailingResponder: ResponseStreaming, @unchecked Sendable {
 @MainActor
 struct MealEstimatorTests {
     let responder = FakePlanResponder()
-    static let answer = #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+    static let answer = #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":null,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":null,"sugar_g":null,"saturated_fat_g":9,"salt_g":null}]}"#
 
     final class Counter { var value = 0 }
+
+    @Test func schema_newFieldsRequiredAndNullable() throws {
+        let root = try #require(try JSONSerialization.jsonObject(with: MealEstimator.schema) as? [String: Any])
+        let items = try #require((root["properties"] as? [String: Any])?["items"] as? [String: Any])
+        let item = try #require(items["items"] as? [String: Any])
+        let properties = try #require(item["properties"] as? [String: Any])
+        let required = try #require(item["required"] as? [String])
+        for key in ["fiber_g", "sugar_g", "saturated_fat_g", "salt_g"] {
+            let type = try #require((properties[key] as? [String: Any])?["type"] as? [String])
+            #expect(Set(type) == ["number", "null"], "\(key) allows null")
+            #expect(required.contains(key), "\(key) is required: the strict format wants an explicit null")
+        }
+        #expect(item["additionalProperties"] as? Bool == false)
+    }
+
+    @Test func instructions_askForNullInsteadOfGuessing() {
+        let text = MealEstimator.instructions(language: .german)
+        #expect(text.contains("fiber_g") && text.contains("salt_g") && text.contains("null"))
+    }
+
+    @Test func estimate_keepsFurtherNutrients_andLeavesUnknownOnesUnknown() async throws {
+        responder.enqueue(Self.answer)
+        let estimate = try await make(responder).estimate(text: "2 Brötchen mit Käse", jpeg: nil)
+        let roll = estimate.items[0], cheese = estimate.items[1]
+        #expect(roll.fiber == 3 && roll.sugar == nil && roll.saturatedFat == 0.5 && roll.salt == 1.4)
+        #expect(cheese.fiber == nil && cheese.saturatedFat == 9 && cheese.salt == nil)
+    }
 
     func make(_ responder: any ResponseStreaming, consent: Bool = true, counter: Counter = Counter(),
               timeout: Duration = .seconds(30), language: VoiceLanguage = .german) -> MealEstimator {
