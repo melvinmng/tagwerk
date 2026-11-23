@@ -48,7 +48,7 @@ struct ProposalAdjustSheet: View {
                 if let editor {
                     editor.fields
                     Section {} footer: {
-                        Text("Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.")
+                        Text("Geändert wird nur der Vorschlag. Ausgeführt wird erst, wenn du die Karte bestätigst.")
                     }
                     if isMarked {
                         Section {

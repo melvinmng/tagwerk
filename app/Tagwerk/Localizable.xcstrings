@@ -11778,6 +11778,16 @@
         }
       }
     },
+    "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält fest, welche Gruppen gelesen wurden. Deine Nachrichten und die Antworten des Assistenten bleiben im Verlauf und können Zahlen daraus nennen, etwa dein Gewicht oder Durchschnittswerte. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history records which groups were read. Your messages and the assistant’s answers stay in the history and can name numbers from it, for example your weight or averages. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
     "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält nur fest, welche Gruppen gelesen wurden. Tagwerk gibt keine medizinische Beratung.": {
       "localizations": {
         "en": {
@@ -12705,6 +12715,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card."
+          }
+        }
+      }
+    },
+    "Geändert wird nur der Vorschlag. Ausgeführt wird erst, wenn du die Karte bestätigst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the proposal is changed. It is carried out only when you confirm the card."
           }
         }
       }

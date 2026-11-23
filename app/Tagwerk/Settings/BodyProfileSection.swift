@@ -12,6 +12,8 @@ struct BodyProfileSection: View {
         Section {
             Button("Aus Health lesen") { Task { await store.readFromHealth() } }
                 .accessibilityIdentifier(AccessibilityID.BodyProfile.readButton)
+                // Once when the section appears; a modifier on the `Section` itself would run once per row.
+                .task { await store.refresh() }
             heightRow(profile.height)
             birthYearRow(profile.birthYear)
             sexRow(profile.sex)
@@ -26,7 +28,6 @@ struct BodyProfileSection: View {
                 Text("Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.")
             }
         }
-        .task { await store.refresh() }
     }
 
     // MARK: Rows

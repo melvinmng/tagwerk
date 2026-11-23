@@ -2397,7 +2397,6 @@
   "Aufwand ändern": "Change effort",
   "Felder, die du nicht änderst, bleiben unverändert.": "Fields you do not change stay as they are.",
   "Frist ändern": "Change due date",
-  "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card.",
   "Ohne Datum wird die Frist entfernt.": "Without a date the due date is removed.",
   "Unverändert": "Unchanged",
   "Vorschlag anpassen": "Adjust proposal",
@@ -2805,7 +2804,6 @@
   "**Nur auf dein Tippen:** Ohne „Ziele planen“ verlässt nichts davon das iPhone.": "**Only when you tap:** Without “Plan goals”, none of this leaves the iPhone.",
   "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen. Ein Widerruf beendet auch ein laufendes Gespräch.": "You can withdraw this in the settings under “Capture”. Withdrawing also ends a running conversation.",
   "Einverstanden und weiter": "Agree and continue",
-  "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält nur fest, welche Gruppen gelesen wurden. Tagwerk gibt keine medizinische Beratung.": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history only records which groups were read. Tagwerk gives no medical advice.",
   "Melde dich unter Einstellungen › KI bei ChatGPT an, um Ziele planen zu lassen.": "Sign in to ChatGPT under Settings › AI to have goals planned.",
   "Ziele mit ChatGPT planen": "Plan goals with ChatGPT",
   "Zielplanung": "Goal planning",
@@ -2866,5 +2864,7 @@
   "wird zu": "becomes",
   "Du wählst vor jedem Gespräch aus, was an ChatGPT geht. Es geht nichts weg, bevor du das Gespräch beginnst. Tagwerk gibt keine medizinische Beratung.": "Before each conversation you choose what goes to ChatGPT. Nothing leaves before you begin the conversation. Tagwerk gives no medical advice.",
   "Fortschritt besprechen": "Discuss progress",
-  "Ich möchte besprechen, wie mein Fortschritt seit meinen letzten Zielen aussieht und ob sie noch passen.": "I would like to discuss how my progress has been since my last goals and whether they still fit."
+  "Ich möchte besprechen, wie mein Fortschritt seit meinen letzten Zielen aussieht und ob sie noch passen.": "I would like to discuss how my progress has been since my last goals and whether they still fit.",
+  "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält fest, welche Gruppen gelesen wurden. Deine Nachrichten und die Antworten des Assistenten bleiben im Verlauf und können Zahlen daraus nennen, etwa dein Gewicht oder Durchschnittswerte. Tagwerk gibt keine medizinische Beratung.": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history records which groups were read. Your messages and the assistant’s answers stay in the history and can name numbers from it, for example your weight or averages. Tagwerk gives no medical advice.",
+  "Geändert wird nur der Vorschlag. Ausgeführt wird erst, wenn du die Karte bestätigst.": "Only the proposal is changed. It is carried out only when you confirm the card."
 }

@@ -15,8 +15,9 @@ struct GoalPlanningSettingsSection: View {
             }
             .disabled(!environment.ai.isSignedIn || environment.goalPlanning.isPreparing)
             .accessibilityIdentifier(AccessibilityID.GoalPlanning.planEntry)
+            // Withdrawing stays possible without a sign-in; only giving the consent needs one.
             Toggle("Ziele mit ChatGPT planen", isOn: $settings.goalPlanningConsent)
-                .disabled(!environment.ai.isSignedIn)
+                .disabled(!environment.ai.isSignedIn && !settings.goalPlanningConsent)
                 .accessibilityIdentifier(AccessibilityID.GoalPlanning.consentSwitch)
         } header: {
             Text("Zielplanung")

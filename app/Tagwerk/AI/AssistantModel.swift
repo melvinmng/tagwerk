@@ -150,6 +150,12 @@ final class AssistantModel {
         guard hasGoalConsent(), let goalTools else { return }
         guard onTurnFinished == nil else { isPresented = true; return }
         guard !isHoldingOtherChat(ChatStore.goalsKey) else { isPresented = true; return }
+        // The goals chat is still loaded (the sheet was only closed): the package of the earlier session must not stay in the history,
+        // the user chose the groups anew. A running turn belongs to the earlier session, so the chat is only shown then.
+        if key == ChatStore.goalsKey, let conversation {
+            guard !conversation.isBusy else { isPresented = true; return }
+            conversation.reduceToStoredForm()
+        }
         goalTools.begin(session)
         goalsPrefill = prefill
         context = .goals

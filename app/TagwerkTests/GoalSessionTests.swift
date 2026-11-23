@@ -91,4 +91,40 @@ struct GoalSessionTests: GoalChatSuite {
         await waitUntil { tools.session == nil }
         #expect(tools.session == nil, "the way a backup restore or the settings withdraw the consent")
     }
+
+    @Test func reopeningTheChat_dropsThePackageOfTheEarlierSession() async {
+        let (model, tools, _) = await makeModel()
+        openGoals(model, tools)
+        responder.enqueueEvents([Self.readCall, .completed(usage: nil)])
+        responder.enqueue("Gelesen.")
+        await model.send("Plane")
+        #expect(model.conversation?.history.map { "\($0)" }.joined().contains("height_cm") == true)
+        // The sheet is only closed; the chat stays loaded. The user begins again and switches the body data off.
+        model.isPresented = false
+        var narrowed = session
+        narrowed.package = session.package.keeping([.weight])
+        model.openGoals(session: narrowed)
+        responder.enqueue("Okay.")
+        await model.send("Und weiter?")
+        let sent = responder.calls.last?.input.map { "\($0)" }.joined() ?? ""
+        #expect(!sent.contains("height_cm") && !sent.contains("2350"), "the earlier package must not go out after the user switched groups off")
+        #expect(tools.session?.package.groups == [.weight])
+    }
+
+    @Test func reopeningTheChat_whileATurnRuns_keepsTheSession_andOnlyShowsTheChat() async {
+        let gate = TurnGate()
+        let (model, tools, _) = await makeModel(responder: gate)
+        openGoals(model, tools)
+        gate.enqueue([.textDelta("Hallo."), .completed(usage: nil)], blocked: true)
+        let sending = Task { await model.send("Hallo") }
+        while !gate.isHolding { await Task.yield() }
+        model.isPresented = false
+        var narrowed = session
+        narrowed.package = session.package.keeping([.weight])
+        model.openGoals(session: narrowed)
+        #expect(model.isPresented)
+        #expect(tools.session?.package.groups == session.package.groups, "the running turn belongs to the earlier session")
+        gate.release()
+        await sending.value
+    }
 }
