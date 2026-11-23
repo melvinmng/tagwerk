@@ -4229,6 +4229,42 @@
         }
       }
     },
+    "Aktivitätsenergie pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active energy per day"
+          }
+        }
+      }
+    },
+    "Aktivitätsenergie pro Tag: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Aktivitätsenergie pro Tag: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active energy per day: %@ → %@"
+          }
+        }
+      }
+    },
+    "Aktivitätsziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity goals"
+          }
+        }
+      }
+    },
     "Aktuelle Phase zeigen": {
       "localizations": {
         "en": {
@@ -6308,6 +6344,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reason"
+          }
+        }
+      }
+    },
+    "Begründung: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason: %@"
           }
         }
       }
@@ -9637,6 +9683,16 @@
         }
       }
     },
+    "Ein Wert, der aus ist, bleibt, wie er in deinen Zielen steht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A value that is switched off stays as it is in your goals."
+          }
+        }
+      }
+    },
     "Ein anderer Tag macht aus dem Block eine Verschiebung. Es bleibt ein Vorschlag, bis du ihn übernimmst.": {
       "localizations": {
         "en": {
@@ -10620,6 +10676,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show nutrition in widget"
+          }
+        }
+      }
+    },
+    "Ernährungsziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition goals"
           }
         }
       }
@@ -11891,6 +11957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gegenrechnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cross-check"
           }
         }
       }
@@ -14295,6 +14371,16 @@
         }
       }
     },
+    "Kalorien ohne Aktivität": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories without activity"
+          }
+        }
+      }
+    },
     "Kalorien: %@ kcal": {
       "extractionState": "stale",
       "localizations": {
@@ -15385,6 +15471,16 @@
         }
       }
     },
+    "Langsamer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slower"
+          }
+        }
+      }
+    },
     "Laufen": {
       "localizations": {
         "en": {
@@ -15974,6 +16070,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More"
+          }
+        }
+      }
+    },
+    "Mehr Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More protein"
           }
         }
       }
@@ -19842,6 +19948,22 @@
         }
       }
     },
+    "Schritte pro Tag: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Schritte pro Tag: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day: %@ → %@"
+          }
+        }
+      }
+    },
     "Schrittziel erreicht": {
       "localizations": {
         "en": {
@@ -22107,6 +22229,22 @@
         }
       }
     },
+    "Training pro Woche: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Training pro Woche: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training per week: %@ → %@"
+          }
+        }
+      }
+    },
     "Training · Woche": {
       "localizations": {
         "en": {
@@ -22193,6 +22331,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save anyway"
+          }
+        }
+      }
+    },
+    "Trotzdem übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopt anyway"
+          }
+        }
+      }
+    },
+    "Trotzdem übernehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopt anyway?"
           }
         }
       }
@@ -26907,6 +27065,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "read with ChatGPT"
+          }
+        }
+      }
+    },
+    "wird zu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "becomes"
           }
         }
       }

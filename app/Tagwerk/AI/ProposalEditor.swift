@@ -14,6 +14,9 @@ struct ProposalEditorContext {
     var writableCalendars: () -> [ListInfo] = { [] }
     /// The name of a shopping item by its id, for the items an `update_shopping` call checks off.
     var shoppingItemName: (String) -> String? = { _ in nil }
+    /// The plan that holds today and the data of the cross-check, for the editor of the goal cards; `nil` outside the goals chat.
+    var currentGoalPlan: () -> GoalPlan? = { nil }
+    var goalGuardInput: () -> GoalGuardInput? = { nil }
     /// Repository and current people of the issue an `assign_task` call is about; `nil` when the issue is not known any more.
     var assignment: (String) -> ProposalAssignment? = { _ in nil }
 }
@@ -55,7 +58,8 @@ protocol ProposalEditor: AnyObject {
 enum ProposalEditors {
     /// One entry per editor type; later strands add theirs here.
     static let editorTypes: [any ProposalEditor.Type] = [TaskProposalEditor.self, EventProposalEditor.self, DayHoursProposalEditor.self,
-                                                                ShoppingProposalEditor.self, CommentProposalEditor.self, AssignProposalEditor.self]
+                                                                ShoppingProposalEditor.self, CommentProposalEditor.self, AssignProposalEditor.self,
+                                                                GoalProposalEditor.self]
 
     /// The functions whose cards offer "Anpassen".
     static var toolNames: Set<String> { editorTypes.reduce(into: Set<String>()) { $0.formUnion($1.toolNames) } }

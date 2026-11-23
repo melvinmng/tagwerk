@@ -270,7 +270,7 @@ struct CardReviserTests {
     }
 
     @Test func everyAdjustableFunction_hasASchemaForTheRevision() {
-        let definitions = Dictionary(uniqueKeysWithValues: (AppTools.allDefinitions + AppTools.gitHubDefinitions).map { ($0.name, $0) })
+        let definitions = Dictionary(uniqueKeysWithValues: (AppTools.allDefinitions + AppTools.gitHubDefinitions + GoalChatTools.allDefinitions).map { ($0.name, $0) })
         for name in AssistantModel.adjustableToolNames {
             let definition = definitions[name]
             #expect(definition != nil, "\(name)")

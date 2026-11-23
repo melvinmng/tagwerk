@@ -12,8 +12,8 @@ extension AppTools.Arguments {
 /// other chat has these functions. Every limit is enforced here in code; the instructions only repeat it.
 @MainActor
 final class GoalChatTools: ToolHandler {
-    static let readTools: Set<String> = ["get_goal_data"]
-    static let proposalTools: Set<String> = ["propose_nutrition_goals", "propose_activity_goals"]
+    nonisolated static let readTools: Set<String> = ["get_goal_data"]
+    nonisolated static let proposalTools: Set<String> = ["propose_nutrition_goals", "propose_activity_goals"]
 
     /// The session of the running conversation; `nil` before the user chose the data and after the conversation ended.
     private(set) var session: GoalPlanningSession?
@@ -32,6 +32,9 @@ final class GoalChatTools: ToolHandler {
         self.adopt = adopt
         self.today = today
     }
+
+    /// The plan that holds today: the base every proposal builds on.
+    func plan() -> GoalPlan { currentPlan() }
 
     func begin(_ session: GoalPlanningSession) { self.session = session }
     func end() { session = nil }

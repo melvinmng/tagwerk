@@ -2848,5 +2848,20 @@
   "Kontext: Ziele planen": "Context: Plan goals",
   "Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.": "Say what you want to achieve. The assistant reads the data you shared and proposes goals as cards. Tagwerk cross-checks every proposal; nothing is adopted until you confirm.",
   "Ziele bestätigst du einzeln.": "You confirm goals one by one.",
-  "Ziele und weitere Vorschläge bestätigst du einzeln.": "You confirm goals and other proposals one by one."
+  "Ziele und weitere Vorschläge bestätigst du einzeln.": "You confirm goals and other proposals one by one.",
+  "Aktivitätsenergie pro Tag": "Active energy per day",
+  "Aktivitätsenergie pro Tag: %@ → %@": "Active energy per day: %@ → %@",
+  "Aktivitätsziele": "Activity goals",
+  "Begründung: %@": "Reason: %@",
+  "Ein Wert, der aus ist, bleibt, wie er in deinen Zielen steht.": "A value that is switched off stays as it is in your goals.",
+  "Ernährungsziele": "Nutrition goals",
+  "Gegenrechnung": "Cross-check",
+  "Kalorien ohne Aktivität": "Calories without activity",
+  "Langsamer": "Slower",
+  "Mehr Eiweiß": "More protein",
+  "Schritte pro Tag: %@ → %@": "Steps per day: %@ → %@",
+  "Training pro Woche: %@ → %@": "Training per week: %@ → %@",
+  "Trotzdem übernehmen": "Adopt anyway",
+  "Trotzdem übernehmen?": "Adopt anyway?",
+  "wird zu": "becomes"
 }

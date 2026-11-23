@@ -19,6 +19,8 @@ struct ChatView: View {
     @State private var noteDetail: NoteDetailRequest?
     /// The card whose sheet "Vorschlag anpassen" is open; set by "Anpassen" on a card with an editor.
     @State private var adjusting: ToolCall?
+    /// The goal card with a warning whose "Übernehmen" waits for the second confirmation.
+    @State private var confirmingGoal: ToolCall?
 
     private var conversation: Conversation? { assistant.conversation }
 
@@ -68,6 +70,14 @@ struct ChatView: View {
             }
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
+            }
+            // The second confirmation hangs on the chat view, never on the card in the list (a dialog on a row does not open reliably).
+            .confirmationDialog("Trotzdem übernehmen?", isPresented: Binding(get: { confirmingGoal != nil }, set: { if !$0 { confirmingGoal = nil } }),
+                                titleVisibility: .visible, presenting: confirmingGoal) { call in
+                Button("Trotzdem übernehmen", role: .destructive) { Task { await assistant.confirm(call, acknowledgedWarning: true) } }
+                    .accessibilityIdentifier(AccessibilityID.GoalPlanning.confirmAnyway)
+            } message: { call in
+                Text(assistant.goalCardContent(for: call)?.warning ?? "")
             }
             .sheet(item: $adjusting) { call in
                 ProposalAdjustSheet(assistant: assistant, call: call)
@@ -263,8 +273,9 @@ struct ChatView: View {
         case .action(let call, let status):
             let card = assistant.describe(call, isOpen: status == .pending)
             ActionCardView(card: card, status: status, time: assistant.actionTimes[call.id],
-                           onConfirm: { Task { await assistant.confirm(call) } },
+                           onConfirm: { if card.asksTwice { confirmingGoal = call } else { Task { await assistant.confirm(call) } } },
                            onDecline: { Task { await assistant.decline(call) } },
+                           canConfirm: !card.blocksConfirmation,
                            proposal: proposalPosition(of: call),
                            onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) },
                            onAdjust: status == .pending && card.canAdjust ? { adjusting = call } : nil)

@@ -338,7 +338,7 @@ final class AssistantModel {
         // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen"), and so
         // are issues assigned to other people or to no one.
         let me = gitHubDirectory()?.login
-        guard !calls.isEmpty, calls.count == ids.count,
+        guard !calls.isEmpty, calls.count == ids.count, !calls.contains(where: { GoalCards.isGoalCall($0.name) }),
               calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.needsSingleConfirmation($0, me: me) }) else {
             onTurnFinished?(.rejected)
             return
@@ -409,10 +409,15 @@ final class AssistantModel {
         return isSpoken(last)
     }
 
-    func confirm(_ call: ToolCall) async {
+    /// - Parameter acknowledgedWarning: the user confirmed a goal card a second time after its warning. A goal card that is blocked never
+    ///   runs, and one with a warning runs only with this flag; the interface asks for it, and the model enforces it.
+    func confirm(_ call: ToolCall, acknowledgedWarning: Bool = false) async {
         guard let conversation else { return }
         // The card may come from the stored form of the history (no note text in its arguments); the call that runs is the open one.
         let call = conversation.pendingActions.first { $0.id == call.id } ?? call
+        if GoalCards.isGoalCall(call.name) {
+            guard let content = goalCardContent(for: call), !content.isBlocked, content.warning == nil || acknowledgedWarning else { return }
+        }
         syncNoteConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
@@ -842,6 +847,10 @@ final class AssistantModel {
         var proposedChange: String? = nil
         /// True for an open card with an editor: the card then offers "Anpassen" (AN1a).
         var canAdjust = false
+        /// The card cannot be confirmed as it stands (a goal card below the hard limit or with a value out of range).
+        var blocksConfirmation = false
+        /// The card has a warning: "Übernehmen" asks a second time before it runs (goal cards).
+        var asksTwice = false
     }
 
     /// What a note card proposes, for the sheet "Änderung ansehen": the values only, the sentences are in `ActionCard`.
@@ -868,6 +877,7 @@ final class AssistantModel {
         describer.noteAccess = noteTools?.access ?? tools.noteAccess
         describer.noteDefaultFolderID = { [weak self] in self?.noteTools?.defaultFolderID }
         describer.isOpen = isOpen
+        describer.goalCard = { [weak self] call in self?.goalCardContent(for: call) }
         var card = describer.describe(call, language: language, spoken: spoken)
         guard isOpen else { return card }
         card.canAdjust = canAdjust(call)
@@ -879,6 +889,14 @@ final class AssistantModel {
             if spoken, let mark = card.mark { card.change += ". " + mark.label(in: language) }
         }
         return card
+    }
+
+    /// The content of a goal card: old and new values, the cross-check and its warning. `nil` for any other call.
+    func goalCardContent(for call: ToolCall) -> GoalCardContent? {
+        guard GoalCards.isGoalCall(call.name) else { return nil }
+        let plan = goalTools?.plan() ?? GoalPlan(validFrom: planning.today, kcal: 2000, waterMilliliters: 2000, stepsPerDay: 8000,
+                                                  workoutMinutesPerWeek: 150)
+        return GoalCards.content(for: call, plan: plan, input: goalTools?.session?.guardInput)
     }
 
     // MARK: Adjusting cards (plan ki-vorschlaege-anpassen, AN1a, AN2a, AN11a)
@@ -925,6 +943,8 @@ final class AssistantModel {
         return ProposalEditorContext(
             calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
             writableCalendars: { planning.writableCalendars }, shoppingItemName: shoppingItemName,
+            currentGoalPlan: { [weak self] in self?.goalTools?.plan() },
+            goalGuardInput: { [weak self] in self?.goalTools?.session?.guardInput },
             assignment: { key in
                 if let task = planning.taskList.items.first(where: { $0.id.key == key }), task.id.source == .github {
                     return ProposalAssignment(repository: task.container.id, current: task.assignees ?? [])
@@ -943,12 +963,14 @@ final class AssistantModel {
     var cardFollowUpHasConsent: Bool {
         switch context {
         case .notes, .note: hasNoteConsent()
+        case .goals: hasGoalConsent()
         default: true
         }
     }
 
     @ObservationIgnored private lazy var cardReviser = CardReviser(
         responder: responder, model: model, hasConsent: { [weak self] in self?.cardFollowUpHasConsent ?? false },
+        definitions: { AppTools.allDefinitions + AppTools.gitHubDefinitions + GoalChatTools.allDefinitions },
         language: { [weak self] in self?.language() ?? .app }, now: now, calendar: planning.calendar)
 
     /// One request about one open card: the answer fills the fields of the sheet. The chat history, the other cards and
