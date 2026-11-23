@@ -33,6 +33,52 @@ struct HabitRulesTests {
         #expect(!HabitRules.isActive(open, on: day(11, 18), today: today))
     }
 
+    @Test func movement_fulfilledByWorkout() {
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 8000
+        data.steps[today] = 1200
+        data.workoutDays = [today]
+        #expect(HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+        #expect(!HabitRules.isSourceFulfilled(movement, on: day(11, 17), facts: data))
+    }
+
+    @Test func movement_fulfilledBySteps() {
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 8000
+        data.steps[today] = 8000
+        #expect(HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+        data.steps[today] = 7999
+        #expect(!HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+    }
+
+    @Test func movement_neitherIsOpen() {
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 8000
+        data.steps[today] = 3000
+        #expect(!HabitRules.isFulfilled(movement, on: today, facts: data))
+        data.manualChecks[movement.id] = [today]
+        #expect(HabitRules.isFulfilled(movement, on: today, facts: data) && !HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+    }
+
+    @Test func movement_withoutStepGoal_usesWorkoutOnly() {
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 0
+        data.steps[today] = 20_000
+        #expect(!HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+        data.workoutDays = [today]
+        #expect(HabitRules.isSourceFulfilled(movement, on: today, facts: data))
+    }
+
+    @Test func movement_isTheOnlyNewSource_andUnknownRawValuesStayUnknown() {
+        #expect(HabitSource.movement.rawValue == "movement")
+        #expect(HabitSource(rawValue: "future-source") == nil)
+        #expect(HabitSource.allCases.contains(.movement) && HabitSource.allCases.count == 9)
+    }
+
     @Test func fulfilled_byManualCheckOrSource() {
         var water = habit(start: day(11, 1), source: .water)
         var data = HabitFacts.empty
