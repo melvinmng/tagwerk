@@ -39,6 +39,17 @@ enum AccessibilityID {
         static let warningCapsule = "travel.warningCapsule"
     }
 
+    enum Capture {
+        /// The budget line of the day head ("Ziel + Aktiv − Gegessen = Noch"): one element with a spoken sentence.
+        static let budgetLine = "capture.budgetLine"
+        /// The "Aktiv" term of the budget line, which opens the breakdown.
+        static let budgetActive = "capture.budgetActive"
+        /// "In Health erlauben" for the active energy.
+        static let allowActiveEnergy = "capture.allowActiveEnergy"
+        /// The sheet "Aktiv heute".
+        static let breakdown = "capture.breakdown"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

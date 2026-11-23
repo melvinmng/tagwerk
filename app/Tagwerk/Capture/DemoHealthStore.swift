@@ -17,8 +17,12 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
             stepsAsked = true
         }
     }
-    func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess { .notAsked }
-    func requestAuthorization(for group: HealthAccessGroup) async throws {}
+    /// The demo allows the active energy, like the steps; the other groups start as not asked and become asked on request.
+    private var askedGroups: Set<HealthAccessGroup> = [.activeEnergy]
+    func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess {
+        lock.withLock { askedGroups.contains(group) ? .asked : .notAsked }
+    }
+    func requestAuthorization(for group: HealthAccessGroup) async throws { lock.withLock { _ = askedGroups.insert(group) } }
     func stepsAccess() async -> StepsAccess { lock.withLock { stepsAsked ? .asked : .notAsked } }
     func requestStepsAuthorization() async throws { lock.withLock { stepsAsked = true } }
 

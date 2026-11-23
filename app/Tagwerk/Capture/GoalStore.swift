@@ -76,6 +76,31 @@ final class GoalStore {
                                                 workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek)))
     }
 
+    /// Carries edits of the single goal fields into the plans. Until the settings screens used the plans, the fields were edited
+    /// directly while the first plan stood still, so the plan of today may be older than what the user set. When the mirrored
+    /// fields differ from the plan of today, a copy of that plan with only those fields replaced applies from today; macro, fibre,
+    /// sugar and weight goals are kept. Equal values change nothing, so the call is safe at every launch.
+    func reconcileWithSettings() {
+        guard let settings else { return }
+        let today = PlanDay(date: now(), calendar: calendar)
+        guard var plan = current(on: today) else { return }
+        let protein = settings.proteinGoalEnabled ? settings.goalProteinGrams : nil
+        guard plan.kcal != settings.goalKilocalories || plan.waterMilliliters != settings.goalWaterMilliliters
+            || plan.stepsPerDay != settings.goalStepsPerDay || plan.workoutMinutesPerWeek != settings.goalWorkoutMinutesPerWeek
+            || plan.proteinGrams != protein else { return }
+        if plan.validFrom != today {
+            plan.id = UUID()
+            plan.validFrom = today
+        }
+        plan.kcal = settings.goalKilocalories
+        plan.waterMilliliters = settings.goalWaterMilliliters
+        plan.stepsPerDay = settings.goalStepsPerDay
+        plan.workoutMinutesPerWeek = settings.goalWorkoutMinutesPerWeek
+        plan.proteinGrams = protein
+        plan.origin = .manual
+        adopt(plan)
+    }
+
     // MARK: Private
 
     private func record(on day: PlanDay) -> GoalPlanRecord? {

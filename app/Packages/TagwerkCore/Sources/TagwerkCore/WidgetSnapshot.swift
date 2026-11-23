@@ -37,9 +37,14 @@ public struct SnapshotIntake: Sendable, Hashable, Codable {
     public var steps: Int?
     /// 0 means no step goal; `nil` in files written before steps existed.
     public var goalSteps: Int?
+    /// Credited active energy of today; `nil` in files written before the budget, which then count as the base goal alone.
+    public var creditedKcal: Int?
+
+    /// Base goal plus the credited activity: what the widget measures the day against.
+    public var budgetKcal: Int { goalKcal + (creditedKcal ?? 0) }
 
     public init(kcal: Double, hasEstimate: Bool, goalKcal: Int, waterMilliliters: Int, goalWaterMilliliters: Int,
-                steps: Int? = nil, goalSteps: Int? = nil) {
+                steps: Int? = nil, goalSteps: Int? = nil, creditedKcal: Int? = nil) {
         self.kcal = kcal
         self.hasEstimate = hasEstimate
         self.goalKcal = goalKcal
@@ -47,6 +52,7 @@ public struct SnapshotIntake: Sendable, Hashable, Codable {
         self.goalWaterMilliliters = goalWaterMilliliters
         self.steps = steps
         self.goalSteps = goalSteps
+        self.creditedKcal = creditedKcal
     }
 }
 
