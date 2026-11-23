@@ -274,7 +274,8 @@ enum DemoData {
 
     private static func seed(_ store: EKEventStore, leadTimeMinutes: Int) throws -> SeededIDs {
         let calendar = Calendar.tagwerk
-        let today = calendar.startOfDay(for: Date())
+        // The clock of the UI test mode (pinned time and weekday), so the events lie on the days the models call today.
+        let today = calendar.startOfDay(for: UITestMode.now())
         func at(_ dayOffset: Int, _ hour: Int, _ minute: Int = 0) -> Date {
             let day = calendar.date(byAdding: .day, value: dayOffset, to: today)!
             return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)!

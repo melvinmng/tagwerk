@@ -328,12 +328,13 @@ final class AppEnvironment {
         self.goals = goals
         self.foods = FoodStore(context: context)
         self.healthMirror = mirror
-        let dayHealth = DayHealthStore(context: context)
+        let dayHealth = DayHealthStore(context: context, now: { UITestMode.now() })
         self.dayHealth = dayHealth
         let budgets = DayBudgets(intake: intake, goals: goals, dayHealth: dayHealth, health: healthStore, settings: settings,
-                                 calendar: .tagwerk, now: Date.init)
+                                 calendar: .tagwerk, now: { UITestMode.now() })
         self.budgets = budgets
-        self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets)
+        self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets,
+                                  now: { UITestMode.now() })
         self.routineStore = RoutineStore(context: context)
         // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
         let routineDays = self.routineStore
@@ -341,7 +342,8 @@ final class AppEnvironment {
         self.habits = HabitsModel(store: HabitStore(context: context), intake: intake, health: healthStore, settings: settings,
                                   daySources: HabitDaySources(closedDays: { routineDays.closedDays(in: $0) },
                                                               journalDays: { noteDays.journalDays(in: $0) },
-                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
+                                                              bibleStudyDays: { noteDays.completedSessionDays(in: $0) }),
+                                  now: { UITestMode.now() })
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
         let lookupTransport: any HTTPTransport
@@ -387,6 +389,8 @@ final class AppEnvironment {
                 return await reminderStore.completionDates(in: interval, listIDs: listIDs).count
                     + localTasks.completionDates(in: interval).count
             },
+            // The same clock as the plan, so the wrap-up belongs to the day and the weekday the plan shows (the UI tests pin both).
+            now: { UITestMode.now() },
             // GitHub issues closed that day; `nil` while GitHub is not connected (asked at every use).
             closedIssueCount: { [taskList] in
                 guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }

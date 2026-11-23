@@ -83,7 +83,7 @@ struct EveningSheet: View {
                                    onJournal: { openJournal() }, onBibleStudy: { openBibleStudy(environment: environment) })
 
                 // Sundays: the weekly planning is one tap away (it contains the reflection).
-                if day.weekday(in: model.calendar) == 1 {
+                if UITestMode.weekday(of: day, calendar: model.calendar) == 1 {
                     Section {
                         Button {
                             model.closeSheet()

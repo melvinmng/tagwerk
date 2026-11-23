@@ -109,8 +109,9 @@ final class PlanUITests: UITestCase {
         XCTAssertTrue(block.waitForExistence(timeout: Self.timeout), "The time block is not in the day")
         let button = app.buttons[AccessibilityID.Focus.planButton].firstMatch
         XCTAssertTrue(button.waitForExistence(timeout: Self.timeout), "The block carries no focus button")
-        XCTAssertGreaterThanOrEqual(button.frame.width, 44, "The focus button is narrower than 44 pt")
-        XCTAssertGreaterThanOrEqual(button.frame.height, 28, "The focus button is lower than 28 pt")
+        // Frames come back as layout values with rounding noise (27.999999999999943 on CI), so the minimums allow half a point.
+        XCTAssertGreaterThanOrEqual(button.frame.width, 44 - 0.5, "The focus button is narrower than 44 pt")
+        XCTAssertGreaterThanOrEqual(button.frame.height, 28 - 0.5, "The focus button is lower than 28 pt")
         button.tap()
         // The timer runs at once, with the sheet of the timer and not the sheet of the block.
         XCTAssertTrue(app.buttons[AccessibilityID.Focus.pause].waitForExistence(timeout: Self.timeout), "The timer did not start")

@@ -29,7 +29,8 @@ struct TimeWithGodSection: View {
                     detail: bible, isDone: false, action: onBibleStudy)
             }
         } header: {
-            Text("Zeit mit Gott")
+            // The system grey of a section header reaches "nearly passed" in the contrast audit; the named tone is darker.
+            Text("Zeit mit Gott").foregroundStyle(.secondaryText)
         } footer: {
             Text(showsJournal && showsBibleStudy ? "Beides bleibt auf deinem iPhone und geht nie an ChatGPT."
                                                  : "Bleibt auf deinem iPhone und geht nie an ChatGPT.")
