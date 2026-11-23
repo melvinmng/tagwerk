@@ -71,6 +71,13 @@ final class AppSettings {
     /// Share of the active energy that raises the daily budget, in percent: 0, 50, 75 or 100. Half is the default because
     /// wrist devices estimate the active energy rather coarsely (decision BU1b).
     var activityCreditPercent: Int = 50
+    /// Counts the nutrition entries of other apps from Health as eaten ("Einträge anderer Apps mitzählen"); off by default
+    /// (decision NU5b).
+    var countsForeignNutrition: Bool = false
+    /// Further nutrients that can be switched on in the meal sheet, the nutrient card and the Health mirror (decision NU1b: fibre and
+    /// sugar are always there, saturated fat and salt are optional).
+    var saturatedFatEnabled: Bool = false
+    var saltEnabled: Bool = false
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330
@@ -390,5 +397,18 @@ extension AppSettings {
         if reminderTaskNotifications { sources.insert(.reminders) }
         if localTaskNotifications { sources.insert(.local) }
         return sources
+    }
+}
+
+extension AppSettings {
+    /// The further nutrients the screens show: fiber and sugar always, saturated fat and salt when switched on (decision NU1b).
+    var visibleNutrients: [Nutrient] {
+        Nutrient.allCases.filter { nutrient in
+            switch nutrient {
+            case .fiber, .sugar: true
+            case .saturatedFat: saturatedFatEnabled
+            case .salt: saltEnabled
+            }
+        }
     }
 }

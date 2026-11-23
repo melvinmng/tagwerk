@@ -33,10 +33,14 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _stepsAuthorizationRequests = 0
     private var _foreignReads: [DateInterval] = []
     private var _stepsReads: [DateInterval] = []
+    private var _nutritionReads: [DateInterval] = []
     var failWrites = false
     var incompleteWrites = false
     /// Step reads throw, like HealthKit while the device is locked.
     var failStepReads = false
+    /// Active energy and foreign nutrition reads throw, like HealthKit while the device is locked.
+    var failActiveEnergyReads = false
+    var failNutritionReads = false
     /// Runs inside a step read before it returns, e.g. to navigate while the query is still running.
     var onStepsRead: (@MainActor @Sendable (DateInterval) async -> Void)?
 
@@ -70,6 +74,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     var stepsAuthorizationRequests: Int { lock.withLock { _stepsAuthorizationRequests } }
     var foreignReads: [DateInterval] { lock.withLock { _foreignReads } }
     var stepsReads: [DateInterval] { lock.withLock { _stepsReads } }
+    var nutritionReads: [DateInterval] { lock.withLock { _nutritionReads } }
     var foreign: [ForeignWorkout] {
         get { lock.withLock { _foreign } }
         set { lock.withLock { _foreign = newValue } }
@@ -129,7 +134,9 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func dailyForeignNutrition(in interval: DateInterval, calendar: Calendar) async throws -> [DailyForeignNutrition] {
-        lock.withLock {
+        lock.withLock { _nutritionReads.append(interval) }
+        if failNutritionReads { throw NSError(domain: "FakeHealth", code: 3) }
+        return lock.withLock {
             guard (_groupAccess[.foreignNutrition] ?? .notAsked) == .asked else { return [] }
             let foreign = _nutritionSamples.filter { !$0.isOwn && $0.day >= interval.start && $0.day < interval.end }
             let byDay = Dictionary(grouping: foreign) { calendar.startOfDay(for: $0.day) }
@@ -156,7 +163,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
 
     /// Like HealthKit, a group that was not asked (or denied) gives no data instead of an error.
     func dailyActiveEnergy(in interval: DateInterval, calendar: Calendar) async throws -> [DailyActiveEnergy] {
-        lock.withLock {
+        if failActiveEnergyReads { throw NSError(domain: "FakeHealth", code: 4) }
+        return lock.withLock {
             _activeEnergyReads.append(interval)
             guard (_groupAccess[.activeEnergy] ?? .notAsked) == .asked else { return [] }
             return _activeEnergy.filter { $0.start >= interval.start && $0.start < interval.end }

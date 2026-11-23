@@ -129,6 +129,7 @@
       }
     },
     "%@ / %@ kcal": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -380,6 +381,16 @@
         }
       }
     },
+    "%@ g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ g"
+          }
+        }
+      }
+    },
     "%@ h": {
       "localizations": {
         "en": {
@@ -458,6 +469,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Log %@ now"
+          }
+        }
+      }
+    },
+    "%@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal"
           }
         }
       }
@@ -3462,6 +3483,16 @@
         }
       }
     },
+    "+ Aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ Active"
+          }
+        }
+      }
+    },
     "+%@ dieser Vorschlag": {
       "localizations": {
         "en": {
@@ -3714,6 +3745,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "7 means daily. Rate: fulfilled days ÷ target days, at most 100 %. Streak with fewer than 7: consecutive weeks that reached the goal."
+          }
+        }
+      }
+    },
+    "= Noch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "= Left"
+          }
+        }
+      }
+    },
+    "= Über": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "= Over"
           }
         }
       }
@@ -3994,6 +4045,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Active"
+          }
+        }
+      }
+    },
+    "Aktiv gesamt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active in total"
+          }
+        }
+      }
+    },
+    "Aktiv heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active today"
+          }
+        }
+      }
+    },
+    "Aktiv · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active · %@"
+          }
+        }
+      }
+    },
+    "Aktivität": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity"
+          }
+        }
+      }
+    },
+    "Aktivität anrechnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit activity"
+          }
+        }
+      }
+    },
+    "Aktivität in Health erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow activity in Health"
+          }
+        }
+      }
+    },
+    "Aktivität in Health erlauben %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow activity in Health %@"
           }
         }
       }
@@ -4450,6 +4571,26 @@
         }
       }
     },
+    "Alltag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyday activity"
+          }
+        }
+      }
+    },
+    "Alltag ist der Rest der Aktivität aus Health ohne die Trainings oben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyday activity is the rest of the activity from Health without the workouts above."
+          }
+        }
+      }
+    },
     "Als Aufgabe anlegen": {
       "localizations": {
         "en": {
@@ -4731,6 +4872,16 @@
         }
       }
     },
+    "Angefragt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked"
+          }
+        }
+      }
+    },
     "Angeheftet": {
       "localizations": {
         "en": {
@@ -4830,6 +4981,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adjusted to %@"
+          }
+        }
+      }
+    },
+    "Angerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credited"
           }
         }
       }
@@ -4987,6 +5148,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "View"
+          }
+        }
+      }
+    },
+    "Anteil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         }
       }
@@ -5730,6 +5901,16 @@
         }
       }
     },
+    "Aus Health · andere Apps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From Health · other apps"
+          }
+        }
+      }
+    },
     "Aus Notion importieren": {
       "localizations": {
         "en": {
@@ -5866,6 +6047,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatic backup"
+          }
+        }
+      }
+    },
+    "Ballaststoff-Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber goal"
+          }
+        }
+      }
+    },
+    "Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber"
+          }
+        }
+      }
+    },
+    "Ballaststoffe und Zucker": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber and sugar"
+          }
+        }
+      }
+    },
+    "Ballaststoffe und Zucker sind immer dabei; gesättigte Fettsäuren und Salz erscheinen im Mahlzeitenblatt und in der Karte „Nährwerte“, wenn du sie einschaltest. Tagwerk liest für „Einträge anderer Apps mitzählen“ Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ob Health das Schreiben der weiteren Nährwerte erlaubt, steht an derselben Stelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber and sugar are always there; saturated fat and salt appear in the meal sheet and in the “Nutrients” card when you switch them on. For “Count entries of other apps”, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. Whether Health allows writing the further nutrients is shown in the same place."
           }
         }
       }
@@ -6247,6 +6468,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Until"
+          }
+        }
+      }
+    },
+    "Bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until %@"
           }
         }
       }
@@ -6920,6 +7151,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sorting failed. Try again."
+          }
+        }
+      }
+    },
+    "Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The goal of each day is its base goal plus the credited activity; the marks show it per day."
           }
         }
       }
@@ -7685,6 +7926,16 @@
         }
       }
     },
+    "Die Aktivität ist ein Schätzwert deiner Geräte. Den Anteil, der dein Tagesbudget erhöht, änderst du unter Einstellungen › Erfassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The activity is an estimate of your devices. You change the share that raises your daily budget under Settings › Log."
+          }
+        }
+      }
+    },
     "Die Anhänge der Notiz müssen im Text bleiben. Übernimm die Verweise auf Anhänge unverändert.": {
       "localizations": {
         "en": {
@@ -8367,7 +8618,18 @@
         }
       }
     },
+    "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Eine Änderung gilt ab heute; frühere Tage behalten ihr Ziel. Das Kalorienziel ist das Grundziel für einen Tag ohne angerechnete Aktivität. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The defaults are placeholders, not a recommendation. Enter your own goals. A change applies from today; earlier days keep their goal. The calorie goal is the base goal for a day without credited activity. Training time counts workouts from Tagwerk and from Health. Tagwerk reads steps from Health; 0 hides a goal."
+          }
+        }
+      }
+    },
     "Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8690,6 +8952,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This week · week %lld"
+          }
+        }
+      }
+    },
+    "Diese Ziele gelten für einen Tag ohne angerechnete Aktivität. Mit angerechneter Aktivität wachsen Kohlenhydrate und Fett im Verhältnis ihrer Kalorien; Eiweiß und Ballaststoffe bleiben fest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These goals apply to a day without credited activity. With credited activity, carbohydrates and fat grow in proportion to their calories; protein and fiber stay fixed."
           }
         }
       }
@@ -9065,6 +9337,16 @@
         }
       }
     },
+    "Eigene Trainings, noch nicht in Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own workouts, not in Health yet"
+          }
+        }
+      }
+    },
     "Eigene Uhrzeit": {
       "localizations": {
         "en": {
@@ -9105,6 +9387,16 @@
         }
       }
     },
+    "Ein Teil der Aktivitätsenergie aus Health erhöht dein Tagesbudget. Geräte schätzen sie eher zu hoch, deshalb zählt voreingestellt die Hälfte. Das Kalorienziel gilt für einen Tag ohne angerechnete Aktivität.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part of the active energy from Health raises your daily budget. Devices tend to overestimate it, so half counts by default. The calorie goal applies to a day without credited activity."
+          }
+        }
+      }
+    },
     "Ein anderer Tag macht aus dem Block eine Verschiebung. Es bleibt ein Vorschlag, bis du ihn übernimmst.": {
       "localizations": {
         "en": {
@@ -9141,6 +9433,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "One of these reminders falls within quiet hours. Routine reminders still come through."
+          }
+        }
+      }
+    },
+    "Eine Änderung gilt ab heute. Frühere Tage, auch im Wochenrückblick, rechnen mit dem Stand, der damals galt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A change applies from today. Earlier days, including the weekly review, use the plan that held then."
           }
         }
       }
@@ -9421,6 +9723,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entry deleted"
+          }
+        }
+      }
+    },
+    "Einträge anderer Apps mitzählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count entries of other apps"
           }
         }
       }
@@ -10341,6 +10653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fat"
+          }
+        }
+      }
+    },
+    "Fett-Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fat goal"
           }
         }
       }
@@ -11677,6 +11999,16 @@
         }
       }
     },
+    "Gesättigte Fettsäuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturated fat"
+          }
+        }
+      }
+    },
     "Geteilt": {
       "localizations": {
         "en": {
@@ -11881,6 +12213,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "If there is already text for it, the imported text is appended below it, after a separator line. Nothing is overwritten."
+          }
+        }
+      }
+    },
+    "Gilt ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid from"
           }
         }
       }
@@ -12313,6 +12655,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Health"
+          }
+        }
+      }
+    },
+    "Health liefert keine Aktivität.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health delivers no activity."
+          }
+        }
+      }
+    },
+    "Health liefert keine Aktivität. Es zählen nur Trainings aus Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health delivers no activity. Only workouts from Tagwerk count."
+          }
+        }
+      }
+    },
+    "Health liefert keine Aktivität. Ohne Erlaubnis oder ohne Daten bleibt dieser Wert leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health delivers no activity. Without permission or without data this value stays empty."
           }
         }
       }
@@ -13447,6 +13819,16 @@
         }
       }
     },
+    "Kalorien (Grundziel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories (base goal)"
+          }
+        }
+      }
+    },
     "Kalorien (optional)": {
       "localizations": {
         "en": {
@@ -14098,6 +14480,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carbs"
+          }
+        }
+      }
+    },
+    "Kohlenhydrate und Fett": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carbohydrates and fat"
+          }
+        }
+      }
+    },
+    "Kohlenhydrate-Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carbohydrate goal"
           }
         }
       }
@@ -16937,7 +17339,18 @@
         }
       }
     },
+    "Nur Kalorien sind nötig. Leere Felder sind unbekannt und werden nicht nach Health geschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only calories are required. Empty fields are unknown and are not written to Health."
+          }
+        }
+      }
+    },
     "Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17186,12 +17599,32 @@
         }
       }
     },
+    "Nährwerte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrients"
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        }
+      }
+    },
+    "Obergrenze überschritten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit exceeded"
           }
         }
       }
@@ -17363,6 +17796,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No time"
+          }
+        }
+      }
+    },
+    "Ohne Ziel zeigt die Karte „Nährwerte“ nur den Wert. Zucker hat eine Obergrenze: Darüber wird der Balken orange.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a goal the “Nutrients” card shows only the value. Sugar has an upper limit: above it the bar turns orange."
           }
         }
       }
@@ -18592,6 +19035,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show the way home"
+          }
+        }
+      }
+    },
+    "Salz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salt"
           }
         }
       }
@@ -20197,6 +20650,16 @@
         }
       }
     },
+    "Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean over the days on which the value is known. Meals without a value are missing from the sum, so the mean tends to be too low."
+          }
+        }
+      }
+    },
     "Tagesroutine": {
       "localizations": {
         "en": {
@@ -20226,6 +20689,9 @@
           }
         }
       }
+    },
+    "Tagwerk": {
+      "shouldTranslate": false
     },
     "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.": {
       "localizations": {
@@ -20293,6 +20759,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk creates planned time blocks as events in its own “Tagwerk” calendar. You also see them in the Calendar app."
+          }
+        }
+      }
+    },
+    "Tagwerk liest dafür Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ein Strich heißt: kein Wert bekannt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For this, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. A dash means that no value is known."
           }
         }
       }
@@ -20961,6 +21437,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Training · week"
+          }
+        }
+      }
+    },
+    "Trainings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workouts"
           }
         }
       }
@@ -22232,12 +22718,52 @@
         }
       }
     },
+    "Weitere Nährwerte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Further nutrients"
+          }
+        }
+      }
+    },
+    "Weitere Nährwerte nach Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Further nutrients to Health"
+          }
+        }
+      }
+    },
     "Weitere Optionen …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Weitere Ziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More goals"
+          }
+        }
+      }
+    },
+    "Weitere Ziele und frühere Stände": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More goals and earlier plans"
           }
         }
       }
@@ -22385,11 +22911,22 @@
       }
     },
     "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Values per amount ×1. Your own values count as exact and appear without “~”."
+          }
+        }
+      }
+    },
+    "Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“. Ein leeres Feld ist unbekannt, nicht 0.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Values per quantity ×1. Your own values count as exact and appear without “~”. An empty field is unknown, not 0."
           }
         }
       }
@@ -22962,6 +23499,16 @@
         }
       }
     },
+    "Zeigt, woraus die Aktivität besteht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what the activity consists of"
+          }
+        }
+      }
+    },
     "Zeile": {
       "localizations": {
         "en": {
@@ -23272,6 +23819,16 @@
         }
       }
     },
+    "Zielstände": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal plans"
+          }
+        }
+      }
+    },
     "Zu Bible Study": {
       "localizations": {
         "en": {
@@ -23378,6 +23935,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instructions"
+          }
+        }
+      }
+    },
+    "Zucker, höchstens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugar, at most"
+          }
+        }
+      }
+    },
+    "Zucker-Obergrenze": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugar limit"
           }
         }
       }
@@ -25894,6 +26471,22 @@
         }
       }
     },
+    "Ø %@ g an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ø %1$@ g an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %1$@ g on %2$@"
+          }
+        }
+      }
+    },
     "Ø %@ kcal an %@": {
       "localizations": {
         "de": {
@@ -26447,6 +27040,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "↻ %@ reserved"
+          }
+        }
+      }
+    },
+    "− Gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "− Eaten"
           }
         }
       }
