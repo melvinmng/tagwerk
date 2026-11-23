@@ -1852,6 +1852,16 @@
         }
       }
     },
+    "Open Food Facts, abgerufen am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts, retrieved on %@"
+          }
+        }
+      }
+    },
     "Portionen": {
       "localizations": {
         "en": {

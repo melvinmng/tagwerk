@@ -1390,6 +1390,9 @@ struct AppSettingsBackup: Codable, Equatable {
     var goalPlansMigrated: Bool?
     var activityCreditPercent: Int?
     var countsForeignNutrition: Bool?
+    /// Optional, so a file written before the online search still opens; a missing value keeps the device's value.
+    var foodLookupConsent: Bool?
+    var foodLookupContact: String?
     var saturatedFatEnabled: Bool?
     var saltEnabled: Bool?
     var mealEstimationConsent: Bool
@@ -1498,6 +1501,8 @@ struct AppSettingsBackup: Codable, Equatable {
         goalPlansMigrated = record.goalPlansMigrated
         activityCreditPercent = record.activityCreditPercent
         countsForeignNutrition = record.countsForeignNutrition
+        foodLookupConsent = record.foodLookupConsent
+        foodLookupContact = record.foodLookupContact
         saturatedFatEnabled = record.saturatedFatEnabled
         saltEnabled = record.saltEnabled
         mealEstimationConsent = record.mealEstimationConsent
@@ -1591,6 +1596,8 @@ struct AppSettingsBackup: Codable, Equatable {
         if let goalPlansMigrated { record.goalPlansMigrated = goalPlansMigrated }
         if let activityCreditPercent { record.activityCreditPercent = activityCreditPercent }
         if let countsForeignNutrition { record.countsForeignNutrition = countsForeignNutrition }
+        if let foodLookupConsent { record.foodLookupConsent = foodLookupConsent }
+        if let foodLookupContact { record.foodLookupContact = foodLookupContact }
         if let saturatedFatEnabled { record.saturatedFatEnabled = saturatedFatEnabled }
         if let saltEnabled { record.saltEnabled = saltEnabled }
         record.mealEstimationConsent = mealEstimationConsent

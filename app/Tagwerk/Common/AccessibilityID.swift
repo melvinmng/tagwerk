@@ -62,6 +62,16 @@ enum AccessibilityID {
         static let labelCamera = "food.labelCamera"
     }
 
+    enum FoodLookup {
+        /// The contact address field of the consent sheet and of the settings.
+        static let contactField = "foodLookup.contact"
+        static let agreeButton = "foodLookup.agree"
+        static let toggle = "foodLookup.toggle"
+        /// The row "Online suchen" below the own foods.
+        static let searchRow = "foodLookup.searchRow"
+        static let results = "foodLookup.results"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

@@ -3226,6 +3226,16 @@
         }
       }
     },
+    "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und die Kontaktadresse, die du unten einträgst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and the contact address you enter below."
+          }
+        }
+      }
+    },
     "**Gesendet wird:** der Rezepttext oder das Foto und die Kategorienamen, oder der Text einer Notiz, die du ausdrücklich als Quelle wählst. Bei einem Link nur der gelesene Text der Seite, nicht die Adresse.": {
       "extractionState": "stale",
       "localizations": {
@@ -3330,6 +3340,16 @@
         }
       }
     },
+    "**Nicht gesendet werden:** Mengen, Mahlzeiten, Ziele, Gewicht, Daten aus Health und ein Konto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Not sent:** amounts, meals, goals, weight, data from Health and an account."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden:** Mengen, erledigte Artikel, Aufgaben, Termine, Notizen, Daten aus Health.": {
       "localizations": {
         "en": {
@@ -3377,6 +3397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Never sent:** %@, deleted notes and the attachments themselves."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst, nie beim Tippen im Suchfeld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Nothing is searched until you tap “Search online”, never while you type in the search field."
           }
         }
       }
@@ -3491,6 +3521,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only in conversation:** without your message to the assistant, nothing leaves the iPhone. Note texts it has read apply only to the running conversation and are not saved in the history; the assistant’s replies are."
+          }
+        }
+      }
+    },
+    "**Wer sucht, verrät, was er isst oder kaufen will.** Open Food Facts speichert IP-Adressen und Protokolle bis zu 3 Jahre. Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Searching tells the operator what you eat or want to buy.** Open Food Facts stores IP addresses and logs for up to 3 years. The data comes from volunteers and can be missing or wrong."
           }
         }
       }
@@ -6610,6 +6650,16 @@
         }
       }
     },
+    "Bitte kurz warten, noch %lld s. Open Food Facts erlaubt nur wenige Anfragen pro Minute.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please wait a moment, %lld s left. Open Food Facts allows only a few requests per minute."
+          }
+        }
+      }
+    },
     "Blatt „Essen“": {
       "localizations": {
         "en": {
@@ -6997,6 +7047,16 @@
         }
       }
     },
+    "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and the contact address go to the operator, never amounts, meals, goals or data from Health. Without a contact address no request goes out; if you empty the field, the search switches off. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images. A product you take over appears in “My foods” with a note about its source."
+          }
+        }
+      }
+    },
     "Danach": {
       "localizations": {
         "en": {
@@ -7297,12 +7357,42 @@
         }
       }
     },
+    "Das ist kein gültiger Strichcode.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is not a valid barcode."
+          }
+        }
+      }
+    },
     "Das ist keine Tagwerk-Sicherung.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This is not a Tagwerk backup."
+          }
+        }
+      }
+    },
+    "Das ist keine gültige E-Mail-Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is not a valid email address."
+          }
+        }
+      }
+    },
+    "Das ist keine gültige E-Mail-Adresse. Die bisherige Adresse bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is not a valid email address. The previous address stays."
           }
         }
       }
@@ -7333,6 +7423,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Files attached: %lld"
+          }
+        }
+      }
+    },
+    "Daten: Open Food Facts (ODbL)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data: Open Food Facts (ODbL)"
           }
         }
       }
@@ -8640,6 +8740,16 @@
         }
       }
     },
+    "Die Suche hat nicht geklappt. Versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The search did not work. Try again."
+          }
+        }
+      }
+    },
     "Die Suche ist nicht verfügbar.": {
       "localizations": {
         "en": {
@@ -9379,6 +9489,16 @@
         }
       }
     },
+    "E-Mail-Adresse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email address"
+          }
+        }
+      }
+    },
     "Eigene": {
       "localizations": {
         "en": {
@@ -9875,6 +9995,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and Sort"
+          }
+        }
+      }
+    },
+    "Einverstanden und suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and search"
           }
         }
       }
@@ -11534,6 +11664,36 @@
         }
       }
     },
+    "Für die Online-Suche fehlt deine Kontaktadresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The online search needs your contact address."
+          }
+        }
+      }
+    },
+    "Für die Online-Suche ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The online search needs your consent."
+          }
+        }
+      }
+    },
+    "Für die Online-Suche sendet Tagwerk dein Suchwort an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For the online search, Tagwerk sends your search word to Open Food Facts, an open food database by volunteers (openfoodfacts.org), without an account."
+          }
+        }
+      }
+    },
     "Für die Zusammenfassung ist deine Einwilligung nötig.": {
       "localizations": {
         "en": {
@@ -12345,6 +12505,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enter a name."
+          }
+        }
+      }
+    },
+    "Gib mindestens %lld Zeichen ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter at least %lld characters."
           }
         }
       }
@@ -14395,6 +14565,16 @@
         }
       }
     },
+    "Keine Verbindung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection"
+          }
+        }
+      }
+    },
     "Keine Verbindung zu GitHub.": {
       "localizations": {
         "en": {
@@ -14742,6 +14922,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conflict"
+          }
+        }
+      }
+    },
+    "Kontaktadresse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact address"
+          }
+        }
+      }
+    },
+    "Kontaktadresse für Open Food Facts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact address for Open Food Facts"
           }
         }
       }
@@ -18092,6 +18292,26 @@
         }
       }
     },
+    "Online-Suche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online search"
+          }
+        }
+      }
+    },
+    "Online-Suche in Open Food Facts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online search in Open Food Facts"
+          }
+        }
+      }
+    },
     "Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.": {
       "extractionState": "stale",
       "localizations": {
@@ -18109,6 +18329,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Open Food Facts nimmt gerade keine Anfragen an. Versuch es später noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts is not accepting requests right now. Try again later."
+          }
+        }
+      }
+    },
+    "Open Food Facts verlangt, dass jede App in jeder Anfrage eine Kontaktadresse nennt, damit der Betreiber sich bei Problemen melden kann. Er sieht diese Adresse bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts requires every app to name a contact address in each request, so the operator can reach out if there are problems. The operator sees this address with every request. Tagwerk does not enter an address itself and takes none from the device or an account; you can choose an address of your own for this purpose."
           }
         }
       }

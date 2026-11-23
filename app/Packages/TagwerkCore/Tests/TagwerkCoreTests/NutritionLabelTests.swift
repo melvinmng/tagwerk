@@ -75,8 +75,10 @@ struct NutritionLabelTests {
     }
 
     @Test func productNameIsTrimmed_andMayBeMissing() throws {
-        #expect(try #require(try reading(json(name: "\"  Skyr natur \""))).food.name == "Skyr natur")
-        #expect(try #require(try reading(json(name: nil))).food.name == "")
+        let trimmed = try #require(try reading(json(name: "\"  Skyr natur \"")))
+        #expect(trimmed.food.name == "Skyr natur")
+        let missing = try #require(try reading(json(name: nil)))
+        #expect(missing.food.name == "")
     }
 
     @Test func strictFormat_aMissingKeyIsAnInvalidAnswer() {
