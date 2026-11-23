@@ -91,6 +91,9 @@ struct BackupTests {
         meal.healthSynced = true
         context.insert(meal)
         context.insert(DrinkRecord(DrinkValue(id: UUID(), date: now, milliliters: 250), healthVersion: 2))
+        let weight = WeightRecord(WeightValue(id: UUID(), date: now, kilograms: 81.4, bodyFatPercent: 22.5), healthVersion: 3)
+        weight.healthSynced = true
+        context.insert(weight)
         let workout = WorkoutRecord(id: UUID(), activity: .running, start: now, minutes: 40, kilocalories: 310.5, healthVersion: 2)
         workout.healthSynced = true
         workout.energyInHealth = false
@@ -429,6 +432,35 @@ struct BackupTests {
         let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
         #expect(stored.map(\.dayKey) == ["2026-11-18"])
         #expect(stored.first?.value.foreign.sources == ["Yazio"])
+    }
+
+    @Test func backup_roundTripsTheBodyWeights() throws {
+        let weight = try #require(try source.mainContext.fetch(FetchDescriptor<WeightRecord>()).first)
+        let decoded = try JSONDecoder().decode(WeightBackup.self, from: JSONEncoder().encode(WeightBackup(weight)))
+        let restored = decoded.makeRecord()
+        #expect(restored.value == weight.value)
+        #expect(restored.healthVersion == 3 && restored.healthSynced)
+        #expect(restored.bodyFatPercent == 22.5)
+    }
+
+    @Test func restore_oldFileWithoutWeights_keepsTheWeightsOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["weights"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        target.container.mainContext.insert(WeightRecord(WeightValue(id: UUID(), date: clock.now, kilograms: 77.7)))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<WeightRecord>())
+        #expect(stored.map(\.kilograms) == [77.7])
+    }
+
+    @Test func restore_withWeights_replacesTheWeightsOfTheDevice() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(WeightRecord(WeightValue(id: UUID(), date: clock.now, kilograms: 77.7)))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<WeightRecord>())
+        #expect(stored.map(\.kilograms) == [81.4])
     }
 
     // MARK: Round trip

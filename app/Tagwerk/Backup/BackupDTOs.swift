@@ -563,6 +563,32 @@ struct DrinkBackup: BackupEntity {
     }
 }
 
+struct WeightBackup: BackupEntity {
+    static let modelName = "WeightRecord"
+    var id: UUID
+    var date: Date
+    var kilograms: Double
+    var bodyFatPercent: Double?
+    var healthVersion: Int
+    var healthSynced: Bool
+
+    init(_ record: WeightRecord) {
+        id = record.id
+        date = record.date
+        kilograms = record.kilograms
+        bodyFatPercent = record.bodyFatPercent
+        healthVersion = record.healthVersion
+        healthSynced = record.healthSynced
+    }
+
+    func makeRecord() -> WeightRecord {
+        let record = WeightRecord(WeightValue(id: id, date: date, kilograms: kilograms, bodyFatPercent: bodyFatPercent))
+        record.healthVersion = healthVersion
+        record.healthSynced = healthSynced
+        return record
+    }
+}
+
 struct WorkoutBackup: BackupEntity {
     static let modelName = "WorkoutRecord"
     var id: UUID
@@ -1618,6 +1644,9 @@ struct BackupEntities: Codable, Equatable {
     var meals: [MealBackup] = []
     var drinks: [DrinkBackup] = []
     var workouts: [WorkoutBackup] = []
+    /// Optional on purpose: a file written before the body weights has no list. `nil` means "the file says nothing about it", and a
+    /// restore then leaves the weights of this device alone.
+    var weights: [WeightBackup]?
     var shoppingCategories: [ShoppingCategoryBackup] = []
     var shoppingAssignments: [ShoppingAssignmentBackup] = []
     var notes: [NoteBackup] = []
@@ -1665,6 +1694,7 @@ struct BackupEntities: Codable, Equatable {
         meals = try container.decodeIfPresent([MealBackup].self, forKey: .meals) ?? []
         drinks = try container.decodeIfPresent([DrinkBackup].self, forKey: .drinks) ?? []
         workouts = try container.decodeIfPresent([WorkoutBackup].self, forKey: .workouts) ?? []
+        weights = try container.decodeIfPresent([WeightBackup].self, forKey: .weights)
         shoppingCategories = try container.decodeIfPresent([ShoppingCategoryBackup].self, forKey: .shoppingCategories) ?? []
         shoppingAssignments = try container.decodeIfPresent([ShoppingAssignmentBackup].self, forKey: .shoppingAssignments) ?? []
         notes = try container.decodeIfPresent([NoteBackup].self, forKey: .notes) ?? []
@@ -1684,7 +1714,7 @@ struct BackupEntities: Codable, Equatable {
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName, DayHealthBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, WeightBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName, DayHealthBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1715,6 +1745,7 @@ extension BackupEntities {
         meals = Self.fetch(MealRecord.self, in: context).map(MealBackup.init)
         drinks = Self.fetch(DrinkRecord.self, in: context).map(DrinkBackup.init)
         workouts = Self.fetch(WorkoutRecord.self, in: context).map(WorkoutBackup.init)
+        weights = Self.fetch(WeightRecord.self, in: context).map(WeightBackup.init)
         shoppingCategories = Self.fetch(ShoppingCategory.self, in: context).map(ShoppingCategoryBackup.init)
         shoppingAssignments = Self.fetch(ShoppingAssignment.self, in: context).map(ShoppingAssignmentBackup.init)
         notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || $0.kind.isInDefaultBackup }.map(NoteBackup.init)
@@ -1770,6 +1801,8 @@ extension BackupEntities {
         Self.delete(MealRecord.self, in: context) { _ in true }
         Self.delete(DrinkRecord.self, in: context) { _ in true }
         Self.delete(WorkoutRecord.self, in: context) { _ in true }
+        // Files from before the body weights leave those of this device untouched.
+        if weights != nil { Self.delete(WeightRecord.self, in: context) { _ in true } }
         Self.delete(ShoppingCategory.self, in: context) { _ in true }
         Self.delete(ShoppingAssignment.self, in: context) { _ in true }
         Self.delete(NoteRecord.self, in: context) { replacePrivate || $0.kind.isInDefaultBackup }
@@ -1813,6 +1846,7 @@ extension BackupEntities {
         for item in meals { context.insert(item.makeRecord()) }
         for item in drinks { context.insert(item.makeRecord()) }
         for item in workouts { context.insert(item.makeRecord()) }
+        for item in weights ?? [] { context.insert(item.makeRecord()) }
         for item in shoppingCategories { context.insert(item.makeRecord()) }
         for item in shoppingAssignments { context.insert(item.makeRecord()) }
         for item in notes where replacePrivate || (NoteKind(rawValue: item.kindRaw) ?? .free).isInDefaultBackup { context.insert(item.makeRecord()) }

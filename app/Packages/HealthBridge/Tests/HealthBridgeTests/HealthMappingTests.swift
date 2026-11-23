@@ -289,6 +289,24 @@ struct WeightMappingTests {
         #expect(result.map(\.kilograms) == [79.9, 81.0], "own samples (by source and by marker) are dropped, the rest is oldest first")
         #expect(result.map(\.sourceName) == ["com.apple.health", "com.withings"])
     }
+
+    @Test func foreignWeights_pairsBodyFatOfTheSameSourceAndMoment() {
+        let day = Date(timeIntervalSince1970: 1_800_000_000)
+        let scale = HealthMapping.WeightSample(id: UUID(), date: day, kilograms: 81, metadata: nil, sourceBundleID: "com.withings",
+                                               sourceName: "Waage")
+        func fat(_ offset: Double, _ fraction: Double, bundle: String) -> HealthMapping.BodyFatSample {
+            HealthMapping.BodyFatSample(date: day.addingTimeInterval(offset), fraction: fraction, metadata: nil, sourceBundleID: bundle,
+                                        sourceName: bundle)
+        }
+        let paired = HealthMapping.foreignWeights([scale], bodyFat: [fat(30, 0.231, bundle: "com.withings"),
+                                                                     fat(5, 0.40, bundle: "com.other"),
+                                                                     fat(3_600, 0.30, bundle: "com.withings"),
+                                                                     fat(0, 0.45, bundle: "local.tagwerk.app")],
+                                                  ownBundleID: "local.tagwerk.app")
+        #expect(paired.count == 1)
+        #expect(abs((paired[0].bodyFatPercent ?? 0) - 23.1) < 0.0001, "only the fat value of the same source close in time belongs to the weight")
+        #expect(HealthMapping.foreignWeights([scale], ownBundleID: "local.tagwerk.app")[0].bodyFatPercent == nil)
+    }
 }
 
 struct ForeignNutritionMappingTests {
