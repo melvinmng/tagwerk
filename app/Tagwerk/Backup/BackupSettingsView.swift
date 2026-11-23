@@ -118,6 +118,10 @@ struct BackupSettingsView: View {
         @Bindable var settings = environment.settings
         return Section {
             Toggle("Tagebuch und Bible Study einschließen", isOn: $settings.backupIncludesPrivateNotes)
+            if environment.notes.lockedCount > 0 {
+                LabeledContent("Gesperrte Notizen · \(environment.notes.lockedCount)",
+                               value: Self.lockedNotesValue(encrypted: settings.backupEncryptionEnabled))
+            }
             NavigationLink { BackupEncryptionView() } label: {
                 LabeledContent("Mit Passwort verschlüsseln",
                                value: settings.backupEncryptionEnabled ? String(localized: "Ein") : String(localized: "Aus"))
@@ -129,8 +133,17 @@ struct BackupSettingsView: View {
         } header: {
             Text("Inhalt")
         } footer: {
-            Text("Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.")
+            Text(contentFooter(encrypted: settings.backupEncryptionEnabled))
         }
+    }
+
+    /// The footer of "Inhalt"; with locked notes in a file that is not encrypted it adds that the lock does not protect the file.
+    private func contentFooter(encrypted: Bool) -> String {
+        var text = String(localized: "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten.")
+        if environment.notes.lockedCount > 0, !encrypted {
+            text += " " + String(localized: "Die Sperre schützt vor Mitlesen in Tagwerk, nicht die Sicherungsdatei. Bewahre die Datei an einem geschützten Ort auf.")
+        }
+        return text
     }
 
     private func safetyCopySection(_ service: BackupService) -> some View {
@@ -159,6 +172,11 @@ struct BackupSettingsView: View {
               settings.backupIncludesPrivateNotes else { return }
         settings.backupPlainHintShown = true
         isAskingForPassword = true
+    }
+
+    /// The value of the row "Gesperrte Notizen": the file holds them as plain text unless the backup is encrypted.
+    static func lockedNotesValue(encrypted: Bool) -> String {
+        encrypted ? String(localized: "enthalten") : String(localized: "in der Datei unverschlüsselt enthalten")
     }
 
     /// "12 · 34 MB"; `nil` without attachments, so the row only shows when it matters for the file size.

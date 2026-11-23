@@ -54,11 +54,11 @@ final class RecipeTranslationModel: Identifiable {
 
     // MARK: Offer
 
-    /// Whether "Übersetzen …" is offered for a note: a free, live note that lies directly in the folder "Rezepte" and reads as
-    /// a structured recipe. Everything else (other folders, private folders, journal, Bible Study, Dream Log, notes without
+    /// Whether "Übersetzen …" is offered for a note: a free, live, not locked note that lies directly in the folder "Rezepte" and
+    /// reads as a structured recipe. Everything else (other folders, private folders, journal, Bible Study, Dream Log, notes without
     /// a section "Zutaten") is not offered; the folder "Rezepte" is the only place this feature works in.
     static func isOffered(_ note: NoteRecord, store: NoteStore) -> Bool {
-        guard note.kind == .free, note.deletedAt == nil, let folderID = note.folderID,
+        guard note.kind == .free, note.deletedAt == nil, !store.isPrivate(note), let folderID = note.folderID,
               store.folder(id: folderID)?.role == .recipes else { return false }
         return RecipeNote.parse(note.text) != nil
     }

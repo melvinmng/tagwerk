@@ -49,6 +49,22 @@
         }
       }
     },
+    "NSFaceIDUsageDescription": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk entsperrt damit gesperrte Notizen und private Ordner."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk uses this to unlock locked notes and private folders."
+          }
+        }
+      }
+    },
     "NSHealthShareUsageDescription": {
       "localizations": {
         "de": {

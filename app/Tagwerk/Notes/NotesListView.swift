@@ -6,6 +6,7 @@ import TagwerkCore
 struct NotesListView: View {
     @Environment(AppEnvironment.self) var environment
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
     let store: NoteStore
     let scope: NotesScope
 
@@ -20,6 +21,9 @@ struct NotesListView: View {
     @State var deletingForGood: [UUID] = []
     @State private var isStartingBibleStudy = false
     @State private var isCreatingRecipe = false
+    @State private var importTarget: NotionImportTarget?
+    /// Notes that wait for the explanation before their first lock (`NoteLockIntroSheet`).
+    @State var lockIntroIDs: [UUID] = []
 
     init(store: NoteStore, scope: NotesScope = .all) {
         self.store = store
@@ -49,8 +53,38 @@ struct NotesListView: View {
     /// Whether the quick capture bar is offered: not in the trash and not in folders that only the routines fill.
     private var allowsCapture: Bool { scope.allowsCapture && (folderRole?.acceptsOwnNotes ?? true) }
 
+    /// A private folder behind the lock shows the lock screen instead of its notes (NO10c, NL3a).
     var body: some View {
+        let lock = environment.noteLock
+        let isFolderProtected: Bool = {
+            guard case .folder(let id) = scope else { return false }
+            return NoteProtection.isProtectedFolder(isPrivateFolder: NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info)).contains(id),
+                                                    settings: lock.protection)
+        }()
+        let isFolderConcealed = isFolderProtected && !lock.isUnlocked
+        Group {
+            if isFolderConcealed {
+                LockedContentView(kind: .folder) { _ = await lock.unlock(reason: NoteLock.reason) }
+                    .navigationTitle(title)
+                    .navigationBarTitleDisplayMode(.inline)
+            } else {
+                listBody
+            }
+        }
+        // The app switcher shows no list of a protected folder.
+        .overlay { if isFolderProtected, scenePhase != .active { LockCoverView() } }
+        // A hidden folder asks once when it appears; a failed or cancelled check leaves the lock screen standing (the system sheet
+        // may move the scene to inactive, so the scene phase is not part of the task id).
+        .task(id: isFolderConcealed) {
+            guard isFolderConcealed, scenePhase == .active else { return }
+            _ = await lock.unlock(reason: NoteLock.reason)
+        }
+        .noteLockIntro(ids: $lockIntroIDs, store: store)
+    }
+
+    @ViewBuilder private var listBody: some View {
         let notes = visibleNotes
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
         // "Tagesstart" also lists the days that only have gratitude (NO14); they are display entries, not notes.
         let gratitudeDays = folderRole == .morningRoutine && !isTrash ? environment.routines.gratitudeDays() : [:]
         let morningEntries = folderRole == .morningRoutine && !isTrash
@@ -90,6 +124,14 @@ struct NotesListView: View {
                     .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
+                if let target = notionImportTarget {
+                    Section {
+                        Button { importTarget = target } label: {
+                            Label("Aus Notion importieren", systemImage: "square.and.arrow.down").foregroundStyle(.tint)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
             ForEach(sections) { section in
                 Section {
@@ -97,13 +139,13 @@ struct NotesListView: View {
                         ForEach(morningEntries, id: \.self) { entry in
                             switch entry {
                             case .note(let id, _):
-                                if let note = notesByID[id] { card(note, attachmentIndex: attachmentIndex) }
+                                if let note = notesByID[id] { card(note, attachmentIndex: attachmentIndex, privateFolderIDs: privateFolderIDs) }
                             case .gratitudeOnly(let day):
                                 gratitudeOnlyCard(day, gratitude: gratitudeDays[day] ?? [])
                             }
                         }
                     } else {
-                        ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
+                        ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex, privateFolderIDs: privateFolderIDs) }
                     }
                 } header: {
                     if let group = section.group {
@@ -164,6 +206,10 @@ struct NotesListView: View {
         }
         .sheet(isPresented: $isStartingBibleStudy) {
             BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
+        }
+        .sheet(item: $importTarget) { target in
+            // The list is already the folder, so "Zum Tagebuch" only closes the sheet.
+            NotionImportView(fixedTarget: target)
         }
         .sheet(isPresented: movingBinding) {
             NoteFolderPickerSheet(store: store, title: "Bewegen nach") { target in
@@ -227,11 +273,18 @@ struct NotesListView: View {
     }
 
     var visibleNotes: [NoteRecord] {
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
         let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder,
                                 ascending: environment.settings.noteSortAscending)
-            .filter { Self.matchesSearch($0, gratitude: gratitude(of: $0), query: searchText) }
+            .filter { matchesSearch($0, privateFolderIDs: privateFolderIDs) }
         // The entries of a routine folder are days: newest day first, not by change date.
         return folderRole?.noteKind == nil ? notes : Self.byDayDescending(notes)
+    }
+
+    /// The search field of the list: a hidden note matches by its title only (NL4a), everything else by its text.
+    private func matchesSearch(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
+        let isConcealed = environment.noteLock.isConcealed(note, privateFolderIDs: privateFolderIDs)
+        return Self.matchesSearch(note, gratitude: isConcealed ? [] : gratitude(of: note), query: searchText, titleOnly: isConcealed)
     }
 
     private var title: String {
@@ -243,6 +296,12 @@ struct NotesListView: View {
         }
     }
 
+    /// TB4b: the empty journal or Bible Study folder offers the import with its target already chosen.
+    private var notionImportTarget: NotionImportTarget? {
+        guard searchText.isEmpty, !isTrash, !editMode.isEditing else { return nil }
+        return isJournal ? .journal : isBibleStudy ? .bibleStudy : nil
+    }
+
     private var emptyText: String {
         if !searchText.isEmpty { return String(localized: "Keine Notizen gefunden.") }
         return isTrash ? String(localized: "Keine gelöschten Notizen.")
@@ -251,15 +310,19 @@ struct NotesListView: View {
 
     // MARK: Cards
 
-    private func card(_ note: NoteRecord, attachmentIndex: [UUID: NoteAttachmentRecord]) -> some View {
-        let attachmentInfo = NoteAttachmentStore.cardInfo(text: note.text, index: attachmentIndex)
+    private func card(_ note: NoteRecord, attachmentIndex: [UUID: NoteAttachmentRecord], privateFolderIDs: Set<UUID>) -> some View {
+        let lock = environment.noteLock
+        // A hidden note shows its title only: no preview, no thumbnail, no count of attachments (NL3a).
+        let isConcealed = lock.isConcealed(note, privateFolderIDs: privateFolderIDs)
+        let attachmentInfo = isConcealed ? NoteAttachmentStore.CardInfo() : NoteAttachmentStore.cardInfo(text: note.text, index: attachmentIndex)
         let isJournalEntry = note.kind == .journal
         // The entries of the routine folders are named by their day.
         let isRoutineEntry = folderRole?.noteKind != nil
         let calendar = environment.planning.calendar
         let title = isJournalEntry ? Self.journalTitle(note, calendar: calendar)
             : isRoutineEntry ? Self.routineTitle(note, calendar: calendar) : NoteText.title(note.text)
-        let preview = isJournalEntry ? JournalTemplate.contentLines(note.text).prefix(2).joined(separator: "\n")
+        let preview = isConcealed ? Self.lockedPreview()
+            : isJournalEntry ? JournalTemplate.contentLines(note.text).prefix(2).joined(separator: "\n")
             : isRoutineEntry ? Self.routinePreview(note, gratitude: gratitude(of: note))
             : NoteText.preview(note.text)
         return Button {
@@ -273,6 +336,10 @@ struct NotesListView: View {
                         Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                         Spacer(minLength: 4)
+                        // The open lock marks a locked note that is unlocked (or whose protection is off) right now.
+                        if note.isLocked, !isConcealed {
+                            Image(systemName: "lock.open").font(.footnote).foregroundStyle(.secondaryText).accessibilityHidden(true)
+                        }
                         if isTrash, let deletedAt = note.deletedAt { trashBadge(deletedAt: deletedAt) }
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
@@ -284,7 +351,9 @@ struct NotesListView: View {
                                 .accessibilityLabel("Angeheftet")
                         }
                     }
-                    if !preview.isEmpty {
+                    if isConcealed {
+                        Label(preview, systemImage: "lock.fill").font(.subheadline).foregroundStyle(.secondaryText)
+                    } else if !preview.isEmpty {
                         Text(preview).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     }
                     Text(footerText(for: note))
@@ -302,14 +371,15 @@ struct NotesListView: View {
         // Without this the whole row takes the accent colour of a button (#173).
         .buttonStyle(.plain)
         .tag(note.id)
+        .accessibilityValue(note.isLocked ? (isConcealed ? Text("gesperrt") : Text("entsperrt")) : Text(""))
         .swipeActions(edge: .trailing) {
             if isTrash {
-                Button { deletingForGood = [note.id] } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+                Button { lock.afterUnlock(whenConcealed: isConcealed) { deletingForGood = [note.id] } } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
             } else {
-                // The trash is the way back, so deleting does not ask.
-                Button { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+                // The trash is the way back, so deleting does not ask; a hidden note asks the device owner first (rule 7).
+                Button { lock.afterUnlock(whenConcealed: isConcealed) { store.trash(note.id) } } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
                 if note.kind == .free {
-                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }.tint(.indigo)
+                    Button { lock.afterUnlock(whenConcealed: isConcealed) { movingNoteIDs = [note.id] } } label: { Label("Bewegen", systemImage: "folder") }.tint(.indigo)
                 }
             }
         }
@@ -328,16 +398,20 @@ struct NotesListView: View {
         .contextMenu {
             if isTrash {
                 Button { store.restore(note.id) } label: { Label("Wiederherstellen", systemImage: "arrow.uturn.backward") }
-                Button(role: .destructive) { deletingForGood = [note.id] } label: { Label("Endgültig löschen", systemImage: "trash") }
+                Button(role: .destructive) { lock.afterUnlock(whenConcealed: isConcealed) { deletingForGood = [note.id] } } label: { Label("Endgültig löschen", systemImage: "trash") }
             } else {
                 Button { store.setPinned(note.id, !note.isPinned) } label: {
                     Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
                 }
                 if note.kind == .free {
-                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }
+                    Button { lock.afterUnlock(whenConcealed: isConcealed) { movingNoteIDs = [note.id] } } label: { Label("Bewegen", systemImage: "folder") }
                 }
-                ShareLink(item: note.text) { Label("Teilen", systemImage: "square.and.arrow.up") }
-                Button(role: .destructive) { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }
+                lockItems(note, privateFolderIDs: privateFolderIDs)
+                // The text of a hidden note is not shared.
+                if !isConcealed {
+                    ShareLink(item: note.text) { Label("Teilen", systemImage: "square.and.arrow.up") }
+                }
+                Button(role: .destructive) { lock.afterUnlock(whenConcealed: isConcealed) { store.trash(note.id) } } label: { Label("Löschen", systemImage: "trash") }
             }
         }
     }
@@ -522,9 +596,11 @@ extension NotesListView {
     }
 
     /// A note matches by its text; an entry of "Tagesstart" also by the gratitude of its day.
-    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String) -> Bool {
+    /// `titleOnly` is for a hidden note: only its first line is searched.
+    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String, titleOnly: Bool = false) -> Bool {
+        if titleOnly { return NoteText.matches(NoteText.title(note.text), query: query) }
         // Text and gratitude are searched together, so a query of two words may find one in each.
-        NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
+        return NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
     }
 
     /// Whether the gratitude of a day matches the search of the list; an empty search matches every day with gratitude.

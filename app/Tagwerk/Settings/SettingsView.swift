@@ -15,7 +15,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var settings = environment.settings
-        NavigationStack {
+        NavigationStack(path: Bindable(environment).settingsPath) {
             Form {
                 PlanningSettingsSection()
 
@@ -159,6 +159,16 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
+            .navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .languages: LanguageSettingsView()
+                case .ai: AISettingsView()
+                case .aiVoice: VoiceSettingsView()
+                case .capture: CaptureSettingsView()
+                case .shopping: ShoppingSettingsView()
+                case .siri: SiriShortcutsSettingsView()
+                }
+            }
             .assistantToolbarButton { .settings }
             .task {
                 loadSources()

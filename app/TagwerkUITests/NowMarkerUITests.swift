@@ -1,17 +1,10 @@
 import XCTest
 
-/// The "now" marker and the running entry of the day view, with the clock pinned inside the demo seminar (10:00–12:30).
+/// The "now" marker of the day view, with the clock pinned inside the demo seminar (10:00–12:30). The texts of the running entry
+/// ("läuft, noch 120 Minuten") and of the time capsule ("Jetzt, 10:30") are checked without an app launch in `PlanningModelTests`
+/// (`runningRemaining_…`) and `NowLineTextTests`; what is left is the scrolling, which needs the real grid.
 final class NowMarkerUITests: UITestCase {
     override var extraLaunchArguments: [String] { ["-TagwerkUITestNow", "10:30"] }
-
-    func testRunningEntryShowsTheTimeLeftAndTheNowCapsule() {
-        waitFor("Sprechstunde")
-        // The time capsule of the marker: the label is "Jetzt, 10:30".
-        waitFor("Jetzt, 10:30")
-        // The seminar runs from 10:00 to 12:30: two hours left. Its label says so instead of the time range.
-        let running = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "läuft, noch 120 Minuten")).firstMatch
-        XCTAssertTrue(running.waitForExistence(timeout: Self.timeout), "The running seminar does not say how long it runs")
-    }
 
     /// "Heute" aligns the grid to "now" again (PL4b): the page is dragged down to its top, which moves the capsule into the
     /// lower half of the screen; a trip to tomorrow and back puts it at a third of the visible height again.

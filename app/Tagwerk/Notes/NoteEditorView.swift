@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 struct NoteEditorView: View {
     @Environment(AppEnvironment.self) var environment
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     let noteID: UUID
     let store: NoteStore
     /// Whether the page offers the assistant. The note in its own sheet (`NoteEditorSheet`) does not: the chat is a sheet
@@ -37,6 +38,8 @@ struct NoteEditorView: View {
     @State var translation: RecipeTranslationModel?
     /// A hint after an action that ends in a sheet ("Als „…“ gesichert.", the result of the shopping list).
     @State var notice: String?
+    /// The note waits for the explanation before its first lock (`NoteLockIntroSheet`).
+    @State var lockIntroIDs: [UUID] = []
     /// What the insert features put on top of the page (scanner, share sheet, rename prompt).
     @State var inserts = NoteInsertState()
 
@@ -52,6 +55,31 @@ struct NoteEditorView: View {
 
     var body: some View {
         let note = store.note(id: noteID)
+        let lock = environment.noteLock
+        let isConcealed = note.map { lock.isConcealed($0, in: store) } ?? false
+        let isProtected = note.map { lock.isProtected($0, in: store) } ?? false
+        Group {
+            if isConcealed {
+                // Nothing of the note is loaded while it is hidden: the text only reaches this page after the unlock.
+                LockedContentView(kind: .note) { _ = await lock.unlock(reason: NoteLock.reason) }
+                    .navigationTitle(title(of: note))
+                    .navigationBarTitleDisplayMode(.inline)
+            } else {
+                editorBody(note)
+            }
+        }
+        // The app switcher shows no text of a protected note.
+        .overlay { if isProtected, scenePhase != .active { LockCoverView() } }
+        // A hidden note asks once when it appears; a failed or cancelled check leaves the lock screen standing (the system
+        // sheet may move the scene to inactive, so the scene phase is not part of the task id).
+        .task(id: isConcealed) {
+            guard isConcealed, scenePhase == .active else { return }
+            _ = await lock.unlock(reason: NoteLock.reason)
+        }
+        .noteLockIntro(ids: $lockIntroIDs, store: store)
+    }
+
+    private func editorBody(_ note: NoteRecord?) -> some View {
         content
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
@@ -151,6 +179,14 @@ struct NoteEditorView: View {
                 store.deleteIfEmpty(noteID)
                 // An attachment goes only when its reference is gone from the saved text, not while the user is still writing.
                 if store.note(id: noteID) != nil { store.attachments?.removeUnreferenced(noteID: noteID, text: text) }
+                // Behind the lock the page keeps no text; it loads the stored text again when it appears. Only then: a tab switch
+                // also ends in here and must not drop the writing mode and the cursor of an ordinary note.
+                if let note = store.note(id: noteID), environment.noteLock.isConcealed(note, in: store) {
+                    text = ""
+                    lastSavedText = ""
+                    selection = nil
+                    isLoaded = false
+                }
             }
     }
 

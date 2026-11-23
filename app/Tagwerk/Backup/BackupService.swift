@@ -90,12 +90,17 @@ final class BackupService {
     @ObservationIgnored private let keyStore: BackupKeyStore
     /// Where safety copies go when no backup folder is reachable: the app documents, as before.
     @ObservationIgnored private let localSafetyCopyDirectory: URL
+    /// Whether the device can check its owner (a passcode is set). A restore that brings locked notes turns the protection on
+    /// only when it can; the settings of the lock are not part of a backup.
+    @ObservationIgnored private let canProtectNotes: @MainActor () -> Bool
 
     init(context: ModelContext, settings: AppSettings, calendar: Calendar = .tagwerk, appVersion: String? = nil,
          now: @escaping () -> Date = Date.init, attachments: NoteAttachmentStore? = nil, keyStore: BackupKeyStore = BackupKeyStore(),
-         safetyCopyDirectory: URL = BackupService.safetyCopyDirectory, afterRestore: @escaping @MainActor () -> Void = {}) {
+         safetyCopyDirectory: URL = BackupService.safetyCopyDirectory, canProtectNotes: @escaping @MainActor () -> Bool = { false },
+         afterRestore: @escaping @MainActor () -> Void = {}) {
         self.keyStore = keyStore
         self.localSafetyCopyDirectory = safetyCopyDirectory
+        self.canProtectNotes = canProtectNotes
         self.afterRestore = afterRestore
         self.attachments = attachments
         self.context = context
@@ -232,6 +237,11 @@ final class BackupService {
         do {
             try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes,
                                               attachments: attachments)
+            // Locked notes on a device without the protection would be open until the switch is found: the safe state is on.
+            if inspection.entities.notes.contains(where: { $0.isLocked == true }), canProtectNotes() {
+                settings.noteLockEnabled = true
+                try? context.save()
+            }
             afterRestore()
         } catch {
             context.rollback()

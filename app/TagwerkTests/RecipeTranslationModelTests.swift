@@ -97,6 +97,24 @@ struct RecipeTranslationModelTests {
 
     // MARK: Offer
 
+    @Test func isOffered_neverForALockedRecipe_whileLocked() throws {
+        let recipe = try recipeNote()
+        #expect(RecipeTranslationModel.isOffered(recipe, store: store))
+        store.setLocked([recipe.id], true)
+        #expect(!RecipeTranslationModel.isOffered(recipe, store: store))
+    }
+
+    /// While the lock session is open the locked recipe is offered again; when it closes, it is not.
+    @Test func isOffered_lockedRecipe_followsTheLockSession() throws {
+        let recipe = try recipeNote()
+        var sessionIsOpen = true
+        store.lockHoldsBack = { $0 && !sessionIsOpen }
+        store.setLocked([recipe.id], true)
+        #expect(RecipeTranslationModel.isOffered(recipe, store: store))
+        sessionIsOpen = false
+        #expect(!RecipeTranslationModel.isOffered(recipe, store: store))
+    }
+
     @Test func isOffered_onlyStructuredNotesInRecipesFolder() throws {
         let recipe = try recipeNote()
         #expect(RecipeTranslationModel.isOffered(recipe, store: store))

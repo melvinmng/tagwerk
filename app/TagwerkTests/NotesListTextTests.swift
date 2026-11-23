@@ -40,6 +40,27 @@ struct NotesListTextTests {
         #expect(footer(note(kind: .morning, dayKey: nil, updated: at(17, 7))) == "Tagesstart · 17.11.")
     }
 
+    @Test func lockedPreview_text() {
+        #expect(NotesListView.lockedPreview() == "Gesperrt")
+    }
+
+    @Test func selection_lockSkipsNotesInPrivateFolders() {
+        let privateFolder = UUID()
+        let settings = NoteProtection.Settings(isEnabled: true, locksPrivateFolders: true, canAuthenticate: true)
+        let own = note(updated: now)
+        let inPrivateFolder = note(updated: now)
+        inPrivateFolder.folderID = privateFolder
+        let journal = note(kind: .journal, dayKey: "2026-11-18", updated: now)
+        let alreadyLocked = note(updated: now)
+        alreadyLocked.isLocked = true
+        let ids = NotesListView.lockableIDs(of: [own, inPrivateFolder, journal, alreadyLocked], privateFolderIDs: [privateFolder], settings: settings)
+        #expect(ids == [own.id])
+        // With the folder switch off the note in the private folder can be locked as well.
+        let relaxed = NoteProtection.Settings(isEnabled: true, locksPrivateFolders: false, canAuthenticate: true)
+        #expect(Set(NotesListView.lockableIDs(of: [own, inPrivateFolder, journal], privateFolderIDs: [privateFolder], settings: relaxed))
+                == [own.id, inPrivateFolder.id])
+    }
+
     @Test func entrySubtitle_latestOrEmpty() {
         #expect(NotesListView.entrySubtitle(latest: note(updated: at(19, 8, 12)), now: now, calendar: calendar)
                 == "zuletzt: „Ideen Hausarbeit“ · heute 08:12")

@@ -13,7 +13,7 @@ struct FocusFilterGuideView: View {
                 step(4, "Schalte „Aufgaben und Deadlines zurückhalten“ ein.")
             }
             Section("Was passiert") {
-                Text("Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden, ohne eingerichtete Ruhezeit nach 8 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.")
+                Text("Solange der Fokus läuft, hält Tagwerk Mitteilungen zu Aufgaben und Deadline-Terminen zurück. Sie kommen, sobald der Fokus endet. Meldet iOS das Ende nicht, kommen sie spätestens nach 4 Stunden. Fällt dieser Zeitpunkt in die Ruhezeit, kommen sie an deren Ende. Nichts entfällt.")
             }
         }
         .navigationTitle("Fokus-Filter")

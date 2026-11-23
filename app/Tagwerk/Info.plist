@@ -43,6 +43,8 @@
 	<string>Tagwerk liest deinen Kalender, um deinen Tag zu planen.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Tagwerk entsperrt damit gesperrte Notizen und private Ordner.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Tagwerk zeigt deine Trainings, Schritte, Aktivitätsenergie, dein Gewicht und deine Körperdaten aus Health im Tab „Erfassen“ und liest auf Wunsch Ernährungseinträge anderer Apps.</string>
 	<key>NSHealthUpdateUsageDescription</key>

@@ -4,7 +4,8 @@
 # Simulators come from a small machine-wide pool ("Tagwerk Tests Slot 1" to "Tagwerk Tests Slot 3"): a test run takes
 # a free slot for its whole duration and shuts the simulator down at the end, so the number of simulators (and with
 # it memory and disk use) does not grow with the number of worktrees. At most one UI test stage runs on the machine at
-# a time.
+# a time. A pool simulator is erased (app stores, containers, permissions) before each run, so data of an earlier run or
+# another branch cannot break the test host.
 #
 # Environment overrides:
 #   TAGWERK_TEST_SIMULATOR     simulator name or UDID to use instead of a pool slot (never shut down by the scripts)
@@ -77,9 +78,24 @@ _tagwerk_find_or_create_simulator() {
   print -r -- "$udid"
 }
 
+# Erases the content and settings of a pool simulator, so every run starts without an app store, app container or
+# permission left behind by an earlier run (possibly from another branch with a different data model). A booted simulator
+# cannot be erased, so it is shut down first if the plain erase is refused. Only called for a pool slot this process holds.
+_tagwerk_reset_pool_simulator() {
+  local udid="$1"
+  if ! xcrun simctl erase "$udid" > /dev/null 2>&1; then
+    xcrun simctl shutdown "$udid" > /dev/null 2>&1 || true
+    xcrun simctl erase "$udid" || {
+      echo "Could not reset the pool simulator $udid" >&2
+      return 1
+    }
+  fi
+}
+
 # Prints the destination for xcodebuild. Without TAGWERK_TEST_SIMULATOR it takes a free pool slot (waiting for one if
 # all are in use, see tagwerk_acquire_simulator_slot) and prints the destination of its simulator "Tagwerk Tests Slot N",
-# which is created from the default device type on first use. The slot stays taken until the process ends or calls
+# which is created from the default device type on first use and reset to a clean state (_tagwerk_reset_pool_simulator)
+# before every run. A simulator chosen with TAGWERK_TEST_SIMULATOR is never reset. The slot stays taken until the process ends or calls
 # tagwerk_release_simulator_slot, so call this from the main script, not from a background job.
 tagwerk_test_destination() {
   local requested="${TAGWERK_TEST_SIMULATOR:-}"
@@ -95,6 +111,7 @@ tagwerk_test_destination() {
   local slot udid
   slot=$(tagwerk_acquire_simulator_slot) || return $?
   udid=$(_tagwerk_find_or_create_simulator "Tagwerk Tests Slot $slot") || return 1
+  _tagwerk_reset_pool_simulator "$udid" || return 1
   print -r -- "platform=iOS Simulator,id=$udid"
 }
 

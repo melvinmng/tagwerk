@@ -66,12 +66,28 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
-    /// True when the note must never leave the device: a private kind, or a note in a private folder or below one.
-    /// The only rule the assistant's note access and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
+    /// True when the note must not reach ChatGPT right now: a private kind, a note in a private folder or below one (always), or
+    /// a note the user locked while it is not unlocked (`lockHoldsBack`). A locked note that is unlocked in the current lock
+    /// session is available to the assistant until the app goes to the background or the lock closes (decision of 2026-11-22,
+    /// #188); closing the lock ends the assistant's note session (`onNoteLocked` and `NoteLock.onSessionClosed`). The only rule the
+    /// assistant's note access, the suggestions, the translations and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
     func isPrivate(_ note: NoteRecord) -> Bool {
         !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
-                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)))
+                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)),
+                                        isLocked: lockHoldsBack(note.isLocked))
     }
+
+    /// Whether the lock keeps a locked note away from the assistant right now; the argument is the lock mark of the note. The
+    /// app wires it to the lock session (`NoteProtection.holdsBack`); a store without a lock keeps every locked note back.
+    @ObservationIgnored var lockHoldsBack: @MainActor (_ isLocked: Bool) -> Bool = { $0 }
+
+    /// How many notes carry the lock mark (notes in the trash included: they stay locked there).
+    var lockedCount: Int { all().filter(\.isLocked).count }
+
+    /// Called when notes get locked, so the assistant forgets what it read of them (`AssistantModel.endNoteSession`).
+    @ObservationIgnored var onNoteLocked: (@MainActor () -> Void)?
+    /// Called after any change of a lock mark, so an open search reads the notes again.
+    @ObservationIgnored var onLockMarksChanged: (@MainActor () -> Void)?
 
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
@@ -162,6 +178,21 @@ final class NoteStore {
         guard let record = note(id: id), record.isPinned != pinned else { return }
         record.isPinned = pinned
         save()
+    }
+
+    /// Sets or clears the lock mark. Locking and unlocking are not changes of the note: the change date stays. Locking ends the
+    /// assistant's note session (`onNoteLocked`), so what it read of the note earlier is forgotten; unlocking does not.
+    func setLocked(_ ids: [UUID], _ locked: Bool) {
+        let wanted = Set(ids)
+        var changed = false
+        for record in all() where wanted.contains(record.id) && record.isLocked != locked {
+            record.isLocked = locked
+            changed = true
+        }
+        guard changed else { return }
+        save()
+        onLockMarksChanged?()
+        if locked { onNoteLocked?() }
     }
 
     func markProcessed(_ id: UUID, at date: Date) {

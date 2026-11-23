@@ -160,9 +160,11 @@ public enum NoteFolderRules {
         return result
     }
 
-    /// Whether a note may be shown to the assistant: its kind is not private and it does not lie in a private folder.
-    public static func mayLeaveDevice(kind: NoteKind, folderID: UUID?, privateFolderIDs: Set<UUID>) -> Bool {
-        guard !kind.isPrivate else { return false }
+    /// Whether a note may be shown to the assistant: its kind is not private, it does not lie in a private folder and it is
+    /// not held back by the lock. `isLocked` means "locked and not unlocked right now" (`NoteProtection.holdsBack`): a locked
+    /// note is available to the assistant while the lock session is open, a private kind or folder never is.
+    public static func mayLeaveDevice(kind: NoteKind, folderID: UUID?, privateFolderIDs: Set<UUID>, isLocked: Bool = false) -> Bool {
+        guard !kind.isPrivate, !isLocked else { return false }
         if let folderID, privateFolderIDs.contains(folderID) { return false }
         return true
     }

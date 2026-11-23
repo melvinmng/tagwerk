@@ -9,3 +9,13 @@ AccessibilityAuditRecipesLargeTextUITests
 
 # The evening variant of the AX5 audit is a nightly-only check as well (introduced with the evening audit work).
 AccessibilityAuditEveningLargeTextUITests
+
+# The title of the plan header next to the bar buttons: the pull request set checks the rule with PlanHeaderLayoutTests (a render
+# test, no app launch); this test measures the real navigation bar and keeps the numbers of that render test honest.
+PlanHeaderLayoutUITests
+
+# Placement of the travel capsule in the grid needs the real layout; its contrast is checked by the render test (MarkerRenderContrastTests).
+TravelContrastUITests/testAttachmentSitsAboveItsEventInTheGrid
+
+# The collapse of overlapping entries needs the real grid; the decision by text size and width is checked by GridCollapseLayoutTests.
+PlanOverlapUITests/testOverlappingEntriesCollapseAtLargeText
