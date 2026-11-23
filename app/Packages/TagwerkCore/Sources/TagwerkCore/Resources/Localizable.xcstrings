@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "%@ %%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %%"
+          }
+        }
+      }
+    },
     "%@ + %lld weitere": {
       "localizations": {
         "de": {
@@ -138,6 +148,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
+    "%@ kg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg"
+          }
+        }
+      }
+    },
+    "%@ kg/Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg/week"
           }
         }
       }
@@ -726,6 +756,16 @@
         }
       }
     },
+    "7-Tage-Mittel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean %@"
+          }
+        }
+      }
+    },
     "Ab %@ für alle folgenden": {
       "localizations": {
         "en": {
@@ -862,6 +902,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fiber"
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Anfang %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around early %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Ende %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around late %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Mitte %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around mid-%@."
           }
         }
       }
@@ -1364,6 +1434,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "General thoughts"
+          }
+        }
+      }
+    },
+    "Gestern %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday %@"
           }
         }
       }

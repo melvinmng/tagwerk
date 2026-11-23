@@ -84,4 +84,20 @@ final class CaptureUITests: UITestCase {
         tapButton("Sichern")
         eventually("The meal was not saved: the budget did not change from \(before)") { budgetLine.label != before }
     }
+
+    /// Decision KG1c: the fourth quick button opens the weight sheet; saving shows the confirmation with "Rückgängig", and undoing
+    /// takes the entry away again.
+    func testQuickEntry_weight_savesAndOffersUndo() {
+        tab("Erfassen")
+        let button = app.buttons[AccessibilityID.Capture.quickWeight].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: Self.timeout), "The quick button for the weight is missing")
+        button.tap()
+        // The sheet starts with a value (the demo data holds no weight yet), so saving needs no typing.
+        XCTAssertTrue(app.navigationBars["Gewicht"].waitForExistence(timeout: Self.timeout), "The weight sheet did not open")
+        app.buttons[AccessibilityID.Capture.weightSave].firstMatch.tap()
+        let confirmation = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'kg erfasst'")).firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: Self.timeout), "The confirmation with the weight is missing")
+        tapButton("Rückgängig")
+        eventually("The confirmation did not disappear after undoing") { !confirmation.exists }
+    }
 }

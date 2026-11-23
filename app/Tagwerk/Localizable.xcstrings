@@ -28,6 +28,16 @@
         }
       }
     },
+    "%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%"
+          }
+        }
+      }
+    },
     "%@\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.": {
       "localizations": {
         "en": {
@@ -8689,6 +8699,16 @@
         }
       }
     },
+    "Die Zeile „Gewicht“ im Tagesstart erinnert ans Wiegen, ohne eine eigene Mitteilung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The “Weight” row in the morning start reminds you to weigh yourself, without a notification of its own."
+          }
+        }
+      }
+    },
     "Die Zeit ist ungültig.": {
       "localizations": {
         "en": {
@@ -11412,6 +11432,16 @@
         }
       }
     },
+    "Für den Verlauf zählt die früheste Messung des Tages. Weitere Messungen am selben Tag bleiben in der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For the trend, the earliest measurement of the day counts. Further measurements on the same day stay in the list."
+          }
+        }
+      }
+    },
     "Für die Zusammenfassung ist deine Einwilligung nötig.": {
       "localizations": {
         "en": {
@@ -12067,6 +12097,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wilted, stage %lld"
+          }
+        }
+      }
+    },
+    "Gewicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight"
+          }
+        }
+      }
+    },
+    "Gewicht abfragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for weight"
+          }
+        }
+      }
+    },
+    "Gewicht in Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight in Health"
           }
         }
       }
@@ -14758,6 +14818,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Took a short moment for gratitude?"
+          }
+        }
+      }
+    },
+    "Körper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body"
+          }
+        }
+      }
+    },
+    "Körperfett": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body fat"
+          }
+        }
+      }
+    },
+    "Körperfett erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record body fat"
+          }
+        }
+      }
+    },
+    "Körperfettanteil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body fat percentage"
           }
         }
       }
@@ -20864,6 +20964,16 @@
         }
       }
     },
+    "Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk writes your weight to Health and reads measurements of other apps, for example a scale. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no foreign measurements. You can check it in Health › Sharing › Apps › Tagwerk. Body fat is a second field in the weight sheet and a second line in the trend."
+          }
+        }
+      }
+    },
     "Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.": {
       "localizations": {
         "en": {
@@ -23713,6 +23823,16 @@
         }
       }
     },
+    "Zeitpunkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
+    },
     "Zeitraum": {
       "localizations": {
         "en": {
@@ -25281,6 +25401,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "no due date"
+          }
+        }
+      }
+    },
+    "kg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kg"
           }
         }
       }

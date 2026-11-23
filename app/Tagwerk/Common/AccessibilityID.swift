@@ -48,6 +48,12 @@ enum AccessibilityID {
         static let allowActiveEnergy = "capture.allowActiveEnergy"
         /// The sheet "Aktiv heute".
         static let breakdown = "capture.breakdown"
+        /// The quick button "Gewicht", the number field of the weight sheet and its "Sichern" button.
+        static let quickWeight = "capture.quickWeight"
+        static let weightField = "capture.weightField"
+        static let weightSave = "capture.weightSave"
+        /// The weight row of the morning start.
+        static let morningWeight = "capture.morningWeight"
     }
 
     enum NoteEditor {

@@ -51,6 +51,8 @@ final class CaptureModel {
     private let store: IntakeStore
     private let mirror: HealthMirror
     private let health: any HealthStoring
+    /// Own and foreign body weights for the sheet, the morning start and the trends page.
+    let weights: WeightStore
     /// Goal plan, Health values and budget of a day; shared with the plan header, the widget and the weekly review.
     let budgets: DayBudgets
     @ObservationIgnored private let now: () -> Date
@@ -82,6 +84,10 @@ final class CaptureModel {
     private(set) var furtherNutrientsAccess: HealthGroupAccess?
     /// Permission group of other apps' nutrition (settings); `nil` until the first query.
     private(set) var foreignNutritionAccess: HealthGroupAccess?
+    /// Permission group "body" (weight and body fat, read and write); `nil` until the first query.
+    private(set) var bodyAccess: HealthGroupAccess?
+    /// Whether Health is connected at all (the core group was asked); only then a weight asks for its own group.
+    private(set) var healthConnected = false
     /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
     private(set) var steps: Int?
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
@@ -118,6 +124,7 @@ final class CaptureModel {
         self.store = store
         self.mirror = mirror
         self.health = health
+        self.weights = WeightStore(intake: store, health: health, calendar: calendar)
         self.settings = settings
         self.calendar = calendar
         self.now = now
@@ -214,6 +221,8 @@ final class CaptureModel {
         self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
         self.furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
         self.foreignNutritionAccess = await health.groupAccess(.foreignNutrition)
+        self.bodyAccess = await health.groupAccess(.body)
+        self.healthConnected = access.wasAsked
         var stepsOfDay: Int?
         if stepsAccess == .asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
@@ -436,6 +445,44 @@ final class CaptureModel {
             store.updateWorkout(workout)
         }
         await changed()
+    }
+
+    /// A weight: new entries offer "Widerrufen". The first one asks for the Health group "body" (a user tap started this call), after the
+    /// entry is saved and shown, so the sheet of iOS never holds up the entry itself. Without a connected Health nothing is asked.
+    func saveWeight(_ weight: WeightValue, isNew: Bool) async {
+        if isNew {
+            store.addWeight(weight)
+            undo = UndoNotice(text: String(localized: "\(WeightFormat.kilograms(weight.kilograms)) erfasst"), action: .remove(weight.id))
+        } else {
+            store.updateWeight(weight)
+        }
+        refreshLocal()
+        await requestBodyAccessIfDue()
+        await changed()
+    }
+
+    /// The time of a new weight: now, also when another day is shown (a weighing is not back-filled like a meal).
+    var weightEntryDate: Date { now() }
+
+    /// The newest known weight for the start of a new entry: an own one or one that another app wrote in the last 90 days.
+    func latestKnownKilograms() async -> Double? {
+        let end = now().addingTimeInterval(86_400)
+        let measurements = await weights.measurements(in: DateInterval(start: end.addingTimeInterval(-91 * 86_400), end: end))
+        return measurements.last?.kilograms
+    }
+
+    /// "Gewicht aus Health" in the settings or on the trends page: asks for the group "body" once, then mirrors waiting weights.
+    func allowBodyAccess() async {
+        await requestBodyAccessIfDue(force: true)
+        await changed()
+    }
+
+    private func requestBodyAccessIfDue(force: Bool = false) async {
+        let connected = await health.access().wasAsked
+        if (force || connected), await health.groupAccess(.body) == .notAsked {
+            try? await health.requestAuthorization(for: .body)
+        }
+        bodyAccess = await health.groupAccess(.body)
     }
 
     func delete(_ id: UUID) async {
