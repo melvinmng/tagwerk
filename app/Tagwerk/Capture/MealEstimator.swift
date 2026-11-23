@@ -103,8 +103,11 @@ final class MealEstimator {
     static func followUpMessage(text: String, items: [MealItem], pinned: Set<UUID>, focus: UUID?, comment: String) -> String {
         let entries: [[String: Any]] = items.map { item in
             ["name": item.name, "amount": item.amount, "kcal_min": item.kcalMin, "kcal": item.kcal, "kcal_max": item.kcalMax,
-             "protein_g": item.protein, "carbs_g": item.carbs, "fat_g": item.fat, "quantity_factor": item.factor,
-             "fixed_by_user": pinned.contains(item.id)]
+             "protein_g": item.protein, "carbs_g": item.carbs, "fat_g": item.fat,
+             // The further nutrients go along (null while unknown), so a revision returns them unchanged instead of losing them.
+             "fiber_g": item.fiber ?? NSNull(), "sugar_g": item.sugar ?? NSNull(),
+             "saturated_fat_g": item.saturatedFat ?? NSNull(), "salt_g": item.salt ?? NSNull(),
+             "quantity_factor": item.factor, "fixed_by_user": pinned.contains(item.id)]
         }
         let json = (try? JSONSerialization.data(withJSONObject: entries, options: [.sortedKeys])).map { String(decoding: $0, as: UTF8.self) } ?? "[]"
         let description = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -204,6 +207,9 @@ final class MealEstimator {
         - Zerlege die Mahlzeit in ihre Bestandteile (Posten) mit einer üblichen Mengenangabe auf \(language.promptName), z. B. \(language == .german ? "„2 Stück“, „1 Teller (300 g)“" : "„2 pieces“, „1 plate (300 g)“").
         - Gib je Posten kcal als wahrscheinlichsten Wert sowie eine ehrliche Spanne (kcal_min, kcal_max) und Eiweiß, \
         Kohlenhydrate und Fett in Gramm an. Die Spanne soll die typische Unsicherheit einer Schätzung abbilden.
+        - Gib außerdem Ballaststoffe (fiber_g), Zucker (sugar_g), gesättigte Fettsäuren (saturated_fat_g) und Salz (salt_g, nicht \
+        Natrium) in Gramm an. Weißt du einen dieser Werte nicht ausreichend sicher, gib null an; null ist besser als geraten. 0 \
+        bedeutet, dass der Posten den Stoff nicht enthält.
         - Mengenangaben in der Beschreibung haben Vorrang vor dem Foto.
         - title: kurzer \(language.promptAdjective) Name der Mahlzeit (höchstens 40 Zeichen).
         - Ist kein Essen oder Getränk zu erkennen, gib eine leere Liste items zurück. Erfinde nichts.
@@ -227,9 +233,14 @@ final class MealEstimator {
               "kcal_max": { "type": "number" },
               "protein_g": { "type": "number" },
               "carbs_g": { "type": "number" },
-              "fat_g": { "type": "number" }
+              "fat_g": { "type": "number" },
+              "fiber_g": { "type": ["number", "null"] },
+              "sugar_g": { "type": ["number", "null"] },
+              "saturated_fat_g": { "type": ["number", "null"] },
+              "salt_g": { "type": ["number", "null"] }
             },
-            "required": ["name", "amount", "kcal_min", "kcal", "kcal_max", "protein_g", "carbs_g", "fat_g"],
+            "required": ["name", "amount", "kcal_min", "kcal", "kcal_max", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g",
+                         "saturated_fat_g", "salt_g"],
             "additionalProperties": false
           }
         }

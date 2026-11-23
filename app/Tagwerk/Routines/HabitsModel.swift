@@ -25,6 +25,22 @@ final class HabitsModel {
         let isFulfilled: Bool
         /// The source is fulfilled; the row cannot be unchecked.
         let isAutomatic: Bool
+        let state: State
+
+        /// What the row shows (design GW3b, GW2a). The green check always means "done"; the bolt means "an automatic source".
+        enum State: Equatable {
+            /// (1) A habit by hand, still open.
+            case manualOpen
+            /// (2) Fulfilled by its source; the check cannot be removed.
+            case automaticDone
+            /// (3) The source is not fulfilled yet and ticks the habit by itself. `progress` is the share of the goal (0…1) for water
+            /// and steps, `nil` for sources without a measure.
+            case automaticPending(progress: Double?)
+            /// (4) Ticked by hand while the source is still open; the check can be removed.
+            case manualDoneSourcePending
+            /// A habit by hand, done.
+            case manualDone
+        }
     }
 
     /// All habits, paused ones too, by order.
@@ -63,6 +79,7 @@ final class HabitsModel {
         self.calendar = calendar
         self.now = now
         self.day = PlanDay(date: now(), calendar: calendar)
+        migrateMovementSourceIfNeeded()
         refreshLocal()
     }
 
@@ -82,6 +99,18 @@ final class HabitsModel {
     /// Automatic sources already used by another habit (paused ones included).
     func takenSources(excluding id: UUID?) -> Set<HabitSource> {
         Set(habits.filter { $0.id != id && $0.source != .manual }.map(\.source))
+    }
+
+    /// Once: a habit with the source "Training erfasst" whose name is the old suggestion "Bewegung" (German or English) gets the
+    /// combined source "Bewegung" (workout or step goal). A habit the user renamed or gave another source stays as it is, and
+    /// the switch never runs again, so a later choice of the old source is respected.
+    func migrateMovementSourceIfNeeded() {
+        guard !settings.movementSourceMigrated else { return }
+        settings.movementSourceMigrated = true
+        for var habit in store.habits() where habit.source == .workout && HabitSuggestions.isFormerMovementName(habit.name) {
+            habit.source = .movement
+            store.save(habit)
+        }
     }
 
     // MARK: Loading
@@ -125,10 +154,24 @@ final class HabitsModel {
     func rows(for day: PlanDay) -> [Row] {
         let today = self.today
         let day = min(day, today)
-        return habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { habit in
-            Row(habit: habit, isFulfilled: HabitRules.isFulfilled(habit, on: day, facts: facts),
-                isAutomatic: HabitRules.isSourceFulfilled(habit, on: day, facts: facts))
+        return habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { row(for: $0, on: day) }
+    }
+
+    /// The row of one habit on one day, from the facts already loaded.
+    private func row(for habit: Habit, on day: PlanDay) -> Row {
+        let isManuallyChecked = facts.manualChecks[habit.id]?.contains(day) == true
+        let isSourceFulfilled = HabitRules.isSourceFulfilled(habit, on: day, facts: facts)
+        let state: Row.State
+        if habit.source == .manual {
+            state = isManuallyChecked ? .manualDone : .manualOpen
+        } else if isSourceFulfilled {
+            state = .automaticDone
+        } else if isManuallyChecked {
+            state = .manualDoneSourcePending
+        } else {
+            state = .automaticPending(progress: HabitText.sourceProgress(habit, on: day, facts: facts))
         }
+        return Row(habit: habit, isFulfilled: isManuallyChecked || isSourceFulfilled, isAutomatic: isSourceFulfilled, state: state)
     }
 
     /// Shows another day at once from the stores; Health is read by `reload`.
@@ -157,10 +200,7 @@ final class HabitsModel {
                            goalSteps: settings.goalStepsPerDay, closedDays: daySources.closedDays(window),
                            journalDays: daySources.journalDays(window), bibleStudyDays: daySources.bibleStudyDays(window))
         day = min(day, today)
-        rows = habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { habit in
-            Row(habit: habit, isFulfilled: HabitRules.isFulfilled(habit, on: day, facts: facts),
-                isAutomatic: HabitRules.isSourceFulfilled(habit, on: day, facts: facts))
-        }
+        rows = habits.filter { HabitRules.isActive($0, on: day, today: today) }.map { row(for: $0, on: day) }
         todayCounter = HabitRules.counter(habits, today: today, facts: facts, calendar: calendar)
         revision += 1
         if notify { onChanged?() }

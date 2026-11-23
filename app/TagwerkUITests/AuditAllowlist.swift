@@ -43,6 +43,12 @@ enum AuditAllowlist {
     /// The page "Siri & Kurzbefehle" in both audit runs.
     private static let siriScreens = ["Einstellungen › Siri & Kurzbefehle", "AX5/dark Einstellungen › Siri & Kurzbefehle"]
 
+    /// The pages of the data backup (`BackupUITests`).
+    private static let backupScreens = [
+        "Einstellungen › Datensicherung", "Einstellungen › Datensicherung › Was wird gesichert?",
+        "Einstellungen › Datensicherung › Verschlüsselung", "Einstellungen › Datensicherung › Sicherheitskopien",
+    ]
+
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
@@ -232,8 +238,8 @@ enum AuditAllowlist {
             "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*",
             "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",
-            "Inhalte", "Stimme", "Ziele", "Liste", "Kategorien",
-            "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet).*",
+            "Inhalte", "Stimme", "Ziele", "Aktivität", "Nährwerte", "Liste", "Kategorien",
+            "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet|Ein Teil der Aktivitätsenergie|Ballaststoffe und Zucker sind immer dabei).*",
             "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*", "(?s)Portionen: \\d+\\nZutaten.*", "wird mit ChatGPT gelesen",
             "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an\\.",
             "Rezepte", "Schätzung", "Anzeige", "In Planen anzeigen", "(?s)(Gesendet wird|Nicht gesendet werden|Um ein Rezept zu lesen).*",
@@ -293,6 +299,30 @@ enum AuditAllowlist {
             + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
             + "of the scroll view (the audit counts that as clipped). The navigation title \"Rezept mit ChatGPT anlegen\" is truncated by the "
             + "system bar (large title at AX sizes still cuts it): device test list, design decision in #188."),
+
+        // MARK: Data backup pages (DS1, DS3, DS4)
+        Entry(auditType: .contrast, labels: [
+            "Automatisch", "Inhalt", "Gesichert", "Nicht gesichert", "An dieses Gerät gebunden",
+            "(?s)Andere Dateien im Ordner rührt Tagwerk nicht an\\. .*", "(?s)Gilt für „Jetzt sichern“.*", "(?s)Alles in einer einzelnen Datei\\. .*",
+            "(?s)Der Chatverlauf wird nicht gesichert, .*", "(?s)Vor jedem Wiederherstellen legt Tagwerk .*", "(?s)Kein Sicherungsordner gewählt\\. .*",
+            "Was wird gesichert\\?", "Anmeldung bei ChatGPT und GitHub", "Zugriff auf Kalender, Erinnerungen und Health",
+        ], screens: backupScreens, reason:
+            "Section headers and footers of the backup pages in the system grey of a grouped list (a `Section` header or footer is not styled with "
+            + "`secondaryText`), reported as \"nearly passed\" on the grouped background; the user accepts the low contrast of this grey secondary "
+            + "text (#188). The last four patterns are rows near the lower edge of the page: they lie under the Liquid Glass of the tab bar, whose "
+            + "background the system draws and lets the list scroll behind it (same group as \"Schrift auf Liquid Glass\" above)."),
+        Entry(auditType: .dynamicType, labels: [
+            "An dieses Gerät gebunden", "(?s)Gilt für „Jetzt sichern“.*", "Noch keine Sicherheitskopien\\.", "(?s)Kein Sicherungsordner gewählt\\. .*",
+        ], screens: backupScreens, reason:
+            "Headers, footers and the empty-state row of the backup pages use text styles (`footnote`, body) that scale; the audit still reports "
+            + "a partial lack of support, as it does for the footers of the recipe screens above. Not measured at AX5 for these pages: "
+            + "device test list (Dynamic Type at the largest size on all four pages)."),
+        Entry(auditType: .textClipped, labels: [
+            "(?s)Gilt für „Jetzt sichern“.*", "(?s)Vor jedem Wiederherstellen legt Tagwerk .*", "(?s)Kein Sicherungsordner gewählt\\. .*",
+        ], screens: backupScreens, reason:
+            "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\": a long footer of the password page and the header and "
+            + "footer of the list of safety copies, plain `Text` in a `Section` without a line limit, so they wrap. Not measured at AX5 for these "
+            + "pages: device test list (Dynamic Type at the largest size on all four pages)."),
 
         // MARK: Hit area
         Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], reason:

@@ -126,6 +126,35 @@ struct HealthMirrorTests {
         #expect(store.unsyncedEntries().isEmpty)
     }
 
+    private func workout() -> WorkoutValue {
+        WorkoutValue(id: UUID().uuidString, activity: .running, start: current, minutes: 30, kilocalories: 250, sourceName: nil, isOwn: true)
+    }
+
+    @Test func workoutMirrored_remembersThatTheCaloriesWentToHealth() async {
+        let entry = workout()
+        store.addWorkout(entry)
+        await mirror().sync()
+        let energy = store.ownWorkoutEnergy(on: PlanDay(date: current, calendar: .tagwerk), calendar: .tagwerk, mayWriteEnergy: false)
+        // The flag decides, not the permission at the time of the question.
+        #expect(energy.map(\.energyInHealth) == [true])
+    }
+
+    @Test func workoutMirroredWhileCaloriesAreRefused_remembersThat() async {
+        let refused = FakeHealthStore(access: .partial([.activeEnergy]))
+        let entry = workout()
+        store.addWorkout(entry)
+        await mirror(refused).sync()
+        let energy = store.ownWorkoutEnergy(on: PlanDay(date: current, calendar: .tagwerk), calendar: .tagwerk, mayWriteEnergy: true)
+        #expect(energy.map(\.energyInHealth) == [false])
+        #expect(store.unsyncedEntries().isEmpty, "the workout itself counts as mirrored")
+    }
+
+    @Test func unsyncedWorkout_isNeverInsideHealth() {
+        store.addWorkout(workout())
+        let energy = store.ownWorkoutEnergy(on: PlanDay(date: current, calendar: .tagwerk), calendar: .tagwerk, mayWriteEnergy: true)
+        #expect(energy.map(\.energyInHealth) == [false])
+    }
+
     private func mealWithFibre(fibre: Double?, salt: Double? = nil) -> MealValue {
         MealValue(id: UUID(), date: current, kind: .lunch, title: "Brot",
                   items: [MealItem(name: "Brot", amount: "2 Scheiben", kcalMin: 200, kcal: 200, kcalMax: 200, protein: 6, carbs: 36, fat: 2,

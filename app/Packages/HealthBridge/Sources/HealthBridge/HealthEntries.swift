@@ -253,6 +253,16 @@ public enum HealthAccess: Sendable, Hashable {
     case partial([HealthShareKind])
     case denied
 
+    /// Whether Tagwerk may write samples of `kind`: authorized, or partial without that kind. Before the first request, when
+    /// Health is unavailable and when everything was refused it may not.
+    public func allowsWriting(_ kind: HealthShareKind) -> Bool {
+        switch self {
+        case .authorized: true
+        case .partial(let denied): !denied.contains(kind)
+        case .unavailable, .notDetermined, .denied: false
+        }
+    }
+
     /// Whether Tagwerk may try to write or read (permission was asked at least once).
     public var wasAsked: Bool {
         switch self {

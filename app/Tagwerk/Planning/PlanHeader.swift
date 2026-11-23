@@ -206,8 +206,9 @@ struct PlanIntakeLine: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(.secondaryText)
-                // One footnote line is about 16 pt high; the audit reports a hit area under 44 pt.
-                .minimumTapTarget()
+                // The hit area of a button is at least 44 pt high, also for this one-line footnote.
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityHint("Öffnet Erfassen")

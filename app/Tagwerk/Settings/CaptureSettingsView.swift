@@ -1,33 +1,90 @@
 import SwiftUI
 import TagwerkCore
 
-/// Einstellungen › Erfassen (mockup E6a, ST1): goals and the meal-estimate consent.
+/// Einstellungen › Erfassen (mockup E6a, ST1): goals, the activity credit, nutrients and the meal-estimate consent.
 struct CaptureSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
+        CaptureSettingsForm(goals: environment.goals)
+    }
+}
+
+/// The form of the settings; the goal editor lives here so that the sub page for the further goals edits the same plan.
+private struct CaptureSettingsForm: View {
+    @Environment(AppEnvironment.self) private var environment
+    @State private var editor: GoalPlanEditor
+
+    init(goals: GoalStore) {
+        _editor = State(initialValue: GoalPlanEditor(goals: goals))
+    }
+
+    private func goal<Value>(_ keyPath: WritableKeyPath<GoalPlan, Value>) -> Binding<Value> {
+        Binding(get: { editor.plan[keyPath: keyPath] }, set: { editor.set(keyPath, to: $0) })
+    }
+
+    var body: some View {
         @Bindable var settings = environment.settings
+        let capture = environment.capture
         Form {
             Section {
-                ValueStepper("Kalorien", value: $settings.goalKilocalories, in: 1000...6000, step: 50, unit: "kcal") {
+                ValueStepper("Kalorien (Grundziel)", value: goal(\.kcal), in: 1000...6000, step: 50, unit: "kcal") {
                     IntakeFormat.kcal(Double($0), estimated: false)
                 }
-                ValueStepper("Wasser", value: $settings.goalWaterMilliliters, in: 500...6000, step: 250,
+                ValueStepper("Wasser", value: goal(\.waterMilliliters), in: 500...6000, step: 250,
                              kind: .decimal(fractionDigits: 2), scale: 1000, unit: "l") { IntakeFormat.liters($0) }
-                ValueStepper("Training pro Woche", value: $settings.goalWorkoutMinutesPerWeek, in: 0...1200, step: 15,
+                ValueStepper("Training pro Woche", value: goal(\.workoutMinutesPerWeek), in: 0...1200, step: 15,
                              kind: .durationMinutes, display: workoutGoalText)
-                ValueStepper("Schritte pro Tag", value: $settings.goalStepsPerDay, in: 0...30000, step: 500,
+                ValueStepper("Schritte pro Tag", value: goal(\.stepsPerDay), in: 0...30000, step: 500,
                              unit: "Schritte", display: stepGoalText)
-                Toggle("Eiweiß-Ziel", isOn: $settings.proteinGoalEnabled)
-                if settings.proteinGoalEnabled {
-                    ValueStepper("Eiweiß", value: $settings.goalProteinGrams, in: 20...400, step: 5, unit: "g") {
+                Toggle("Eiweiß-Ziel", isOn: optionalGoal(\.proteinGrams, start: 120))
+                if let protein = editor.plan.proteinGrams {
+                    ValueStepper("Eiweiß", value: goal(\.proteinGrams, orStart: protein), in: 20...400, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
+                }
+                NavigationLink {
+                    GoalPlanView(editor: editor)
+                } label: {
+                    Text("Weitere Ziele und frühere Stände")
                 }
             } header: {
                 Text("Ziele")
             } footer: {
-                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
+                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Eine Änderung gilt ab heute; frühere Tage behalten ihr Ziel. Das Kalorienziel ist das Grundziel für einen Tag ohne angerechnete Aktivität. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
+            }
+
+            Section {
+                Picker("Aktivität anrechnen", selection: $settings.activityCreditPercent) {
+                    ForEach(EnergyBudget.creditPercents, id: \.self) { percent in
+                        Text(percent == 0 ? String(localized: "Aus") : "\(percent) %").tag(percent)
+                    }
+                }
+                .accessibilityIdentifier("activityCredit")
+            } header: {
+                Text("Aktivität")
+            } footer: {
+                Text("Ein Teil der Aktivitätsenergie aus Health erhöht dein Tagesbudget. Geräte schätzen sie eher zu hoch, deshalb zählt voreingestellt die Hälfte. Das Kalorienziel gilt für einen Tag ohne angerechnete Aktivität.")
+            }
+
+            Section {
+                Toggle("Gesättigte Fettsäuren", isOn: $settings.saturatedFatEnabled)
+                Toggle("Salz", isOn: $settings.saltEnabled)
+                Toggle("Einträge anderer Apps mitzählen", isOn: Binding(
+                    get: { settings.countsForeignNutrition },
+                    set: { enabled in Task { await capture.setCountsForeignNutrition(enabled) } }))
+                    .accessibilityIdentifier("countsForeignNutrition")
+                LabeledContent("Weitere Nährwerte nach Health") {
+                    if capture.furtherNutrientsAccess == .notAsked {
+                        Button("Erlauben") { Task { await capture.allowFurtherNutrients() } }
+                    } else {
+                        Text("Angefragt").foregroundStyle(.secondaryText)
+                    }
+                }
+            } header: {
+                Text("Nährwerte")
+            } footer: {
+                Text("Ballaststoffe und Zucker sind immer dabei; gesättigte Fettsäuren und Salz erscheinen im Mahlzeitenblatt und in der Karte „Nährwerte“, wenn du sie einschaltest. Tagwerk liest für „Einträge anderer Apps mitzählen“ Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ob Health das Schreiben der weiteren Nährwerte erlaubt, steht an derselben Stelle.")
             }
 
             Section {
@@ -68,6 +125,16 @@ struct CaptureSettingsView: View {
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// A goal that can be switched off (`nil`): the toggle sets `start` when it is switched on.
+    private func optionalGoal(_ keyPath: WritableKeyPath<GoalPlan, Int?>, start: Int) -> Binding<Bool> {
+        Binding(get: { editor.plan[keyPath: keyPath] != nil }, set: { editor.set(keyPath, to: $0 ? start : nil) })
+    }
+
+    /// The value of a goal that is switched on, as a plain number for the stepper.
+    private func goal(_ keyPath: WritableKeyPath<GoalPlan, Int?>, orStart start: Int) -> Binding<Int> {
+        Binding(get: { editor.plan[keyPath: keyPath] ?? start }, set: { editor.set(keyPath, to: $0) })
     }
 
     /// One portion of the quick buttons; every write goes through the rules, so the three values stay inside the range.

@@ -153,9 +153,9 @@ struct IntakeTests {
     @Test func estimate_decode_normalizes() throws {
         let json = """
         {"title":"Brötchen mit Käse","items":[
-          {"name":"Brötchen","amount":"2 Stück","kcal_min":350,"kcal":300,"kcal_max":280,"protein_g":10,"carbs_g":56,"fat_g":2},
-          {"name":"Käse","amount":"2 Scheiben","kcal_min":-5,"kcal":180,"kcal_max":220,"protein_g":-1,"carbs_g":0,"fat_g":14},
-          {"name":"Unsinn","amount":"","kcal_min":6000,"kcal":7000,"kcal_max":8000,"protein_g":0,"carbs_g":0,"fat_g":0}
+          {"name":"Brötchen","amount":"2 Stück","kcal_min":350,"kcal":300,"kcal_max":280,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null},
+          {"name":"Käse","amount":"2 Scheiben","kcal_min":-5,"kcal":180,"kcal_max":220,"protein_g":-1,"carbs_g":0,"fat_g":14,"fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null},
+          {"name":"Unsinn","amount":"","kcal_min":6000,"kcal":7000,"kcal_max":8000,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null}
         ]}
         """
         let estimate = try #require(try MealEstimateOutput.decode(Data(json.utf8)).normalized())
@@ -168,8 +168,35 @@ struct IntakeTests {
         #expect(cheese.kcalMin == 0 && cheese.protein == 0)
     }
 
+    private func estimateJSON(_ itemFields: String) -> Data {
+        Data(#"{"title":"Brot","items":[{"name":"Brot","amount":"2 Scheiben","kcal_min":180,"kcal":200,"kcal_max":220,"protein_g":6,"carbs_g":36,"fat_g":2\#(itemFields)}]}"#.utf8)
+    }
+
+    @Test func normalized_nullStaysUnknown() throws {
+        let data = estimateJSON(#","fiber_g":4.5,"sugar_g":null,"saturated_fat_g":0,"salt_g":null"#)
+        let item = try #require(try MealEstimateOutput.decode(data).normalized()?.items.first)
+        #expect(item.fiber == 4.5)
+        #expect(item.sugar == nil && item.salt == nil, "null is unknown, never 0")
+        #expect(item.saturatedFat == 0, "a stated 0 is a value")
+    }
+
+    @Test func normalized_negativeClampedToZero() throws {
+        let data = estimateJSON(#","fiber_g":-3,"sugar_g":-0.5,"saturated_fat_g":1,"salt_g":-1"#)
+        let item = try #require(try MealEstimateOutput.decode(data).normalized()?.items.first)
+        #expect(item.fiber == 0 && item.sugar == 0 && item.salt == 0 && item.saturatedFat == 1)
+    }
+
+    @Test func decode_answerWithoutNewFields_fails() {
+        // The format is strict: a missing field is an invalid answer, while an explicit null is allowed.
+        #expect(throws: DecodingError.self) { try MealEstimateOutput.decode(estimateJSON("")) }
+        #expect(throws: DecodingError.self) { try MealEstimateOutput.decode(estimateJSON(#","fiber_g":null,"sugar_g":null"#)) }
+        #expect(throws: Never.self) {
+            try MealEstimateOutput.decode(estimateJSON(#","fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null"#))
+        }
+    }
+
     @Test func estimate_tooManyItems_cut() throws {
-        let items = (0..<25).map { #"{"name":"P\#($0)","amount":"","kcal_min":1,"kcal":2,"kcal_max":3,"protein_g":0,"carbs_g":0,"fat_g":0}"# }
+        let items = (0..<25).map { #"{"name":"P\#($0)","amount":"","kcal_min":1,"kcal":2,"kcal_max":3,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null}"# }
         let json = #"{"title":"Buffet","items":[\#(items.joined(separator: ","))]}"#
         let estimate = try #require(try MealEstimateOutput.decode(Data(json.utf8)).normalized())
         #expect(estimate.items.count == 20)
