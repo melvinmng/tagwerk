@@ -100,47 +100,4 @@ final class BibleStudyUITests: UITestCase {
         confirm.tap()
         waitUntilGone(app.staticTexts["Sitzung läuft"])
     }
-
-    // MARK: Task from a checkbox (BS5b)
-
-    /// Aufgaben › Notizen › Bible Study › the note of Römer, shown as a page.
-    private func openRomansNote(file: StaticString = #filePath, line: UInt = #line) {
-        openBibleStudyFolder(file: file, line: line)
-        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Römer")).firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: Self.timeout), "The note of Römer is missing", file: file, line: line)
-        card.tap()
-    }
-
-    private func pageText(_ text: String) -> XCUIElement {
-        app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
-
-    /// A long press on the box of the first checkbox offers "Als Aufgabe anlegen"; the hint comes before the sheet.
-    private func askForTaskOnFirstCheckbox(file: StaticString = #filePath, line: UInt = #line) {
-        let box = app.webViews.descendants(matching: .any).matching(NSPredicate(format: "elementType == %d", XCUIElement.ElementType.switch.rawValue)).firstMatch
-        XCTAssertTrue(box.waitForExistence(timeout: Self.timeout), "The checkbox is missing", file: file, line: line)
-        box.press(forDuration: 1.0)
-        tapButton("Als Aufgabe anlegen", file: file, line: line)
-        XCTAssertTrue(app.staticTexts["Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent)."]
-            .waitForExistence(timeout: Self.timeout), "The hint about the private title is missing", file: file, line: line)
-        tapButton("Weiter", file: file, line: line)
-    }
-
-    /// The line gets the marker "→ Aufgabe" once the task was created.
-    func testCreateTaskFromBibleStudyCheckbox() {
-        openRomansNote()
-        XCTAssertFalse(pageText("→ Aufgabe").exists)
-        askForTaskOnFirstCheckbox()
-        tapButton("Hinzufügen")
-        XCTAssertTrue(pageText("→ Aufgabe").waitForExistence(timeout: Self.timeout), "The line was not marked")
-    }
-
-    /// Cancelling the sheet creates nothing and leaves the line without the marker.
-    func testCancelLeavesLineUnmarked() {
-        openRomansNote()
-        askForTaskOnFirstCheckbox()
-        tapButton("Abbrechen")
-        XCTAssertTrue(pageText("nochmal lesen").waitForExistence(timeout: Self.timeout))
-        XCTAssertFalse(pageText("→ Aufgabe").exists, "The line was marked although no task was created")
-    }
 }

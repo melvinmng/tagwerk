@@ -14,6 +14,7 @@ struct BibleStudyStartSheet: View {
 
     private enum Wheel { case from, to }
     @State private var openWheel: Wheel?
+    @State private var isPickingBook = false
 
     init(store: NoteStore, onStarted: @escaping (UUID) -> Void) {
         self.store = store
@@ -82,13 +83,17 @@ struct BibleStudyStartSheet: View {
                 ForEach(model.recentBooks) { book in
                     chip(book.name(locale: locale), isSelected: book == model.book) { select(book, in: model) }
                 }
-                NavigationLink {
-                    BibleBookPicker(selected: model.book) { select($0, in: model) }
-                } label: {
+                Button { isPickingBook = true } label: {
                     Text("Anderes …").frame(minHeight: 44).padding(.horizontal, 12)
                         .background(.quaternary, in: Capsule())
                 }
-                .tint(.primary)
+                .buttonStyle(.plain)
+                .navigationDestination(isPresented: $isPickingBook) {
+                    BibleBookPicker(selected: model.book) {
+                        select($0, in: model)
+                        isPickingBook = false
+                    }
+                }
             }
         }
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))

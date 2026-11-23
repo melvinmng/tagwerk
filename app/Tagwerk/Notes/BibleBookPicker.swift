@@ -2,11 +2,10 @@ import SwiftUI
 import TagwerkCore
 
 /// "Anderes …" of the start sheet: all 66 books in "Altes Testament" and "Neues Testament" with a search field that also
-/// finds abbreviations ("Offb", "1 Kor").
+/// finds abbreviations ("Offb", "1 Kor"). The caller closes the list after `onSelect`.
 struct BibleBookPicker: View {
     let selected: BibleBook
     let onSelect: (BibleBook) -> Void
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @State private var searchText = ""
 
@@ -33,7 +32,6 @@ struct BibleBookPicker: View {
                 ForEach(books) { book in
                     Button {
                         onSelect(book)
-                        dismiss()
                     } label: {
                         HStack {
                             Text(book.name(locale: locale))
