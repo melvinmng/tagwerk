@@ -53,10 +53,24 @@ final class NotificationNavigator {
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     private let navigator: NotificationNavigator
     private let router: AppRouter
+    /// "Heute nicht" on the Bible Study reminder: runs without the app opening and finishes before the system may suspend it.
+    private let skipBibleStudy: @MainActor () async -> Void
 
-    init(navigator: NotificationNavigator, router: AppRouter) {
+    init(navigator: NotificationNavigator, router: AppRouter, skipBibleStudy: @escaping @MainActor () async -> Void = {}) {
         self.navigator = navigator
         self.router = router
+        self.skipBibleStudy = skipBibleStudy
+    }
+
+    /// A tap on the notification or on one of its actions. "Heute nicht" only drops the reminder of today; every other answer,
+    /// "Starten" included, goes the way of a tap (the notification carries the link to the start sheet).
+    @MainActor
+    func handle(_ strings: [String: String], action: String) async {
+        if action == BibleStudyReminders.skipAction {
+            await skipBibleStudy()
+            return
+        }
+        handle(strings)
     }
 
     /// A routine reminder carries the path of a link and goes to the router; everything else to the navigator.
@@ -85,6 +99,17 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         var strings: [String: String] = [:]
         for (key, value) in response.notification.request.content.userInfo {
             if let key = key as? String, let value = value as? String { strings[key] = value }
+        }
+        let action = response.actionIdentifier
+        if action == BibleStudyReminders.skipAction {
+            // The app runs in the background for this action; the system must not suspend it before the day is skipped.
+            nonisolated(unsafe) let finish = completionHandler
+            let skip = skipBibleStudy
+            Task { @MainActor in
+                await skip()
+                finish()
+            }
+            return
         }
         let navigator = self.navigator, router = self.router
         Task { @MainActor in Self.dispatch(strings, navigator: navigator, router: router) }

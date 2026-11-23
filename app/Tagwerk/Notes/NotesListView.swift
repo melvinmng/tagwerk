@@ -20,6 +20,7 @@ struct NotesListView: View {
     @State private var confirmsEmptyTrash = false
     @State var deletingForGood: [UUID] = []
     @State private var isStartingBibleStudy = false
+    @State private var endingSession: BibleSessionEndModel?
     @State private var isCreatingRecipe = false
     @State private var importTarget: NotionImportTarget?
     /// Notes that wait for the explanation before their first lock (`NoteLockIntroSheet`).
@@ -204,6 +205,9 @@ struct NotesListView: View {
         .sheet(isPresented: $isCreatingRecipe) {
             RecipeNoteSaveSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
         }
+        .sheet(item: $endingSession) { model in
+            BibleSessionEndSheet(model: model) {}
+        }
         .sheet(isPresented: $isStartingBibleStudy) {
             BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
         }
@@ -222,8 +226,10 @@ struct NotesListView: View {
             store.purgeExpired(calendar: environment.planning.calendar)
             prepareVoice()
             startRequestedDictation()
+            openRequestedBibleStudyStart()
         }
         .onChange(of: environment.router.dictationRequested) { _, _ in startRequestedDictation() }
+        .onChange(of: environment.router.bibleStudyStartRequested) { _, _ in openRequestedBibleStudyStart() }
         .onDisappear { voice?.cancel() }
     }
 
@@ -246,11 +252,22 @@ struct NotesListView: View {
                     }
                     .buttonStyle(.plain)
                     Spacer()
-                    Button("Abschließen") { store.completeSession(session.id) }
+                    Button("Abschließen") { complete(session) }
                         .buttonStyle(.bordered)
+                        .frame(minHeight: 44)
                 }
             }
         }
+    }
+
+    /// "Abschließen" of an open session asks "Bis wohin gelesen?" like the bar in the note; a passage typed as free text has
+    /// nothing to ask for.
+    private func complete(_ session: BibleStudySessionRecord) {
+        guard let model = BibleSessionEndModel(session: session, store: store) else {
+            store.completeSession(session.id)
+            return
+        }
+        if model.asksForEnd { endingSession = model } else { model.complete() }
     }
 
     /// "Römer 3,21-31".
@@ -511,6 +528,13 @@ struct NotesListView: View {
         guard folderRole == .brainDump, environment.router.dictationRequested else { return }
         let wanted = environment.router.takeDictationRequest()
         if wanted, allowsCapture, environment.settings.voiceInputEnabled { voice?.tapMicrophone() }
+    }
+
+    /// The Bible Study reminder was tapped: the list of the Bible Study folder opens the start sheet. Another list that is still
+    /// on screen while the path changes leaves the request alone.
+    private func openRequestedBibleStudyStart() {
+        guard isBibleStudy, environment.router.bibleStudyStartRequested else { return }
+        if environment.router.takeBibleStudyStartRequest() { isStartingBibleStudy = true }
     }
 
     private func prepareVoice() {

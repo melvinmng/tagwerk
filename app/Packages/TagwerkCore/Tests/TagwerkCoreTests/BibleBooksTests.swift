@@ -23,6 +23,20 @@ struct BibleBooksTests {
         #expect(BibleBooks.book(matching: "Hebraer")?.german == "Hebräer")
     }
 
+    @Test func search_findsNamesInBothLanguagesAndAbbreviations() {
+        #expect(BibleBooks.search("Offb").map(\.german) == ["Offenbarung"])
+        #expect(BibleBooks.search("Röm").map(\.german) == ["Römer"])
+        #expect(BibleBooks.search("roemer").map(\.german) == ["Römer"])
+        #expect(BibleBooks.search("Romans").map(\.german) == ["Römer"])
+        #expect(BibleBooks.search("1 Kor").map(\.number) == [46])
+        #expect(BibleBooks.search("mose").map(\.number) == [1, 2, 3, 4, 5])
+    }
+
+    @Test func search_emptyTextListsEveryBookInCanonOrder() {
+        #expect(BibleBooks.search("  ").map(\.number) == Array(1...66))
+        #expect(BibleBooks.search("xyzxyz").isEmpty)
+    }
+
     @Test func matching_abbreviationsBeatPrefixes() {
         #expect(BibleBooks.book(matching: "Phil")?.german == "Philipper")
         #expect(BibleBooks.book(matching: "Phlm")?.german == "Philemon")

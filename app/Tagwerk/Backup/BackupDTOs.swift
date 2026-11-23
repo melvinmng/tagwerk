@@ -1450,6 +1450,11 @@ struct AppSettingsBackup: Codable, Equatable {
     var weekPlanningReminderMinutes: Int?
     /// Optional, so a backup written before the choice of the place of Bible Study still decodes; a missing value keeps the default.
     var bibleStudyOfferRaw: String?
+    /// Optional, so a backup written before the reminder of Bible Study still decodes; a missing value keeps the default. The day
+    /// of "Heute nicht" and the snooze of the suggestion are left out on purpose.
+    var bibleStudyReminderEnabled: Bool?
+    var bibleStudyReminderTimesData: Data?
+    var bibleStudyReminderShowsPassage: Bool?
     /// Optional, so a backup written before the focus timer settings were part of it still decodes; a missing value keeps the default.
     var focusWorkMinutes: Int?
     var focusShortBreakMinutes: Int?
@@ -1555,6 +1560,9 @@ struct AppSettingsBackup: Codable, Equatable {
         weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
         weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
         bibleStudyOfferRaw = record.bibleStudyOfferRaw
+        bibleStudyReminderEnabled = record.bibleStudyReminderEnabled
+        bibleStudyReminderTimesData = record.bibleStudyReminderTimesData
+        bibleStudyReminderShowsPassage = record.bibleStudyReminderShowsPassage
         focusWorkMinutes = record.focusWorkMinutes
         focusShortBreakMinutes = record.focusShortBreakMinutes
         focusLongBreakMinutes = record.focusLongBreakMinutes
@@ -1652,6 +1660,9 @@ struct AppSettingsBackup: Codable, Equatable {
         if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
         if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
         if let bibleStudyOfferRaw { record.bibleStudyOfferRaw = bibleStudyOfferRaw }
+        if let bibleStudyReminderEnabled { record.bibleStudyReminderEnabled = bibleStudyReminderEnabled }
+        if let bibleStudyReminderTimesData { record.bibleStudyReminderTimesData = bibleStudyReminderTimesData }
+        if let bibleStudyReminderShowsPassage { record.bibleStudyReminderShowsPassage = bibleStudyReminderShowsPassage }
         if let focusWorkMinutes { record.focusWorkMinutes = focusWorkMinutes }
         if let focusShortBreakMinutes { record.focusShortBreakMinutes = focusShortBreakMinutes }
         if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }

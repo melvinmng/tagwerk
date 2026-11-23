@@ -28,6 +28,8 @@ final class AppRouter {
     @ObservationIgnored private let calendar: Calendar
     /// "Notiz diktieren" arrived: the notes list of Brain Dump starts a recording once, see `takeDictationRequest()`.
     private(set) var dictationRequested = false
+    /// The Bible Study reminder was tapped: the list of the Bible Study folder opens the start sheet once.
+    private(set) var bibleStudyStartRequested = false
 
     init(now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk) {
         self.now = now
@@ -52,7 +54,7 @@ final class AppRouter {
         case .captureWorkout: .workout(activity: nil, minutes: nil)
         case .review: .review
         case .capture: .today
-        case .planToday, .shopping, .routineStart, .routineEvening, .routineWeek, .routineNow, .notesDictate: nil
+        case .planToday, .shopping, .routineStart, .routineEvening, .routineWeek, .routineNow, .notesDictate, .bibleStudyStart: nil
         }
         pending = Request(route: route, prefill: prefill ?? defaultPrefill)
         receivedCount += 1
@@ -66,6 +68,7 @@ final class AppRouter {
         if request.route == .routineNow { request.route = RoutineSchedule.currentRoutine(at: now(), calendar: calendar) }
         capturePrefill = request.prefill
         dictationRequested = request.route == .notesDictate
+        bibleStudyStartRequested = request.route == .bibleStudyStart
         return request
     }
 
@@ -73,6 +76,12 @@ final class AppRouter {
     func takeDictationRequest() -> Bool {
         defer { dictationRequested = false }
         return dictationRequested
+    }
+
+    /// Whether the start sheet of Bible Study is to open in the list that was just shown; consumed once.
+    func takeBibleStudyStartRequest() -> Bool {
+        defer { bibleStudyStartRequested = false }
+        return bibleStudyStartRequested
     }
 
     func takeCapturePrefill() -> CapturePrefill? {

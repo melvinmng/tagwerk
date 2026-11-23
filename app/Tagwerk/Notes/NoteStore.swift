@@ -25,6 +25,10 @@ final class NoteStore {
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
+    /// Called after a Bible Study session was started or completed: the reminder names the next verse and drops the day of a
+    /// completed session, so the app plans it again (BS7). Set by the app environment; the store knows nothing of notifications.
+    @ObservationIgnored var onBibleStudyChanged: (() -> Void)?
+
     /// The pictures and files of the notes; `nil` where nothing needs them (most tests). A note that goes for good takes
     /// its attachments with it.
     @ObservationIgnored let attachments: NoteAttachmentStore?

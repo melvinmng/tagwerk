@@ -75,12 +75,49 @@ MACOS_DESTINATION="platform=macOS"
 # not repeated when a resource file was added to the package after the cached build, so a test run reads the stale copy
 # and does not find the new file (the Bible verse table was reported missing this way). Deleting the embedded copies before
 # the build forces Xcode to copy the current bundle again; the cost is one small copy per bundle.
+#
+# App extensions embedded in the app (Tagwerk.app/PlugIns/*.appex) are different: Xcode copies the extension as one unit, and
+# the incremental build does not notice that a bundle inside the copy is gone, so deleting only the bundle leaves the
+# extension without it (TagwerkWidget then crashed at NSBundle.module in IntakeFormat.liters). The embedded extension is
+# therefore deleted as a whole, which makes Xcode embed it again with all of its resource bundles.
+#
+# The state before the deletion is recorded in EMBEDDED_BUNDLES_BEFORE (paths relative to the products folder), and
+# verify_embedded_resource_bundles checks after the build that every recorded bundle is back, so a missing bundle fails the
+# stage with a clear message instead of crashing a test host later. Only apps and extensions are recorded: the UI scheme does
+# not build the unit test bundles, so their copies stay absent until the next run of the app scheme, which is no error.
+typeset -a EMBEDDED_BUNDLES_BEFORE
+EMBEDDED_BUNDLES_BEFORE=()
+
 # Usage: remove_embedded_resource_bundles PRODUCTS_FOLDER
 remove_embedded_resource_bundles() {
   local products_folder="$1"
+  EMBEDDED_BUNDLES_BEFORE=()
   [[ -d "$products_folder" ]] || return 0
-  find "$products_folder" -mindepth 2 -type d -name "*_*.bundle" \( -path "*.xctest/*" -o -path "*.app/*" \) -prune \
+  local bundle
+  while IFS= read -r bundle; do
+    [[ -n "$bundle" ]] && EMBEDDED_BUNDLES_BEFORE+=("${bundle#$products_folder/}")
+  done < <(find "$products_folder" -mindepth 2 -type d -name "*_*.bundle" ! -path "*.xctest/*" \
+    \( -path "*.app/*" -o -path "*.appex/*" \) -prune 2> /dev/null | sort)
+  # Embedded extensions first, as a whole; their bundles are gone with them.
+  find "$products_folder" -mindepth 3 -type d -name "*.appex" -path "*.app/PlugIns/*" -prune \
     -exec rm -rf {} + 2> /dev/null || true
+  find "$products_folder" -mindepth 2 -type d -name "*_*.bundle" \
+    \( -path "*.xctest/*" -o -path "*.app/*" -o -path "*.appex/*" \) -prune \
+    -exec rm -rf {} + 2> /dev/null || true
+}
+
+# Fails when a resource bundle that was embedded before remove_embedded_resource_bundles is missing after the build.
+# Usage: verify_embedded_resource_bundles PRODUCTS_FOLDER
+verify_embedded_resource_bundles() {
+  local products_folder="$1" relative_path missing=()
+  for relative_path in "${EMBEDDED_BUNDLES_BEFORE[@]}"; do
+    [[ -d "$products_folder/$relative_path" ]] || missing+=("$relative_path")
+  done
+  (( ${#missing} == 0 )) && return 0
+  echo "Resource bundles are missing after the build (they were embedded before it):" >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  echo "A target without its resource bundle crashes at Bundle.module. Delete $products_folder and run again." >&2
+  return 1
 }
 
 # Prints the DerivedData folder Xcode uses for the package or project at the given path (xcodebuild without
@@ -209,7 +246,7 @@ if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
   TAGWERK_ONLY_UI_TESTS=1
 fi
 
-# Sourced by scripts/tests/test-all-ui-selection.zsh: only the functions above are needed, not the test run.
+# Sourced by scripts/tests/test-all-ui-selection.zsh and test-all-resource-bundles.zsh: only the functions above are needed, not the test run.
 if [[ -n "${TAGWERK_SOURCE_ONLY:-}" ]]; then return 0; fi
 
 # Phase of the last failed xcodebuild call ("build" or "test"), set by build_for_testing and run_tests.
@@ -385,6 +422,7 @@ else
   APP_ARGS=(-project "$SCRIPT_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" -derivedDataPath "$DERIVED")
   remove_embedded_resource_bundles "$DERIVED/Build/Products"
   build_for_testing "${APP_ARGS[@]}" || stage_failed
+  verify_embedded_resource_bundles "$DERIVED/Build/Products" || { FAILED_PHASE="build"; stage_failed; }
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
     run_tests test-without-building "${APP_ARGS[@]}" || stage_failed
   fi
@@ -403,6 +441,7 @@ else
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then build_ui_selection_args || stage_failed; fi
   remove_embedded_resource_bundles "$DERIVED/Build/Products"
   build_for_testing "${UI_ARGS[@]}" || stage_failed
+  verify_embedded_resource_bundles "$DERIVED/Build/Products" || { FAILED_PHASE="build"; stage_failed; }
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
     # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).
     tagwerk_acquire_ui_lock || exit 2

@@ -110,16 +110,12 @@ struct RoutineSettingsView: View {
             }
 
             Section {
-                Picker("Bible Study anbieten", selection: $settings.bibleStudyOffer) {
-                    Text("Im Tagesabschluss").tag(BibleStudyOffer.evening)
-                    Text("Im Tagesstart").tag(BibleStudyOffer.morning)
-                    Text("In beiden").tag(BibleStudyOffer.both)
-                    Text("Nirgends").tag(BibleStudyOffer.never)
-                }
+                NavigationLink("Bible Study") { BibleStudySettingsView() }
+                    .frame(minHeight: 44)
             } header: {
-                Text("Bible Study")
+                Text("Zeit mit Gott")
             } footer: {
-                Text("Wo die Zeile „Bible Study starten“ in den Routinen steht. Das Tagebuch steht im Tagesabschluss.")
+                Text("Wo „Bible Study starten“ steht und wann Tagwerk daran erinnert. Das Tagebuch steht im Tagesabschluss.")
             }
 
             Section {
