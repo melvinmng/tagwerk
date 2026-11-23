@@ -2839,5 +2839,14 @@
   "Trend %@": "Trend %@",
   "Zielgewicht %@": "Target weight %@",
   "an %lld von %lld Tagen erfasst": "recorded on %lld of %lld days",
-  "~%@ kcal pro Tag": "~%@ kcal per day"
+  "~%@ kcal pro Tag": "~%@ kcal per day",
+  "Der Nutzer hat noch keine Daten freigegeben.": "The user has not shared any data yet.",
+  "Der Vorschlag enthält keinen Wert.": "The proposal contains no value.",
+  "Die Einwilligung „Ziele mit ChatGPT planen“ fehlt.": "The consent “Plan goals with ChatGPT” is missing.",
+  "Diese Werte liegen außerhalb des erlaubten Bereichs: %@.": "These values are outside the allowed range: %@.",
+  "Gelesen: %@ der letzten %lld Tage (Durchschnitte)": "Read: %@ of the last %lld days (averages)",
+  "Kontext: Ziele planen": "Context: Plan goals",
+  "Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.": "Say what you want to achieve. The assistant reads the data you shared and proposes goals as cards. Tagwerk cross-checks every proposal; nothing is adopted until you confirm.",
+  "Ziele bestätigst du einzeln.": "You confirm goals one by one.",
+  "Ziele und weitere Vorschläge bestätigst du einzeln.": "You confirm goals and other proposals one by one."
 }

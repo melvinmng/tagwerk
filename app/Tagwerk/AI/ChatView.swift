@@ -40,7 +40,11 @@ struct ChatView: View {
             .presentationBackgroundInteraction(voiceModeRunning ? .enabled(upThrough: .medium) : .disabled)
             .navigationTitle("ChatGPT")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { setUpVoice() }
+            .onAppear {
+                setUpVoice()
+                // "Fortschritt besprechen" prepares the first message; the user sends it with a tap.
+                if let prefill = assistant.takeGoalsPrefill() { draft = prefill }
+            }
             .onDisappear {
                 voice?.cancel()
                 environment.voiceMode.end()
@@ -91,7 +95,8 @@ struct ChatView: View {
     private var voiceModeRunning: Bool { environment.voiceMode.isRunning }
     /// The send button turns into the voice mode entry while the field is empty (SP5 Einstieg).
     private var offersVoiceMode: Bool {
-        showsMicrophone && environment.ai.isSignedIn && draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        showsMicrophone && environment.ai.isSignedIn && assistant.allowsVoiceMode
+            && draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func requestVoiceMode() {
@@ -154,6 +159,7 @@ struct ChatView: View {
         case .tasks: return String(localized: "Kontext: Aufgaben")
         case .settings: return String(localized: "Kontext: allgemein")
         case .capture: return String(localized: "Kontext: Erfassen")
+        case .goals: return String(localized: "Kontext: Ziele planen")
         case .task: return assistant.task.map { String(localized: "Kontext: \($0.title)") } ?? String(localized: "Kontext: Aufgabe")
         case .notes(let folderID):
             // The line says what stays out, so the user sees why the assistant does not find the private folders.
@@ -191,6 +197,9 @@ struct ChatView: View {
                     } else if conversation?.history.isEmpty != false {
                         if isNotesContext {
                             Text("Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.")
+                                .font(.subheadline).foregroundStyle(.secondaryText)
+                        } else if assistant.context == .goals {
+                            Text("Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.")
                                 .font(.subheadline).foregroundStyle(.secondaryText)
                         } else {
                             Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")

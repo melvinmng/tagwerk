@@ -26,6 +26,8 @@ final class ChatStore {
     static let assistantKey = "assistant"
     /// The chat about notes; one history for the chat about all notes and the chat about one note (#233).
     static let notesKey = "notes"
+    /// The chat "Ziele planen"; its stored form holds no measured values (decision PV3b).
+    static let goalsKey = "goals"
     private let context: ModelContext
 
     init(context: ModelContext) {

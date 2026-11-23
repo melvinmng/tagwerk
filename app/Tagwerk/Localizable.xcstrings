@@ -7205,6 +7205,16 @@
         }
       }
     },
+    "Das Grundziel liegt unter der harten Grenze von %@ kcal und lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below the hard limit of %@ kcal and cannot be adopted."
+          }
+        }
+      }
+    },
     "Das Issue ist dann niemandem zugewiesen.": {
       "localizations": {
         "en": {
@@ -7805,6 +7815,16 @@
         }
       }
     },
+    "Der Nutzer hat noch keine Daten freigegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The user has not shared any data yet."
+          }
+        }
+      }
+    },
     "Der Ordner enthält zu viele Dateien für einen Import.": {
       "localizations": {
         "en": {
@@ -7942,6 +7962,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Audio is converted to text on your iPhone. Tagwerk only carries out changes once you confirm them."
+          }
+        }
+      }
+    },
+    "Der Vorschlag enthält keinen Wert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The proposal contains no value."
           }
         }
       }
@@ -8332,6 +8362,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The consent “Notes with ChatGPT” is missing."
+          }
+        }
+      }
+    },
+    "Die Einwilligung „Ziele mit ChatGPT planen“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Plan goals with ChatGPT” is missing."
           }
         }
       }
@@ -9076,6 +9116,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "These events don’t exist."
+          }
+        }
+      }
+    },
+    "Diese Werte liegen außerhalb des erlaubten Bereichs: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These values are outside the allowed range: %@."
           }
         }
       }
@@ -11902,6 +11952,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read: %@"
+          }
+        }
+      }
+    },
+    "Gelesen: %@ der letzten %lld Tage (Durchschnitte)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gelesen: %1$@ der letzten %2$lld Tage (Durchschnitte)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read: %@ of the last %lld days (averages)"
           }
         }
       }
@@ -15088,6 +15154,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Context: Notes · without %@"
+          }
+        }
+      }
+    },
+    "Kontext: Ziele planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Plan goals"
           }
         }
       }
@@ -19575,6 +19651,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show the way home"
+          }
+        }
+      }
+    },
+    "Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say what you want to achieve. The assistant reads the data you shared and proposes goals as cards. Tagwerk cross-checks every proposal; nothing is adopted until you confirm."
           }
         }
       }
@@ -24439,6 +24525,16 @@
         }
       }
     },
+    "Ziele bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm goals one by one."
+          }
+        }
+      }
+    },
     "Ziele mit ChatGPT planen": {
       "localizations": {
         "en": {
@@ -24455,6 +24551,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan goals"
+          }
+        }
+      }
+    },
+    "Ziele und weitere Vorschläge bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm goals and other proposals one by one."
           }
         }
       }

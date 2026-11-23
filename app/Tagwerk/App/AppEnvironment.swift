@@ -327,6 +327,11 @@ final class AppEnvironment {
         let budgets = DayBudgets(intake: intake, goals: goals, dayHealth: dayHealth, health: healthStore, settings: settings,
                                  calendar: .tagwerk, now: Date.init)
         self.budgets = budgets
+        // The chat "Ziele planen": its own tools; the plan of today is the base every proposal builds on.
+        let goalDay = { PlanDay(date: Date(), calendar: .tagwerk) }
+        assistant.goalTools = GoalChatTools(hasConsent: { settings.goalPlanningConsent }, currentPlan: { budgets.plan(on: goalDay()) },
+                                            adopt: { goals.adopt($0) }, today: goalDay)
+        assistant.hasGoalConsent = { settings.goalPlanningConsent }
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets)
         self.routineStore = RoutineStore(context: context)
         // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.

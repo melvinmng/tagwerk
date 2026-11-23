@@ -20,6 +20,8 @@ final class AssistantModel {
         case notes(folderID: UUID?)
         /// The chat about one note.
         case note(UUID)
+        /// "Ziele planen": the chat that proposes nutrition and activity goals (plan nutrition, strand G).
+        case goals
     }
 
     private(set) var conversation: Conversation?
@@ -80,6 +82,12 @@ final class AssistantModel {
     @ObservationIgnored var noteTools: NoteChatTools?
     /// Whether the consent "Notizen mit ChatGPT" is on; the entries ask before they open the notes chat.
     @ObservationIgnored var hasNoteConsent: () -> Bool = { false }
+    /// The tools of the chat "Ziele planen"; `nil` where the app has no goals. Only this chat has them.
+    @ObservationIgnored var goalTools: GoalChatTools?
+    /// Whether the consent "Ziele mit ChatGPT planen" is on.
+    @ObservationIgnored var hasGoalConsent: () -> Bool = { false }
+    /// The first message of the next goals chat ("Fortschritt besprechen"); the chat view takes it into the input field and sends nothing.
+    var goalsPrefill: String?
     /// GitHub catalog and login for the issue card and the instructions; `nil` while GitHub is not signed in.
     @ObservationIgnored var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// Name of an open shopping item by its id, for the card of `update_shopping`.
@@ -133,6 +141,30 @@ final class AssistantModel {
         openNotesChat(context: .note(id), scope: id, defaultFolderID: nil)
     }
 
+    /// The chat "Ziele planen" with the data package the user selected. Does nothing without the consent and without goal tools: the
+    /// entries ask for the consent and show the data sheet first. The package is frozen here; the chat sees exactly this value.
+    func openGoals(session: GoalPlanningSession, prefill: String? = nil) {
+        guard hasGoalConsent(), let goalTools else { return }
+        guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.goalsKey) else { isPresented = true; return }
+        goalTools.begin(session)
+        goalsPrefill = prefill
+        context = .goals
+        task = nil
+        taskContext = nil
+        switchThread(to: ChatStore.goalsKey, tools: goalTools)
+        isPresented = true
+    }
+
+    /// The voice mode is not offered in the goal planning chat, and it cannot be started there (decision: the cards need the screen).
+    var allowsVoiceMode: Bool { context != .goals }
+
+    /// The prefilled first message, once; the user sends it with a tap.
+    func takeGoalsPrefill() -> String? {
+        defer { goalsPrefill = nil }
+        return goalsPrefill
+    }
+
     private func openNotesChat(context newContext: Context, scope: UUID?, defaultFolderID: UUID?) {
         guard hasNoteConsent(), let noteTools else { return }
         guard onTurnFinished == nil else { isPresented = true; return }
@@ -159,6 +191,8 @@ final class AssistantModel {
             persist()
             // Leaving a chat ends the note session: the next chat starts from its stored form.
             tools.noteSession.reset()
+            // Leaving the goals chat ends its data package too; the next chat (or this one, opened again) starts from the stored form.
+            if key == ChatStore.goalsKey, newKey != ChatStore.goalsKey { goalTools?.end() }
         }
         key = newKey
         actionTimes = store.actionTimes(for: newKey)
@@ -256,6 +290,7 @@ final class AssistantModel {
     /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other
     /// cards by voice. The note tools of the notes chat are added here.
     static let singleConfirmationTools: Set<String> = Set(["assign_task"]).union(NoteChatTools.noteWriteTools)
+        .union(GoalChatTools.proposalTools)
 
     /// True for a card that must be confirmed alone: a tool of `singleConfirmationTools`, or creating a task that is
     /// assigned beyond the user (`assignsBeyondMe`).
@@ -272,7 +307,12 @@ final class AssistantModel {
     /// The line below "Alle bestätigen" that names what is confirmed alone; `nil` without guarded cards.
     static func singleConfirmationNotice(for calls: [ToolCall], me: String? = nil) -> String? {
         let hasNotes = calls.contains { NoteChatTools.noteWriteTools.contains($0.name) }
-        let hasAssignments = calls.contains { needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) }
+        let hasGoals = calls.contains { GoalChatTools.proposalTools.contains($0.name) }
+        let hasAssignments = calls.contains {
+            needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) && !GoalChatTools.proposalTools.contains($0.name)
+        }
+        if hasGoals { return hasAssignments || hasNotes ? String(localized: "Ziele und weitere Vorschläge bestätigst du einzeln.")
+                                                        : String(localized: "Ziele bestätigst du einzeln.") }
         switch (hasAssignments, hasNotes) {
         case (true, true): return String(localized: "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.")
         case (true, false): return String(localized: "Zuweisungen bestätigst du einzeln.")
@@ -472,6 +512,7 @@ final class AssistantModel {
         guard conversation?.isBusy != true else { return }
         conversation?.clear()
         tools.noteSession.reset()
+        if key == ChatStore.goalsKey { goalTools?.end() }
         actionTimes = [:]
         spokenMarks = []
         taskContext = nil
@@ -551,9 +592,22 @@ final class AssistantModel {
                 return String(localized: "Gelesen: \(count) Titel aus „\(folder.name)“")
             }
             return String(localized: "Gelesen: \(count) Titel")
+        case "get_goal_data":
+            return Self.goalActivityText(output)
         default:
             return nil
         }
+    }
+
+    /// "Gelesen: Gewicht und Ernährung der letzten 28 Tage (Durchschnitte)", built from the stored form of the result, so the line
+    /// reads the same for the full and for the stored output; `nil` for an error.
+    static func goalActivityText(_ output: String) -> String? {
+        let stored = GoalChatTools.storedPackageOutput(output)
+        guard let object = (try? JSONSerialization.jsonObject(with: Data(stored.utf8))) as? [String: Any], object["ok"] as? Bool == true,
+              let keys = object["groups"] as? [String], let days = object["days"] as? Int else { return nil }
+        let names = keys.compactMap(GoalDataGroup.init(rawValue:)).map(\.activityName)
+        guard !names.isEmpty else { return nil }
+        return String(localized: "Gelesen: \(names.formatted(.list(type: .and))) der letzten \(days) Tage (Durchschnitte)")
     }
 
     private func applyNoteSessionEnd() {
@@ -590,6 +644,7 @@ final class AssistantModel {
     @ObservationIgnored var language: () -> VoiceLanguage = { .app }
 
     func instructions() -> String {
+        if context == .goals { return goalInstructions() }
         let current = now()
         let today = planning.today
         let time = AIPlanner.time(planning.calendar.component(.hour, from: current) * 60 + planning.calendar.component(.minute, from: current))
@@ -699,8 +754,37 @@ final class AssistantModel {
         return text
     }
 
+    /// The instructions of the chat "Ziele planen": an own block instead of the app functions. They state the rules once more; the limits
+    /// themselves are enforced in code.
+    func goalInstructions() -> String {
+        let current = now()
+        let today = planning.today
+        return """
+        Du bist der Assistent für die Zielplanung in der App Tagwerk. Antworte knapp in der Sprache der letzten Nachricht des Nutzers \
+        (Deutsch oder Englisch); gibt es noch keine Nachricht oder ist die Sprache unklar, antworte auf \(language().promptName).
+        Heute ist \(AIPlanner.dayString(today)).
+        Rufe vor jedem Vorschlag get_goal_data auf und frage nicht nach Werten, die dort stehen. Eine Gruppe, die dort fehlt, hat der \
+        Nutzer nicht freigegeben; frag dann kurz nach, wenn du sie brauchst. Die Werte sind Durchschnitte über Tage mit Einträgen und \
+        Schätzungen.
+        Vorschläge machst du nur über propose_nutrition_goals (Ernährung) und propose_activity_goals (Aktivität) als Karte; schreib die \
+        Zahlen nicht nur in den Text. Aktivitätsziele sind freiwillig: schlage sie nur vor, wenn der Nutzer sie will. Die Karte bestätigt der \
+        Nutzer einzeln; bitte nicht im Text um Bestätigung. Werte, die gleich bleiben sollen, gibst du als null an.
+        Das Kalorienziel (kcal) ist das Grundziel für einen Tag ohne angerechnete Aktivität, nicht der Gesamtbedarf; die Aktivität des Tages \
+        kommt in der App dazu. Ein Grundziel unter \(IntakeFormat.grouped(GoalGuardConstants.hardMinimumKcal, locale: Locale(identifier: "de_DE"))) kcal lässt sich nicht übernehmen. Tagwerk rechnet jeden Vorschlag selbst gegen und \
+        warnt auf der Karte; nenne keine eigenen Werte für Ruheumsatz oder Bedarf.
+        Du stellst keine Diagnosen und gibst keine medizinische Beratung. Nennt der Nutzer eine Erkrankung, Schwangerschaft oder eine Essstörung, \
+        rate zu ärztlichem Rat und mache keinen Vorschlag zur Gewichtsabnahme.
+        Ist das Ergebnis eines Vorschlags „revision_requested“ oder hat der Nutzer die Karte angepasst („adjusted_by_user“), arbeite mit dem \
+        genannten Stand weiter und lege den Vorschlag bei Bedarf neu vor.
+        \(onTurnFinished == nil ? "" : voiceModeText())
+        """
+    }
+
     private func contextText() -> String {
         switch context {
+        case .goals:
+            return "Ansicht: Ziele planen."
+
         case .task:
             return taskContext ?? task.map { "Das Gespräch betrifft die Aufgabe „\($0.title)“ (id \($0.id.key))." } ?? ""
         case .settings:
