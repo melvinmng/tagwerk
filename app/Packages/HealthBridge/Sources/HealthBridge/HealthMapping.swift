@@ -247,12 +247,34 @@ public enum HealthMapping {
         var sourceName: String
     }
 
-    /// The weights of other sources, oldest first; own samples (by source or marker) are dropped.
-    static func foreignWeights(_ samples: [WeightSample], ownBundleID: String?) -> [ForeignWeight] {
-        samples
+    /// A body fat sample as read from Health (a fraction of the body mass: 0.25 is 25 %).
+    struct BodyFatSample {
+        var date: Date
+        var fraction: Double
+        var metadata: [String: Any]?
+        var sourceBundleID: String
+        var sourceName: String
+    }
+
+    /// A body fat value belongs to a weight when the same source wrote it within this many seconds of the weight.
+    static let bodyFatPairingWindow: TimeInterval = 120
+
+    /// The weights of other sources, oldest first; own samples (by source or marker) are dropped. A body fat sample of the same
+    /// source close to a weight (a smart scale writes both) becomes the weight's body fat; a fat value without a weight is dropped.
+    static func foreignWeights(_ samples: [WeightSample], bodyFat: [BodyFatSample] = [], ownBundleID: String?) -> [ForeignWeight] {
+        let foreignFat = bodyFat.filter {
+            !isOwn(metadata: $0.metadata, sourceBundleID: $0.sourceBundleID, ownBundleID: ownBundleID) && $0.fraction > 0
+        }
+        return samples
             .filter { !isOwn(metadata: $0.metadata, sourceBundleID: $0.sourceBundleID, ownBundleID: ownBundleID) }
             .sorted { $0.date < $1.date }
-            .map { ForeignWeight(id: $0.id, date: $0.date, kilograms: $0.kilograms, sourceName: $0.sourceName) }
+            .map { sample in
+                let fat = foreignFat
+                    .filter { $0.sourceBundleID == sample.sourceBundleID && abs($0.date.timeIntervalSince(sample.date)) <= bodyFatPairingWindow }
+                    .min { abs($0.date.timeIntervalSince(sample.date)) < abs($1.date.timeIntervalSince(sample.date)) }
+                return ForeignWeight(id: sample.id, date: sample.date, kilograms: sample.kilograms, sourceName: sample.sourceName,
+                                     bodyFatPercent: fat.map { $0.fraction * 100 })
+            }
     }
 
     static func activityType(_ activity: WorkoutActivity) -> HKWorkoutActivityType {

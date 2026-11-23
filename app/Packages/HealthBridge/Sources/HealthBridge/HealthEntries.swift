@@ -108,12 +108,15 @@ public struct ForeignWeight: Sendable, Hashable, Identifiable {
     public var date: Date
     public var kilograms: Double
     public var sourceName: String
+    /// Body fat in percent that the same source wrote at the same moment (a smart scale writes both); `nil` when there is none.
+    public var bodyFatPercent: Double?
 
-    public init(id: UUID, date: Date, kilograms: Double, sourceName: String) {
+    public init(id: UUID, date: Date, kilograms: Double, sourceName: String, bodyFatPercent: Double? = nil) {
         self.id = id
         self.date = date
         self.kilograms = kilograms
         self.sourceName = sourceName
+        self.bodyFatPercent = bodyFatPercent
     }
 }
 

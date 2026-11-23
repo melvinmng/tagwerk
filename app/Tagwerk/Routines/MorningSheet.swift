@@ -25,6 +25,8 @@ struct MorningSheet: View {
     @State private var dream: NoteFieldModel
     @State private var isStartingBibleStudy = false
     @State private var bibleSheet: JournalSheetTarget?
+    @State private var isEnteringWeight = false
+    @State private var weight = WeightOverview()
 
     /// The first field, then one more each time the previous one is filled (at most three).
     private var visibleFields: Int {
@@ -56,6 +58,7 @@ struct MorningSheet: View {
                 if model.settings.bibleStudyOffer.isOffered(in: .routineStart) {
                     TimeWithGodSection(day: day, showsJournal: false, showsBibleStudy: true, onJournal: {}, onBibleStudy: { openBibleStudy() })
                 }
+                if Self.showsWeightRow(enabled: model.settings.morningWeightEnabled, day: day, today: model.today) { weightSection }
                 if day == model.today { focusSection }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -84,6 +87,45 @@ struct MorningSheet: View {
                 BibleStudyStartSheet(store: environment.notes) { noteID in bibleSheet = JournalSheetTarget(id: noteID) }
             }
             .sheet(item: $bibleSheet) { target in NoteEditorSheet(noteID: target.id) }
+            // At the level of the stack, like the other sheets: a sheet on a row inside a Form does not present reliably.
+            .sheet(isPresented: $isEnteringWeight) {
+                WeightSheet(model: environment.capture, existing: nil) { Task { await loadWeight() } }
+            }
+            .task { await loadWeight() }
+        }
+    }
+
+    /// The weight row appears on today's start when it is switched on (settings › Routinen); it is a reminder without a notification
+    /// (decision KG5a).
+    static func showsWeightRow(enabled: Bool, day: PlanDay, today: PlanDay) -> Bool { enabled && day == today }
+
+    private func loadWeight() async {
+        let today = model.today
+        let end = today.adding(days: 1, calendar: .tagwerk).startDate(in: .tagwerk)
+        let days = await environment.capture.weights.dayValues(in: DateInterval(start: end.addingTimeInterval(-45 * 86_400), end: end))
+        weight = WeightOverview.make(days, today: today, calendar: .tagwerk)
+    }
+
+    /// "Körper · Gewicht": today's value (a dash before the first weighing), with yesterday's value and the 7-day mean below.
+    private var weightSection: some View {
+        Section {
+            Button { isEnteringWeight = true } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Gewicht")
+                        if let caption = WeightFormat.morningCaption(yesterday: weight.yesterday, mean: weight.mean) {
+                            Text(caption).font(.subheadline).foregroundStyle(.secondaryText)
+                        }
+                    }
+                    Spacer()
+                    Text(weight.today.map { WeightFormat.kilograms($0) } ?? "–").monospacedDigit().foregroundStyle(.secondaryText)
+                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                }
+            }
+            .tint(.primary)
+            .accessibilityIdentifier(AccessibilityID.Capture.morningWeight)
+        } header: {
+            Text("Körper")
         }
     }
 

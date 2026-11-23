@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "%@ %%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %%"
+          }
+        }
+      }
+    },
     "%@ + %lld weitere": {
       "localizations": {
         "de": {
@@ -148,6 +158,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
+    "%@ kg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg"
+          }
+        }
+      }
+    },
+    "%@ kg/Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg/week"
           }
         }
       }
@@ -388,6 +418,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Messungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld measurements."
           }
         }
       }
@@ -736,6 +776,26 @@
         }
       }
     },
+    "7-Tage-Mittel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean %@"
+          }
+        }
+      }
+    },
+    "7-Tage-Mittel %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean %@."
+          }
+        }
+      }
+    },
     "Ab %@ für alle folgenden": {
       "localizations": {
         "en": {
@@ -886,6 +946,36 @@
         }
       }
     },
+    "Bei diesem Tempo etwa Anfang %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around early %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Ende %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around late %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Mitte %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around mid-%@."
+          }
+        }
+      }
+    },
     "Bett machen": {
       "localizations": {
         "en": {
@@ -998,6 +1088,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deadline passed %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Dein Trend liegt bei %@ kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von %@ %% des Körpergewichts und %@ kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Dein Trend liegt bei %1$@ kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von %2$@ %% des Körpergewichts und %3$@ kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trend is a loss of %@ kg per week. Tagwerk points this out above the smaller of %@ %% of body weight and %@ kg per week. This is a rule of the app, not a guideline; talk to a doctor if you have questions."
           }
         }
       }
@@ -1388,6 +1494,16 @@
         }
       }
     },
+    "Gestern %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday %@"
+          }
+        }
+      }
+    },
     "Gesättigte Fettsäuren": {
       "localizations": {
         "en": {
@@ -1632,6 +1748,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "None"
+          }
+        }
+      }
+    },
+    "Keine Einträge in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries in this period."
+          }
+        }
+      }
+    },
+    "Keine Messungen in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No measurements in this period."
           }
         }
       }
@@ -2034,6 +2170,22 @@
         }
       }
     },
+    "Tagesmittel etwa %@ Kilokalorien, Budget %@. Einträge an %lld Tagen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Tagesmittel etwa %1$@ Kilokalorien, Budget %2$@. Einträge an %3$lld Tagen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean about %@ kilocalories, budget %@. Entries on %lld days."
+          }
+        }
+      }
+    },
     "Tagesstart": {
       "localizations": {
         "en": {
@@ -2050,6 +2202,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Frozen"
+          }
+        }
+      }
+    },
+    "Trend %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend %@."
           }
         }
       }

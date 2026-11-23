@@ -249,23 +249,39 @@ public final class HealthKitStore: HealthStoring, Sendable {
 extension HealthKitStore {
     public func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] {
         guard Self.isAvailable else { return [] }
-        let descriptor = HKSampleQueryDescriptor(
-            predicates: [.quantitySample(type: HKQuantityType(.bodyMass),
-                                         predicate: HKQuery.predicateForSamples(withStart: interval.start, end: interval.end))],
+        // Own samples are excluded in the predicate (by marker and by the own source). The same test runs on the result as well:
+        // whether HealthKit takes the negated source predicate in a sample query is checked on a device, and the second test is the
+        // fallback.
+        let period = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end)
+        let foreign = HealthMapping.foreignPredicate(ownSource: HealthMapping.ownSourcePredicate())
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [period, foreign])
+        let massDescriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: HKQuantityType(.bodyMass), predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate)])
+        let fatDescriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: HKQuantityType(.bodyFatPercentage), predicate: predicate)],
             sortDescriptors: [SortDescriptor(\.startDate)])
         let samples: [HKQuantitySample]
+        var fatSamples: [HKQuantitySample] = []
         do {
-            samples = try await descriptor.result(for: store)
+            samples = try await massDescriptor.result(for: store)
         } catch let error as HKError where error.code == .errorNoData || error.code == .errorAuthorizationNotDetermined {
             return []
         }
+        // Body fat is optional: a failing read leaves the weights without it.
+        if let read = try? await fatDescriptor.result(for: store) { fatSamples = read }
         let raw = samples.map { sample in
             HealthMapping.WeightSample(id: sample.uuid, date: sample.startDate,
                                        kilograms: sample.quantity.doubleValue(for: .gramUnit(with: .kilo)),
                                        metadata: sample.metadata, sourceBundleID: sample.sourceRevision.source.bundleIdentifier,
                                        sourceName: sample.sourceRevision.source.name)
         }
-        return HealthMapping.foreignWeights(raw, ownBundleID: ownBundleID)
+        let fat = fatSamples.map { sample in
+            HealthMapping.BodyFatSample(date: sample.startDate, fraction: sample.quantity.doubleValue(for: .percent()),
+                                        metadata: sample.metadata, sourceBundleID: sample.sourceRevision.source.bundleIdentifier,
+                                        sourceName: sample.sourceRevision.source.name)
+        }
+        return HealthMapping.foreignWeights(raw, bodyFat: fat, ownBundleID: ownBundleID)
     }
 
     /// Day sums of a quantity type from a statistics collection: Health merges overlapping sources (iPhone, Apple Watch) by its

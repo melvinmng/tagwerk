@@ -75,10 +75,14 @@ struct RoutineSettingsView: View {
                 if settings.morningReminderEnabled {
                     DatePicker("Uhrzeit", selection: $settings.morningReminderMinutes.asTime(), displayedComponents: .hourAndMinute)
                 }
+                Toggle("Gewicht abfragen", isOn: $settings.morningWeightEnabled)
             } header: {
                 Text("Tagesstart")
             } footer: {
-                if conflict.morning { Text(Self.quietHoursNote) }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Die Zeile „Gewicht“ im Tagesstart erinnert ans Wiegen, ohne eine eigene Mitteilung.")
+                    if conflict.morning { Text(Self.quietHoursNote) }
+                }
             }
 
             Section {

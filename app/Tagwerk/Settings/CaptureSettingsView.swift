@@ -89,6 +89,22 @@ private struct CaptureSettingsForm: View {
             }
 
             Section {
+                Toggle("Körperfett erfassen", isOn: $settings.bodyFatEnabled)
+                    .accessibilityIdentifier("bodyFatEnabled")
+                if capture.healthConnected, capture.bodyAccess == .notAsked {
+                    LabeledContent("Gewicht in Health") {
+                        Button("Erlauben") { Task { await capture.allowBodyAccess() } }
+                    }
+                } else if capture.bodyAccess == .asked {
+                    LabeledContent("Gewicht in Health") { Text("Angefragt").foregroundStyle(.secondaryText) }
+                }
+            } header: {
+                Text("Gewicht")
+            } footer: {
+                Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
+            }
+
+            Section {
                 ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in
                     ValueStepper("Portion \(index + 1)", value: presetBinding(index), in: DrinkPresets.range,
                                  step: DrinkPresets.step, unit: "ml") { "\($0) ml" }

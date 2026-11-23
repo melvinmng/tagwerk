@@ -85,6 +85,28 @@ final class CaptureUITests: UITestCase {
         eventually("The meal was not saved: the budget did not change from \(before)") { budgetLine.label != before }
     }
 
+    /// Decision KG1c: the fourth quick button opens the weight sheet; saving shows the confirmation with "Rückgängig", and undoing
+    /// takes the entry away again.
+    func testQuickEntry_weight_savesAndOffersUndo() {
+        tab("Erfassen")
+        // The neighbouring days keep their page previews in the tree with the same identifiers, and `firstMatch` may be such a copy
+        // beside the screen; the button the user can tap is the one that is hittable.
+        let buttons = app.buttons.matching(identifier: AccessibilityID.Capture.quickWeight)
+        var button: XCUIElement?
+        eventually("The quick button for the weight is not on screen") {
+            button = buttons.allElementsBoundByIndex.first { $0.isHittable }
+            return button != nil
+        }
+        button?.tap()
+        // The sheet starts with a value (the demo data holds no weight yet), so saving needs no typing.
+        XCTAssertTrue(app.navigationBars["Gewicht"].waitForExistence(timeout: Self.timeout), "The weight sheet did not open")
+        app.buttons[AccessibilityID.Capture.weightSave].firstMatch.tap()
+        let confirmation = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'kg erfasst'")).firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: Self.timeout), "The confirmation with the weight is missing")
+        tapButton("Rückgängig")
+        eventually("The confirmation did not disappear after undoing") { !confirmation.exists }
+    }
+
     /// Decision LM1b and LM4b: a food with values per 100 g is created, chosen with a typed amount in grams, and its item is exact.
     func testAddOwnFood_withGrams_addsExactItem() {
         tab("Erfassen")
