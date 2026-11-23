@@ -10,7 +10,7 @@ final class FoodLookupUITests: UITestCase {
     func testOnlineSearch_consentFirst_thenResults() {
         tab("Erfassen")
         onScreen(label: "Essen").tap()
-        tapButton("Meine Lebensmittel")
+        selectSegment("Meine Lebensmittel", inSheetTitled: "Essen")
         typeIn("Was hast du gegessen?", text: "Skyr")
         let hideKeyboard = app.buttons[AccessibilityID.Common.hideKeyboard].firstMatch
         XCTAssertTrue(hideKeyboard.waitForExistence(timeout: Self.timeout), "The button above the keyboard is missing")
@@ -25,7 +25,10 @@ final class FoodLookupUITests: UITestCase {
         // The consent comes first, and "Einverstanden" needs an address.
         let contact = app.textFields[AccessibilityID.FoodLookup.contactField].firstMatch
         XCTAssertTrue(contact.waitForExistence(timeout: Self.timeout), "The consent sheet did not open")
-        XCTAssertEqual((contact.value as? String) ?? "", "E-Mail-Adresse", "The field must start empty (only the placeholder shows)")
+        // An empty field reports no value (older systems reported the placeholder as the value); the placeholder is a separate property.
+        let typed = (contact.value as? String) ?? ""
+        XCTAssertTrue(typed.isEmpty || typed == "E-Mail-Adresse", "The field must start empty (only the placeholder shows): \(typed)")
+        XCTAssertEqual(contact.placeholderValue, "E-Mail-Adresse", "The placeholder of the field is missing")
         let agree = app.buttons[AccessibilityID.FoodLookup.agreeButton].firstMatch
         XCTAssertFalse(agree.isEnabled, "Agreeing must need an address")
         XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.FoodLookup.results].exists, "Results appeared before the consent")
@@ -53,6 +56,8 @@ final class FoodLookupUITests: UITestCase {
         food.swipeLeft()
         tapButton("Bearbeiten")
         let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Open Food Facts, abgerufen am'")).firstMatch
-        XCTAssertTrue(note.waitForExistence(timeout: Self.timeout), "The source note of the product is missing or says that the values were changed")
+        // The note is the last section of the form, below the further nutrients, and the form builds its rows lazily.
+        scrollTo(note)
+        XCTAssertTrue(note.exists, "The source note of the product is missing or says that the values were changed")
     }
 }
