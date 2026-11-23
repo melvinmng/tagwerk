@@ -72,4 +72,20 @@ struct FoodStoreTests {
         #expect(stored?.reference == .perPiece(grams: 30))
         #expect(stored?.sourceNote == "Open Food Facts, abgerufen am 21.11.2026")
     }
+
+    @Test func estimatedItem_saveAsFood_keepsValues() throws {
+        let store = makeStore()
+        let item = MealItem(name: "Müsliriegel", amount: "1 Stück", factor: 2, kcalMin: 160, kcal: 180, kcalMax: 200, protein: 3, carbs: 30,
+                            fat: 5, fiber: 2, isEstimated: true)
+        var food = FoodValue.fromItem(item)
+        food.name = "Müsliriegel (Marke X)"
+        #expect(store.save(food))
+        let stored = try #require(store.foods().first)
+        #expect(stored.kcal == 360 && stored.protein == 6 && stored.carbs == 60 && stored.fat == 10)
+        #expect(stored.nutrients.fiber == 4 && stored.nutrients.sugar == nil)
+        #expect(stored.origin == .estimate)
+        // One piece of the saved food gives back the values the meal showed.
+        let again = stored.item(amount: 1)
+        #expect(again.kcal == 360 && !again.isEstimated)
+    }
 }

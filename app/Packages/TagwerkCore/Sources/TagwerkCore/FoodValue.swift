@@ -176,6 +176,21 @@ public struct FoodValue: Sendable, Hashable, Codable, Identifiable {
                          nutrients: item.nutrients.scaled(by: factor), origin: .estimate)
     }
 
+    /// The food after the user changed values of `original`. A product of Open Food Facts that is changed no longer claims to hold the
+    /// values of that database: it becomes a typed food and keeps only a note about where it started, so third-party data and own
+    /// values never share a record under the label of the third party. Without a change the food stays as it is.
+    public func afterEditing(from original: FoodValue) -> FoodValue {
+        guard original.origin == .openFoodFacts, origin == .openFoodFacts else { return self }
+        var comparable = original
+        comparable.name = name
+        comparable.barcode = barcode
+        guard comparable != self else { return self }
+        var edited = self
+        edited.origin = .typed
+        edited.sourceNote = String(localized: "Ausgangswerte aus Open Food Facts, von dir geändert", bundle: .module)
+        return edited
+    }
+
     // MARK: Text
 
     /// "je 100 g · 62 kcal · 11 g Eiweiß": the line of a list row.

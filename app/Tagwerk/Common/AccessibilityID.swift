@@ -50,6 +50,17 @@ enum AccessibilityID {
         static let breakdown = "capture.breakdown"
     }
 
+    enum Food {
+        /// A row of "Meine Lebensmittel" in the meal sheet.
+        static let row = "food.row"
+        static let newButton = "food.new"
+        static let nameField = "food.name"
+        static let saveButton = "food.save"
+        static let amountField = "food.amount"
+        static let addButton = "food.add"
+        static let searchField = "food.search"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

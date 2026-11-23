@@ -4631,6 +4631,16 @@
         }
       }
     },
+    "Als Lebensmittel sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as food"
+          }
+        }
+      }
+    },
     "Als Liste zeigen": {
       "localizations": {
         "en": {
@@ -6328,6 +6338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calculated by Apple Maps. Tagwerk does not use your location."
+          }
+        }
+      }
+    },
+    "Bereits erfasste Mahlzeiten ändern sich nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals you already logged stay as they are."
           }
         }
       }
@@ -8655,6 +8675,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The suggestions were revised."
+          }
+        }
+      }
+    },
+    "Die Werte unten gelten für diese Menge. Beim Erfassen gibst du Gramm, Milliliter oder Stück ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The values below refer to this amount. When you log it, you enter grams, millilitres or pieces."
           }
         }
       }
@@ -12071,6 +12101,16 @@
         }
       }
     },
+    "Gewicht je Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight per piece"
+          }
+        }
+      }
+    },
     "Gewohnheit": {
       "localizations": {
         "en": {
@@ -12193,6 +12233,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enter this code on GitHub:"
+          }
+        }
+      }
+    },
+    "Gib eine Menge größer als 0 ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an amount greater than 0."
           }
         }
       }
@@ -12765,6 +12815,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drop here"
+          }
+        }
+      }
+    },
+    "Hier erscheinen Lebensmittel, die du anlegst: mit Werten je 100 g, je 100 ml oder je Stück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foods you create appear here, with values per 100 g, per 100 ml or per piece."
           }
         }
       }
@@ -13973,6 +14033,16 @@
         }
       }
     },
+    "Kein Lebensmittel passt zu deiner Suche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No food matches your search."
+          }
+        }
+      }
+    },
     "Kein Plan-Kalender": {
       "localizations": {
         "en": {
@@ -14849,6 +14919,46 @@
         }
       }
     },
+    "Lebensmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food"
+          }
+        }
+      }
+    },
+    "Lebensmittel hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add food"
+          }
+        }
+      }
+    },
+    "Lebensmittel löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete food"
+          }
+        }
+      }
+    },
+    "Lebensmittel löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this food?"
+          }
+        }
+      }
+    },
     "Leeren": {
       "shouldTranslate": false
     },
@@ -15468,6 +15578,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Multiple selection"
+          }
+        }
+      }
+    },
+    "Meine Lebensmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My foods"
           }
         }
       }
@@ -16692,6 +16812,16 @@
         }
       }
     },
+    "Neues Lebensmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New food"
+          }
+        }
+      }
+    },
     "Neues Rezept": {
       "localizations": {
         "en": {
@@ -16718,6 +16848,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Newest first"
+          }
+        }
+      }
+    },
+    "Nicht alle Werte sind bekannt. Unbekannte Werte zählen nicht als 0.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not all values are known. Unknown values do not count as 0."
           }
         }
       }
@@ -17335,6 +17475,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tasks only"
+          }
+        }
+      }
+    },
+    "Nur Kalorien sind nötig. Ein leeres Feld ist unbekannt, nicht 0, und wird nicht nach Health geschrieben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only calories are required. An empty field is unknown, not 0, and is not written to Health."
           }
         }
       }
@@ -20429,6 +20579,16 @@
         }
       }
     },
+    "Suchen: Lebensmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search: food"
+          }
+        }
+      }
+    },
     "Symbol": {
       "localizations": {
         "en": {
@@ -21296,6 +21456,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text revised"
+          }
+        }
+      }
+    },
+    "Tippe auf ein Lebensmittel und gib die Menge ein. Wische nach links, um es zu bearbeiten oder zu löschen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a food and enter the amount. Swipe left to edit or delete it."
           }
         }
       }
@@ -24029,6 +24199,16 @@
         }
       }
     },
+    "Zuletzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
+          }
+        }
+      }
+    },
     "Zuletzt gelöscht": {
       "localizations": {
         "en": {
@@ -25171,6 +25351,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "yes"
+          }
+        }
+      }
+    },
+    "je 100 g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 g"
+          }
+        }
+      }
+    },
+    "je 100 ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 ml"
+          }
+        }
+      }
+    },
+    "je Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece"
           }
         }
       }

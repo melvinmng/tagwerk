@@ -74,4 +74,26 @@ struct MealDraftTests {
         draft.setManualNutrient(.fiber, 2)
         #expect(draft.value.nutrient(.sugar) == nil && draft.value.nutrient(.saturatedFat) == nil && draft.value.nutrient(.salt) == nil)
     }
+
+    // MARK: Own foods (plan nutrition, strand E)
+
+    @Test func foodItem_showsAsItemList_notAsFourFields() {
+        let item = FoodValue(name: "Skyr", reference: .per100g, kcal: 62, protein: 11).item(amount: 250)
+        var draft = MealDraft(title: "Skyr", kind: .snack, date: Date(timeIntervalSince1970: 0), items: [item], origin: .manual, estimatedAt: nil)
+        #expect(draft.isManualSingle, "without the flag a single typed item shows the value fields")
+        draft.usesItemList = true
+        #expect(!draft.isManualSingle, "an item of an own food keeps its amount visible")
+        #expect(draft.value.items.first?.amount == "250 g")
+        #expect(draft.value.kcal == 155 && draft.canSave)
+    }
+
+    @Test func foodItems_addUpInOneMeal() {
+        let skyr = FoodValue(name: "Skyr", reference: .per100g, kcal: 62, protein: 11).item(amount: 250)
+        let oats = FoodValue(name: "Haferflocken", reference: .per100g, kcal: 372, nutrients: NutrientValues(fiber: 10)).item(amount: 60)
+        var draft = MealDraft(title: "Skyr", kind: .breakfast, date: Date(timeIntervalSince1970: 0), items: [skyr], origin: .manual, estimatedAt: nil)
+        draft.usesItemList = true
+        draft.items.append(oats)
+        #expect(abs(draft.value.kcal - (155 + 223.2)) < 0.001)
+        #expect(!draft.value.hasEstimate, "items of own foods are exact")
+    }
 }

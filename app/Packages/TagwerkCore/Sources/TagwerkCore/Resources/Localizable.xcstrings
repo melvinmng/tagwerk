@@ -866,6 +866,16 @@
         }
       }
     },
+    "Ausgangswerte aus Open Food Facts, von dir geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting values from Open Food Facts, changed by you"
+          }
+        }
+      }
+    },
     "Ballaststoffe": {
       "localizations": {
         "en": {

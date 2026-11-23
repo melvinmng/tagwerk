@@ -137,4 +137,39 @@ struct FoodValueTests {
         let noProtein = FoodValue(name: "Wasser", reference: .per100ml, kcal: 0)
         #expect(!noProtein.summary(locale: german).contains("Eiweiß"))
     }
+
+    // MARK: Third-party values
+
+    private func product() -> FoodValue {
+        FoodValue(name: "Skyr", reference: .per100g, kcal: 62, protein: 11, origin: .openFoodFacts, barcode: "4000000000000",
+                  sourceNote: "Open Food Facts, abgerufen am 21.11.2026")
+    }
+
+    @Test func afterEditing_unchangedProductStaysOpenFoodFacts() {
+        let original = product()
+        #expect(original.afterEditing(from: original) == original)
+        var renamed = original
+        renamed.name = "Skyr natur"
+        #expect(renamed.afterEditing(from: original).origin == .openFoodFacts, "a new name is not a change of the values")
+    }
+
+    @Test func afterEditing_changedValuesNoLongerClaimTheThirdPartySource() {
+        let original = product()
+        var changed = original
+        changed.kcal = 65
+        let result = changed.afterEditing(from: original)
+        #expect(result.origin == .typed)
+        #expect(result.sourceNote != original.sourceNote && result.sourceNote != nil)
+        #expect(result.kcal == 65 && result.barcode == original.barcode)
+        var filledIn = original
+        filledIn.nutrients.fiber = 3
+        #expect(filledIn.afterEditing(from: original).origin == .typed, "filling in a missing value is a change too")
+    }
+
+    @Test func afterEditing_ownFoodsAreNotTouched() {
+        let own = skyr()
+        var changed = own
+        changed.kcal = 70
+        #expect(changed.afterEditing(from: own) == changed)
+    }
 }
