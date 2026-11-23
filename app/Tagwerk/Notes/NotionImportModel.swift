@@ -3,9 +3,11 @@ import Observation
 import TagwerkCore
 
 /// What an import reads from the unpacked Notion export: the journal "Tagebuch mit Gott" or the Bible Study notes.
-enum NotionImportTarget: Hashable, CaseIterable {
+enum NotionImportTarget: Hashable, CaseIterable, Identifiable {
     case journal
     case bibleStudy
+
+    var id: Self { self }
 }
 
 /// Reads the folder of an unpacked Notion export, shows what an import would do and then stores it. Only a folder is read
@@ -27,11 +29,34 @@ final class NotionImportModel {
         var lastDay: PlanDay?
         /// Journal: pages without a usable date. Bible Study: pages whose title is not a book.
         var leftOutTitles: [String]
+        /// The journal days that already have an entry, newest first; empty for Bible Study.
+        var conflicts: [Conflict] = []
+
+        typealias Conflict = NotionImportConflict
 
         var isBibleStudy: Bool {
             if case .bibleStudy = payload { return true }
             return false
         }
+
+        /// What the import stores: the new entries plus the ones whose text is appended to an existing entry.
+        var importCount: Int { counts.newCount + counts.conflictCount }
+
+        /// "207 Einträge importieren" (Bible Study: "Seiten").
+        var importButtonTitle: String {
+            let count = importCount
+            if isBibleStudy {
+                return count == 1 ? String(localized: "1 Seite importieren") : String(localized: "\(count) Seiten importieren")
+            }
+            return count == 1 ? String(localized: "1 Eintrag importieren") : String(localized: "\(count) Einträge importieren")
+        }
+    }
+
+    /// The three screens of the import: instructions with the folder choice, preview, result.
+    enum Step: Int {
+        case instructions = 1
+        case preview
+        case result
     }
 
     struct Summary: Equatable {
@@ -49,15 +74,30 @@ final class NotionImportModel {
         case failed(String)
     }
 
-    var target: NotionImportTarget = .journal
+    var target: NotionImportTarget
     private(set) var phase: Phase = .idle
 
     @ObservationIgnored private let store: NoteStore
     @ObservationIgnored private let calendar: Calendar
+    @ObservationIgnored let fixedTarget: NotionImportTarget?
 
-    init(store: NoteStore, calendar: Calendar) {
+    /// The target is fixed when the import was opened from a folder; the choice between journal and Bible Study is then not shown.
+    init(store: NoteStore, calendar: Calendar, fixedTarget: NotionImportTarget? = nil) {
         self.store = store
         self.calendar = calendar
+        self.fixedTarget = fixedTarget
+        self.target = fixedTarget ?? .journal
+    }
+
+    var showsTargetChoice: Bool { fixedTarget == nil }
+
+    /// Reading and failures belong to the first screen: they show the instructions again.
+    var step: Step {
+        switch phase {
+        case .idle, .reading, .failed: .instructions
+        case .preview: .preview
+        case .done: .result
+        }
     }
 
     /// Reads the chosen folder and builds the preview. `url` comes from the file importer; its security scope is opened here.
@@ -96,9 +136,12 @@ final class NotionImportModel {
             guard plan.foundCount > 0 else {
                 return .failed(String(localized: "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien)."))
             }
-            let counts = NotionImportPlanner.preview(entries: plan.entries, existingDayKeys: store.journalDayKeys, importedIDs: imported)
+            // An entry that only holds the unfilled template is replaced by the import, so its day is no conflict.
+            let existingTexts = journalTextsWithContent()
+            let counts = NotionImportPlanner.preview(entries: plan.entries, existingDayKeys: Set(existingTexts.keys), importedIDs: imported)
+            let conflicts = NotionImportPlanner.conflicts(entries: plan.entries, existingTexts: existingTexts, importedIDs: imported)
             return .preview(Preview(payload: payload, counts: counts, foundCount: plan.foundCount, firstDay: plan.firstDay,
-                                    lastDay: plan.lastDay, leftOutTitles: plan.skipped.map(\.title)))
+                                    lastDay: plan.lastDay, leftOutTitles: plan.skipped.map(\.title), conflicts: conflicts))
         case .bibleStudy(let pages):
             guard !pages.isEmpty else {
                 return .failed(String(localized: "Im gewählten Ordner wurden keine Seiten von „Bible Studies“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien)."))
@@ -108,6 +151,15 @@ final class NotionImportModel {
             return .preview(Preview(payload: payload, counts: result.preview, foundCount: pages.count, firstDay: nil, lastDay: nil,
                                     leftOutTitles: result.unmatched))
         }
+    }
+
+    /// The text of every day whose live journal entry holds more than the unfilled template.
+    private func journalTextsWithContent() -> [String: String] {
+        var texts: [String: String] = [:]
+        for note in store.notes(.all) where note.kind == .journal && !JournalTemplate.isOnlyTemplate(note.text) {
+            if let key = note.dayKey { texts[key] = note.text }
+        }
+        return texts
     }
 
     func runImport() {
