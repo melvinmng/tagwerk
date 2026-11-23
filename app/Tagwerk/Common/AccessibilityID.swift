@@ -63,6 +63,30 @@ enum AccessibilityID {
         static let weightRow = "trend.weightRow"
     }
 
+    enum Food {
+        /// A row of "Meine Lebensmittel" in the meal sheet.
+        static let row = "food.row"
+        static let newButton = "food.new"
+        static let nameField = "food.name"
+        static let saveButton = "food.save"
+        static let amountField = "food.amount"
+        static let addButton = "food.add"
+        static let searchField = "food.search"
+        static let labelCamera = "food.labelCamera"
+    }
+
+    enum FoodLookup {
+        /// The contact address field of the consent sheet and of the settings.
+        static let contactField = "foodLookup.contact"
+        static let agreeButton = "foodLookup.agree"
+        static let toggle = "foodLookup.toggle"
+        /// The row "Online suchen" below the own foods.
+        static let searchRow = "foodLookup.searchRow"
+        static let results = "foodLookup.results"
+        static let searchButton = "foodLookup.searchButton"
+        static let saveFood = "foodLookup.saveFood"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"
