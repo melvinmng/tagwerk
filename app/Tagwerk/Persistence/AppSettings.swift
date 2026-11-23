@@ -74,6 +74,12 @@ final class AppSettings {
     /// Counts the nutrition entries of other apps from Health as eaten ("Einträge anderer Apps mitzählen"); off by default
     /// (decision NU5b).
     var countsForeignNutrition: Bool = false
+    /// The consent for the online search in Open Food Facts (decision LM1d): the search words, or a barcode, go to a third party. Off by
+    /// default; only counts together with a valid `foodLookupContact` (see `isFoodLookupEnabled`).
+    var foodLookupConsent: Bool = false
+    /// The contact address the user typed for the operator of Open Food Facts, who asks every client to name one in each request. It
+    /// is never filled in by the app: not from the device, not from an account. `nil` until the user types one.
+    var foodLookupContact: String? = nil
     /// Further nutrients that can be switched on in the meal sheet, the nutrient card and the Health mirror (decision NU1b: fibre and
     /// sugar are always there, saturated fat and salt are optional).
     var saturatedFatEnabled: Bool = false
@@ -410,6 +416,33 @@ extension AppSettings {
 }
 
 extension AppSettings {
+    /// The online search may send a request: the user agreed and gave a valid contact address. Without both, nothing goes out.
+    var isFoodLookupEnabled: Bool { foodLookupConsent && ProductSearchRules.validContact(foodLookupContact) != nil }
+
+    /// Takes over what the user typed into the contact field. A valid address is stored; an empty field removes it and switches the online
+    /// search off (it can not run without an address); anything else changes nothing. Returns what happened, for the message.
+    @discardableResult
+    func commitFoodLookupContact(_ entered: String) -> ProductSearchRules.ContactChange {
+        let change = ProductSearchRules.contactChange(entered: entered)
+        switch change {
+        case .cleared:
+            foodLookupContact = nil
+            foodLookupConsent = false
+        case .accepted(let address):
+            foodLookupContact = address
+        case .invalid:
+            break
+        }
+        return change
+    }
+
+    /// The user agreed to the online search with this address. Does nothing for an address that is not valid.
+    func agreeToFoodLookup(contact entered: String) {
+        guard case .accepted(let address) = ProductSearchRules.contactChange(entered: entered) else { return }
+        foodLookupContact = address
+        foodLookupConsent = true
+    }
+
     /// The further nutrients the screens show: fiber and sugar always, saturated fat and salt when switched on (decision NU1b).
     var visibleNutrients: [Nutrient] {
         Nutrient.allCases.filter { nutrient in

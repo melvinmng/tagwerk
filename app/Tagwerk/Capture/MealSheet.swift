@@ -15,6 +15,10 @@ struct MealSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private enum Phase { case input, estimating, editing }
+    private enum ListMode: String, CaseIterable, Identifiable {
+        case recent, foods
+        var id: String { rawValue }
+    }
 
     @State private var phase: Phase = .input
     @State private var text = ""
@@ -27,6 +31,10 @@ struct MealSheet: View {
     @State private var estimateTask: Task<Void, Never>?
     @State private var draft = MealDraft()
     @State private var showsFurtherNutrients = false
+    /// The list below the input: earlier meals or "Meine Lebensmittel" (decision LM1b). Earlier meals are the default.
+    @State private var listMode: ListMode = .recent
+    @State private var foodCoordinator: FoodPickerCoordinator?
+    @State private var showsFoodPicker = false
     @State private var editingItem: EditedItem?
     @State private var prepared = false
     @State private var saving = false
@@ -86,6 +94,13 @@ struct MealSheet: View {
                 }
                 .ignoresSafeArea()
             }
+            .sheet(isPresented: $showsFoodPicker) {
+                FoodPickerSheet { item in
+                    showsFoodPicker = false
+                    addFoodItem(item)
+                }
+            }
+            .modifier(OptionalFoodSheets(coordinator: foodCoordinator))
             .sheet(item: $editingItem) { edited in
                 MealItemEditor(item: edited.item, onSave: { updated in
                     if let index = draft.items.firstIndex(where: { $0.id == updated.id }) {
@@ -190,7 +205,7 @@ struct MealSheet: View {
                 }
             }
 
-            repeatSection
+            listSections
         }
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
@@ -212,6 +227,28 @@ struct MealSheet: View {
 
     private var hasInput: Bool {
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || photoJPEG != nil
+    }
+
+    /// The switch between earlier meals and "Meine Lebensmittel", and the list that goes with it.
+    @ViewBuilder
+    private var listSections: some View {
+        Section {
+            Picker("Quelle", selection: $listMode) {
+                Text("Zuletzt").tag(ListMode.recent)
+                Text("Meine Lebensmittel").tag(ListMode.foods)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .accessibilityIdentifier("meal.listMode")
+        }
+        switch listMode {
+        case .recent:
+            repeatSection
+        case .foods:
+            if let foodCoordinator {
+                FoodPickerSection(query: photo == nil ? text : "", coordinator: foodCoordinator)
+            }
+        }
     }
 
     @ViewBuilder
@@ -424,6 +461,10 @@ struct MealSheet: View {
                     HStack {
                         PreviewRowMark(mark: followUp.mark(of: item.id))
                         Spacer()
+                        Button("Als Lebensmittel sichern", systemImage: "square.and.arrow.down") {
+                            saveAsFood(item)
+                        }
+                        .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
                         if followUpAvailability != .hidden {
                             Button("Mit ChatGPT zu diesem Posten schreiben", systemImage: "sparkles") { followUp.focus = item.id }
                                 .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
@@ -437,6 +478,8 @@ struct MealSheet: View {
                     }
                 }
             }
+            Button("Lebensmittel hinzufügen", systemImage: "fork.knife") { showsFoodPicker = true }
+                .accessibilityIdentifier("meal.addFood")
             Button("Posten hinzufügen", systemImage: "plus") {
                 editingItem = EditedItem(item: MealItem(name: "", amount: "", kcalMin: 0, kcal: 0, kcalMax: 0,
                                                                     protein: 0, carbs: 0, fat: 0))
@@ -492,6 +535,7 @@ struct MealSheet: View {
     private func prepare() {
         guard !prepared else { return }
         prepared = true
+        foodCoordinator = FoodPickerCoordinator { item in addFoodItem(item) }
         if let existing {
             draft = MealDraft(meal: existing, estimatedAt: model.estimatedAt(meal: existing.id))
             phase = .editing
@@ -554,6 +598,27 @@ struct MealSheet: View {
         phase = .editing
     }
 
+    /// An item of an own food and an amount: starts a meal with it, or joins the items of the meal being edited.
+    private func addFoodItem(_ item: MealItem) {
+        if phase == .editing {
+            draft.items.append(item)
+            draft.usesItemList = true
+            return
+        }
+        let date = model.entryDate
+        draft = MealDraft(title: item.name, kind: MealKind.forTime(date, calendar: model.calendar), date: date, items: [item],
+                          origin: .manual, estimatedAt: nil)
+        draft.usesItemList = true
+        phase = .editing
+    }
+
+    /// "Als Lebensmittel sichern": the item becomes the prefilled draft of a new food, saved only after the user confirms.
+    private func saveAsFood(_ item: MealItem) {
+        var food = FoodValue.fromItem(item)
+        if !item.isEstimated { food.origin = .typed }
+        foodCoordinator?.edit = FoodEditSheet.Seed(food: food)
+    }
+
     private func startEditing(copyOf meal: MealValue) {
         let date = model.entryDate
         draft = MealDraft(title: meal.title, kind: MealKind.forTime(date, calendar: model.calendar), date: date,
@@ -574,6 +639,8 @@ struct MealDraft {
     var items: [MealItem] = []
     var origin: MealOrigin = .manual
     var estimatedAt: Date?
+    /// The meal was built from own foods: its items show with their amounts instead of the four value fields of a typed meal.
+    var usesItemList = false
 
     init() {}
 
@@ -593,7 +660,7 @@ struct MealDraft {
     }
 
     /// Typed meals with one item show the four value fields instead of the item list (mockup E2a, manual form).
-    var isManualSingle: Bool { origin == .manual && items.count <= 1 && !(items.first?.isEstimated ?? false) }
+    var isManualSingle: Bool { origin == .manual && items.count <= 1 && !(items.first?.isEstimated ?? false) && !usesItemList }
 
     var value: MealValue {
         var finalItems = items
@@ -666,6 +733,19 @@ struct MealDraft {
     var manualFat: Double? {
         get { manualValue(\.fat) }
         set { setManual(newValue) { $0.fat = $1 } }
+    }
+}
+
+/// Attaches the sheets of the food list once the list exists.
+private struct OptionalFoodSheets: ViewModifier {
+    let coordinator: FoodPickerCoordinator?
+
+    func body(content: Content) -> some View {
+        if let coordinator {
+            content.foodSheets(coordinator)
+        } else {
+            content
+        }
     }
 }
 

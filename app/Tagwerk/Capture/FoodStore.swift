@@ -1,0 +1,58 @@
+import Foundation
+import SwiftData
+import TagwerkCore
+
+/// Stores "Meine Lebensmittel" in SwiftData. The list stays on the device and is part of the backup.
+@MainActor
+final class FoodStore {
+    private let context: ModelContext
+    private let now: () -> Date
+
+    init(context: ModelContext, now: @escaping () -> Date = { Date() }) {
+        self.context = context
+        self.now = now
+    }
+
+    /// All foods, sorted by name.
+    func foods() -> [FoodValue] {
+        let records = (try? context.fetch(FetchDescriptor<FoodRecord>())) ?? []
+        return records.map(\.value).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// The foods whose name contains every word of `query`; all foods for an empty query.
+    func search(_ query: String) -> [FoodValue] { FoodSearch.matching(foods(), query: query) }
+
+    func food(_ id: UUID) -> FoodValue? { record(id)?.value }
+
+    var isEmpty: Bool {
+        var descriptor = FetchDescriptor<FoodRecord>()
+        descriptor.fetchLimit = 1
+        return ((try? context.fetchCount(descriptor)) ?? 0) == 0
+    }
+
+    /// Adds a food, or replaces the one with the same identity. An invalid food (no name, negative energy) is not stored.
+    @discardableResult
+    func save(_ value: FoodValue) -> Bool {
+        guard value.isValid else { return false }
+        var food = value
+        food.name = value.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let existing = record(food.id) {
+            existing.apply(food)
+        } else {
+            context.insert(FoodRecord(food, createdAt: now()))
+        }
+        try? context.save()
+        return true
+    }
+
+    func delete(_ id: UUID) {
+        guard let existing = record(id) else { return }
+        context.delete(existing)
+        try? context.save()
+    }
+
+    private func record(_ id: UUID) -> FoodRecord? {
+        let descriptor = FetchDescriptor<FoodRecord>(predicate: #Predicate { $0.id == id })
+        return (try? context.fetch(descriptor))?.first
+    }
+}

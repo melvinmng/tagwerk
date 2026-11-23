@@ -195,6 +195,13 @@ struct BackupTests {
                                                  foreign: ForeignIntake(kcal: 340, protein: 12, carbs: 40, fat: 9,
                                                                         nutrients: NutrientValues(fiber: 5, sugar: 11, saturatedFat: 3, salt: 1.5),
                                                                         waterMilliliters: 250, sources: ["Yazio"])), updatedAt: now))
+        context.insert(FoodRecord(FoodValue(id: UUID(uuidString: "00000000-0000-0000-0000-0000000000F1") ?? UUID(), name: "Skyr natur",
+                                            reference: .perPiece(grams: 150), kcal: 93, protein: 16.5, carbs: nil, fat: 0.3,
+                                            nutrients: NutrientValues(fiber: nil, sugar: 6, saturatedFat: 0.2, salt: 0.15),
+                                            origin: .openFoodFacts, barcode: "4000000000000",
+                                            sourceNote: "Open Food Facts, abgerufen am 18.11.2026"), createdAt: now))
+        settings.foodLookupConsent = true
+        settings.foodLookupContact = "backup@example.org"
         settings.activityCreditPercent = 75
         settings.countsForeignNutrition = true
         settings.saturatedFatEnabled = true
@@ -396,6 +403,30 @@ struct BackupTests {
                 && !target.settings.saturatedFatEnabled && !target.settings.saltEnabled)
     }
 
+    @Test func settingsBackup_carriesTheOnlineSearchConsentAndAddress() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let restored = try JSONDecoder().decode(AppSettingsBackup.self, from: data)
+        let target = try makeTarget()
+        restored.apply(to: target.settings)
+        #expect(target.settings.foodLookupConsent && target.settings.foodLookupContact == "backup@example.org")
+        #expect(target.settings.isFoodLookupEnabled)
+    }
+
+    @Test func settingsBackup_withoutOnlineSearchFields_keepsTheDeviceValues() throws {
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        for key in ["foodLookupConsent", "foodLookupContact"] { object[key] = nil }
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let target = try makeTarget()
+        target.settings.foodLookupConsent = true
+        target.settings.foodLookupContact = "device@example.org"
+        older.apply(to: target.settings)
+        #expect(target.settings.foodLookupConsent && target.settings.foodLookupContact == "device@example.org")
+        let fresh = try makeTarget()
+        older.apply(to: fresh.settings)
+        #expect(!fresh.settings.foodLookupConsent && fresh.settings.foodLookupContact == nil, "an old file switches nothing on")
+    }
+
     @Test func restore_oldFileWithoutGoalPlans_rebuildsTheFirstPlanFromTheRestoredGoals() throws {
         // A file from before the goal plans has no list; its single goals become the plan instead of the plans of the device.
         var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
@@ -434,6 +465,32 @@ struct BackupTests {
         let stored = try target.container.mainContext.fetch(FetchDescriptor<DayHealthRecord>())
         #expect(stored.map(\.dayKey) == ["2026-11-18"])
         #expect(stored.first?.value.foreign.sources == ["Yazio"])
+    }
+
+    @Test func restore_oldFileWithoutFoods_keepsTheFoodsOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["foods"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        target.container.mainContext.insert(FoodRecord(FoodValue(name: "Nur auf dem Ziel", reference: .per100g, kcal: 100)))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<FoodRecord>())
+        #expect(stored.map(\.name) == ["Nur auf dem Ziel"])
+    }
+
+    @Test func restore_withFoods_replacesTheFoodsAndKeepsEveryValue() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(FoodRecord(FoodValue(name: "Nur auf dem Ziel", reference: .per100g, kcal: 100)))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<FoodRecord>())
+        #expect(stored.count == 1)
+        let food = try #require(stored.first?.value)
+        #expect(food.name == "Skyr natur" && food.reference == .perPiece(grams: 150) && food.kcal == 93)
+        #expect(food.protein == 16.5 && food.carbs == nil && food.fat == 0.3, "an unknown value stays unknown")
+        #expect(food.nutrients == NutrientValues(fiber: nil, sugar: 6, saturatedFat: 0.2, salt: 0.15))
+        #expect(food.origin == .openFoodFacts && food.barcode == "4000000000000")
+        #expect(food.sourceNote == "Open Food Facts, abgerufen am 18.11.2026")
     }
 
     // MARK: Round trip
