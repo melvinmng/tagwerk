@@ -41,6 +41,8 @@
 #   TAGWERK_UI_TEST_RETRIES=1  retry each failed UI test once (-retry-tests-on-failure -test-iterations 2) and list the
 #                              tests that only passed on the second attempt under "RETRIED UI TESTS". UI stage only;
 #                              the package and app unit stages never retry.
+#   (UI stage) while the tests run, scripts/ui-hang-sampler.py writes a stack sample of the app process to <log dir>/hang-*.txt when the log shows
+#                              that the app does not answer; it never changes the result of a test
 #   TAGWERK_NIGHTLY_ONLY_FILE  alternative path of the nightly-only list (used by scripts/tests/test-all-ui-selection.zsh)
 
 set -euo pipefail
@@ -310,6 +312,28 @@ build_for_testing() {
   echo "    build succeeded in $((SECONDS - started)) s (log: $log)"
 }
 
+# Takes a stack sample of the app process when a UI test shows that the app does not answer (scripts/ui-hang-sampler.py reads
+# the log of the run in the background and writes hang-*.txt into the log folder, which CI uploads). It only watches: it changes no
+# test result, and a hang-free run costs one idle process that reads the log once per second.
+# Usage: start_ui_hang_sampler LOG, then stop_ui_hang_sampler
+start_ui_hang_sampler() {
+  local log="$1" simulator_id=""
+  [[ "$DESTINATION" == *id=* ]] && simulator_id="${${DESTINATION#*id=}%%,*}"
+  UI_HANG_STOP_FILE="$LOG_DIR/.ui-hang-sampler-stop"
+  rm -f "$UI_HANG_STOP_FILE"
+  /usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-hang-sampler.py" "$log" "$LOG_DIR" "$UI_HANG_STOP_FILE" \
+    --simulator-id "$simulator_id" >> "$LOG_DIR/ui-hang-sampler.log" 2>&1 &
+  UI_HANG_SAMPLER_PID=$!
+}
+
+stop_ui_hang_sampler() {
+  [[ -n "${UI_HANG_SAMPLER_PID:-}" ]] || return 0
+  : > "$UI_HANG_STOP_FILE"
+  # The sampler ends after its current sample (3 seconds at most) once it sees the stop file.
+  wait "$UI_HANG_SAMPLER_PID" 2> /dev/null || true
+  UI_HANG_SAMPLER_PID=""
+}
+
 # Runs a package stage: build and test in one xcodebuild call, only the build with TAGWERK_BUILD_ONLY=1. A package has its
 # own build graph, so there is nothing to share and nothing to do between build and test.
 run_stage() {
@@ -410,7 +434,9 @@ else
     # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
     tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
     ui_status=0
+    start_ui_hang_sampler "$LOG_DIR/app-UI-tests.log"
     run_tests test-without-building "${UI_ARGS[@]}" "${UI_SELECTION_ARGS[@]}" || ui_status=$?
+    stop_ui_hang_sampler
     # The list is reported even when the stage fails: a test that wobbles twice in one run is worth knowing about.
     if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
       report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
