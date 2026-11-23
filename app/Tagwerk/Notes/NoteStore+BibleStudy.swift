@@ -137,6 +137,11 @@ extension NoteStore {
         note.updatedAt = now()
     }
 
+    /// The moments the completed sessions began, for the learned reminder time (BS8).
+    func completedSessionStartTimes() -> [Date] {
+        sessions().filter { $0.completedAt != nil }.map(\.startedAt)
+    }
+
     /// What the reminder says about where to go on: the book of the latest session and the verse that follows in it. `nil`
     /// without a session and for a session typed as free text, which has no verse to continue at (BS7).
     func reminderContinuation() -> (book: BibleBook, next: BibleProgress.Next)? {

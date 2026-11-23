@@ -32,6 +32,8 @@ struct BibleStudySettingsView: View {
                 Text("Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.")
             }
 
+            suggestionSection
+
             if settings.bibleStudyReminderEnabled {
                 Section {
                     ForEach(times) { time in
@@ -74,6 +76,34 @@ struct BibleStudySettingsView: View {
         .task { await environment.routineNotifications.reschedule() }
     }
 
+    /// "Vorschlag aus deinen Sitzungen" (BE1c): the learned time with its reason, to take over or to push away for four weeks.
+    @ViewBuilder
+    private var suggestionSection: some View {
+        let suggestions = environment.bibleStudySuggestions()
+        if !suggestions.isEmpty {
+            Section {
+                ForEach(suggestions, id: \.key) { suggestion in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(BibleStudySuggestionText.title(suggestion, locale: locale)).font(.body.weight(.semibold))
+                        Text(BibleStudySuggestionText.reason(suggestion, locale: locale)).font(.footnote).foregroundStyle(.secondaryText)
+                        HStack(spacing: 8) {
+                            Button("Nicht jetzt") { environment.snoozeBibleStudySuggestion() }
+                                .buttonStyle(.bordered)
+                                .frame(minHeight: 44)
+                            Button("Übernehmen") { Task { await environment.adoptBibleStudySuggestion(suggestion) } }
+                                .buttonStyle(.borderedProminent)
+                                .frame(minHeight: 44)
+                                .accessibilityIdentifier("bibleStudy.suggestion.adopt")
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            } header: {
+                Text("Vorschlag aus deinen Sitzungen")
+            }
+        }
+    }
+
     /// Switching on asks for the permission when it was not asked yet; the first time is 06:45 on every day.
     private var reminderBinding: Binding<Bool> {
         Binding(get: { environment.settings.bibleStudyReminderEnabled }, set: { isOn in
@@ -112,19 +142,23 @@ struct BibleStudySettingsView: View {
 /// One reminder time: the clock time in steps of five minutes and the weekdays. Days that another time uses are greyed out.
 struct BibleStudyTimeSheet: View {
     let isNew: Bool
+    /// The days are the user's own choice (the sheet of a learned suggestion): they are taken from the times that hold them now
+    /// instead of being greyed out, and confirming switches the reminder on.
+    let takesOverDays: Bool
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @State private var time: BibleStudyReminderTime
 
-    init(time: BibleStudyReminderTime, isNew: Bool) {
+    init(time: BibleStudyReminderTime, isNew: Bool, takesOverDays: Bool = false) {
         self.isNew = isNew
+        self.takesOverDays = takesOverDays
         _time = State(initialValue: time)
     }
 
     var body: some View {
         let others = environment.settings.bibleStudyReminderTimes
-        let taken = BibleStudyReminderTimes.takenWeekdays(for: time, in: others)
+        let taken = takesOverDays ? [] : BibleStudyReminderTimes.takenWeekdays(for: time, in: others)
         NavigationStack {
             Form {
                 Section {
@@ -164,6 +198,13 @@ struct BibleStudyTimeSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Fertig") {
                         environment.settings.bibleStudyReminderTimes = BibleStudyReminderTimes.saving(time, into: others)
+                        if takesOverDays {
+                            environment.settings.bibleStudyReminderEnabled = true
+                            Task {
+                                if environment.routineNotifications.authorization == .notDetermined { await environment.notifications.requestAuthorization() }
+                                await environment.routineNotifications.reschedule()
+                            }
+                        }
                         dismiss()
                     }
                     .disabled(time.weekdays.subtracting(taken).isEmpty)

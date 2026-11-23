@@ -9,9 +9,13 @@ struct BibleSessionBar: View {
     let store: NoteStore
     /// Saves the text of the editor; runs before the session is completed.
     let saveText: () -> Void
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.locale) private var locale
     @State private var asking: BibleSessionEndModel?
     @State private var showsDone = false
+    /// The learned reminder time offered once after a completed session (BS8, BE3b).
+    @State private var suggestion: BibleStudyHabitTime.Suggestion?
+    @State private var changingTime: BibleStudyReminderTime?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +24,10 @@ struct BibleSessionBar: View {
             } else if showsDone {
                 done
             }
+            if let suggestion { suggestionCard(suggestion) }
+        }
+        .sheet(item: $changingTime) { time in
+            BibleStudyTimeSheet(time: time, isNew: true, takesOverDays: true)
         }
         .task(id: showsDone) {
             guard showsDone else { return }
@@ -71,6 +79,42 @@ struct BibleSessionBar: View {
         model.complete(beforeCompleting: saveText)
         asking = nil
         showsDone = true
+        suggestion = environment.nextBibleStudySuggestionCard()
+    }
+
+    /// "Du beginnst werktags meist zwischen 06:30 und 07:10. Soll Tagwerk dich Mo–Fr um 06:45 erinnern?" The times only change
+    /// when the user taps "Erinnern" or confirms the sheet of "Zeit ändern".
+    private func suggestionCard(_ item: BibleStudyHabitTime.Suggestion) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Erinnerung", systemImage: "bell").font(.subheadline.weight(.semibold))
+            Text(BibleStudySuggestionText.card(item, locale: locale)).font(.subheadline)
+            HStack(spacing: 8) {
+                Button("Nicht jetzt") {
+                    environment.snoozeBibleStudySuggestion()
+                    suggestion = nil
+                }
+                .buttonStyle(.bordered)
+                .frame(minHeight: 44)
+                Button("Zeit ändern") {
+                    changingTime = BibleStudyReminderTime(minutes: item.minutes, weekdays: item.group.weekdays)
+                    suggestion = nil
+                }
+                .buttonStyle(.bordered)
+                .frame(minHeight: 44)
+                Button("Erinnern") {
+                    suggestion = nil
+                    Task { await environment.adoptBibleStudySuggestion(item) }
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(minHeight: 44)
+                .accessibilityIdentifier("bibleSession.suggestion.adopt")
+            }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.bar)
+        .overlay(alignment: .bottom) { Divider() }
+        .accessibilityElement(children: .contain)
     }
 }
 

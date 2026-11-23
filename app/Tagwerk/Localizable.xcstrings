@@ -380,6 +380,22 @@
         }
       }
     },
+    "%@ gegen %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ gegen %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ around %2$@"
+          }
+        }
+      }
+    },
     "%@ h": {
       "localizations": {
         "en": {
@@ -4544,6 +4560,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "On day %lld of the month"
+          }
+        }
+      }
+    },
+    "An %lld von %lld Sitzungen am Wochenende der letzten %lld Wochen hast du zwischen %@ und %@ begonnen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "An %1$lld von %2$lld Sitzungen am Wochenende der letzten %3$lld Wochen hast du zwischen %4$@ und %5$@ begonnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You began %1$lld of %2$lld sessions at the weekend in the last %3$lld weeks between %4$@ and %5$@."
+          }
+        }
+      }
+    },
+    "An %lld von %lld Sitzungen an Werktagen der letzten %lld Wochen hast du zwischen %@ und %@ begonnen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "An %1$lld von %2$lld Sitzungen an Werktagen der letzten %3$lld Wochen hast du zwischen %4$@ und %5$@ begonnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You began %1$lld of %2$lld sessions on workdays in the last %3$lld weeks between %4$@ and %5$@."
           }
         }
       }
@@ -8894,6 +8942,38 @@
         }
       }
     },
+    "Du beginnst am Wochenende meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Du beginnst am Wochenende meist zwischen %1$@ und %2$@. Soll Tagwerk dich %3$@ um %4$@ erinnern?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You usually begin at the weekend between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?"
+          }
+        }
+      }
+    },
+    "Du beginnst werktags meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Du beginnst werktags meist zwischen %1$@ und %2$@. Soll Tagwerk dich %3$@ um %4$@ erinnern?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You usually begin on workdays between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?"
+          }
+        }
+      }
+    },
     "Du bist danach nicht mehr zugewiesen.": {
       "localizations": {
         "en": {
@@ -9715,6 +9795,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planning result"
+          }
+        }
+      }
+    },
+    "Erinnern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me"
           }
         }
       }
@@ -22017,6 +22107,16 @@
         }
       }
     },
+    "Vorschlag aus deinen Sitzungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion from your sessions"
+          }
+        }
+      }
+    },
     "Vorschlag der KI: %@": {
       "localizations": {
         "en": {
@@ -23303,6 +23403,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Time with God"
+          }
+        }
+      }
+    },
+    "Zeit ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change time"
           }
         }
       }

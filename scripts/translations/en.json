@@ -2653,5 +2653,13 @@
   "Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Accepted times do not change by themselves. Skipped on days with a completed session. Tagwerk plans the reminder for the next 3 days and fills it up as soon as you open the app.",
   "Weiter in %@ ab %@": "Continue in %1$@ from %2$@",
   "Zeit für Bible Study.": "Time for Bible Study.",
-  "Heute nicht": "Not today"
+  "Heute nicht": "Not today",
+  "%@ gegen %@": "%1$@ around %2$@",
+  "An %lld von %lld Sitzungen am Wochenende der letzten %lld Wochen hast du zwischen %@ und %@ begonnen.": "You began %1$lld of %2$lld sessions at the weekend in the last %3$lld weeks between %4$@ and %5$@.",
+  "An %lld von %lld Sitzungen an Werktagen der letzten %lld Wochen hast du zwischen %@ und %@ begonnen.": "You began %1$lld of %2$lld sessions on workdays in the last %3$lld weeks between %4$@ and %5$@.",
+  "Du beginnst am Wochenende meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": "You usually begin at the weekend between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?",
+  "Du beginnst werktags meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": "You usually begin on workdays between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?",
+  "Erinnern": "Remind me",
+  "Vorschlag aus deinen Sitzungen": "Suggestion from your sessions",
+  "Zeit ändern": "Change time"
 }

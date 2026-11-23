@@ -130,6 +130,9 @@ final class AppSettings {
     var bibleStudySkippedDayKey: String? = nil
     /// "Nicht jetzt" on the suggested reminder time (BS8): no suggestion before this moment. Not part of the backup.
     var bibleStudySuggestionSnoozedUntil: Date? = nil
+    /// The suggestions (`BibleStudyHabitTime.Suggestion.key`, comma separated) whose card was already shown after a completed
+    /// session: the card comes once per new suggestion; the settings page keeps showing it. Not part of the backup.
+    var bibleStudySuggestionShownKeys: String? = nil
     /// The one-time upgrade of "Helle Lichter ausmachen" (offset 60) in an untouched five-point list was done. Not part of the
     /// backup: it only keeps a list that the user changed afterwards from being upgraded again.
     var lightsOffsetUpgradeDone: Bool = false
