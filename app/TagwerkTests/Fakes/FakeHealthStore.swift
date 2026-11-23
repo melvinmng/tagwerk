@@ -111,8 +111,17 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
-    func save(_ weight: HealthWeight) async throws -> Bool { try await write { _weights.append(weight) } }
-    func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { try await write { _deleted.append(id) } }
+    /// A weight is written only into the group `body`; without its sheet shown the fake reports "not complete", like the real store.
+    func save(_ weight: HealthWeight) async throws -> Bool {
+        guard await groupAccess(.body) == .asked else { return false }
+        return try await write { _weights.append(weight) }
+    }
+    func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool {
+        try await write {
+            _deleted.append(id)
+            _weights.removeAll { $0.id == id }
+        }
+    }
 
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout] {
         lock.withLock {

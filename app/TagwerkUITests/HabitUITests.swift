@@ -2,15 +2,36 @@ import XCTest
 
 /// The habits of "Erfassen" (GW3): a habit that its source fulfilled keeps its check when it is tapped and explains itself.
 final class HabitUITests: UITestCase {
-    /// The button with a label that starts with `prefix` and can be hit now; the page of "Erfassen" scrolls up until it is there.
+    /// The button with a label that starts with `prefix` and can be hit now; the page of "Erfassen" scrolls until it is there:
+    /// up while the row is below the screen, then down when a swipe moved it past the top (the list below the habits is long
+    /// enough to carry a swipe that far, and a row above the screen may not be in the tree any more, so scrolling in one
+    /// direction only would never find the row again).
     /// "Erfassen" keeps the neighbouring days as page previews in the tree, so only a hittable match counts.
     private func hittableButton(_ prefix: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let query = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", prefix))
-        var steps = 0
-        while steps < 8 {
-            if let found = query.allElementsBoundByIndex.first(where: { $0.exists && $0.isHittable }) { return found }
-            app.swipeUp()
-            steps += 1
+        let maxSwipesUp = 8
+        let maxSwipesDown = 8
+        var swipesUp = 0
+        var swipesDown = 0
+        var isScrollingUp = true
+        while swipesUp < maxSwipesUp || swipesDown < maxSwipesDown {
+            let matches = query.allElementsBoundByIndex.filter { $0.exists }
+            if let found = matches.first(where: { $0.isHittable }) { return found }
+            // A match of the shown page (the previews of the neighbouring days sit beside the window) above the top edge: scroll back.
+            let window = app.windows.firstMatch.frame
+            if matches.contains(where: { $0.frame.maxY <= window.minY && window.minX <= $0.frame.midX && $0.frame.midX <= window.maxX }) {
+                isScrollingUp = false
+            }
+            if isScrollingUp && swipesUp < maxSwipesUp {
+                app.swipeUp()
+                swipesUp += 1
+            } else if swipesDown < maxSwipesDown {
+                isScrollingUp = false
+                app.swipeDown()
+                swipesDown += 1
+            } else {
+                break
+            }
         }
         XCTFail("\(prefix) is not reachable by scrolling", file: file, line: line)
         return query.firstMatch

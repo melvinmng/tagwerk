@@ -8,8 +8,10 @@ struct CaptureView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
     @State private var showsReview = false
+    @State private var showsTrends = false
     @State private var showsHabitList = false
     @State private var limitBumps = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     enum CaptureSheet: Identifiable {
         case newMeal(text: String? = nil)
@@ -19,6 +21,8 @@ struct CaptureView: View {
         case workout(WorkoutValue)
         case activeBreakdown
         case foreignIntake
+        case newWeight
+        case weight(WeightValue)
 
         var id: String {
             switch self {
@@ -29,6 +33,8 @@ struct CaptureView: View {
             case .workout(let workout): "workout-\(workout.id)"
             case .activeBreakdown: "activeBreakdown"
             case .foreignIntake: "foreignIntake"
+            case .newWeight: "newWeight"
+            case .weight(let weight): "weight-\(weight.id)"
             }
         }
     }
@@ -55,6 +61,9 @@ struct CaptureView: View {
             .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.7), trigger: limitBumps)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
+            }
+            .navigationDestination(isPresented: $showsTrends) {
+                TrendView(model: environment.makeTrendModel())
             }
             .navigationDestination(isPresented: $showsHabitList) {
                 HabitListView(model: environment.habits)
@@ -96,6 +105,8 @@ struct CaptureView: View {
                 case .activeBreakdown: BudgetBreakdownSheet(model: model)
                 case .foreignIntake:
                     if let foreign = model.current.figures.totals.foreign { ForeignIntakeSheet(foreign: foreign) }
+                case .newWeight: WeightSheet(model: model, existing: nil)
+                case .weight(let weight): WeightSheet(model: model, existing: weight)
                 }
             }
         }
@@ -124,7 +135,6 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    
                 }
                 Section {
                     quickEntry
@@ -139,6 +149,23 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                // The trends of the intake and the weight, below the cards of the day: the entry is used less often than the routine and
+                // habit cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
+                Section {
+                    // The value is the weight of the latest 7 days, when there is one.
+                    Button { showsTrends = true } label: {
+                        HStack {
+                            Label("Verlauf und Ziele", systemImage: "chart.line.uptrend.xyaxis")
+                            Spacer()
+                            if let kilograms = model.weightOverview.mean ?? model.weightOverview.latest {
+                                Text(WeightFormat.kilograms(kilograms)).monospacedDigit().foregroundStyle(.secondaryText)
+                            }
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityIdentifier(AccessibilityID.Trend.entry)
+                }
                 // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
                 Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
@@ -153,7 +180,7 @@ struct CaptureView: View {
     /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
     private func applyPrefill() {
         guard let prefill = environment.router.takeCapturePrefill() else { return }
-        if prefill != .review, !model.isToday {
+        if prefill != .review, prefill != .trends, !model.isToday {
             // The day switches at once; the sheet does not wait for the Health query of the reload.
             model.day = model.today
             Task { await model.reload() }
@@ -163,6 +190,7 @@ struct CaptureView: View {
         case .meal(let text): sheet = .newMeal(text: text)
         case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
         case .review: showsReview = true
+        case .trends: showsTrends = true
         }
     }
 
@@ -170,10 +198,14 @@ struct CaptureView: View {
 
     private var quickEntry: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 8) {
+            // Four buttons in one row; with large text they wrap into two rows of two, so no label is cut off.
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: QuickEntryLayout.columns(for: dynamicTypeSize)),
+                      spacing: 8) {
                 quickButton("Essen", symbol: "fork.knife") { sheet = .newMeal() }
                 quickButton("Trinken", symbol: "drop.fill") { sheet = .drinks }
                 quickButton("Training", symbol: "figure.run") { sheet = .newWorkout() }
+                quickButton("Gewicht", symbol: "scalemass") { sheet = .newWeight }
+                    .accessibilityIdentifier(AccessibilityID.Capture.quickWeight)
             }
             // SI3: shown once, directly above the portions; renders nothing when the shortcuts are not registered.
             if SiriTipPolicy.isVisible(done: model.settings.siriTipWaterDone) {
@@ -205,7 +237,7 @@ struct CaptureView: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.title3)
-                Text(title).font(.subheadline.weight(.semibold))
+                Text(title).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
         }
@@ -530,6 +562,13 @@ private struct HealthCard: View {
         }
         .padding(.vertical, 4)
     }
+}
+
+// MARK: - Quick entry layout
+
+enum QuickEntryLayout {
+    /// Buttons per row of the quick entry: all four in one row up to the default text sizes, two per row from "extra large" on.
+    static func columns(for size: DynamicTypeSize) -> Int { size >= .xLarge ? 2 : 4 }
 }
 
 // MARK: - Texts

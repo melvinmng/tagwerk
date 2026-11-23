@@ -64,18 +64,22 @@ final class HealthMirror {
 
     private func runOnce() async {
         let access = await health.access()
-        guard access.wasAsked else {
-            // Nothing ever reached Health before the user was asked, so queued deletions have nothing to remove.
-            for (id, _) in store.dueDeletionEntries(now: now()) where !store.exists(id) { store.removeDeletion(id) }
-            return
-        }
-        guard access != .denied else { return }
+        // The body weight has its own permission group (`body`), asked at the first saved weight: it is mirrored even though the
+        // core group was never asked, and it waits while its own group was not asked.
+        let bodyAsked = await health.groupAccess(.body) == .asked
+        let coreOpen = access.wasAsked && access != .denied
         for unsynced in store.unsyncedEntries() {
+            if case .weight = unsynced.entry {
+                guard bodyAsked else { continue }
+            } else {
+                guard coreOpen else { continue }
+            }
             do {
                 let complete: Bool = switch unsynced.entry.healthValue(version: unsynced.version) {
                 case .meal(let meal): try await health.save(meal)
                 case .drink(let drink): try await health.save(drink)
                 case .workout(let workout): try await health.save(workout)
+                case .weight(let weight): try await health.save(weight)
                 }
                 // The calories of a workout go to Health only while that type may be written; remember how it was at this moment.
                 let energyInHealth: Bool? = if case .workout = unsynced.entry { access.allowsWriting(.activeEnergy) } else { nil }
@@ -88,6 +92,13 @@ final class HealthMirror {
             // The entry came back ("Widerrufen") after the deletion was queued.
             guard !store.exists(id) else {
                 store.removeDeletion(id)
+                continue
+            }
+            let reachable = kind == .weight ? bodyAsked : coreOpen
+            guard reachable else {
+                // Nothing ever reached Health before the user was asked, so such a deletion has nothing to remove there. A denied
+                // core group keeps its deletions queued.
+                if kind == .weight ? !bodyAsked : !access.wasAsked { store.removeDeletion(id) }
                 continue
             }
             do {

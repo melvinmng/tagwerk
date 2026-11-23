@@ -15,6 +15,9 @@ struct GoalPlanView: View {
         Binding(get: { editor.plan[keyPath: keyPath] != nil }, set: { editor.set(keyPath, to: $0 ? start : nil) })
     }
 
+    /// The start of a new target: the 7-day mean of the weight or, without one, the last weight.
+    private var startWeight: Double { environment.capture.weightOverview.mean ?? environment.capture.weightOverview.latest ?? 75 }
+
     var body: some View {
         Form {
             Section {
@@ -53,6 +56,21 @@ struct GoalPlanView: View {
                 Text("Ballaststoffe und Zucker")
             } footer: {
                 Text("Ohne Ziel zeigt die Karte „Nährwerte“ nur den Wert. Zucker hat eine Obergrenze: Darüber wird der Balken orange.")
+            }
+
+            Section {
+                Toggle("Zielgewicht", isOn: Binding(get: { editor.plan.targetWeightKg != nil },
+                                                    set: { editor.set(\.targetWeightKg, to: $0 ? WeightRules.clamped(startWeight) : nil) }))
+                    .accessibilityIdentifier("targetWeightEnabled")
+                if let target = editor.plan.targetWeightKg {
+                    ValueStepper("Zielgewicht", value: Binding(get: { target }, set: { editor.set(\.targetWeightKg, to: WeightRules.clamped($0)) }),
+                                 in: WeightRules.minimumKilograms...WeightRules.maximumKilograms, step: WeightRules.stepKilograms,
+                                 kind: .decimal(fractionDigits: 1), unit: "kg") { WeightFormat.kilograms($0) }
+                }
+            } header: {
+                Text("Gewicht")
+            } footer: {
+                Text("Das Zielgewicht erscheint als gestrichelte Linie im Gewichtsverlauf, bei „Verlauf und Ziele“. Es ändert dein Tagesbudget nicht.")
             }
 
             Section {

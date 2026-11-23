@@ -84,6 +84,10 @@ final class AppSettings {
     /// sugar are always there, saturated fat and salt are optional).
     var saturatedFatEnabled: Bool = false
     var saltEnabled: Bool = false
+    /// The second field of the weight sheet and the second line of the weight chart (decision KG4b); off by default.
+    var bodyFatEnabled: Bool = false
+    /// The weight row of the morning start (decision KG1c); it replaces a notification, so it is on by default.
+    var morningWeightEnabled: Bool = true
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330

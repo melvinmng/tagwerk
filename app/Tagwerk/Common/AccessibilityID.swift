@@ -48,6 +48,19 @@ enum AccessibilityID {
         static let allowActiveEnergy = "capture.allowActiveEnergy"
         /// The sheet "Aktiv heute".
         static let breakdown = "capture.breakdown"
+        /// The quick button "Gewicht", the number field of the weight sheet and its "Sichern" button.
+        static let quickWeight = "capture.quickWeight"
+        static let weightField = "capture.weightField"
+        static let weightSave = "capture.weightSave"
+        /// The weight row of the morning start.
+        static let morningWeight = "capture.morningWeight"
+    }
+
+    enum Trend {
+        /// The row "Verlauf und Ziele" in the capture tab, the period picker and the weight row of the trends page.
+        static let entry = "trend.entry"
+        static let period = "trend.period"
+        static let weightRow = "trend.weightRow"
     }
 
     enum Food {
