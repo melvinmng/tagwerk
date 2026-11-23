@@ -1539,6 +1539,7 @@
       }
     },
     "%lld Aufgaben, %lld Notizen, %lld Gewohnheiten, %lld Mahlzeiten": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4112,6 +4113,16 @@
         }
       }
     },
+    "Aktionen für die Kopie vom %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions for the copy from %@"
+          }
+        }
+      }
+    },
     "Aktiv": {
       "localizations": {
         "en": {
@@ -4403,6 +4414,7 @@
       }
     },
     "Alle Daten durch die Sicherung ersetzen?": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4634,12 +4646,32 @@
         }
       }
     },
+    "Alles auf diesem iPhone wird ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything on this iPhone will be replaced."
+          }
+        }
+      }
+    },
     "Alles früher am Tag": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Everything earlier in the day"
+          }
+        }
+      }
+    },
+    "Alles in einer einzelnen Datei. Beim Wiederherstellen werden die gesicherten Daten ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All in a single file. A restore replaces the backed-up data."
           }
         }
       }
@@ -4670,6 +4702,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create as task"
+          }
+        }
+      }
+    },
+    "Als Datei sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as file"
           }
         }
       }
@@ -4854,6 +4896,26 @@
         }
       }
     },
+    "An dieses Gerät gebunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tied to this device"
+          }
+        }
+      }
+    },
+    "Andere Dateien im Ordner rührt Tagwerk nicht an. Gelöscht werden nur ältere Dateien mit dem Namen „Tagwerk-Sicherung-…“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk does not touch other files in the folder. Only older files named “Tagwerk-Sicherung-…” are deleted."
+          }
+        }
+      }
+    },
     "Andere Liste wählen": {
       "localizations": {
         "en": {
@@ -4971,6 +5033,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Information incomplete"
+          }
+        }
+      }
+    },
+    "Angaben zu Kalendern, Erinnerungslisten und der Einkaufsliste werden übernommen; fehlen sie auf dem Gerät, verhält sich Tagwerk wie bei einer fehlenden Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choices of calendars, reminder lists and the shopping list are restored; if they are missing on the device, Tagwerk behaves as it does with a missing list."
           }
         }
       }
@@ -5201,6 +5273,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create as"
+          }
+        }
+      }
+    },
+    "Anmeldung bei ChatGPT und GitHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in to ChatGPT and GitHub"
           }
         }
       }
@@ -5878,6 +5960,16 @@
         }
       }
     },
+    "Aufgaben, Zuordnungen zu Tagen und Wiederholungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks, their assignment to days and recurrences"
+          }
+        }
+      }
+    },
     "Aufnahme beenden": {
       "localizations": {
         "en": {
@@ -6074,6 +6166,16 @@
         }
       }
     },
+    "Ausschalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off"
+          }
+        }
+      }
+    },
     "Auswählen": {
       "localizations": {
         "en": {
@@ -6134,6 +6236,16 @@
         }
       }
     },
+    "Automatisch nach „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically to “%@”"
+          }
+        }
+      }
+    },
     "Automatisch sichern": {
       "localizations": {
         "en": {
@@ -6155,11 +6267,22 @@
       }
     },
     "Automatische Sicherung": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Automatic backup"
+          }
+        }
+      }
+    },
+    "Automatische Sicherung aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic backup off"
           }
         }
       }
@@ -7022,6 +7145,16 @@
         }
       }
     },
+    "Chatverlauf mit dem Assistenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat history with the assistant"
+          }
+        }
+      }
+    },
     "Checkbox": {
       "localizations": {
         "en": {
@@ -7299,6 +7432,36 @@
         }
       }
     },
+    "Das Passwort der Sicherung: Tagwerk speichert nur den Schlüssel im Schlüsselbund dieses iPhones, nie das Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup password: Tagwerk only stores the key in the Keychain of this iPhone, never the password"
+          }
+        }
+      }
+    },
+    "Das Passwort ist zu kurz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is too short."
+          }
+        }
+      }
+    },
+    "Das Passwort stimmt nicht. Es wurde nichts geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is wrong. Nothing was changed."
+          }
+        }
+      }
+    },
     "Das Produkt kommt als eigener Eintrag in „Meine Lebensmittel“, mit Hinweis auf die Quelle. Erst dort wählst du eine Menge.": {
       "localizations": {
         "en": {
@@ -7485,6 +7648,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Files attached: %lld"
+          }
+        }
+      }
+    },
+    "Daten ersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace data"
           }
         }
       }
@@ -7817,6 +7990,16 @@
         }
       }
     },
+    "Der Chatverlauf wird nicht gesichert, der Zwischenspeicher lädt Tagwerk neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chat history is not backed up; Tagwerk reloads the cache."
+          }
+        }
+      }
+    },
     "Der Code ist abgelaufen. Bitte neu starten.": {
       "localizations": {
         "en": {
@@ -7915,6 +8098,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "The way home applies after the last event of the day and before breaks of more than three hours. It counts as busy time like the way there."
+          }
+        }
+      }
+    },
+    "Der Schlüssel fehlt auf diesem iPhone. Solange du das Passwort nicht erneut eingibst, sichert Tagwerk nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key is missing on this iPhone. Tagwerk does not back up anything until you enter the password again."
+          }
+        }
+      }
+    },
+    "Der Schlüssel ließ sich nicht aus dem Schlüsselbund entfernen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key could not be removed from the Keychain."
+          }
+        }
+      }
+    },
+    "Der Schlüssel ließ sich nicht im Schlüsselbund speichern. Die Verschlüsselung wurde nicht eingeschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key could not be saved in the Keychain. Encryption was not turned on."
+          }
+        }
+      }
+    },
+    "Der Sicherungsordner dieses iPhones": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup folder of this iPhone"
           }
         }
       }
@@ -8521,6 +8744,16 @@
         }
       }
     },
+    "Die Kopien liegen verborgen im Sicherungsordner, im Unterordner „.Sicherheitskopien“. Die Dateien-App zeigt ihn nicht an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The copies are hidden in the backup folder, in the subfolder “.Sicherheitskopien”. The Files app does not show it."
+          }
+        }
+      }
+    },
     "Die Liste ist leer. Füge unten Artikel hinzu.": {
       "localizations": {
         "en": {
@@ -8721,7 +8954,28 @@
         }
       }
     },
+    "Die Sicherheitskopie ließ sich nicht lesen. Der Sicherungsordner ist vielleicht nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The safety copy could not be read. The backup folder may not be reachable."
+          }
+        }
+      }
+    },
+    "Die Sicherung enthält dein Tagebuch unverschlüsselt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup contains your journal unencrypted."
+          }
+        }
+      }
+    },
     "Die Sicherung ist eine einzelne Datei mit allen eigenen Daten, auch den Bildern und Dateien in Notizen. Sie ist nicht verschlüsselt und liegt dort, wo du sie speicherst, zum Beispiel in iCloud Drive. Anmeldedaten für GitHub und ChatGPT sind nie darin.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8753,11 +9007,22 @@
       }
     },
     "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The backup could not be restored. The previous state was brought back; a copy is in the “Sicherungen” folder in Tagwerk's documents."
+          }
+        }
+      }
+    },
+    "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie steht unter „Sicherheitskopien“ in der Datensicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be restored. The previous state was brought back; a copy is under “Safety copies” in the data backup."
           }
         }
       }
@@ -9024,6 +9289,16 @@
         }
       }
     },
+    "Die beiden Eingaben stimmen nicht überein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The two entries do not match."
+          }
+        }
+      }
+    },
     "Die bisherige Liste gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -9154,6 +9429,26 @@
         }
       }
     },
+    "Diese Sicherung ist mit einem Passwort verschlüsselt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is encrypted with a password."
+          }
+        }
+      }
+    },
+    "Diese Sicherung ist verschlüsselt. Gib das Passwort ein, mit dem sie gesichert wurde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is encrypted. Enter the password it was backed up with."
+          }
+        }
+      }
+    },
     "Diese Sicherung stammt aus einer neueren Version von Tagwerk. Aktualisiere die App und versuche es noch einmal.": {
       "localizations": {
         "en": {
@@ -9250,6 +9545,16 @@
         }
       }
     },
+    "Diesen Stand zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore this state"
+          }
+        }
+      }
+    },
     "Diesen Termin gibt es nicht mehr.": {
       "localizations": {
         "en": {
@@ -9320,6 +9625,16 @@
         }
       }
     },
+    "Dieser Stand lässt sich danach nicht mehr zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This state can no longer be restored afterwards."
+          }
+        }
+      }
+    },
     "Dieser Termin lässt sich nicht ändern.": {
       "localizations": {
         "en": {
@@ -9376,6 +9691,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This repository is not in the list from list_github_targets."
+          }
+        }
+      }
+    },
+    "Dieses iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone"
           }
         }
       }
@@ -9651,6 +9976,16 @@
         }
       }
     },
+    "Ein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
     "Ein Artikel ließ sich nicht schreiben.": {
       "localizations": {
         "en": {
@@ -9687,6 +10022,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day turns the block into a move. It stays a suggestion until you accept it."
+          }
+        }
+      }
+    },
+    "Ein neues Passwort gilt nur für neue Sicherungen. Ältere Dateien behalten das Passwort, mit dem sie geschrieben wurden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new password only applies to new backups. Older files keep the password they were written with."
           }
         }
       }
@@ -10788,6 +11133,16 @@
         }
       }
     },
+    "Es wurde nichts ersetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was replaced."
+          }
+        }
+      }
+    },
     "Essen": {
       "localizations": {
         "en": {
@@ -11235,6 +11590,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Focus filter"
+          }
+        }
+      }
+    },
+    "Fokus-Sitzungen und Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus sessions and settings"
           }
         }
       }
@@ -12272,6 +12637,16 @@
         }
       }
     },
+    "Gesichert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed up"
+          }
+        }
+      }
+    },
     "Gesichert: %@": {
       "localizations": {
         "en": {
@@ -12561,6 +12936,16 @@
         }
       }
     },
+    "Gewohnheiten, Routinen und Reflexionen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits, routines and reflections"
+          }
+        }
+      }
+    },
     "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
       "localizations": {
         "en": {
@@ -12767,7 +13152,28 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applies to “Back up now” and the automatic backup. Without this content, existing entries in the journal and Bible Study are kept when restoring."
+            "value": "Applies to “Back up now” and the automatic backup. Without this content, a restore keeps the existing journal and Bible Study entries."
+          }
+        }
+      }
+    },
+    "Gilt für „Jetzt sichern“ und die automatische Sicherung. Ohne diese Inhalte bleiben beim Wiederherstellen vorhandene Einträge in Tagebuch und Bible Study erhalten. Die Sicherung ist nicht verschlüsselt und liegt dort, wo du sie speicherst.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to “Back up now” and the automatic backup. Without this content, a restore keeps the existing journal and Bible Study entries. The backup is not encrypted and sits where you save it."
+          }
+        }
+      }
+    },
+    "Gilt für „Jetzt sichern“, die automatische Sicherung und Sicherheitskopien. Der Schlüssel liegt im Schlüsselbund dieses iPhones, damit automatisch gesichert werden kann. Auf einem neuen iPhone wirst du beim Wiederherstellen nach dem Passwort gefragt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to “Back up now”, the automatic backup and safety copies. The key is in the Keychain of this iPhone so that backups can run automatically. On a new iPhone you are asked for the password when you restore."
           }
         }
       }
@@ -13159,6 +13565,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write today"
+          }
+        }
+      }
+    },
+    "Heute, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, %@"
           }
         }
       }
@@ -14002,6 +14418,16 @@
         }
       }
     },
+    "Inhalt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content"
+          }
+        }
+      }
+    },
     "Inhalte": {
       "localizations": {
         "en": {
@@ -14413,6 +14839,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "No project"
+          }
+        }
+      }
+    },
+    "Kein Sicherungsordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup folder"
+          }
+        }
+      }
+    },
+    "Kein Sicherungsordner gewählt. Die Kopien liegen nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup folder chosen. The copies are only on this iPhone."
           }
         }
       }
@@ -15407,6 +15853,7 @@
       }
     },
     "Letzte Sicherung": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -15816,6 +16263,16 @@
         }
       }
     },
+    "Mahlzeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals"
+          }
+        }
+      }
+    },
     "Mahlzeiten von ChatGPT schätzen": {
       "localizations": {
         "en": {
@@ -15832,6 +16289,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Have ChatGPT estimate meals"
+          }
+        }
+      }
+    },
+    "Mahlzeiten, Rezepte und Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals, recipes and shopping list"
           }
         }
       }
@@ -16260,6 +16727,16 @@
         }
       }
     },
+    "Mindestens %lld Zeichen. Notiere das Passwort an einem sicheren Ort: Tagwerk kennt es nicht und kann es nicht zurücksetzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least %lld characters. Write the password down in a safe place: Tagwerk does not know it and cannot reset it."
+          }
+        }
+      }
+    },
     "Minimal": {
       "localizations": {
         "en": {
@@ -16510,6 +16987,16 @@
         }
       }
     },
+    "Mit Passwort verschlüsseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypt with a password"
+          }
+        }
+      }
+    },
     "Mit Pomodoro wechseln sich Fokus und Pause ab, nach der letzten Runde folgt die lange Pause. Ohne Pomodoro läuft eine einzelne Fokuszeit. Ein Zeitblock ohne Pomodoro setzt die Fokuszeit auf seine Restlänge.": {
       "localizations": {
         "en": {
@@ -16521,6 +17008,7 @@
       }
     },
     "Mit Tagebuch und Bible Study.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16586,6 +17074,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "With your ChatGPT account, Tagwerk can plan your day, week and month, and the assistant can change tasks for you."
+          }
+        }
+      }
+    },
+    "Mit „Jetzt sichern“ legst du eine Datei an, wo du willst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Back up now” saves a file wherever you like."
           }
         }
       }
@@ -17126,6 +17624,16 @@
         }
       }
     },
+    "Neue Sicherungen sind danach unverschlüsselt. Vorhandene verschlüsselte Dateien bleiben, wie sie sind, und brauchen weiter ihr Passwort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New backups will be unencrypted afterwards. Existing encrypted files stay as they are and still need their password."
+          }
+        }
+      }
+    },
     "Neue Vorgabe": {
       "localizations": {
         "en": {
@@ -17236,6 +17744,16 @@
         }
       }
     },
+    "Neues Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password"
+          }
+        }
+      }
+    },
     "Neues Rezept": {
       "localizations": {
         "en": {
@@ -17296,6 +17814,16 @@
         }
       }
     },
+    "Nicht betroffen: Chatverlauf, Anmeldung bei ChatGPT und GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not affected: chat history, sign-in to ChatGPT and GitHub."
+          }
+        }
+      }
+    },
     "Nicht eingeplant": {
       "localizations": {
         "en": {
@@ -17306,7 +17834,18 @@
         }
       }
     },
+    "Nicht gesichert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not backed up"
+          }
+        }
+      }
+    },
     "Nicht gesichert: der Chatverlauf mit dem Assistenten und Zwischenspeicher, die Tagwerk neu lädt. Beim Wiederherstellen werden alle gesicherten Daten ersetzt. Angaben, die an dieses Gerät gebunden sind (Kalender, Erinnerungslisten, Einkaufsliste), werden übernommen; fehlen sie auf dem Gerät, verhält sich Tagwerk wie bei einer fehlenden Liste.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -17550,12 +18089,42 @@
     "Noch keine Planung protokolliert.": {
       "shouldTranslate": false
     },
+    "Noch keine Sicherheitskopien.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No safety copies yet."
+          }
+        }
+      }
+    },
+    "Noch keine automatische Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No automatic backup yet"
+          }
+        }
+      }
+    },
     "Noch leer": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Empty so far"
+          }
+        }
+      }
+    },
+    "Noch nicht gesichert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not backed up yet"
           }
         }
       }
@@ -17819,6 +18388,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes with ChatGPT"
+          }
+        }
+      }
+    },
+    "Notizen mit ihren Bildern und Dateien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes with their images and files"
           }
         }
       }
@@ -18293,6 +18872,46 @@
         }
       }
     },
+    "Ohne Ordner kann Tagwerk nicht automatisch sichern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a folder, Tagwerk cannot back up automatically."
+          }
+        }
+      }
+    },
+    "Ohne Passwort ist die Sicherung unbrauchbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without the password the backup is useless"
+          }
+        }
+      }
+    },
+    "Ohne Passwort lässt sich eine verschlüsselte Sicherung nicht öffnen. Tagwerk kann es nicht zurücksetzen. Vergisst du es, ist die Sicherung unbrauchbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An encrypted backup cannot be opened without the password. Tagwerk cannot reset it. If you forget it, the backup is useless."
+          }
+        }
+      }
+    },
+    "Ohne Passwort sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up without a password"
+          }
+        }
+      }
+    },
     "Ohne Project erscheint das Issue nicht in deinen Aufgaben.": {
       "extractionState": "stale",
       "localizations": {
@@ -18345,6 +18964,7 @@
       }
     },
     "Ohne Tagebuch und Bible Study.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18612,6 +19232,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "No longer fits: pause or delete a habit."
+          }
+        }
+      }
+    },
+    "Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Passwort der Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup password"
+          }
+        }
+      }
+    },
+    "Passwort erneut eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the password again"
+          }
+        }
+      }
+    },
+    "Passwort erneut eingeben: Der Schlüssel fehlt auf diesem iPhone. Öffne „Mit Passwort verschlüsseln“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the password again: the key is missing on this iPhone. Open “Encrypt with a password”."
+          }
+        }
+      }
+    },
+    "Passwort festlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set password"
+          }
+        }
+      }
+    },
+    "Passwort festlegen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a password?"
+          }
+        }
+      }
+    },
+    "Passwort wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat password"
+          }
+        }
+      }
+    },
+    "Passwort ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change password"
           }
         }
       }
@@ -19971,6 +20671,16 @@
         }
       }
     },
+    "Seit %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For %lld days"
+          }
+        }
+      }
+    },
     "Seit dem Öffnen wurde die Aufgabe geändert.": {
       "localizations": {
         "en": {
@@ -20284,6 +20994,26 @@
         }
       }
     },
+    "Sicherheitskopie löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete safety copy?"
+          }
+        }
+      }
+    },
+    "Sicherheitskopien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety copies"
+          }
+        }
+      }
+    },
     "Sichern": {
       "localizations": {
         "en": {
@@ -20314,7 +21044,38 @@
         }
       }
     },
+    "Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup"
+          }
+        }
+      }
+    },
+    "Sicherung fehlgeschlagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup failed"
+          }
+        }
+      }
+    },
+    "Sicherung vom %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup from %@"
+          }
+        }
+      }
+    },
     "Sicherung vom %@: %@. %@ Das ersetzt die gesicherten Daten auf diesem iPhone.": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -20326,6 +21087,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Backup from %@: %@. %@ This replaces the backed-up data on this iPhone."
+          }
+        }
+      }
+    },
+    "Sicherungen: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backups: %lld"
           }
         }
       }
@@ -20778,6 +21549,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Loaded as of %@"
+          }
+        }
+      }
+    },
+    "Stand vor dem Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State before the restore"
           }
         }
       }
@@ -21274,6 +22055,16 @@
         }
       }
     },
+    "Tagebuch und Bible Study (wenn der Schalter an ist)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal and Bible Study (if the switch is on)"
+          }
+        }
+      }
+    },
     "Tagebuch und Bible Study einschließen": {
       "localizations": {
         "en": {
@@ -21290,6 +22081,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open journal"
+          }
+        }
+      }
+    },
+    "Tagebuch, Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal, Bible Study"
           }
         }
       }
@@ -22225,6 +23026,16 @@
         }
       }
     },
+    "Täglich beim Verlassen der App, die letzten %lld bleiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily when you leave the app, the last %lld are kept"
+          }
+        }
+      }
+    },
     "Uhrzeit": {
       "localizations": {
         "en": {
@@ -22397,6 +23208,16 @@
         }
       }
     },
+    "Verbleibende Tage: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days left: %lld"
+          }
+        }
+      }
+    },
     "Vergangen": {
       "localizations": {
         "en": {
@@ -22553,6 +23374,36 @@
         }
       }
     },
+    "Verschlüsselung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption"
+          }
+        }
+      }
+    },
+    "Verschlüsselung ausschalten?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off encryption?"
+          }
+        }
+      }
+    },
+    "Verschlüsselung einschalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on encryption"
+          }
+        }
+      }
+    },
     "Verschoben": {
       "localizations": {
         "en": {
@@ -22599,6 +23450,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Verstanden, verschlüsseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Understood, encrypt"
           }
         }
       }
@@ -22769,6 +23630,63 @@
           "stringUnit": {
             "state": "translated",
             "value": "A sheet appears before the start where you choose the duration. Siri, Control Center and shortcuts always start without it, using the values above."
+          }
+        }
+      }
+    },
+    "Vor dem Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before a restore"
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Die letzten %lld bleiben, höchstens %lld Tage. Sie enthalten immer auch Tagebuch und Bible Study.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Die letzten %1$lld bleiben, höchstens %2$lld Tage. Sie enthalten immer auch Tagebuch und Bible Study."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. The last %lld are kept, for %lld days at most. They always include the journal and Bible Study."
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie bleiben, bis du sie löschst, und enthalten immer auch Tagebuch und Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. They stay until you delete them and always include the journal and Bible Study."
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie liegt verborgen im Sicherungsordner, sonst nur auf diesem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state. It is hidden in the backup folder, otherwise only on this iPhone."
+          }
+        }
+      }
+    },
+    "Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands im Ordner „Sicherungen“ in den Dokumenten von Tagwerk an (Dateien-App › Auf meinem iPhone › Tagwerk).": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before every restore, Tagwerk saves a copy of the current state in the “Sicherungen” folder in the Tagwerk documents (Files app › On My iPhone › Tagwerk)."
           }
         }
       }
@@ -23260,6 +24178,16 @@
         }
       }
     },
+    "Was seit dem %@ dazugekommen ist, steht danach nur noch in der Sicherheitskopie, die Tagwerk jetzt anlegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whatever was added since %@ will afterwards only be in the safety copy that Tagwerk creates now."
+          }
+        }
+      }
+    },
     "Was soll auf die Liste?": {
       "localizations": {
         "en": {
@@ -23297,6 +24225,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "What’s on today in Tagwerk?"
+          }
+        }
+      }
+    },
+    "Was wird gesichert?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is backed up?"
           }
         }
       }
@@ -23716,11 +24654,22 @@
       }
     },
     "Wiederhergestellt. Eine Kopie des vorherigen Stands liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Restored. A copy of the previous state is in the “Sicherungen” folder in the Tagwerk documents."
+          }
+        }
+      }
+    },
+    "Wiederhergestellt. Eine Kopie des vorherigen Stands steht unter „Sicherheitskopien“ in der Datensicherung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored. A copy of the previous state is under “Safety copies” in the data backup."
           }
         }
       }
@@ -24083,7 +25032,18 @@
         }
       }
     },
+    "Wähle einen Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder"
+          }
+        }
+      }
+    },
     "Wähle einen Ordner, zum Beispiel in iCloud Drive. Beim Wechsel in den Hintergrund sichert Tagwerk, wenn die letzte Sicherung älter als 24 Stunden ist. Die letzten %lld Dateien bleiben, ältere mit dem Namen „Tagwerk-Sicherung-…“ werden gelöscht. Andere Dateien im Ordner rührt Tagwerk nicht an.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -24713,6 +25673,16 @@
         }
       }
     },
+    "Zugriff auf Kalender, Erinnerungen und Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access to calendars, reminders and Health"
+          }
+        }
+      }
+    },
     "Zugriff erlauben": {
       "localizations": {
         "en": {
@@ -25200,6 +26170,16 @@
         }
       }
     },
+    "Zwischenspeicher (GitHub, Vorschläge der Planung)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache (GitHub, planning suggestions)"
+          }
+        }
+      }
+    },
     "Zählt ab": {
       "localizations": {
         "en": {
@@ -25464,6 +26444,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "so far"
+          }
+        }
+      }
+    },
+    "bleibt erhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stays as it is"
           }
         }
       }
@@ -26212,6 +27202,16 @@
         }
       }
     },
+    "mit Tagebuch und Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with journal and Bible Study"
+          }
+        }
+      }
+    },
     "mit dem Auto": {
       "localizations": {
         "en": {
@@ -26467,6 +27467,16 @@
         }
       }
     },
+    "ohne Tagebuch und Bible Study": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "without journal and Bible Study"
+          }
+        }
+      }
+    },
     "ohne Ziel": {
       "localizations": {
         "en": {
@@ -26673,6 +27683,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "linked"
+          }
+        }
+      }
+    },
+    "verschlüsselt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "encrypted"
           }
         }
       }
