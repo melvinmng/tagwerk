@@ -193,4 +193,15 @@ struct GoalChatToolsTests: GoalChatSuite {
         #expect(fullLine.contains("28"))
         #expect(AssistantModel.goalActivityText(#"{"error":"x"}"#) == nil)
     }
+
+    @Test func adopting_tellsTheScreensToReload() async {
+        let tools = makeTools()
+        tools.begin(session)
+        var adopted = 0
+        tools.onAdopted = { adopted += 1 }
+        _ = await tools.run(call(Self.nutritionCall()))
+        #expect(adopted == 1)
+        _ = await tools.run(call(Self.nutritionCall(kcal: "900")))
+        #expect(adopted == 1, "a refused proposal changes nothing and tells nobody")
+    }
 }

@@ -15,6 +15,9 @@ final class GoalChatTools: ToolHandler {
     nonisolated static let readTools: Set<String> = ["get_goal_data"]
     nonisolated static let proposalTools: Set<String> = ["propose_nutrition_goals", "propose_activity_goals"]
 
+    /// Called after a plan was adopted, so the screens that show the goals (the head of "Erfassen", the widget) read the new plan.
+    var onAdopted: () -> Void = {}
+
     /// The session of the running conversation; `nil` before the user chose the data and after the conversation ended.
     private(set) var session: GoalPlanningSession?
     private let hasConsent: () -> Bool
@@ -138,6 +141,7 @@ final class GoalChatTools: ToolHandler {
         adopted.origin = .assistant
         if !reason.isEmpty { adopted.note = reason }
         adopt(adopted)
+        onAdopted()
     }
 
     static var hardLimitMessage: String {
