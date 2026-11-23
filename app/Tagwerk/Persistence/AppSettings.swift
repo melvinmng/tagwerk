@@ -154,6 +154,10 @@ final class AppSettings {
     /// The explanation before the first lock was shown (`NoteLockIntroSheet`).
     var noteLockExplained: Bool = false
 
+    /// The habit "Bewegung" was switched once from "Training erfasst" to the combined source (GW1c). Device state, not part of a
+    /// backup: it only keeps a habit that the user changed afterwards from being switched again.
+    var movementSourceMigrated: Bool = false
+
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
     var autoBackupEnabled: Bool = false

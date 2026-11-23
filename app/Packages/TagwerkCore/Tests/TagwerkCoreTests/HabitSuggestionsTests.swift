@@ -16,7 +16,7 @@ struct HabitSuggestionsTests {
         #expect(all.map(\.name) == ["Tag reflektieren", "Bett machen", "Bewegung", "Journal schreiben", "Duschen", "Sonnenlicht",
                                     "Wasser trinken", "Lernen", "Lesen", "Bible Study"])
         #expect(all.count == HabitRules.maximumActive)
-        #expect(all.map(\.source) == [.eveningClosed, .manual, .workout, .journal, .manual, .manual, .water, .manual, .manual, .bibleStudy])
+        #expect(all.map(\.source) == [.eveningClosed, .manual, .movement, .journal, .manual, .manual, .water, .manual, .manual, .bibleStudy])
         #expect(all.first { $0.key == "sunlight" }?.source == .manual)
         #expect(Set(all.map(\.key)).count == 10 && all.allSatisfy { !$0.symbol.isEmpty })
         // Each automatic source is wanted by one suggestion only.
@@ -51,10 +51,26 @@ struct HabitSuggestionsTests {
     }
 
     @Test func plan_aTakenAutomaticSourceBecomesManual() {
-        let existing = [habit("Mein Wasser", source: .water), habit("Pausiertes Training", source: .workout, order: 1, paused: true)]
+        let existing = [habit("Mein Wasser", source: .water), habit("Pausierte Bewegung", source: .movement, order: 1, paused: true)]
         let plan = HabitSuggestions.plan(selected: [suggestion("water"), suggestion("movement"), suggestion("journal")], existing: existing)
         #expect(plan.adoptions.map(\.source) == [.manual, .manual, .journal])
         #expect(plan.adoptions.map(\.fellBackToManual) == [true, true, false])
+    }
+
+    @Test func suggestion_movementUsesCombinedSource() {
+        #expect(HabitSuggestions.all.first { $0.key == "movement" }?.source == .movement)
+    }
+
+    @Test func plan_movementDoesNotClashWithWorkoutOrSteps() {
+        let existing = [habit("Training", source: .workout), habit("Schritte", source: .steps, order: 1)]
+        let plan = HabitSuggestions.plan(selected: [suggestion("movement")], existing: existing)
+        #expect(plan.adoptions.map(\.source) == [.movement] && plan.adoptions.map(\.fellBackToManual) == [false])
+    }
+
+    @Test func formerMovementName_isGermanOrEnglishWithoutCaseAndSpace() {
+        #expect(HabitSuggestions.isFormerMovementName("Bewegung") && HabitSuggestions.isFormerMovementName("  bewegung "))
+        #expect(HabitSuggestions.isFormerMovementName("Exercise"))
+        #expect(!HabitSuggestions.isFormerMovementName("Bewegung 30 min") && !HabitSuggestions.isFormerMovementName("Training"))
     }
 
     @Test func plan_theSameSourceTwiceInOneSelectionOnlyServesTheFirst() {
