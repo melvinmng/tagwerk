@@ -9,6 +9,8 @@ enum CapturePrefill: Equatable {
     case meal(text: String?)
     case workout(activity: WorkoutActivity?, minutes: Int?)
     case review
+    /// The trends page "Verlauf und Ziele" (entry of the weekly review and, later, of the goal planning).
+    case trends
 }
 
 /// Buffers a navigation request from a `tagwerk://` link or an App Intent until the app can show it

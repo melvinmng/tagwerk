@@ -44,6 +44,15 @@ final class IntakeStore {
         return ((try? context.fetch(descriptor)) ?? []).map(\.value)
     }
 
+    /// Meals that start in `interval` (end exclusive), oldest first; one query for a whole period.
+    func meals(in interval: DateInterval) -> [MealValue] {
+        let start = interval.start
+        let end = interval.end
+        let descriptor = FetchDescriptor<MealRecord>(predicate: #Predicate { $0.date >= start && $0.date < end },
+                                                     sortBy: [SortDescriptor(\.date)])
+        return ((try? context.fetch(descriptor)) ?? []).map(\.value)
+    }
+
     func drinks(on day: PlanDay, calendar: Calendar) -> [DrinkValue] {
         let (start, end) = bounds(day, calendar)
         let descriptor = FetchDescriptor<DrinkRecord>(predicate: #Predicate { $0.date >= start && $0.date < end },

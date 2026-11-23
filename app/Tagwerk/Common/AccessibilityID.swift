@@ -56,6 +56,13 @@ enum AccessibilityID {
         static let morningWeight = "capture.morningWeight"
     }
 
+    enum Trend {
+        /// The row "Verlauf und Ziele" in the capture tab, the period picker and the weight row of the trends page.
+        static let entry = "trend.entry"
+        static let period = "trend.period"
+        static let weightRow = "trend.weightRow"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

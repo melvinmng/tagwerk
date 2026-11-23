@@ -93,6 +93,8 @@ final class CaptureModel {
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
     private var todayStepsValue: DaySteps?
     private(set) var undo: UndoNotice?
+    /// Weight of today, yesterday and the 7-day mean for the row "Verlauf und Ziele"; read with every reload.
+    private(set) var weightOverview = WeightOverview()
     @ObservationIgnored private var weekForeign: [WorkoutValue] = []
     /// Health workouts and steps of the weeks around the shown day, read after each reload. A day change inside this
     /// window shows them at once, so the neighbour page and the page after it carry the same numbers.
@@ -243,7 +245,16 @@ final class CaptureModel {
         await budgets.refreshHealth(in: week)
         guard day == requestedDay else { return }
         refreshLocal(week: week)
+        await refreshWeightOverview()
         await prefetchNeighbourHealth()
+    }
+
+    /// The weight figures from own entries and, once the group "body" was asked, the measurements of other apps.
+    func refreshWeightOverview() async {
+        let today = self.today
+        let end = today.adding(days: 1, calendar: calendar).startDate(in: calendar)
+        let days = await weights.dayValues(in: DateInterval(start: end.addingTimeInterval(-45 * 86_400), end: end))
+        weightOverview = WeightOverview.make(days, today: today, calendar: calendar)
     }
 
     private static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
@@ -514,6 +525,7 @@ final class CaptureModel {
     /// Shows the change at once; the Health mirror runs afterwards and never holds up a sheet.
     private func changed() async {
         refreshLocal()
+        await refreshWeightOverview()
         let mirror = self.mirror
         let run = Task { await mirror.sync() }
         pendingSync = run

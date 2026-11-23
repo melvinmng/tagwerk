@@ -71,6 +71,12 @@ final class DayBudgets {
         return DayFigures(day: day, plan: plan, health: stored, active: active, totals: totals, budget: budget)
     }
 
+    /// The days of `span` for which Health values are stored (active energy or other apps' nutrition); the trends page computes only
+    /// days that hold something.
+    func storedDays(in span: ClosedRange<PlanDay>) -> [PlanDay] {
+        (dayHealth?.values(from: span.lowerBound, to: span.upperBound) ?? []).map(\.day)
+    }
+
     /// The figures of `day` from the entries in the store.
     func figures(on day: PlanDay) -> DayFigures {
         figures(on: day, own: IntakeRules.dayIntake(meals: intake.meals(on: day, calendar: calendar),

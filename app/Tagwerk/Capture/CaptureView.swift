@@ -8,6 +8,7 @@ struct CaptureView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
     @State private var showsReview = false
+    @State private var showsTrends = false
     @State private var showsHabitList = false
     @State private var limitBumps = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -60,6 +61,9 @@ struct CaptureView: View {
             .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.7), trigger: limitBumps)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
+            }
+            .navigationDestination(isPresented: $showsTrends) {
+                TrendView(model: environment.makeTrendModel())
             }
             .navigationDestination(isPresented: $showsHabitList) {
                 HabitListView(model: environment.habits)
@@ -131,7 +135,19 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    
+                    // The trends of the intake and the weight; the value is the weight of the latest 7 days, when there is one.
+                    Button { showsTrends = true } label: {
+                        HStack {
+                            Label("Verlauf und Ziele", systemImage: "chart.line.uptrend.xyaxis")
+                            Spacer()
+                            if let kilograms = model.weightOverview.mean ?? model.weightOverview.latest {
+                                Text(WeightFormat.kilograms(kilograms)).monospacedDigit().foregroundStyle(.secondaryText)
+                            }
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityIdentifier(AccessibilityID.Trend.entry)
                 }
                 Section {
                     quickEntry
@@ -160,7 +176,7 @@ struct CaptureView: View {
     /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
     private func applyPrefill() {
         guard let prefill = environment.router.takeCapturePrefill() else { return }
-        if prefill != .review, !model.isToday {
+        if prefill != .review, prefill != .trends, !model.isToday {
             // The day switches at once; the sheet does not wait for the Health query of the reload.
             model.day = model.today
             Task { await model.reload() }
@@ -170,6 +186,7 @@ struct CaptureView: View {
         case .meal(let text): sheet = .newMeal(text: text)
         case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
         case .review: showsReview = true
+        case .trends: showsTrends = true
         }
     }
 

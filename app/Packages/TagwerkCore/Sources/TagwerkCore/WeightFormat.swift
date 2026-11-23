@@ -56,6 +56,15 @@ public enum WeightFormat {
         }
     }
 
+    /// The hint next to a trend above the limit of the app. The numbers come from `GoalGuardConstants`; the text calls the limit a rule
+    /// of the app, not a guideline.
+    public static func paceHint(trend: Double, limit: Double, locale: Locale = .current) -> String {
+        let share = number(GoalGuardConstants.maxWeeklyChangeShare * 100, fractionDigits: 0, locale: locale)
+        let kilograms = number(GoalGuardConstants.maxWeeklyChangeKilograms, locale: locale)
+        let current = number(abs(trend), fractionDigits: 1, locale: locale)
+        return String(localized: "Dein Trend liegt bei \(current) kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von \(share) % des Körpergewichts und \(kilograms) kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt.", bundle: .module)
+    }
+
     /// The caption under the weight row of the morning start: "Gestern 82,3 kg · 7-Tage-Mittel 82,1 kg"; `nil` without either.
     public static func morningCaption(yesterday: Double?, mean: Double?, locale: Locale = .current) -> String? {
         var parts: [String] = []

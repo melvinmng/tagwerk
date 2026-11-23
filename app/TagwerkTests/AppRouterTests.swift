@@ -13,6 +13,14 @@ struct AppRouterTests {
         #expect(router.takeRequest(setupCompleted: true) == nil)
     }
 
+    @Test func router_trendsPrefill_opensTheCaptureTabOnce() {
+        let router = AppRouter()
+        router.open(.capture, prefill: .trends)
+        #expect(router.takeRequest(setupCompleted: true)?.route == .capture)
+        #expect(router.takeCapturePrefill() == .trends)
+        #expect(router.takeCapturePrefill() == nil)
+    }
+
     @Test func router_mealPrefill_consumedOnce() {
         let router = AppRouter()
         router.open(.captureMeal, prefill: .meal(text: "Zwei Brötchen"))

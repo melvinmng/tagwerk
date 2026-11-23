@@ -3703,6 +3703,16 @@
         }
       }
     },
+    "3 Monate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 months"
+          }
+        }
+      }
+    },
     "3 · Ergebnis": {
       "localizations": {
         "en": {
@@ -3755,6 +3765,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "7 means daily. Rate: fulfilled days ÷ target days, at most 100 %. Streak with fewer than 7: consecutive weeks that reached the goal."
+          }
+        }
+      }
+    },
+    "7-Tage-Mittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean"
+          }
+        }
+      }
+    },
+    "7-Tage-Mittel · heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean · today"
           }
         }
       }
@@ -6719,6 +6749,26 @@
         }
       }
     },
+    "Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget"
+          }
+        }
+      }
+    },
+    "Budget des Tages": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget of the day"
+          }
+        }
+      }
+    },
     "Bus und Bahn": {
       "localizations": {
         "en": {
@@ -7171,6 +7221,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The goal of each day is its base goal plus the credited activity; the marks show it per day."
+          }
+        }
+      }
+    },
+    "Das Zielgewicht erscheint als gestrichelte Linie im Gewichtsverlauf, bei „Verlauf und Ziele“. Es ändert dein Tagesbudget nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The target weight appears as a dashed line in the weight chart under “Trends and goals”. It does not change your daily budget."
           }
         }
       }
@@ -9457,6 +9517,16 @@
         }
       }
     },
+    "Eine gerade Fortschreibung des Trends, keine Vorhersage. Der tatsächliche Verlauf flacht meist ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A straight-line extension of the trend, not a forecast. The actual course usually flattens out."
+          }
+        }
+      }
+    },
     "Eine Änderung gilt ab heute. Frühere Tage, auch im Wochenrückblick, rechnen mit dem Stand, der damals galt.": {
       "localizations": {
         "en": {
@@ -11502,6 +11572,16 @@
         }
       }
     },
+    "Für ein 7-Tage-Mittel fehlen Messungen: es braucht mindestens drei in sieben Tagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are not enough measurements for a 7-day mean: it needs at least three within seven days."
+          }
+        }
+      }
+    },
     "Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.": {
       "extractionState": "stale",
       "localizations": {
@@ -12117,6 +12197,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ask for weight"
+          }
+        }
+      }
+    },
+    "Gewicht aus Health lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read weight from Health"
+          }
+        }
+      }
+    },
+    "Gewicht erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record weight"
           }
         }
       }
@@ -14173,6 +14273,16 @@
         }
       }
     },
+    "Keine Einträge in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries in this period."
+          }
+        }
+      }
+    },
     "Keine Fahrzeit für diesen Termin": {
       "localizations": {
         "en": {
@@ -14199,6 +14309,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No meals logged"
+          }
+        }
+      }
+    },
+    "Keine Messungen in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No measurements in this period."
           }
         }
       }
@@ -14520,6 +14640,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "None"
+          }
+        }
+      }
+    },
+    "Kennzahlen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Figures"
           }
         }
       }
@@ -15028,6 +15158,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading aloud · Stop"
+          }
+        }
+      }
+    },
+    "Linie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line"
           }
         }
       }
@@ -15756,6 +15896,26 @@
         }
       }
     },
+    "Messungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measurements"
+          }
+        }
+      }
+    },
+    "Messungen anderer Apps änderst oder löschst du in der App, die sie geschrieben hat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You change or delete measurements of other apps in the app that wrote them."
+          }
+        }
+      }
+    },
     "Messungen in dieser Woche": {
       "localizations": {
         "en": {
@@ -16278,6 +16438,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Medium"
+          }
+        }
+      }
+    },
+    "Mittel über die Tage mit Einträgen. Tage ohne Einträge sind Lücken, nicht null. Das Budget ist das Tagesbudget des jeweiligen Tages.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mean over the days with entries. Days without entries are gaps, not zero. The budget is the daily budget of each day."
           }
         }
       }
@@ -17059,6 +17229,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "None yet"
+          }
+        }
+      }
+    },
+    "Noch keine Messung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No measurement yet."
           }
         }
       }
@@ -18593,6 +18773,16 @@
         }
       }
     },
+    "Punkte sind einzelne Messungen, die Linie ist der Mittelwert der letzten sieben Tage, gestrichelt das Zielgewicht. Das Gewicht schwankt von Tag zu Tag stärker, als es sich durch Fett verändert; der Mittelwert zeigt den Verlauf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dots are single measurements, the line is the mean of the last seven days, dashed is the target weight. Body weight fluctuates from day to day more than it changes through fat; the mean shows the course."
+          }
+        }
+      }
+    },
     "Quelle": {
       "localizations": {
         "en": {
@@ -19423,6 +19613,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Very high"
+          }
+        }
+      }
+    },
+    "Seit Start": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since start"
           }
         }
       }
@@ -20750,12 +20950,32 @@
         }
       }
     },
+    "Tagesmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean"
+          }
+        }
+      }
+    },
     "Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Daily mean over the days on which the value is known. Meals without a value are missing from the sum, so the mean tends to be too low."
+          }
+        }
+      }
+    },
+    "Tagesmittel · Budget %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean · budget %@"
           }
         }
       }
@@ -20869,6 +21089,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For this, Tagwerk reads nutrition entries from Health that do not come from Tagwerk. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no entries of other apps. You can check it in Health › Sharing › Apps › Tagwerk. A dash means that no value is known."
+          }
+        }
+      }
+    },
+    "Tagwerk liest dann Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk then reads measurements of other apps, for example a scale. iOS does not tell Tagwerk whether you allowed reading; without permission it looks as if there were no foreign measurements."
           }
         }
       }
@@ -21581,6 +21811,16 @@
         }
       }
     },
+    "Trend · 4 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend · 4 weeks"
+          }
+        }
+      }
+    },
     "Trinken": {
       "localizations": {
         "en": {
@@ -21783,6 +22023,16 @@
         }
       }
     },
+    "Unter dem Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Below the target"
+          }
+        }
+      }
+    },
     "Unterbrechen": {
       "localizations": {
         "en": {
@@ -21943,6 +22193,16 @@
         }
       }
     },
+    "Verlauf und Ziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trends and goals"
+          }
+        }
+      }
+    },
     "Verschieben": {
       "localizations": {
         "en": {
@@ -22065,6 +22325,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maybe the brain dump gave you some clarity."
+          }
+        }
+      }
+    },
+    "Von": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
           }
         }
       }
@@ -23919,6 +24189,16 @@
         }
       }
     },
+    "Zielgewicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target weight"
+          }
+        }
+      }
+    },
     "Zielschlafzeit": {
       "localizations": {
         "en": {
@@ -25071,6 +25351,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "all day"
+          }
+        }
+      }
+    },
+    "gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eaten"
           }
         }
       }
@@ -26649,6 +26939,16 @@
         }
       }
     },
+    "Über dem Ziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Above the target"
+          }
+        }
+      }
+    },
     "Über diese Aufgabe sprechen": {
       "localizations": {
         "en": {
@@ -26811,6 +27111,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "opens Tagwerk"
+          }
+        }
+      }
+    },
+    "über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "over budget"
           }
         }
       }
@@ -27116,6 +27426,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“Add recipe” sends the recipe text or the photos and the names of your categories when you tap; “Create recipe with ChatGPT” sends only the recipe text or the photos. For a link, only the text read from the page leaves, not the address. Tagwerk reads a recipe note with ingredients and instructions on the iPhone. “Translate …” in a recipe note sends the text of that note when you tap, without attachments. If you turn this off, Tagwerk asks again for the next recipe."
+          }
+        }
+      }
+    },
+    "„Seit Start“ vergleicht das heutige Mittel mit dem ersten Mittel, das es gibt. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Since start” compares today's mean with the first mean there is. Tagwerk gives no medical advice."
           }
         }
       }

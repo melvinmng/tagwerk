@@ -1008,6 +1008,11 @@ final class AppEnvironment {
         }
     }
 
+    /// The trends page "Verlauf und Ziele" (intake charts and weight).
+    func makeTrendModel() -> TrendModel {
+        TrendModel(store: intake, capture: capture, goals: goals)
+    }
+
     /// The weekly review (phase 4); completed reminders only from the selected lists and with full access.
     func makeWeekReviewModel() -> WeekReviewModel {
         let reminderStore = self.reminderStore

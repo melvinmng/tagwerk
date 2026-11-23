@@ -31,6 +31,13 @@ struct WeightFormatTests {
         #expect(text(27) == "Bei diesem Tempo etwa Ende Februar 2027.")
     }
 
+    @Test func paceHint_takesItsNumbersFromTheConstants() {
+        let text = WeightFormat.paceHint(trend: -1.04, limit: 0.8, locale: de)
+        #expect(text.contains("1,0 kg Abnahme pro Woche"))
+        #expect(text.contains("1 % des Körpergewichts") && text.contains("1,0 kg pro Woche"))
+        #expect(text.contains("keine Leitlinie"))
+    }
+
     @Test func morningCaption_listsWhatIsKnown() {
         #expect(WeightFormat.morningCaption(yesterday: 82.3, mean: 82.1, locale: de) == "Gestern 82,3 kg · 7-Tage-Mittel 82,1 kg")
         #expect(WeightFormat.morningCaption(yesterday: nil, mean: 82.1, locale: de) == "7-Tage-Mittel 82,1 kg")
