@@ -3205,6 +3205,16 @@
         }
       }
     },
+    "**Gesendet werden** nur die Angaben, die du vor jedem Gespräch auswählst: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Durchschnittswerte enthalten auch Einträge anderer Apps aus Health, wenn du sie mitzählen lässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent** is only what you select before each conversation: height, age, sex, weight, averages of the last weeks and your current goals. Averages also include entries of other apps from Health if you let them count."
+          }
+        }
+      }
+    },
     "**Gesendet wird** der Betreff, der Name des Absenders und der Text der Mail, höchstens 12 000 Zeichen.": {
       "localizations": {
         "en": {
@@ -3318,6 +3328,16 @@
         }
       }
     },
+    "**Keine medizinische Beratung:** Vorschläge sind Schätzungen. Bei Erkrankungen, Schwangerschaft oder Essstörungen sprich mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**No medical advice:** Proposals are estimates. In case of illness, pregnancy or eating disorders, talk to a doctor."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.": {
       "localizations": {
         "en": {
@@ -3355,6 +3375,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Not sent:** data from Health, your goals and earlier entries."
+          }
+        }
+      }
+    },
+    "**Nicht gesendet werden** einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent** are single meals, photos, notes, tasks and events."
           }
         }
       }
@@ -3456,6 +3486,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get suggestions”, no note leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Ziele planen“ verlässt nichts davon das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Without “Plan goals”, none of this leaves the iPhone."
           }
         }
       }
@@ -9306,6 +9346,16 @@
         }
       }
     },
+    "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen. Ein Widerruf beendet auch ein laufendes Gespräch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can withdraw this in the settings under “Capture”. Withdrawing also ends a running conversation."
+          }
+        }
+      }
+    },
     "Du kannst das in den Einstellungen unter „KI“ widerrufen.": {
       "localizations": {
         "en": {
@@ -9913,6 +9963,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and Sort"
+          }
+        }
+      }
+    },
+    "Einverstanden und weiter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and continue"
           }
         }
       }
@@ -11548,6 +11608,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For the trend, the earliest measurement of the day counts. Further measurements on the same day stay in the list."
+          }
+        }
+      }
+    },
+    "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält nur fest, welche Gruppen gelesen wurden. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history only records which groups were read. Tagwerk gives no medical advice."
           }
         }
       }
@@ -15858,6 +15928,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign in to ChatGPT under Settings › AI to get suggestions."
+          }
+        }
+      }
+    },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Ziele planen zu lassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to have goals planned."
           }
         }
       }
@@ -24279,12 +24359,32 @@
         }
       }
     },
+    "Ziele mit ChatGPT planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan goals with ChatGPT"
+          }
+        }
+      }
+    },
     "Zielgewicht": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Target weight"
+          }
+        }
+      }
+    },
+    "Zielplanung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal planning"
           }
         }
       }
@@ -24576,6 +24676,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your consent is needed to read recipes."
+          }
+        }
+      }
+    },
+    "Zum Planen deiner Ziele sendet Tagwerk Angaben über deinen Körper und deine Ernährung an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To plan your goals, Tagwerk sends information about your body and your nutrition to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
+    "Zum Planen deiner Ziele sendet Tagwerk auf dein Tippen die Angaben, die du vor jedem Gespräch auswählst, an ChatGPT (OpenAI): Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine werden nie gesendet. Ausschalten beendet ein laufendes Gespräch. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To plan your goals, Tagwerk sends what you select before each conversation to ChatGPT (OpenAI), when you tap: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never sent. Switching it off ends a running conversation. Tagwerk gives no medical advice."
           }
         }
       }

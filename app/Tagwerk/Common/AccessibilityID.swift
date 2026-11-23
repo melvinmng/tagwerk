@@ -73,6 +73,20 @@ enum AccessibilityID {
         static let nothingDelivered = "bodyProfile.nothingDelivered"
     }
 
+    enum GoalPlanning {
+        /// The entries "Ziele planen" and "Fortschritt besprechen", the switch of the consent, and the buttons of the two sheets.
+        static let planEntry = "goalPlanning.planEntry"
+        static let reviewEntry = "goalPlanning.reviewEntry"
+        static let consentSwitch = "goalPlanning.consentSwitch"
+        static let consentAgree = "goalPlanning.consentAgree"
+        static let begin = "goalPlanning.begin"
+        static let packageJSON = "goalPlanning.packageJSON"
+        static let signInHint = "goalPlanning.signInHint"
+        static func groupSwitch(_ group: String) -> String { "goalPlanning.group.\(group)" }
+        /// The second confirmation of a goal card with a warning.
+        static let confirmAnyway = "goalPlanning.confirmAnyway"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

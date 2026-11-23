@@ -105,6 +105,8 @@ private struct CaptureSettingsForm: View {
 
             BodyProfileSection(store: environment.bodyProfile)
 
+            GoalPlanningSettingsSection()
+
             Section {
                 ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in
                     ValueStepper("Portion \(index + 1)", value: presetBinding(index), in: DrinkPresets.range,

@@ -308,6 +308,9 @@ final class AppSettings {
     var healthFormulaSexRaw: String? = nil
     /// When Health last delivered at least one body value; device state, not part of the backup.
     var healthBodyProfileReadAt: Date? = nil
+    /// The consent "Ziele mit ChatGPT planen" (decision PV1b): only the chat "Ziele planen" and only the data package the user selects
+    /// before each conversation. Off by default; a backup without the field restores it as off.
+    var goalPlanningConsent: Bool = false
 
     /// The body values the user typed.
     var typedBodyValues: BodyProfileValues {
