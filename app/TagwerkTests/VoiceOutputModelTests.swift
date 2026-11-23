@@ -192,9 +192,9 @@ struct VoiceOutputModelTests {
                                      sleep: { _ in await withCheckedContinuation { continuation in wake = { continuation.resume() } } })
         var ends: [VoiceOutputModel.Ending] = []
         model.speak(id: "a1", text: "Erster Satz.", explicit: true, fallback: .german) { ends.append($0) }
-        for _ in 0..<10 { await Task.yield() }
+        await awaitCondition("the time limit started to wait") { wake != nil }
         wake?()
-        for _ in 0..<10 { await Task.yield() }
+        await awaitCondition("the reading was given up") { ends == [.stopped] }
         #expect(ends == [.stopped])
         #expect(model.speakingID == nil)
     }
