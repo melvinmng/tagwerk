@@ -101,6 +101,18 @@ struct RootView: View {
         .sheet(isPresented: focusPresented) {
             FocusTimerView()
         }
+        // The consent and the data sheet of the goal planning hang here, never on a row; the next step waits until a sheet has left.
+        .sheet(item: Binding(get: { environment.goalPlanning.stage }, set: { if $0 == nil { environment.goalPlanning.dismissed() } }),
+               onDismiss: { Task { await environment.goalPlanning.finishPresentation() } }) { stage in
+            let flow = environment.goalPlanning
+            switch stage {
+            case .consent:
+                GoalConsentSheet(onAgree: { flow.agree() }, onDecline: { flow.decline() })
+            case .data(let session):
+                GoalDataSheet(draft: session, initiallyOn: flow.initialSelection(for: session.package),
+                              onBegin: { flow.begin(selected: $0, draft: session) }, onCancel: { flow.cancel() })
+            }
+        }
         .sheet(item: startRequest) { request in
             FocusStartSheet(request: request, base: environment.settings.focusTimerSettings,
                             lastMinutes: environment.settings.focusLastStartMinutes)

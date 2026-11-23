@@ -9513,6 +9513,16 @@
         }
       }
     },
+    "Du wählst vor jedem Gespräch aus, was an ChatGPT geht. Es geht nichts weg, bevor du das Gespräch beginnst. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before each conversation you choose what goes to ChatGPT. Nothing leaves before you begin the conversation. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
     "Duplizieren": {
       "localizations": {
         "en": {
@@ -11298,6 +11308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Focus time over"
+          }
+        }
+      }
+    },
+    "Fortschritt besprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discuss progress"
           }
         }
       }
@@ -13598,6 +13618,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I’m cooking for"
+          }
+        }
+      }
+    },
+    "Ich möchte besprechen, wie mein Fortschritt seit meinen letzten Zielen aussieht und ob sie noch passen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I would like to discuss how my progress has been since my last goals and whether they still fit."
           }
         }
       }

@@ -70,6 +70,7 @@ struct WeekReviewView: View {
                     Text(WeekReviewModel.completedFooter(model.gitHub))
                 }
             }
+            GoalPlanningEntries(offer: .reviewOnly)
             EffortReviewSection(model: model)
             // Phase 7: also in a week without any entry.
             WeekReflectionSections(model: model)

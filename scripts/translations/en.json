@@ -2863,5 +2863,8 @@
   "Training pro Woche: %@ → %@": "Training per week: %@ → %@",
   "Trotzdem übernehmen": "Adopt anyway",
   "Trotzdem übernehmen?": "Adopt anyway?",
-  "wird zu": "becomes"
+  "wird zu": "becomes",
+  "Du wählst vor jedem Gespräch aus, was an ChatGPT geht. Es geht nichts weg, bevor du das Gespräch beginnst. Tagwerk gibt keine medizinische Beratung.": "Before each conversation you choose what goes to ChatGPT. Nothing leaves before you begin the conversation. Tagwerk gives no medical advice.",
+  "Fortschritt besprechen": "Discuss progress",
+  "Ich möchte besprechen, wie mein Fortschritt seit meinen letzten Zielen aussieht und ob sie noch passen.": "I would like to discuss how my progress has been since my last goals and whether they still fit."
 }

@@ -8,6 +8,13 @@ struct GoalPlanningSettingsSection: View {
     var body: some View {
         @Bindable var settings = environment.settings
         Section {
+            Button {
+                Task { await environment.goalPlanning.start(.plan) }
+            } label: {
+                Label("Ziele planen", systemImage: "sparkles")
+            }
+            .disabled(!environment.ai.isSignedIn || environment.goalPlanning.isPreparing)
+            .accessibilityIdentifier(AccessibilityID.GoalPlanning.planEntry)
             Toggle("Ziele mit ChatGPT planen", isOn: $settings.goalPlanningConsent)
                 .disabled(!environment.ai.isSignedIn)
                 .accessibilityIdentifier(AccessibilityID.GoalPlanning.consentSwitch)

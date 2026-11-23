@@ -20,6 +20,7 @@ struct GoalPlanView: View {
 
     var body: some View {
         Form {
+            GoalPlanningEntries(offer: .planOnly)
             Section {
                 Toggle("Kohlenhydrate-Ziel", isOn: isOn(\.carbsGrams, start: 250))
                 if editor.plan.carbsGrams != nil {
