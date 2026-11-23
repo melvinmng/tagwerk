@@ -100,6 +100,7 @@ extension NoteStore {
         }
         context.insert(session)
         save()
+        onBibleStudyChanged?()
         return (note, session)
     }
 
@@ -121,6 +122,7 @@ extension NoteStore {
             }
         }
         save()
+        onBibleStudyChanged?()
     }
 
     private func completeHeading(of session: BibleStudySessionRecord, oldPassage: String, passage: BiblePassage) {
@@ -133,6 +135,13 @@ extension NoteStore {
         guard updated != note.text else { return }
         note.text = updated
         note.updatedAt = now()
+    }
+
+    /// What the reminder says about where to go on: the book of the latest session and the verse that follows in it. `nil`
+    /// without a session and for a session typed as free text, which has no verse to continue at (BS7).
+    func reminderContinuation() -> (book: BibleBook, next: BibleProgress.Next)? {
+        guard let last = lastSession, let book = BibleBooks.book(key: last.book), last.resolvedStart != nil else { return nil }
+        return (book, suggestion(for: book))
     }
 
     /// The days with at least one completed session inside `range` (by the day the session started).

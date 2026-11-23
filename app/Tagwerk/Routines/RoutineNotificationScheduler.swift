@@ -17,6 +17,11 @@ final class RoutineNotificationScheduler {
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let locale: () -> Locale
+    /// Days with a completed Bible Study session inside the planned days (those get no reminder).
+    @ObservationIgnored private let bibleStudyCompletedDays: (ClosedRange<PlanDay>) -> Set<PlanDay>
+    /// "Weiter in Römer ab 3,27" for the body of the reminder; `nil` leaves it out. Called with the switch "Stelle in der
+    /// Mitteilung zeigen" and the locale.
+    @ObservationIgnored private let bibleStudyNextPassage: (Bool, Locale) -> String?
     @ObservationIgnored private let log = Logger(subsystem: "de.tagwerk", category: "routine-notifications")
     @ObservationIgnored private var queue: Task<Void, Never>?
 
@@ -24,7 +29,11 @@ final class RoutineNotificationScheduler {
     private(set) var authorization: NotificationAuthorization = .notDetermined
 
     init(center: any NotificationCenterClient, store: RoutineStore, settings: AppSettings,
-         now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk, locale: @escaping () -> Locale = { .current }) {
+         now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk, locale: @escaping () -> Locale = { .current },
+         bibleStudyCompletedDays: @escaping (ClosedRange<PlanDay>) -> Set<PlanDay> = { _ in [] },
+         bibleStudyNextPassage: @escaping (Bool, Locale) -> String? = { _, _ in nil }) {
+        self.bibleStudyCompletedDays = bibleStudyCompletedDays
+        self.bibleStudyNextPassage = bibleStudyNextPassage
         self.center = center
         self.store = store
         self.settings = settings
@@ -45,6 +54,11 @@ final class RoutineNotificationScheduler {
         await enqueue { await self.center.removePending([RoutineSchedule.eveningIdentifier(item: id, day: day)]) }
     }
 
+    /// Removes the Bible Study reminder of one day at once ("Heute nicht", a completed session).
+    func removeBibleStudyReminder(on day: PlanDay) async {
+        await enqueue { await self.center.removePending([BibleStudyReminders.identifier(day: day)]) }
+    }
+
     private func enqueue(_ work: @escaping @MainActor () async -> Void) async {
         let previous = queue
         let next = Task { @MainActor in
@@ -62,7 +76,7 @@ final class RoutineNotificationScheduler {
         guard authorization == .authorized else { return }
         let locale = locale()
         let store = store
-        // Evening points first: the routines keep to their own 14 places next to the 46 of the task reminders.
+        // Evening points first: the routines keep to their own 17 places next to the 44 of the task reminders.
         let evening = RoutineSchedule.eveningNotifications(
             items: store.checklist(), bedtimeMinutes: settings.bedtimeMinutes, enabled: settings.eveningRemindersEnabled,
             checked: { store.day($0).checkedItemIDs }, now: now(), calendar: calendar, locale: locale)
@@ -76,12 +90,21 @@ final class RoutineNotificationScheduler {
                                                                minutes: settings.weekPlanningReminderMinutes, locale: locale) {
             repeating.append(week)
         }
-        let datedLimit = min(RoutineSchedule.maximumEveningNotifications, RoutineSchedule.maximumRoutineNotifications - repeating.count)
-        for notification in evening.prefix(datedLimit) {
+        // The routines keep to their 17 places in this order: the evening points (12), the morning start and the weekly planning,
+        // then Bible Study with what is left (3).
+        let eveningPlanned = Array(evening.prefix(RoutineSchedule.maximumEveningNotifications))
+        let today = PlanDay(date: now(), calendar: calendar)
+        let bible = BibleStudyReminders.notifications(
+            times: settings.bibleStudyReminderTimes, enabled: settings.bibleStudyReminderEnabled,
+            completedDays: bibleStudyCompletedDays(today...today.adding(days: RoutineSchedule.bibleStudyHorizonDays - 1, calendar: calendar)),
+            skippedDay: settings.bibleStudySkippedDayKey.flatMap { PlanDay(dayKey: $0) },
+            nextPassage: bibleStudyNextPassage(settings.bibleStudyReminderShowsPassage, locale), now: now(), calendar: calendar, locale: locale)
+        let bibleLimit = max(0, RoutineSchedule.maximumRoutineNotifications - eveningPlanned.count - repeating.count)
+        for notification in eveningPlanned + bible.prefix(bibleLimit) {
             do {
                 try await center.addDated(notification)
             } catch {
-                log.error("Adding an evening reminder failed: \(error.localizedDescription, privacy: .public)")
+                log.error("Adding a dated routine reminder failed: \(error.localizedDescription, privacy: .public)")
             }
         }
         for notification in repeating {

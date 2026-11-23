@@ -213,8 +213,10 @@ struct NotesListView: View {
             store.purgeExpired(calendar: environment.planning.calendar)
             prepareVoice()
             startRequestedDictation()
+            openRequestedBibleStudyStart()
         }
         .onChange(of: environment.router.dictationRequested) { _, _ in startRequestedDictation() }
+        .onChange(of: environment.router.bibleStudyStartRequested) { _, _ in openRequestedBibleStudyStart() }
         .onDisappear { voice?.cancel() }
     }
 
@@ -507,6 +509,13 @@ struct NotesListView: View {
         guard folderRole == .brainDump, environment.router.dictationRequested else { return }
         let wanted = environment.router.takeDictationRequest()
         if wanted, allowsCapture, environment.settings.voiceInputEnabled { voice?.tapMicrophone() }
+    }
+
+    /// The Bible Study reminder was tapped: the list of the Bible Study folder opens the start sheet. Another list that is still
+    /// on screen while the path changes leaves the request alone.
+    private func openRequestedBibleStudyStart() {
+        guard isBibleStudy, environment.router.bibleStudyStartRequested else { return }
+        if environment.router.takeBibleStudyStartRequest() { isStartingBibleStudy = true }
     }
 
     private func prepareVoice() {

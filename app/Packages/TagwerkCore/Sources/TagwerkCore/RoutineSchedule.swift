@@ -83,8 +83,11 @@ public struct DatedRoutineNotification: Sendable, Hashable, Identifiable {
     public var body: String
     /// What a tap opens; carried in the notification as the link path.
     public var route: AppRoute
+    /// The notification category whose actions the reminder offers ("Starten", "Heute nicht" of Bible Study); `nil` for none.
+    public var categoryIdentifier: String?
 
-    public init(id: String, year: Int, month: Int, day: Int, hour: Int, minute: Int, title: String, body: String, route: AppRoute) {
+    public init(id: String, year: Int, month: Int, day: Int, hour: Int, minute: Int, title: String, body: String, route: AppRoute,
+                categoryIdentifier: String? = nil) {
         self.id = id
         self.year = year
         self.month = month
@@ -94,6 +97,7 @@ public struct DatedRoutineNotification: Sendable, Hashable, Identifiable {
         self.title = title
         self.body = body
         self.route = route
+        self.categoryIdentifier = categoryIdentifier
     }
 }
 
@@ -113,7 +117,9 @@ public enum RoutineSchedule {
     public static let maximumEveningNotifications = maximumReminders * eveningHorizonDays
     /// Routine reminders hold at most this many places: the evening reminders of the next days, the morning start and
     /// the weekly planning.
-    public static let maximumRoutineNotifications = maximumEveningNotifications + 2
+    public static let maximumRoutineNotifications = maximumEveningNotifications + 2 + bibleStudyHorizonDays
+    /// The Bible Study reminder is planned for this many days, today included: one place a day (BS7).
+    public static let bibleStudyHorizonDays = 3
     public static let offsetRange = 0...240
     public static let offsetStep = 5
     public static let titleLimit = 60

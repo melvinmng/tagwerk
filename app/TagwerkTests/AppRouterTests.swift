@@ -74,6 +74,19 @@ struct AppRouterTests {
         return AppRouter(now: { moment }, calendar: calendar)
     }
 
+    @Test func bibleStudyStart_opensStartSheet() {
+        let router = router(atHour: 8)
+        #expect(router.open(URL(string: "tagwerk://bible/start")!))
+        #expect(router.bibleStudyStartRequested == false, "the request is buffered until it is shown")
+        #expect(router.takeRequest(setupCompleted: true)?.route == .bibleStudyStart)
+        #expect(router.bibleStudyStartRequested)
+        #expect(router.takeBibleStudyStartRequest())
+        #expect(!router.takeBibleStudyStartRequest(), "the sheet opens once")
+        router.open(.routineStart)
+        _ = router.takeRequest(setupCompleted: true)
+        #expect(!router.bibleStudyStartRequested)
+    }
+
     @Test func routineNow_morning_opensStart() {
         let router = router(atHour: 8)
         #expect(router.open(URL(string: "tagwerk://routine/now")!))

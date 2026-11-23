@@ -89,4 +89,26 @@ struct NotificationNavigatorTests {
         NotificationDelegate(navigator: navigator, router: router).handle(["route": "settings/everything"])
         #expect(router.takeRequest(setupCompleted: true) == nil)
     }
+
+    // MARK: Bible Study reminder (BS7)
+
+    @Test func skipAction_dropsTheDayWithoutOpeningTheApp() async {
+        let router = AppRouter()
+        var skipped = 0
+        let delegate = NotificationDelegate(navigator: NotificationNavigator(), router: router, skipBibleStudy: { skipped += 1 })
+        await delegate.handle(["route": "bible/start"], action: BibleStudyReminders.skipAction)
+        #expect(skipped == 1)
+        #expect(router.takeRequest(setupCompleted: true) == nil, "\"Heute nicht\" does not open the app")
+    }
+
+    @Test func startAction_andTap_openTheStartSheet() async {
+        for action in [BibleStudyReminders.startAction, "com.apple.UNNotificationDefaultActionIdentifier"] {
+            let router = AppRouter()
+            var skipped = 0
+            let delegate = NotificationDelegate(navigator: NotificationNavigator(), router: router, skipBibleStudy: { skipped += 1 })
+            await delegate.handle(["route": "bible/start"], action: action)
+            #expect(router.takeRequest(setupCompleted: true)?.route == .bibleStudyStart)
+            #expect(skipped == 0)
+        }
+    }
 }

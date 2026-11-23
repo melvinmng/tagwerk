@@ -20,6 +20,9 @@ public enum AppRoute: String, Sendable, Hashable, CaseIterable {
     /// The routine that fits the time of day: morning start or evening wrap-up (Control Center control, #167).
     case routineNow = "routine/now"
 
+    /// The start sheet of a Bible Study session (the notification of the Bible Study reminder).
+    case bibleStudyStart = "bible/start"
+
     public static let scheme = "tagwerk"
 
     /// Parses `tagwerk://<host>/<path>`; query parameters are ignored on purpose.

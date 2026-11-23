@@ -12385,6 +12385,16 @@
         }
       }
     },
+    "Heute nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not today"
+          }
+        }
+      }
+    },
     "Heute offen, nicht zugeordnet": {
       "localizations": {
         "en": {

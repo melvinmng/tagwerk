@@ -2650,5 +2650,8 @@
   "Zeit löschen": "Delete time",
   "Zeiten": "Times",
   "und": "and",
-  "Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Accepted times do not change by themselves. Skipped on days with a completed session. Tagwerk plans the reminder for the next 3 days and fills it up as soon as you open the app."
+  "Übernommene Zeiten ändern sich nicht von selbst. Entfällt an Tagen mit abgeschlossener Sitzung. Tagwerk plant die Erinnerung für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.": "Accepted times do not change by themselves. Skipped on days with a completed session. Tagwerk plans the reminder for the next 3 days and fills it up as soon as you open the app.",
+  "Weiter in %@ ab %@": "Continue in %1$@ from %2$@",
+  "Zeit für Bible Study.": "Time for Bible Study.",
+  "Heute nicht": "Not today"
 }

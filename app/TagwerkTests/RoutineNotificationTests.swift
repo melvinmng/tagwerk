@@ -252,4 +252,121 @@ struct RoutineNotificationTests {
         #expect(!center.pendingIDs.contains(eveningID(late, day: 18)))
         #expect(center.pendingIDs.contains(eveningID(late, day: 19)) && center.pendingIDs.contains(eveningID(late, day: 20)))
     }
+
+    // MARK: Bible Study (BS7)
+
+    /// The scheduler with the Bible Study sessions of a note store behind it, the way the app wires it.
+    private func makeScheduler(notes: NoteStore) -> RoutineNotificationScheduler {
+        let clock = self.clock
+        return RoutineNotificationScheduler(
+            center: center, store: store, settings: settings, now: { clock.now }, calendar: calendar, locale: { Locale(identifier: "de_DE") },
+            bibleStudyCompletedDays: { notes.completedSessionDays(in: $0) },
+            bibleStudyNextPassage: { showsPassage, locale in
+                let continuation = notes.reminderContinuation()
+                return BibleStudyReminders.nextPassageText(bookName: continuation?.book.name(locale: locale), next: continuation?.next,
+                                                           showsPassage: showsPassage, locale: locale)
+            })
+    }
+
+    private func bibleID(_ day: Int) -> String { BibleStudyReminders.identifier(day: PlanDay(year: 2026, month: 11, day: day)) }
+
+    /// A reminder at 20:30 on every day: today (still ahead at 10:00) and the next two days.
+    private func enableBibleStudy(showsPassage: Bool = true) {
+        settings.bibleStudyReminderEnabled = true
+        settings.bibleStudyReminderTimes = [BibleStudyReminderTime(minutes: 20 * 60 + 30, weekdays: Set(1...7))]
+        settings.bibleStudyReminderShowsPassage = showsPassage
+    }
+
+    /// A completed session of Römer 3,1–26 on a day in the past.
+    @discardableResult
+    private func finishedSession(in notes: NoteStore, dayKey: String) -> BibleStudySessionRecord {
+        let romans = BibleBooks.book(number: 45)!
+        let started = notes.startSession(book: romans, passage: BiblePassage(start: BibleReference(chapter: 3, verse: 1),
+                                                                              end: BibleReference(chapter: 3, verse: 26)),
+                                         dayKey: dayKey, dateText: dayKey, locale: Locale(identifier: "de_DE"))
+        notes.completeSession(started.session.id)
+        return started.session
+    }
+
+    @Test func reschedule_addsBibleStudyReminders() async {
+        enableBibleStudy()
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        finishedSession(in: notes, dayKey: "2026-11-17")
+        await makeScheduler(notes: notes).reschedule()
+        let bible = center.addedDated.filter { $0.id.hasPrefix("tagwerk.routine.bible.") }
+        #expect(bible.map(\.id) == [bibleID(18), bibleID(19), bibleID(20)])
+        #expect(bible.allSatisfy { $0.hour == 20 && $0.minute == 30 && $0.route == .bibleStudyStart })
+        #expect(bible.first?.body == "Zeit für Bible Study. Weiter in Römer ab 3,27.")
+        #expect(bible.first?.categoryIdentifier == BibleStudyReminders.categoryIdentifier)
+    }
+
+    @Test func reschedule_withoutThePassageSwitch_namesNoVerse() async {
+        enableBibleStudy(showsPassage: false)
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        finishedSession(in: notes, dayKey: "2026-11-17")
+        await makeScheduler(notes: notes).reschedule()
+        #expect(center.addedDated.first { $0.id == bibleID(18) }?.body == "Zeit für Bible Study.")
+    }
+
+    @Test func reschedule_neverExceedsSeventeen() async {
+        store.adoptSuggestion()
+        settings.morningReminderEnabled = true
+        settings.weekPlanningReminderEnabled = true
+        enableBibleStudy()
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        await makeScheduler(notes: notes).reschedule()
+        // 12 evening points, the morning start and the weekly planning, and the three days of Bible Study.
+        #expect(center.pendingIDs.count == RoutineSchedule.maximumRoutineNotifications)
+        #expect(center.pendingIDs.count == 17)
+        #expect(center.pendingIDs.filter { $0.hasPrefix("tagwerk.routine.bible.") }.count == 3)
+    }
+
+    @Test func completeSession_removesTodaysReminderAndReplans() async {
+        enableBibleStudy()
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        let scheduler = makeScheduler(notes: notes)
+        await scheduler.reschedule()
+        #expect(center.pendingIDs.contains(bibleID(18)))
+        // A session of today is completed: the reminder of today goes, the next days name the verse after it.
+        finishedSession(in: notes, dayKey: "2026-11-18")
+        await scheduler.reschedule()
+        #expect(!center.pendingIDs.contains(bibleID(18)))
+        #expect(center.pendingIDs.contains(bibleID(19)) && center.pendingIDs.contains(bibleID(20)))
+        #expect(center.addedDated.last { $0.id == bibleID(19) }?.body == "Zeit für Bible Study. Weiter in Römer ab 3,27.")
+    }
+
+    @Test func skippedDay_isLeftOut() async {
+        enableBibleStudy()
+        settings.bibleStudySkippedDayKey = "2026-11-18"
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        await makeScheduler(notes: notes).reschedule()
+        #expect(!center.pendingIDs.contains(bibleID(18)) && center.pendingIDs.contains(bibleID(19)))
+    }
+
+    @Test func skipFromYesterday_doesNotAffectToday() async {
+        enableBibleStudy()
+        settings.bibleStudySkippedDayKey = "2026-11-17"
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        await makeScheduler(notes: notes).reschedule()
+        #expect(center.pendingIDs.contains(bibleID(18)))
+    }
+
+    @Test func removeBibleStudyReminder_dropsOnlyThatDay() async {
+        enableBibleStudy()
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        let scheduler = makeScheduler(notes: notes)
+        await scheduler.reschedule()
+        await scheduler.removeBibleStudyReminder(on: PlanDay(year: 2026, month: 11, day: 18))
+        #expect(!center.pendingIDs.contains(bibleID(18)) && center.pendingIDs.contains(bibleID(19)))
+    }
+
+    @Test func freeTextSession_namesNoVerse() async {
+        enableBibleStudy()
+        let notes = NoteStore(context: container.mainContext, now: { [clock] in clock.now })
+        let started = notes.startSession(book: BibleBooks.book(number: 45)!, passage: nil, freeText: "Kap. 3", dayKey: "2026-11-17",
+                                         dateText: "17.11.2026", locale: Locale(identifier: "de_DE"))
+        notes.completeSession(started.session.id)
+        await makeScheduler(notes: notes).reschedule()
+        #expect(center.addedDated.first { $0.id == bibleID(18) }?.body == "Zeit für Bible Study.")
+    }
 }

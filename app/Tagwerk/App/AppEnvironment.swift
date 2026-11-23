@@ -66,7 +66,8 @@ final class AppEnvironment {
     /// Target of a `tagwerk://` link or a shortcut until the app shows it (phase 4).
     let router = AppRouter()
     /// Delegate of the system notification center; held here because the center keeps it weakly.
-    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(navigator: notificationNavigator, router: router)
+    @ObservationIgnored private(set) lazy var notificationDelegate = NotificationDelegate(
+        navigator: notificationNavigator, router: router, skipBibleStudy: { [weak self] in await self?.skipBibleStudyToday() })
     /// Meals, water and workouts (phase 3); mirrored to Health only after the user allowed it.
     let intake: IntakeStore
     /// Goal plans ("Zielstände"); the plan of a day is the goal that holds on it.
@@ -352,10 +353,20 @@ final class AppEnvironment {
                 guard let gitHub = taskList.provider(for: .github) as? GitHubTaskProvider else { return nil }
                 return { interval in try await gitHub.closedIssueCount(in: interval) }
             })
-        self.routineNotifications = RoutineNotificationScheduler(center: notificationCenter ?? SystemNotificationCenter(),
-                                                                 store: routineStore, settings: settings)
+        // The Bible Study reminder reads the sessions of the notes: which days are done and where reading goes on.
+        let bibleStudyNotes = self.notes
+        self.routineNotifications = RoutineNotificationScheduler(
+            center: notificationCenter ?? SystemNotificationCenter(), store: routineStore, settings: settings,
+            bibleStudyCompletedDays: { bibleStudyNotes.completedSessionDays(in: $0) },
+            bibleStudyNextPassage: { showsPassage, locale in
+                let continuation = bibleStudyNotes.reminderContinuation()
+                return BibleStudyReminders.nextPassageText(bookName: continuation?.book.name(locale: locale), next: continuation?.next,
+                                                           showsPassage: showsPassage, locale: locale)
+            })
         let routines = self.routines
         let routineNotifications = self.routineNotifications
+        // A started or completed session changes the verse the reminder names and the days that get one.
+        bibleStudyNotes.onBibleStudyChanged = { Task { await routineNotifications.reschedule() } }
         // A checked point must not remind on that evening any more; unchecking plans the reminder again while it is ahead.
         routines.onChecklistToggled = { id, day, isChecked in
             if isChecked {
@@ -555,6 +566,24 @@ final class AppEnvironment {
     /// Replaces whatever was pushed there; used by the deep link and the shortcut.
     func openShopping() {
         tasksPath = [settings.shoppingListID == nil ? .shoppingSettings : .shopping]
+        requestedTab = 1
+    }
+
+    /// "Heute nicht" on the Bible Study reminder: the calendar day is remembered and the reminder of today goes at once. The
+    /// planner leaves the day out from now on, so the next run does not bring it back.
+    func skipBibleStudyToday() async {
+        let today = PlanDay(date: Date(), calendar: planning.calendar)
+        settings.bibleStudySkippedDayKey = today.dayKey
+        try? modelContainer.mainContext.save()
+        await routineNotifications.removeBibleStudyReminder(on: today)
+        await routineNotifications.reschedule()
+    }
+
+    /// Shows the list of the Bible Study folder in the "Aufgaben" tab; it opens the start sheet once
+    /// (`AppRouter.bibleStudyStartRequested`).
+    func openBibleStudyStart() {
+        let folder = notes.ensureBibleStudyFolder()
+        tasksPath = [.notes, .notesFolder(.folder(folder.id))]
         requestedTab = 1
     }
 
@@ -906,6 +935,10 @@ final class AppEnvironment {
             hasher.combine(settings.weekPlanningReminderEnabled)
             hasher.combine(settings.weekPlanningReminderWeekday)
             hasher.combine(settings.weekPlanningReminderMinutes)
+            hasher.combine(settings.bibleStudyReminderEnabled)
+            hasher.combine(settings.bibleStudyReminderTimesData)
+            hasher.combine(settings.bibleStudyReminderShowsPassage)
+            hasher.combine(settings.bibleStudySkippedDayKey)
             hasher.combine(routineStore.checklist())
             return hasher.finalize()
         }
