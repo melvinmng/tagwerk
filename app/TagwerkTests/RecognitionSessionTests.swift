@@ -23,7 +23,20 @@ final class RecognitionSessionHarness {
         events.filter { if case .finished = $0 { true } else if case .failed = $0 { true } else { false } }
     }
 
-    func settle() async { for _ in 0..<20 { await Task.yield() } }
+    /// Waits until the session reported `.started` `count` times in total.
+    func waitForStarted(_ count: Int = 1, sourceLocation: SourceLocation = #_sourceLocation) async {
+        await awaitCondition("\(count) started event(s)", sourceLocation: sourceLocation) {
+            events.filter { $0 == .started }.count == count
+        }
+    }
+
+    func waitForEnds(_ count: Int, sourceLocation: SourceLocation = #_sourceLocation) async {
+        await awaitCondition("\(count) end event(s)", sourceLocation: sourceLocation) { ends.count == count }
+    }
+
+    /// Gives queued work a chance to run before a test asserts that something did NOT happen. A turn count cannot prove
+    /// absence, but it cannot make a test fail spuriously either; positive expectations use `awaitCondition`.
+    func drain() async { for _ in 0..<50 { await Task.yield() } }
 }
 
 @MainActor
@@ -31,9 +44,9 @@ struct RecognitionSessionTests {
     @Test func start_reportsStartedAndText() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         harness.recognizer.send(.text(final: "Hallo", volatile: ""))
-        await harness.settle()
+        await awaitCondition("the text event") { harness.events.count == 2 }
         #expect(harness.events == [.started, .text(final: "Hallo", volatile: "")])
         #expect(harness.session.isActive)
     }
@@ -41,11 +54,11 @@ struct RecognitionSessionTests {
     @Test func stop_endsExactlyOnce() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         harness.recognizer.finalOnStop = "Fertig."
         harness.session.stop()
         harness.session.stop()
-        await harness.settle()
+        await harness.waitForEnds(1)
         harness.clock += 10
         harness.session.tick()
         #expect(harness.ends == [.finished])
@@ -56,16 +69,16 @@ struct RecognitionSessionTests {
     @Test func stuckStop_isGivenUpAfterTimeout() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         harness.recognizer.ignoresStop = true
         harness.session.stop()
-        await harness.settle()
+        await awaitCondition("the recognizer received the stop") { harness.recognizer.stops == 1 }
         harness.clock += 2.9
         harness.session.tick()
         #expect(harness.ends.isEmpty)
         harness.clock += 0.1
         harness.session.tick()
-        await harness.settle()
+        await awaitCondition("the recognizer was cancelled") { harness.recognizer.cancels >= 1 }
         #expect(harness.ends == [.finished])
         #expect(harness.recognizer.cancels >= 1)
     }
@@ -73,11 +86,11 @@ struct RecognitionSessionTests {
     @Test func cancel_reportsNothing_andReleasesRecognizer() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         harness.session.cancel()
-        await harness.settle()
+        await awaitCondition("the recognizer was cancelled") { harness.recognizer.cancels == 1 }
         harness.recognizer.send(.text(final: "spät", volatile: ""))
-        await harness.settle()
+        await harness.drain()
         #expect(harness.events == [.started])
         #expect(harness.recognizer.cancels == 1)
     }
@@ -86,7 +99,8 @@ struct RecognitionSessionTests {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
         harness.session.cancel()
-        await harness.settle()
+        await awaitCondition("the recognizer was cancelled") { harness.recognizer.cancels >= 1 }
+        await harness.drain()
         #expect(harness.events.isEmpty)
         #expect(harness.recognizer.cancels >= 1)
     }
@@ -94,14 +108,14 @@ struct RecognitionSessionTests {
     @Test func restart_cancelsOldBeforeNew_andDropsItsEvents() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         let old = harness.recognizer
         harness.session.start(.english)
-        await harness.settle()
+        await harness.waitForStarted(2)
         #expect(old.cancels == 1)
         old.send(.text(final: "alt", volatile: ""))
         harness.recognizer.send(.text(final: "new", volatile: ""))
-        await harness.settle()
+        await awaitCondition("the text of the new recognizer") { harness.events.contains(.text(final: "new", volatile: "")) }
         #expect(harness.recognizer.started == [.english])
         #expect(!harness.events.contains(.text(final: "alt", volatile: "")))
         #expect(harness.events.contains(.text(final: "new", volatile: "")))
@@ -110,9 +124,9 @@ struct RecognitionSessionTests {
     @Test func failure_endsOnce() async {
         let harness = RecognitionSessionHarness()
         harness.session.start(.german)
-        await harness.settle()
+        await harness.waitForStarted()
         harness.recognizer.send(.failed(.interrupted))
-        await harness.settle()
+        await harness.waitForEnds(1)
         #expect(harness.ends == [.failed(.interrupted)])
         #expect(!harness.session.isActive)
     }

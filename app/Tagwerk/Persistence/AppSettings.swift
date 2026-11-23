@@ -154,6 +154,10 @@ final class AppSettings {
     /// The explanation before the first lock was shown (`NoteLockIntroSheet`).
     var noteLockExplained: Bool = false
 
+    /// The habit "Bewegung" was switched once from "Training erfasst" to the combined source (GW1c). Device state, not part of a
+    /// backup: it only keeps a habit that the user changed afterwards from being switched again.
+    var movementSourceMigrated: Bool = false
+
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
     var autoBackupEnabled: Bool = false
@@ -162,6 +166,11 @@ final class AppSettings {
     var lastAutoBackupAt: Date? = nil
     /// Why the last automatic backup failed; shown in the settings, blocks nothing.
     var lastBackupError: String? = nil
+    /// Backups are encrypted with the password of this device (DS6b). The key is in the Keychain of this iPhone; neither the switch
+    /// nor the key is part of a backup, so a restore never turns encryption on or off.
+    var backupEncryptionEnabled: Bool = false
+    /// The one-time question "Passwort festlegen?" when the automatic backup is switched on without a password was shown.
+    var backupPlainHintShown: Bool = false
 
     /// Quiet hours (plan quiet-hours, #169): task and deadline notifications that fall into the window move to its end.
     var quietHoursEnabled: Bool = false

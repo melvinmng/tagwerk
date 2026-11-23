@@ -72,22 +72,47 @@ final class VoiceModeHarness {
         return controller
     }()
 
-    func settle() async { for _ in 0..<30 { await Task.yield() } }
+    /// Distinct values for the barrier events of `waitForListening`.
+    private var barrierLevel: Float = 0
 
-    /// Starts the mode and lets the recognizer report that it runs.
-    func startListening() async {
-        controller.start()
-        await settle()
+    /// Waits until the recognizer was started `starts` times in total and the controller processed the `.started` event
+    /// of the last start. The recognizer's stream delivers its events in order, so a level event sent now arrives after
+    /// `.started` and tells that the controller has seen it.
+    func waitForListening(starts: Int, sourceLocation: SourceLocation = #_sourceLocation) async {
+        await awaitCondition("\(starts) recognizer start(s)", sourceLocation: sourceLocation) { recognizer.started.count == starts }
+        barrierLevel += 0.01
+        let barrier = barrierLevel
+        recognizer.send(.level(barrier))
+        await awaitCondition("the recognizer's started event", sourceLocation: sourceLocation) { controller.level == barrier }
     }
 
-    /// Says `text`, waits out the countdown and lets the final text arrive.
-    func say(_ text: String) async {
+    func waitForPhase(_ phase: VoiceModeMachine.Phase, sourceLocation: SourceLocation = #_sourceLocation) async {
+        await awaitCondition("phase \(phase)", sourceLocation: sourceLocation) { controller.phase == phase }
+    }
+
+    /// Gives queued work a chance to run before a test asserts that something did NOT happen. A turn count cannot prove
+    /// absence, but it cannot make a test fail spuriously either; positive expectations use `awaitCondition`.
+    func drain() async { for _ in 0..<50 { await Task.yield() } }
+
+    /// Starts the mode and waits until the recognizer reports that it runs.
+    func startListening() async {
+        controller.start()
+        await waitForListening(starts: recognizer.started.count + 1)
+    }
+
+    /// Says `text`, waits out the countdown, lets the final text arrive and waits until `handled` holds.
+    func say(_ text: String, until handled: () -> Bool, sourceLocation: SourceLocation = #_sourceLocation) async {
         recognizer.send(.text(final: text, volatile: ""))
-        await settle()
+        await awaitCondition("the controller heard \"\(text)\"", sourceLocation: sourceLocation) { controller.machine.text == text }
         recognizer.finalOnStop = text
         clock += 3
         controller.tick()
-        await settle()
+        await awaitCondition("the utterance \"\(text)\" was handled", sourceLocation: sourceLocation, until: handled)
+    }
+
+    /// Says `text` and waits until the assistant received it.
+    func sayAndSend(_ text: String, sourceLocation: SourceLocation = #_sourceLocation) async {
+        await say(text, until: { assistant.sent.last == text }, sourceLocation: sourceLocation)
     }
 }
 
@@ -100,7 +125,7 @@ struct VoiceModeControllerTests {
         #expect(harness.audio.currentMode == .conversation)
         #expect(harness.controller.phase == .listening)
         #expect(harness.screenOn == [true])
-        await harness.say("Was steht heute an?")
+        await harness.sayAndSend("Was steht heute an?")
         #expect(harness.assistant.sent == ["Was steht heute an?"])
         #expect(harness.controller.phase == .speaking)
         #expect(harness.speaker.spoken.count == 1)
@@ -109,7 +134,7 @@ struct VoiceModeControllerTests {
         #expect(harness.controller.phase == .tone)
         #expect(harness.tone.plays == 1)
         harness.tone.finish()
-        await harness.settle()
+        await harness.waitForListening(starts: 2)
         #expect(harness.controller.phase == .listening)
         #expect(harness.recognizer.started.count == 2)
         #expect(harness.audio.currentMode == .conversation)
@@ -121,17 +146,19 @@ struct VoiceModeControllerTests {
         harness.assistant.replies = [.answered(id: "message-1", speech: "Ich lege die Mail auf 16 Uhr.", cards: card),
                                      .answered(id: "message-3", speech: "Ausgeführt.", cards: .none)]
         await harness.startListening()
-        await harness.say("Leg die Mail auf 16 Uhr")
+        await harness.sayAndSend("Leg die Mail auf 16 Uhr")
         harness.speaker.emit(.finished)
         harness.tone.finish()
-        await harness.settle()
+        await harness.waitForListening(starts: 2)
         #expect(harness.controller.phase == .listening)
-        await harness.say("Ja")
+        // "Ja" is not sent: the recognizer restarts and the confirmation countdown begins once it listens again.
+        await harness.say("Ja", until: { harness.recognizer.started.count == 3 })
+        await harness.waitForListening(starts: 3)
         guard case .confirming = harness.controller.phase else { Issue.record("\(harness.controller.phase)"); return }
         #expect(harness.assistant.confirmed.isEmpty)
         harness.clock += 2
         harness.controller.tick()
-        await harness.settle()
+        await awaitCondition("the cards were confirmed") { harness.assistant.confirmed == [["c1"]] }
         #expect(harness.assistant.confirmed == [["c1"]])
         #expect(harness.controller.phase == .speaking)
     }
@@ -141,11 +168,11 @@ struct VoiceModeControllerTests {
         let card = OpenCards(ids: ["c1"], deletes: 0)
         harness.assistant.replies = [.answered(id: "message-1", speech: "Vorschlag.", cards: card)]
         await harness.startListening()
-        await harness.say("Leg einen Termin an")
+        await harness.sayAndSend("Leg einen Termin an")
         harness.speaker.emit(.finished)
         harness.tone.finish()
-        await harness.settle()
-        await harness.say("Nimm den Arbeitskalender")
+        await harness.waitForListening(starts: 2)
+        await harness.sayAndSend("Nimm den Arbeitskalender")
         #expect(harness.assistant.sent.last == "Nimm den Arbeitskalender")
         #expect(harness.assistant.declined.isEmpty)
     }
@@ -154,11 +181,11 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         await harness.startListening()
         harness.recognizer.send(.text(final: "Leg die Mail", volatile: ""))
-        await harness.settle()
+        await awaitCondition("the controller heard the text") { harness.controller.machine.text == "Leg die Mail" }
         harness.clock += 1
         harness.controller.tick()
         harness.controller.doNotSend()
-        await harness.settle()
+        await harness.drain()
         #expect(harness.draft == ["Leg die Mail"])
         #expect(harness.assistant.sent.isEmpty)
         #expect(harness.ended == 1)
@@ -171,7 +198,8 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         await harness.startListening()
         harness.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        await harness.settle()
+        await harness.waitForPhase(.ended)
+        await awaitCondition("the recognizer was cancelled") { harness.recognizer.cancels >= 1 }
         #expect(harness.controller.phase == .ended)
         #expect(harness.recognizer.cancels >= 1)
         #expect(harness.audio.currentMode == nil)
@@ -182,11 +210,11 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         harness.assistant.replies = [.failed(offline: true)]
         await harness.startListening()
-        await harness.say("Hallo")
+        await harness.sayAndSend("Hallo")
         #expect(harness.controller.phase == .paused(.offline))
         #expect(harness.speaker.spoken.first?.sentences.joined(separator: " ").contains("Keine Verbindung") == true)
         harness.controller.resume()
-        await harness.settle()
+        await harness.waitForListening(starts: 2)
         #expect(harness.controller.phase == .listening)
     }
 
@@ -194,9 +222,9 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         harness.assistant.replies = [.answered(id: "message-1", speech: "Eine lange Antwort.", cards: .none)]
         await harness.startListening()
-        await harness.say("Erzähl")
+        await harness.sayAndSend("Erzähl")
         harness.controller.interrupt()
-        await harness.settle()
+        await harness.waitForListening(starts: 2)
         #expect(harness.output.speakingID == nil)
         #expect(harness.tone.plays == 0)
         #expect(harness.controller.phase == .listening)
@@ -206,11 +234,11 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         await harness.startListening()
         harness.controller.end()
-        await harness.settle()
+        await awaitCondition("the recognizer was cancelled") { harness.recognizer.cancels >= 1 }
         harness.recognizer.send(.text(final: "spät", volatile: ""))
         harness.clock += 10
         harness.controller.tick()
-        await harness.settle()
+        await harness.drain()
         #expect(harness.assistant.sent.isEmpty)
         #expect(harness.controller.phase == .ended)
         #expect(!harness.controller.isRunning)
@@ -220,7 +248,7 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         harness.assistant.replies = [.answered(id: "message-1", speech: "Zwei Änderungen.", cards: OpenCards(ids: ["a", "b"], deletes: 0))]
         await harness.startListening()
-        await harness.say("Plan meinen Tag")
+        await harness.sayAndSend("Plan meinen Tag")
         harness.assistant.onTurnFinished?(.answered(id: "message-3", speech: "Ausgeführt.", cards: .none))
         #expect(harness.controller.phase == .speaking)
         #expect(harness.tone.plays == 0)
@@ -241,7 +269,7 @@ struct VoiceModeControllerTests {
         let harness = VoiceModeHarness()
         harness.assistant.replies = [.failed(offline: false)]
         await harness.startListening()
-        await harness.say("Hallo")
+        await harness.sayAndSend("Hallo")
         #expect(harness.output.speakingID != nil)
         harness.controller.end()
         #expect(harness.output.speakingID == nil)
@@ -250,8 +278,9 @@ struct VoiceModeControllerTests {
     @Test func audioFailure_pausesWithoutListening() async {
         let harness = VoiceModeHarness()
         harness.audio.failing = true
-        await harness.startListening()
+        harness.controller.start()
         #expect(harness.controller.phase == .paused(.failed))
+        await harness.drain()
         #expect(harness.recognizer.started.isEmpty)
     }
 }

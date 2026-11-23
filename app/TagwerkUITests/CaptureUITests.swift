@@ -89,9 +89,15 @@ final class CaptureUITests: UITestCase {
     /// takes the entry away again.
     func testQuickEntry_weight_savesAndOffersUndo() {
         tab("Erfassen")
-        let button = app.buttons[AccessibilityID.Capture.quickWeight].firstMatch
-        XCTAssertTrue(button.waitForExistence(timeout: Self.timeout), "The quick button for the weight is missing")
-        button.tap()
+        // The neighbouring days keep their page previews in the tree with the same identifiers, and `firstMatch` may be such a copy
+        // beside the screen; the button the user can tap is the one that is hittable.
+        let buttons = app.buttons.matching(identifier: AccessibilityID.Capture.quickWeight)
+        var button: XCUIElement?
+        eventually("The quick button for the weight is not on screen") {
+            button = buttons.allElementsBoundByIndex.first { $0.isHittable }
+            return button != nil
+        }
+        button?.tap()
         // The sheet starts with a value (the demo data holds no weight yet), so saving needs no typing.
         XCTAssertTrue(app.navigationBars["Gewicht"].waitForExistence(timeout: Self.timeout), "The weight sheet did not open")
         app.buttons[AccessibilityID.Capture.weightSave].firstMatch.tap()
