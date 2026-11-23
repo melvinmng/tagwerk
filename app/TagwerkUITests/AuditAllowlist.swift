@@ -168,9 +168,9 @@ enum AuditAllowlist {
             + "Header design: #188 / #175."),
         Entry(auditType: .dynamicType, labels: [
             "Punkte in den Einstellungen anlegen", "(Morgen|[A-Z][a-z]\\.) planen", "Abschließen", "Brain Dump", "Leitfragen einfügen", "\\d+\\.\\d+\\.", "Wochenplanung starten",
-            "Tagebuch schreiben", "Bible Study starten", "Zuletzt: .*",
+            "Tagebuch schreiben", "Bible Study starten", "Zuletzt: .*", "Unerledigtes verschieben · .*",
         ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day, the rows of "
-            + "\"Zeit mit Gott\") report a partial lack of Dynamic Type support; no fixed frame, line limit or fixed font in the code, 15 view "
+            + "\"Zeit mit Gott\", the leftover row with `.subheadline` that wraps) report a partial lack of Dynamic Type support; no fixed frame, line limit or fixed font in the code, 15 view "
             + "variants gave the same findings, no clipping in the large text run. Stays on the device test list (largest text size)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
