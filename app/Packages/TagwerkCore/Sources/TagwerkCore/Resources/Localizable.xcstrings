@@ -110,6 +110,22 @@
         }
       }
     },
+    "%@ kcal entsprechen etwa %@ (%@; grobe Schätzung, der tatsächliche Verlauf flacht ab).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kcal entsprechen etwa %2$@ (%3$@; grobe Schätzung, der tatsächliche Verlauf flacht ab)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal correspond to about %@ (%@; rough estimate, the actual course flattens out)."
+          }
+        }
+      }
+    },
     "%@ kcal · %@": {
       "localizations": {
         "de": {
@@ -876,6 +892,16 @@
         }
       }
     },
+    "Alle Werte sind Schätzungen; Einzelfehler von ±10 % und mehr sind möglich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All values are estimates; individual errors of ±10 % and more are possible."
+          }
+        }
+      }
+    },
     "Allgemeine Stimmung": {
       "localizations": {
         "en": {
@@ -1012,6 +1038,94 @@
           "stringUnit": {
             "state": "translated",
             "value": "The date is invalid."
+          }
+        }
+      }
+    },
+    "Das Eiweißziel liegt unter %lld g, dem Richtwert von %@ g je Kilogramm Referenzgewicht.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Eiweißziel liegt unter %1$lld g, dem Richtwert von %2$@ g je Kilogramm Referenzgewicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The protein goal is below %lld g, the reference of %@ g per kilogram of reference weight."
+          }
+        }
+      }
+    },
+    "Das Grundziel bedeutet bei deinem geschätzten Verbrauch etwa %@. Das liegt über der Regel von Tagwerk von %@ pro Woche.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Grundziel bedeutet bei deinem geschätzten Verbrauch etwa %1$@. Das liegt über der Regel von Tagwerk von %2$@ pro Woche."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At your estimated expenditure the base goal means about %@. That is above Tagwerk’s rule of %@ per week."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter %@ kcal. Besprich ein so niedriges Ziel mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below %@ kcal. Discuss such a low goal with a doctor."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter deinem geschätzten Ruheumsatz (~%@ kcal).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below your estimated resting energy (~%@ kcal)."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter der harten Grenze von %@ kcal und lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below the hard limit of %@ kcal and cannot be adopted."
+          }
+        }
+      }
+    },
+    "Das Tempo %@ liegt über %@ pro Woche. Das ist die Regel von Tagwerk: der kleinere Wert aus %lld %% des Körpergewichts und %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Tempo %1$@ liegt über %2$@ pro Woche. Das ist die Regel von Tagwerk: der kleinere Wert aus %3$lld %% des Körpergewichts und %4$@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pace %@ is above %@ per week. That is Tagwerk’s rule: the smaller of %lld %% of body weight and %@."
+          }
+        }
+      }
+    },
+    "Das Tempo liegt über %@ Abnahme pro Woche. Schlage ein langsameres Tempo vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pace is above %@ of loss per week. Propose a slower pace."
           }
         }
       }
@@ -1328,6 +1442,16 @@
         }
       }
     },
+    "Ein Grundziel unter %@ kcal lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A base goal below %@ kcal cannot be adopted."
+          }
+        }
+      }
+    },
     "Ein ruhiger Start in den Tag?": {
       "localizations": {
         "en": {
@@ -1364,6 +1488,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Protein"
+          }
+        }
+      }
+    },
+    "Eiweiß, Kohlenhydrate und Fett ergeben etwa %@ kcal und weichen um mehr als %lld %% vom Grundziel ab.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Eiweiß, Kohlenhydrate und Fett ergeben etwa %1$@ kcal und weichen um mehr als %2$lld %% vom Grundziel ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein, carbohydrates and fat add up to about %@ kcal and differ from the base goal by more than %lld %%."
+          }
+        }
+      }
+    },
+    "Eiweiß, Kohlenhydrate und Fett ergeben zusammen etwa %@ kcal und weichen um mehr als %lld %% vom Grundziel ab. Rechne sie so, dass sie zum Grundziel passen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Eiweiß, Kohlenhydrate und Fett ergeben zusammen etwa %1$@ kcal und weichen um mehr als %2$lld %% vom Grundziel ab. Rechne sie so, dass sie zum Grundziel passen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein, carbohydrates and fat together add up to about %@ kcal and differ from the base goal by more than %lld %%. Recalculate them so they fit the base goal."
           }
         }
       }
@@ -1454,6 +1610,58 @@
         }
       }
     },
+    "Für %@ wären etwa %@ kcal nötig.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Für %1$@ wären etwa %2$@ kcal nötig."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For %@ about %@ kcal would be needed."
+          }
+        }
+      }
+    },
+    "Für die volle Gegenrechnung fehlen: %@. Trage Größe, Geburtsjahr und Geschlecht unter Einstellungen › Erfassen › Körper ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full cross-check is missing: %@. Enter height, year of birth and sex under Settings › Capture › Body."
+          }
+        }
+      }
+    },
+    "Geburtsjahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year of birth"
+          }
+        }
+      }
+    },
+    "Gegenrechnung von Tagwerk: Ruheumsatz ~%@ kcal, Grundbedarf ohne Bewegung ~%@ kcal.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gegenrechnung von Tagwerk: Ruheumsatz ~%1$@ kcal, Grundbedarf ohne Bewegung ~%2$@ kcal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk’s cross-check: resting energy ~%@ kcal, base need without movement ~%@ kcal."
+          }
+        }
+      }
+    },
     "Gehen": {
       "localizations": {
         "en": {
@@ -1470,6 +1678,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "General thoughts"
+          }
+        }
+      }
+    },
+    "Geschlecht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex"
           }
         }
       }
@@ -1500,6 +1718,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drinks"
+          }
+        }
+      }
+    },
+    "Gewicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight"
+          }
+        }
+      }
+    },
+    "Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
           }
         }
       }
@@ -1586,6 +1824,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today: %@. Nothing more coming up."
+          }
+        }
+      }
+    },
+    "Hinweis: Der Richtwert liegt bei %lld g Ballaststoffen oder %@ g je 1.000 kcal, bei diesem Grundziel etwa %lld g.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hinweis: Der Richtwert liegt bei %1$lld g Ballaststoffen oder %2$@ g je 1.000 kcal, bei diesem Grundziel etwa %3$lld g."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: the reference is %lld g of fibre or %@ g per 1,000 kcal, about %lld g for this base goal."
+          }
+        }
+      }
+    },
+    "Hinweis: Getränke von etwa %@ bis %@ l am Tag gelten als Richtwert.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hinweis: Getränke von etwa %1$@ bis %2$@ l am Tag gelten als Richtwert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: drinks of about %@ to %@ l a day are the reference."
           }
         }
       }
@@ -2528,6 +2798,16 @@
         }
       }
     },
+    "mit der mittleren Aktivenergie der letzten %lld Tage gerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calculated with the mean active energy of the last %lld days"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -2554,6 +2834,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal left"
+          }
+        }
+      }
+    },
+    "ohne Aktivitätsdaten aus Health mit dem Faktor %@ gerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calculated without activity data from Health, with the factor %@"
           }
         }
       }

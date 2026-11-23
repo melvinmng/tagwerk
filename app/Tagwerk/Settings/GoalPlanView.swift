@@ -23,13 +23,13 @@ struct GoalPlanView: View {
             Section {
                 Toggle("Kohlenhydrate-Ziel", isOn: isOn(\.carbsGrams, start: 250))
                 if editor.plan.carbsGrams != nil {
-                    ValueStepper("Kohlenhydrate", value: goal(\.carbsGrams, orStart: 250), in: 20...800, step: 5, unit: "g") {
+                    ValueStepper("Kohlenhydrate", value: goal(\.carbsGrams, orStart: 250), in: GoalRanges.carbsGrams, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
                 }
                 Toggle("Fett-Ziel", isOn: isOn(\.fatGrams, start: 70))
                 if editor.plan.fatGrams != nil {
-                    ValueStepper("Fett", value: goal(\.fatGrams, orStart: 70), in: 10...400, step: 5, unit: "g") {
+                    ValueStepper("Fett", value: goal(\.fatGrams, orStart: 70), in: GoalRanges.fatGrams, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
                 }
@@ -42,13 +42,13 @@ struct GoalPlanView: View {
             Section {
                 Toggle("Ballaststoff-Ziel", isOn: isOn(\.fiberGrams, start: 30))
                 if editor.plan.fiberGrams != nil {
-                    ValueStepper("Ballaststoffe", value: goal(\.fiberGrams, orStart: 30), in: 5...100, step: 1, unit: "g") {
+                    ValueStepper("Ballaststoffe", value: goal(\.fiberGrams, orStart: 30), in: GoalRanges.fiberGrams, step: 1, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
                 }
                 Toggle("Zucker-Obergrenze", isOn: isOn(\.sugarLimitGrams, start: 50))
                 if editor.plan.sugarLimitGrams != nil {
-                    ValueStepper("Zucker, höchstens", value: goal(\.sugarLimitGrams, orStart: 50), in: 5...250, step: 5, unit: "g") {
+                    ValueStepper("Zucker, höchstens", value: goal(\.sugarLimitGrams, orStart: 50), in: GoalRanges.sugarLimitGrams, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
                 }
@@ -64,7 +64,7 @@ struct GoalPlanView: View {
                     .accessibilityIdentifier("targetWeightEnabled")
                 if let target = editor.plan.targetWeightKg {
                     ValueStepper("Zielgewicht", value: Binding(get: { target }, set: { editor.set(\.targetWeightKg, to: WeightRules.clamped($0)) }),
-                                 in: WeightRules.minimumKilograms...WeightRules.maximumKilograms, step: WeightRules.stepKilograms,
+                                 in: GoalRanges.targetWeightKg, step: WeightRules.stepKilograms,
                                  kind: .decimal(fractionDigits: 1), unit: "kg") { WeightFormat.kilograms($0) }
                 }
             } header: {
