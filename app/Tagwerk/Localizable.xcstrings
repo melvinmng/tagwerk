@@ -12335,6 +12335,7 @@
       }
     },
     "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält nur fest, welche Gruppen gelesen wurden. Tagwerk gibt keine medizinische Beratung.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13286,6 +13287,7 @@
       }
     },
     "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
