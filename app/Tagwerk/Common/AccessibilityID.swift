@@ -70,6 +70,8 @@ enum AccessibilityID {
         /// The row "Online suchen" below the own foods.
         static let searchRow = "foodLookup.searchRow"
         static let results = "foodLookup.results"
+        static let searchButton = "foodLookup.searchButton"
+        static let saveFood = "foodLookup.saveFood"
     }
 
     enum NoteEditor {

@@ -10,6 +10,8 @@ final class FoodPickerCoordinator {
     var amountFood: FoodValue?
     /// The edit sheet: a new food, an existing one or a prefilled draft.
     var edit: FoodEditSheet.Seed?
+    /// The online search sheet (decision LM1d); opened by a tap on "Online suchen", never by typing.
+    var onlineSearch: OnlineSearchRequest?
     /// Counts changes of the list, so the list redraws after a save or a delete.
     private(set) var revision = 0
     /// Called with the item of a chosen food and amount.
@@ -46,6 +48,9 @@ private struct FoodSheetsModifier: ViewModifier {
             }
             .sheet(item: $coordinator.edit) { seed in
                 FoodEditSheet(seed: seed) { _ in coordinator.listChanged() }
+            }
+            .sheet(item: $coordinator.onlineSearch) { request in
+                ProductSearchSheet(request: request) { coordinator.listChanged() }
             }
     }
 }
@@ -90,6 +95,7 @@ struct FoodPickerSection: View {
                         .tint(.accentColor)
                 }
             }
+            onlineSearchRow
             Button("Neues Lebensmittel", systemImage: "plus") { coordinator.startNewFood() }
                 .accessibilityIdentifier(AccessibilityID.Food.newButton)
             if environment.ai.isSignedIn {
@@ -97,6 +103,32 @@ struct FoodPickerSection: View {
             }
         } footer: {
             Text("Tippe auf ein Lebensmittel und gib die Menge ein. Wische nach links, um es zu bearbeiten oder zu löschen.")
+        }
+    }
+}
+
+extension FoodPickerSection {
+    /// "Online suchen: ‚…‘" below the own hits: a tap opens the search (and, without consent, the consent first). Nothing is sent while
+    /// the words are typed. Without a connection or with fewer than three characters the row is greyed out and says why.
+    @ViewBuilder
+    var onlineSearchRow: some View {
+        let words = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !words.isEmpty {
+            let offline = !environment.connectivity.isOnline
+            let tooShort = words.count < ProductSearchRules.minimumQueryLength
+            VStack(alignment: .leading, spacing: 2) {
+                Button { coordinator.onlineSearch = OnlineSearchRequest(query: words) } label: {
+                    Label("Online suchen: „\(words)“", systemImage: "globe")
+                }
+                .disabled(offline || tooShort)
+                .accessibilityIdentifier(AccessibilityID.FoodLookup.searchRow)
+                if offline {
+                    Text("Keine Verbindung").font(.caption).foregroundStyle(.secondaryText)
+                } else if tooShort {
+                    Text("Gib mindestens \(ProductSearchRules.minimumQueryLength) Zeichen ein.").font(.caption).foregroundStyle(.secondaryText)
+                }
+            }
+            .onAppear { environment.connectivity.start() }
         }
     }
 }

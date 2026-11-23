@@ -54,6 +54,8 @@ struct FoodLookupConsentSheet: View {
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .focused($contactFocused)
+                                .submitLabel(.done)
+                                .onSubmit { contactFocused = false }
                                 .accessibilityIdentifier(AccessibilityID.FoodLookup.contactField)
                             if model.showsInvalidHint {
                                 Text("Das ist keine gültige E-Mail-Adresse.").font(.footnote).foregroundStyle(.orangeText)

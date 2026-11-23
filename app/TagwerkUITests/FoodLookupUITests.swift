@@ -1,0 +1,51 @@
+import XCTest
+
+/// The online search in Open Food Facts (decision LM1d), against scripted answers: the app runs with `-TagwerkDemoFoodLookup`, so no
+/// request leaves the simulator. The address is invented.
+final class FoodLookupUITests: UITestCase {
+    override var extraLaunchArguments: [String] { ["-TagwerkDemoFoodLookup"] }
+
+    /// Typing does not search; the tap asks for the consent and the contact address first; after "Einverstanden und suchen" the hits
+    /// show, and a hit is taken over as an own food.
+    func testOnlineSearch_consentFirst_thenResults() {
+        tab("Erfassen")
+        onScreen(label: "Essen").tap()
+        tapButton("Meine Lebensmittel")
+        typeIn("Was hast du gegessen?", text: "Skyr")
+        let hideKeyboard = app.buttons[AccessibilityID.Common.hideKeyboard].firstMatch
+        XCTAssertTrue(hideKeyboard.waitForExistence(timeout: Self.timeout), "The button above the keyboard is missing")
+        hideKeyboard.tap()
+
+        // The row is there, nothing was searched while typing.
+        let row = app.buttons[AccessibilityID.FoodLookup.searchRow].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row for the online search is missing")
+        XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.FoodLookup.results].exists, "A search started while typing")
+        row.tap()
+
+        // The consent comes first, and "Einverstanden" needs an address.
+        let contact = app.textFields[AccessibilityID.FoodLookup.contactField].firstMatch
+        XCTAssertTrue(contact.waitForExistence(timeout: Self.timeout), "The consent sheet did not open")
+        XCTAssertEqual((contact.value as? String) ?? "", "E-Mail-Adresse", "The field must start empty (only the placeholder shows)")
+        let agree = app.buttons[AccessibilityID.FoodLookup.agreeButton].firstMatch
+        XCTAssertFalse(agree.isEnabled, "Agreeing must need an address")
+        XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.FoodLookup.results].exists, "Results appeared before the consent")
+        contact.tap()
+        contact.typeText("ui-test@example.org\n")
+        XCTAssertTrue(agree.isEnabled, "A valid address should allow agreeing")
+        agree.tap()
+
+        // The scripted answer lists two hits; the first one is complete.
+        let hit = app.descendants(matching: .any).matching(identifier: AccessibilityID.FoodLookup.results)
+            .matching(NSPredicate(format: "label CONTAINS 'Demo Skyr natur'")).firstMatch
+        XCTAssertTrue(hit.waitForExistence(timeout: Self.timeout), "The hits did not show")
+        hit.tap()
+        tapButton(AccessibilityID.FoodLookup.saveFood)
+        // The edit sheet holds the product with its values; saving makes it an own food.
+        XCTAssertTrue(app.textFields["Kalorien"].firstMatch.waitForExistence(timeout: Self.timeout), "The food form did not open")
+        tapButton(AccessibilityID.Food.saveButton)
+
+        let food = app.buttons.matching(identifier: AccessibilityID.Food.row)
+            .matching(NSPredicate(format: "label CONTAINS 'Demo Skyr natur'")).firstMatch
+        XCTAssertTrue(food.waitForExistence(timeout: Self.timeout), "The taken-over product is not in the list of own foods")
+    }
+}

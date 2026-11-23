@@ -4703,6 +4703,16 @@
         }
       }
     },
+    "Als Lebensmittel speichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as food"
+          }
+        }
+      }
+    },
     "Als Liste zeigen": {
       "localizations": {
         "en": {
@@ -4940,6 +4950,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Another day …"
+          }
+        }
+      }
+    },
+    "Angaben unvollständig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information incomplete"
           }
         }
       }
@@ -6660,6 +6680,16 @@
         }
       }
     },
+    "Bitte mit der Verpackung vergleichen: Die Werte stammen aus einer offenen Datenbank und können fehlen oder falsch sein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please compare with the package: The values come from an open database and can be missing or wrong."
+          }
+        }
+      }
+    },
     "Blatt „Essen“": {
       "localizations": {
         "en": {
@@ -7243,6 +7273,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The issue will not be assigned to anyone and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Produkt kommt als eigener Eintrag in „Meine Lebensmittel“, mit Hinweis auf die Quelle. Erst dort wählst du eine Menge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The product becomes an entry of its own in “My foods”, with a note about its source. You choose an amount there."
           }
         }
       }
@@ -8318,6 +8358,16 @@
         }
       }
     },
+    "Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The data comes from volunteers and can be missing or wrong."
+          }
+        }
+      }
+    },
     "Die Einwilligung gilt auch für „Artikel übersetzen“; dabei gehen die Namen deiner Artikel und die Zielsprache an ChatGPT, ohne Kategorien.": {
       "localizations": {
         "en": {
@@ -8575,6 +8625,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The note has changed in the meantime. Read it again."
+          }
+        }
+      }
+    },
+    "Die Packung nennt nur Werte je Portion, nicht je 100 g.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The package only states values per serving, not per 100 g."
           }
         }
       }
@@ -12281,6 +12341,16 @@
         }
       }
     },
+    "Gesucht wird nur, wenn du auf „Suchen“ tippst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is searched unless you tap “Search”."
+          }
+        }
+      }
+    },
     "Gesättigte Fettsäuren": {
       "localizations": {
         "en": {
@@ -15261,6 +15331,16 @@
         }
       }
     },
+    "Lebensmittel suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search for a food"
+          }
+        }
+      }
+    },
     "Leeren": {
       "shouldTranslate": false
     },
@@ -17264,6 +17344,16 @@
         }
       }
     },
+    "Nichts gefunden. Versuch andere Wörter oder lege das Lebensmittel selbst an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found. Try other words or create the food yourself."
+          }
+        }
+      }
+    },
     "Nichts geplant": {
       "localizations": {
         "en": {
@@ -18292,6 +18382,26 @@
         }
       }
     },
+    "Online suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search online"
+          }
+        }
+      }
+    },
+    "Online suchen: „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search online: “%@”"
+          }
+        }
+      }
+    },
     "Online-Suche": {
       "localizations": {
         "en": {
@@ -18878,6 +18988,16 @@
     },
     "Probeaufnahme starten": {
       "shouldTranslate": false
+    },
+    "Produkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product"
+          }
+        }
+      }
     },
     "Project": {
       "extractionState": "stale",
@@ -20791,6 +20911,16 @@
         }
       }
     },
+    "Stattdessen Etikett fotografieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph the label instead"
+          }
+        }
+      }
+    },
     "Status": {
       "localizations": {
         "en": {
@@ -20917,6 +21047,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hours"
+          }
+        }
+      }
+    },
+    "Suche …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching …"
           }
         }
       }
@@ -23296,6 +23436,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More goals and earlier plans"
+          }
+        }
+      }
+    },
+    "Weitere laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more"
           }
         }
       }
@@ -25855,6 +26005,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "none"
+          }
+        }
+      }
+    },
+    "keine Angabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not stated"
           }
         }
       }
