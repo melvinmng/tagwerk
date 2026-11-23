@@ -112,17 +112,11 @@ class UITestCase: XCTestCase {
         return button
     }
 
-    /// Selects a segment of a segmented control in a sheet whose text field has focus on its own (the meal sheet). While the keyboard
-    /// is open, a tap on a segment is swallowed by the window-wide tap that closes the keyboard (`KeyboardDismissal.swift`) and the
-    /// segment stays unselected, so the keyboard is closed first with a tap on the sheet title, which is not an input.
-    func selectSegment(_ title: String, inSheetTitled sheetTitle: String, file: StaticString = #filePath, line: UInt = #line) {
+    /// Selects a segment of a segmented control; one tap has to do it, also while the keyboard is open (the meal sheet focuses its
+    /// text field on its own). `KeyboardDismissalUITests` covers the keyboard case.
+    func selectSegment(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
         let segment = app.buttons[title].firstMatch
         XCTAssertTrue(segment.waitForExistence(timeout: Self.timeout), "Segment \(title) missing", file: file, line: line)
-        if app.keyboards.firstMatch.exists {
-            app.navigationBars[sheetTitle].staticTexts[sheetTitle].firstMatch.tap()
-            waitUntilGone(app.keyboards.firstMatch, file: file, line: line)
-            waitUntilScreenIsStable(file: file, line: line)
-        }
         segment.tap()
         eventually("Segment \(title) did not get selected", file: file, line: line) { segment.isSelected }
     }

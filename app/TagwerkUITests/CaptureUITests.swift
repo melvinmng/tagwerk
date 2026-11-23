@@ -93,7 +93,7 @@ final class CaptureUITests: UITestCase {
         onScreen(label: "Essen").tap()
 
         // "Zuletzt" is the default list; the second segment holds the own foods.
-        selectSegment("Meine Lebensmittel", inSheetTitled: "Essen")
+        selectSegment("Meine Lebensmittel")
         tapButton(AccessibilityID.Food.newButton)
         typeIn(AccessibilityID.Food.nameField, text: "Skyr natur")
         let kcal = app.textFields["Kalorien"].firstMatch

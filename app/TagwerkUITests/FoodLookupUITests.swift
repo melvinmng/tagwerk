@@ -10,7 +10,7 @@ final class FoodLookupUITests: UITestCase {
     func testOnlineSearch_consentFirst_thenResults() {
         tab("Erfassen")
         onScreen(label: "Essen").tap()
-        selectSegment("Meine Lebensmittel", inSheetTitled: "Essen")
+        selectSegment("Meine Lebensmittel")
         typeIn("Was hast du gegessen?", text: "Skyr")
         let hideKeyboard = app.buttons[AccessibilityID.Common.hideKeyboard].firstMatch
         XCTAssertTrue(hideKeyboard.waitForExistence(timeout: Self.timeout), "The button above the keyboard is missing")
