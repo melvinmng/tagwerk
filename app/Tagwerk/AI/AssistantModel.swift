@@ -82,6 +82,9 @@ final class AssistantModel {
     @ObservationIgnored var noteTools: NoteChatTools?
     /// Whether the consent "Notizen mit ChatGPT" is on; the entries ask before they open the notes chat.
     @ObservationIgnored var hasNoteConsent: () -> Bool = { false }
+    /// The consent as the settings hold it, followed by `watchGoalConsent`, and as last seen.
+    @ObservationIgnored private var goalConsent: (() -> Bool)?
+    @ObservationIgnored private var goalConsentWasGiven = false
     /// The tools of the chat "Ziele planen"; `nil` where the app has no goals. Only this chat has them.
     @ObservationIgnored var goalTools: GoalChatTools?
     /// Whether the consent "Ziele mit ChatGPT planen" is on.
@@ -212,6 +215,7 @@ final class AssistantModel {
             return
         }
         syncNoteConsent()
+        syncGoalConsent()
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
@@ -419,6 +423,7 @@ final class AssistantModel {
             guard let content = goalCardContent(for: call), !content.isBlocked, content.warning == nil || acknowledgedWarning else { return }
         }
         syncNoteConsent()
+        syncGoalConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
         await conversation.confirm(call)
@@ -476,6 +481,7 @@ final class AssistantModel {
     func confirmAll() async {
         guard let conversation else { return }
         syncNoteConsent()
+        syncGoalConsent()
         let index = conversation.history.count
         // Guarded cards stay open: they are confirmed one by one.
         let calls = batchConfirmable
@@ -563,6 +569,44 @@ final class AssistantModel {
         let allowed = noteConsent()
         defer { noteConsentWasGiven = allowed }
         if noteConsentWasGiven && !allowed { endNoteSession() }
+    }
+
+    /// Ends the goal session: the package is dropped and, while the goals chat is shown, the history in memory is reduced to its stored
+    /// form (the model no longer sees the values it read). While a turn runs the reduction follows when the turn ends; the note session
+    /// shares that mechanism (`pendingNoteSessionEnd`).
+    func endGoalSession() {
+        goalTools?.end()
+        guard key == ChatStore.goalsKey else { return }
+        pendingNoteSessionEnd = true
+        applyNoteSessionEnd()
+        persist()
+    }
+
+    /// Starts following the consent "Ziele mit ChatGPT planen": every change to `false` ends the goal session, wherever it comes from.
+    func watchGoalConsent(_ consent: @escaping () -> Bool) {
+        goalConsent = consent
+        goalConsentWasGiven = consent()
+        observeGoalConsent()
+    }
+
+    private func observeGoalConsent() {
+        guard let goalConsent else { return }
+        withObservationTracking {
+            _ = goalConsent()
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.syncGoalConsent()
+                self?.observeGoalConsent()
+            }
+        }
+    }
+
+    /// Compares the consent with the last value seen and ends the session when it was withdrawn; the turn entry points call it.
+    private func syncGoalConsent() {
+        guard let goalConsent else { return }
+        let allowed = goalConsent()
+        defer { goalConsentWasGiven = allowed }
+        if goalConsentWasGiven && !allowed { endGoalSession() }
     }
 
     /// Names of the folders that never leave the device, for the context line of the notes chat.

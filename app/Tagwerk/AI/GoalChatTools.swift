@@ -45,6 +45,14 @@ final class GoalChatTools: ToolHandler {
 
     func kind(of name: String) -> ToolKind { Self.readTools.contains(name) ? .read : .write }
 
+    /// `get_goal_data` keeps only the groups and the period; the proposals keep their arguments and results (goal numbers, no
+    /// measured values, and the user saw them).
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        let arguments = String(decoding: call.arguments, as: UTF8.self)
+        guard call.name == "get_goal_data", let output else { return (arguments, output) }
+        return (arguments, Self.storedPackageOutput(output))
+    }
+
     func showsActivity(_ name: String) -> Bool { Self.readTools.contains(name) }
 
     func run(_ call: ToolCall) async -> String {

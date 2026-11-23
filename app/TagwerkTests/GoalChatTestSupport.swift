@@ -69,7 +69,7 @@ struct GoalChatHarness {
         model.goalTools = goalTools
         let settings = settings
         model.hasGoalConsent = { settings.goalPlanningConsent }
-        // The session follows the consent (task G7): `model.watchGoalConsent { settings.goalPlanningConsent }`.
+        model.watchGoalConsent { settings.goalPlanningConsent }
         return (model, goalTools, store)
     }
 

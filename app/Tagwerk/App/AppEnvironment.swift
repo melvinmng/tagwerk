@@ -332,6 +332,8 @@ final class AppEnvironment {
         assistant.goalTools = GoalChatTools(hasConsent: { settings.goalPlanningConsent }, currentPlan: { budgets.plan(on: goalDay()) },
                                             adopt: { goals.adopt($0) }, today: goalDay)
         assistant.hasGoalConsent = { settings.goalPlanningConsent }
+        // Withdrawing the consent ends the goal session: the package is dropped and the history in memory is reduced to its stored form.
+        assistant.watchGoalConsent { settings.goalPlanningConsent }
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets)
         self.routineStore = RoutineStore(context: context)
         // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
