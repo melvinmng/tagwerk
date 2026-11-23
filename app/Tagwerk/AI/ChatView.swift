@@ -19,6 +19,8 @@ struct ChatView: View {
     @State private var noteDetail: NoteDetailRequest?
     /// The card whose sheet "Vorschlag anpassen" is open; set by "Anpassen" on a card with an editor.
     @State private var adjusting: ToolCall?
+    /// The goal card with a warning whose "Übernehmen" waits for the second confirmation.
+    @State private var confirmingGoal: ToolCall?
 
     private var conversation: Conversation? { assistant.conversation }
 
@@ -40,7 +42,11 @@ struct ChatView: View {
             .presentationBackgroundInteraction(voiceModeRunning ? .enabled(upThrough: .medium) : .disabled)
             .navigationTitle("ChatGPT")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { setUpVoice() }
+            .onAppear {
+                setUpVoice()
+                // "Fortschritt besprechen" prepares the first message; the user sends it with a tap.
+                if let prefill = assistant.takeGoalsPrefill() { draft = prefill }
+            }
             .onDisappear {
                 voice?.cancel()
                 environment.voiceMode.end()
@@ -64,6 +70,14 @@ struct ChatView: View {
             }
             .confirmationDialog("Verlauf löschen?", isPresented: $askingClear, titleVisibility: .visible) {
                 Button("Verlauf löschen", role: .destructive) { assistant.clear() }
+            }
+            // The second confirmation hangs on the chat view, never on the card in the list (a dialog on a row does not open reliably).
+            .confirmationDialog("Trotzdem übernehmen?", isPresented: Binding(get: { confirmingGoal != nil }, set: { if !$0 { confirmingGoal = nil } }),
+                                titleVisibility: .visible, presenting: confirmingGoal) { call in
+                Button("Trotzdem übernehmen", role: .destructive) { Task { await assistant.confirm(call, acknowledgedWarning: true) } }
+                    .accessibilityIdentifier(AccessibilityID.GoalPlanning.confirmAnyway)
+            } message: { call in
+                Text(assistant.goalCardContent(for: call)?.warning ?? "")
             }
             .sheet(item: $adjusting) { call in
                 ProposalAdjustSheet(assistant: assistant, call: call)
@@ -91,7 +105,8 @@ struct ChatView: View {
     private var voiceModeRunning: Bool { environment.voiceMode.isRunning }
     /// The send button turns into the voice mode entry while the field is empty (SP5 Einstieg).
     private var offersVoiceMode: Bool {
-        showsMicrophone && environment.ai.isSignedIn && draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        showsMicrophone && environment.ai.isSignedIn && assistant.allowsVoiceMode
+            && draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func requestVoiceMode() {
@@ -154,6 +169,7 @@ struct ChatView: View {
         case .tasks: return String(localized: "Kontext: Aufgaben")
         case .settings: return String(localized: "Kontext: allgemein")
         case .capture: return String(localized: "Kontext: Erfassen")
+        case .goals: return String(localized: "Kontext: Ziele planen")
         case .task: return assistant.task.map { String(localized: "Kontext: \($0.title)") } ?? String(localized: "Kontext: Aufgabe")
         case .notes(let folderID):
             // The line says what stays out, so the user sees why the assistant does not find the private folders.
@@ -191,6 +207,9 @@ struct ChatView: View {
                     } else if conversation?.history.isEmpty != false {
                         if isNotesContext {
                             Text("Frag nach deinen Notizen oder bitte um Änderungen. Jede Änderung bestätigst du einzeln.")
+                                .font(.subheadline).foregroundStyle(.secondaryText)
+                        } else if assistant.context == .goals {
+                            Text("Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.")
                                 .font(.subheadline).foregroundStyle(.secondaryText)
                         } else {
                             Text("Frag nach deinem Tag, deinen Aufgaben oder bitte um Änderungen. Änderungen führt Tagwerk erst aus, wenn du sie bestätigst.")
@@ -254,8 +273,9 @@ struct ChatView: View {
         case .action(let call, let status):
             let card = assistant.describe(call, isOpen: status == .pending)
             ActionCardView(card: card, status: status, time: assistant.actionTimes[call.id],
-                           onConfirm: { Task { await assistant.confirm(call) } },
+                           onConfirm: { if card.asksTwice { confirmingGoal = call } else { Task { await assistant.confirm(call) } } },
                            onDecline: { Task { await assistant.decline(call) } },
+                           canConfirm: !card.blocksConfirmation,
                            proposal: proposalPosition(of: call),
                            onShowDetail: card.detail == nil ? nil : { noteDetail = NoteDetailRequest(call: call, card: card) },
                            onAdjust: status == .pending && card.canAdjust ? { adjusting = call } : nil)

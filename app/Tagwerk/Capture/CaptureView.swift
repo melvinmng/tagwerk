@@ -63,7 +63,7 @@ struct CaptureView: View {
                 WeekReviewView(model: environment.makeWeekReviewModel())
             }
             .navigationDestination(isPresented: $showsTrends) {
-                TrendView(model: environment.makeTrendModel())
+                TrendView(model: environment.makeTrendModel(), planning: { GoalPlanningEntries() })
             }
             .navigationDestination(isPresented: $showsHabitList) {
                 HabitListView(model: environment.habits)

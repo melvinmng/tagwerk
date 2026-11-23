@@ -1027,12 +1027,32 @@
         }
       }
     },
+    "%@ · aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · from Health"
+          }
+        }
+      }
+    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · dictated"
+          }
+        }
+      }
+    },
+    "%@ · eingetragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · entered"
           }
         }
       }
@@ -2441,6 +2461,16 @@
         }
       }
     },
+    "%lld cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cm"
+          }
+        }
+      }
+    },
     "%lld eigene Erinnerungen": {
       "localizations": {
         "en": {
@@ -3250,6 +3280,16 @@
         }
       }
     },
+    "**Gesendet werden** nur die Angaben, die du vor jedem Gespräch auswählst: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Durchschnittswerte enthalten auch Einträge anderer Apps aus Health, wenn du sie mitzählen lässt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is sent** is only what you select before each conversation: height, age, sex, weight, averages of the last weeks and your current goals. Averages also include entries of other apps from Health if you let them count."
+          }
+        }
+      }
+    },
     "**Gesendet wird** der Betreff, der Name des Absenders und der Text der Mail, höchstens 12 000 Zeichen.": {
       "localizations": {
         "en": {
@@ -3384,6 +3424,16 @@
         }
       }
     },
+    "**Keine medizinische Beratung:** Vorschläge sind Schätzungen. Bei Erkrankungen, Schwangerschaft oder Essstörungen sprich mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**No medical advice:** Proposals are estimates. In case of illness, pregnancy or eating disorders, talk to a doctor."
+          }
+        }
+      }
+    },
     "**Nicht gesendet werden** Anhänge, E-Mail-Adressen (auch im Text), Empfänger und der Link zur Mail.": {
       "localizations": {
         "en": {
@@ -3421,6 +3471,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Not sent:** data from Health, your goals and earlier entries."
+          }
+        }
+      }
+    },
+    "**Nicht gesendet werden** einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**What is not sent** are single meals, photos, notes, tasks and events."
           }
         }
       }
@@ -3564,6 +3624,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "**Only when you tap:** without “Get suggestions”, no note leaves the iPhone."
+          }
+        }
+      }
+    },
+    "**Nur auf dein Tippen:** Ohne „Ziele planen“ verlässt nichts davon das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Without “Plan goals”, none of this leaves the iPhone."
           }
         }
       }
@@ -4333,6 +4403,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allow activity in Health %@"
+          }
+        }
+      }
+    },
+    "Aktivitätsenergie pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active energy per day"
+          }
+        }
+      }
+    },
+    "Aktivitätsenergie pro Tag: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Aktivitätsenergie pro Tag: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active energy per day: %@ → %@"
+          }
+        }
+      }
+    },
+    "Aktivitätsziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity goals"
           }
         }
       }
@@ -6302,6 +6408,16 @@
         }
       }
     },
+    "Aus Health lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read from Health"
+          }
+        }
+      }
+    },
     "Aus Health · andere Apps": {
       "localizations": {
         "en": {
@@ -6721,6 +6837,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reason"
+          }
+        }
+      }
+    },
+    "Begründung: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason: %@"
           }
         }
       }
@@ -7750,6 +7876,16 @@
         }
       }
     },
+    "Das Grundziel liegt unter der harten Grenze von %@ kcal und lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below the hard limit of %@ kcal and cannot be adopted."
+          }
+        }
+      }
+    },
     "Das Issue ist dann niemandem zugewiesen.": {
       "localizations": {
         "en": {
@@ -7896,6 +8032,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The target weight appears as a dashed line in the weight chart under “Trends and goals”. It does not change your daily budget."
+          }
+        }
+      }
+    },
+    "Das geht an ChatGPT, wenn du das Gespräch beginnst. Schalte aus, was nicht mitgehen soll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This goes to ChatGPT when you begin the conversation. Switch off what should not be shared."
           }
         }
       }
@@ -8440,6 +8586,16 @@
         }
       }
     },
+    "Der Nutzer hat noch keine Daten freigegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The user has not shared any data yet."
+          }
+        }
+      }
+    },
     "Der Ordner enthält zu viele Dateien für einen Import.": {
       "localizations": {
         "en": {
@@ -8628,6 +8784,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Audio is converted to text on your iPhone. Tagwerk only carries out changes once you confirm them."
+          }
+        }
+      }
+    },
+    "Der Vorschlag enthält keinen Wert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The proposal contains no value."
           }
         }
       }
@@ -9028,6 +9194,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The consent “Notes with ChatGPT” is missing."
+          }
+        }
+      }
+    },
+    "Die Einwilligung „Ziele mit ChatGPT planen“ fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The consent “Plan goals with ChatGPT” is missing."
           }
         }
       }
@@ -9888,6 +10064,16 @@
         }
       }
     },
+    "Diese Werte liegen außerhalb des erlaubten Bereichs: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These values are outside the allowed range: %@."
+          }
+        }
+      }
+    },
     "Diese Wiederholung kann nicht gespeichert werden.": {
       "localizations": {
         "en": {
@@ -10226,6 +10412,16 @@
         }
       }
     },
+    "Du kannst das in den Einstellungen unter „Erfassen“ widerrufen. Ein Widerruf beendet auch ein laufendes Gespräch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can withdraw this in the settings under “Capture”. Withdrawing also ends a running conversation."
+          }
+        }
+      }
+    },
     "Du kannst das in den Einstellungen unter „KI“ widerrufen.": {
       "localizations": {
         "en": {
@@ -10277,6 +10473,16 @@
         }
       }
     },
+    "Du wählst vor jedem Gespräch aus, was an ChatGPT geht. Es geht nichts weg, bevor du das Gespräch beginnst. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before each conversation you choose what goes to ChatGPT. Nothing leaves before you begin the conversation. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
     "Duplizieren": {
       "localizations": {
         "en": {
@@ -10293,6 +10499,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duplicated"
+          }
+        }
+      }
+    },
+    "Durchschnitte über %lld Tage; Tage ohne Eintrag zählen nicht mit. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Averages over %lld days; days without an entry do not count. Tagwerk gives no medical advice."
           }
         }
       }
@@ -10463,6 +10679,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Part of the active energy from Health raises your daily budget. Devices tend to overestimate it, so half counts by default. The calorie goal applies to a day without credited activity."
+          }
+        }
+      }
+    },
+    "Ein Wert, der aus ist, bleibt, wie er in deinen Zielen steht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A value that is switched off stays as it is in your goals."
           }
         }
       }
@@ -10893,6 +11119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and search"
+          }
+        }
+      }
+    },
+    "Einverstanden und weiter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and continue"
           }
         }
       }
@@ -11464,12 +11700,32 @@
         }
       }
     },
+    "Ernährung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition"
+          }
+        }
+      }
+    },
     "Ernährung im Widget zeigen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Show nutrition in widget"
+          }
+        }
+      }
+    },
+    "Ernährungsziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition goals"
           }
         }
       }
@@ -12126,6 +12382,16 @@
         }
       }
     },
+    "Fortschritt besprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discuss progress"
+          }
+        }
+      }
+    },
     "Fortsetzen": {
       "localizations": {
         "en": {
@@ -12632,6 +12898,27 @@
         }
       }
     },
+    "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält fest, welche Gruppen gelesen wurden. Deine Nachrichten und die Antworten des Assistenten bleiben im Verlauf und können Zahlen daraus nennen, etwa dein Gewicht oder Durchschnittswerte. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history records which groups were read. Your messages and the assistant’s answers stay in the history and can name numbers from it, for example your weight or averages. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
+    "Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält nur fest, welche Gruppen gelesen wurden. Tagwerk gibt keine medizinische Beratung.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For goal planning, information about your body and your nutrition goes to ChatGPT only if you switched on “Plan goals with ChatGPT” in the settings under “Capture” and selected what is shared before the conversation in the chat “Plan goals”: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never part of it. This data package only applies to the running conversation and is not saved in the history; the history only records which groups were read. Tagwerk gives no medical advice."
+          }
+        }
+      }
+    },
     "Für die Zusammenfassung ist deine Einwilligung nötig.": {
       "localizations": {
         "en": {
@@ -12804,6 +13091,16 @@
         }
       }
     },
+    "Geburtsjahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year of birth"
+          }
+        }
+      }
+    },
     "Gedanken": {
       "extractionState": "stale",
       "localizations": {
@@ -12811,6 +13108,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gegenrechnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cross-check"
           }
         }
       }
@@ -12882,6 +13189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read: %@"
+          }
+        }
+      }
+    },
+    "Gelesen: %@ der letzten %lld Tage (Durchschnitte)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gelesen: %1$@ der letzten %2$lld Tage (Durchschnitte)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read: %@ of the last %lld days (averages)"
           }
         }
       }
@@ -12966,6 +13289,16 @@
         }
       }
     },
+    "Geltende Ziele": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current goals"
+          }
+        }
+      }
+    },
     "Gelöscht": {
       "localizations": {
         "en": {
@@ -12998,6 +13331,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Measured from time blocks; focus timer time only counts outside the blocks, last 8 weeks."
+          }
+        }
+      }
+    },
+    "Genau diese Werte senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send exactly these values"
           }
         }
       }
@@ -13068,6 +13411,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Finished"
+          }
+        }
+      }
+    },
+    "Geschlecht für die Formel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex for the formula"
           }
         }
       }
@@ -13249,6 +13602,16 @@
         }
       }
     },
+    "Gespräch beginnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin conversation"
+          }
+        }
+      }
+    },
     "Gestern": {
       "localizations": {
         "en": {
@@ -13401,6 +13764,16 @@
         }
       }
     },
+    "Gewicht und Trend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight and trend"
+          }
+        }
+      }
+    },
     "Gewohnheit": {
       "localizations": {
         "en": {
@@ -13518,11 +13891,22 @@
       }
     },
     "Geändert wird nur der Vorschlag. Ausgeführt wird erst mit „Bestätigen“ auf der Karte.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Only the proposal is changed. Nothing is carried out until you tap “Confirm” on the card."
+          }
+        }
+      }
+    },
+    "Geändert wird nur der Vorschlag. Ausgeführt wird erst, wenn du die Karte bestätigst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the proposal is changed. It is carried out only when you confirm the card."
           }
         }
       }
@@ -13949,6 +14333,26 @@
         }
       }
     },
+    "Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        }
+      }
+    },
+    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback."
+          }
+        }
+      }
+    },
     "Größere Portion": {
       "localizations": {
         "en": {
@@ -14046,6 +14450,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Health"
+          }
+        }
+      }
+    },
+    "Health hat nichts geliefert. Entweder fehlt die Angabe in Health oder das Lesen ist nicht erlaubt; iOS teilt Tagwerk das nicht mit. Trage die Werte hier ein oder erlaube das Lesen in Health › Teilen › Apps › Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health delivered nothing. Either the value is missing in Health or reading is not allowed; iOS does not tell Tagwerk which. Enter the values here or allow reading in Health › Sharing › Apps › Tagwerk."
           }
         }
       }
@@ -14507,6 +14921,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I’m cooking for"
+          }
+        }
+      }
+    },
+    "Ich möchte besprechen, wie mein Fortschritt seit meinen letzten Zielen aussieht und ob sie noch passen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I would like to discuss how my progress has been since my last goals and whether they still fit."
           }
         }
       }
@@ -15286,6 +15710,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calories (optional)"
+          }
+        }
+      }
+    },
+    "Kalorien ohne Aktivität": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories without activity"
           }
         }
       }
@@ -16259,6 +16693,16 @@
         }
       }
     },
+    "Kontext: Ziele planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context: Plan goals"
+          }
+        }
+      }
+    },
     "Kontext: allgemein": {
       "localizations": {
         "en": {
@@ -16369,6 +16813,16 @@
         }
       }
     },
+    "Körperdaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body data"
+          }
+        }
+      }
+    },
     "Körperfett": {
       "localizations": {
         "en": {
@@ -16472,6 +16926,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Long break: %lld min"
+          }
+        }
+      }
+    },
+    "Langsamer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slower"
           }
         }
       }
@@ -17150,6 +17614,16 @@
         }
       }
     },
+    "Mehr Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More protein"
+          }
+        }
+      }
+    },
     "Mehr als 30 Kategorien sind nicht möglich.": {
       "localizations": {
         "en": {
@@ -17266,6 +17740,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign in to ChatGPT under Settings › AI to get suggestions."
+          }
+        }
+      }
+    },
+    "Melde dich unter Einstellungen › KI bei ChatGPT an, um Ziele planen zu lassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to ChatGPT under Settings › AI to have goals planned."
           }
         }
       }
@@ -21230,6 +21714,16 @@
         }
       }
     },
+    "Sag, was du erreichen willst. Der Assistent liest die Daten, die du freigegeben hast, und schlägt Ziele als Karten vor. Tagwerk rechnet jeden Vorschlag gegen; übernommen wird erst, wenn du bestätigst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say what you want to achieve. The assistant reads the data you shared and proposes goals as cards. Tagwerk cross-checks every proposal; nothing is adopted until you confirm."
+          }
+        }
+      }
+    },
     "Salz": {
       "localizations": {
         "en": {
@@ -21403,6 +21897,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Steps per day: %@"
+          }
+        }
+      }
+    },
+    "Schritte pro Tag: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Schritte pro Tag: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day: %@ → %@"
           }
         }
       }
@@ -23996,6 +24506,22 @@
         }
       }
     },
+    "Training pro Woche: %@ → %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Training pro Woche: %1$@ → %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training per week: %@ → %@"
+          }
+        }
+      }
+    },
     "Training · Woche": {
       "localizations": {
         "en": {
@@ -24092,6 +24618,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save anyway"
+          }
+        }
+      }
+    },
+    "Trotzdem übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopt anyway"
+          }
+        }
+      }
+    },
+    "Trotzdem übernehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopt anyway?"
           }
         }
       }
@@ -26741,12 +27287,62 @@
         }
       }
     },
+    "Ziele bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm goals one by one."
+          }
+        }
+      }
+    },
+    "Ziele mit ChatGPT planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan goals with ChatGPT"
+          }
+        }
+      }
+    },
+    "Ziele planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan goals"
+          }
+        }
+      }
+    },
+    "Ziele und weitere Vorschläge bestätigst du einzeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirm goals and other proposals one by one."
+          }
+        }
+      }
+    },
     "Zielgewicht": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Target weight"
+          }
+        }
+      }
+    },
+    "Zielplanung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal planning"
           }
         }
       }
@@ -27068,6 +27664,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your consent is needed to read recipes."
+          }
+        }
+      }
+    },
+    "Zum Planen deiner Ziele sendet Tagwerk Angaben über deinen Körper und deine Ernährung an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To plan your goals, Tagwerk sends information about your body and your nutrition to ChatGPT (OpenAI), through the account you are signed in with."
+          }
+        }
+      }
+    },
+    "Zum Planen deiner Ziele sendet Tagwerk auf dein Tippen die Angaben, die du vor jedem Gespräch auswählst, an ChatGPT (OpenAI): Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine werden nie gesendet. Ausschalten beendet ein laufendes Gespräch. Tagwerk gibt keine medizinische Beratung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To plan your goals, Tagwerk sends what you select before each conversation to ChatGPT (OpenAI), when you tap: height, age, sex, weight, averages of the last weeks and your current goals. Single meals, photos, notes, tasks and events are never sent. Switching it off ends a running conversation. Tagwerk gives no medical advice."
           }
         }
       }
@@ -27777,6 +28393,16 @@
         }
       }
     },
+    "cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cm"
+          }
+        }
+      }
+    },
     "danach %@ von %@ geplant": {
       "localizations": {
         "de": {
@@ -27915,6 +28541,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "completed · %@"
+          }
+        }
+      }
+    },
+    "fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "missing"
           }
         }
       }
@@ -28591,6 +29227,16 @@
         }
       }
     },
+    "männlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "male"
+          }
+        }
+      }
+    },
     "nach %@": {
       "localizations": {
         "en": {
@@ -28660,6 +29306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not completed"
+          }
+        }
+      }
+    },
+    "nicht gewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not chosen"
           }
         }
       }
@@ -29158,6 +29814,16 @@
         }
       }
     },
+    "weiblich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "female"
+          }
+        }
+      }
+    },
     "wie geschätzt": {
       "localizations": {
         "en": {
@@ -29207,6 +29873,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "read with ChatGPT"
+          }
+        }
+      }
+    },
+    "wird zu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "becomes"
           }
         }
       }

@@ -329,6 +329,55 @@ final class AppSettings {
         set { weekScheduleData = try? JSONEncoder().encode(newValue) }
     }
 
+    // MARK: Goal planning (strand G of the nutrition plan; all new fields of that strand stay together here)
+
+    /// Body values for the cross-check of goals, typed by the user as the fallback for Health. Height in whole centimetres,
+    /// birth year only (never the date of birth), `FormulaSex` raw value.
+    var bodyHeightCm: Int? = nil
+    var birthYear: Int? = nil
+    var formulaSexRaw: String? = nil
+    /// What Health delivered at the last reading of the group `bodyProfile`, in the same shape. A later silent answer keeps these.
+    var healthBodyHeightCm: Int? = nil
+    var healthBirthYear: Int? = nil
+    var healthFormulaSexRaw: String? = nil
+    /// When Health last delivered at least one body value; device state, not part of the backup.
+    var healthBodyProfileReadAt: Date? = nil
+    /// The consent "Ziele mit ChatGPT planen" (decision PV1b): only the chat "Ziele planen" and only the data package the user selects
+    /// before each conversation. Off by default; a backup without the field restores it as off.
+    var goalPlanningConsent: Bool = false
+    /// The groups of the data package the user switched off at the last conversation, as comma-separated `GoalDataGroup` raw values.
+    /// A device preference, not part of the backup.
+    var goalDataOffGroupsRaw: String? = nil
+
+    /// The groups that start switched off in the data sheet.
+    var goalDataOffGroups: Set<GoalDataGroup> {
+        get { Set((goalDataOffGroupsRaw ?? "").split(separator: ",").compactMap { GoalDataGroup(rawValue: String($0)) }) }
+        set { goalDataOffGroupsRaw = newValue.isEmpty ? nil : newValue.map(\.rawValue).sorted().joined(separator: ",") }
+    }
+
+    /// The body values the user typed.
+    var typedBodyValues: BodyProfileValues {
+        get { BodyProfileValues(heightCm: bodyHeightCm, birthYear: birthYear, sex: formulaSexRaw.flatMap(FormulaSex.init(rawValue:))) }
+        set {
+            bodyHeightCm = newValue.heightCm
+            birthYear = newValue.birthYear
+            formulaSexRaw = newValue.sex?.rawValue
+        }
+    }
+
+    /// The body values Health delivered at the last reading.
+    var healthBodyValues: BodyProfileValues {
+        get {
+            BodyProfileValues(heightCm: healthBodyHeightCm, birthYear: healthBirthYear,
+                              sex: healthFormulaSexRaw.flatMap(FormulaSex.init(rawValue:)))
+        }
+        set {
+            healthBodyHeightCm = newValue.heightCm
+            healthBirthYear = newValue.birthYear
+            healthFormulaSexRaw = newValue.sex?.rawValue
+        }
+    }
+
     init() {}
 
     /// Returns the single settings object, creating it on first access.

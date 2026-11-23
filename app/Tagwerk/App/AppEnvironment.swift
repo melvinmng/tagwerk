@@ -78,8 +78,12 @@ final class AppEnvironment {
     let dayHealth: DayHealthStore
     let budgets: DayBudgets
     let health: any HealthStoring
+    /// Height, birth year and sex for the cross-check of goals, from Health or typed.
+    let bodyProfile: BodyProfileStore
     let healthMirror: HealthMirror
     let capture: CaptureModel
+    /// The way into the chat "Ziele planen": sign-in, consent, data sheet, chat.
+    let goalPlanning: GoalPlanningFlow
     /// Habits of the "Erfassen" tab, their counter in "Planen" and in the widget (phase 7).
     let habits: HabitsModel
     /// Day entries and the evening checklist of the routines (phase 7).
@@ -321,6 +325,7 @@ final class AppEnvironment {
         let intake = IntakeStore(context: context)
         let mirror = HealthMirror(store: intake, health: healthStore)
         self.health = healthStore
+        self.bodyProfile = BodyProfileStore(settings: settings, health: healthStore, calendar: .tagwerk)
         self.intake = intake
         let goals = GoalStore(context: context, settings: settings, calendar: .tagwerk)
         goals.migrateIfNeeded()
@@ -334,8 +339,20 @@ final class AppEnvironment {
         let budgets = DayBudgets(intake: intake, goals: goals, dayHealth: dayHealth, health: healthStore, settings: settings,
                                  calendar: .tagwerk, now: { UITestMode.now() })
         self.budgets = budgets
+        // The chat "Ziele planen": its own tools; the plan of today is the base every proposal builds on.
+        let goalDay = { PlanDay(date: Date(), calendar: .tagwerk) }
+        assistant.goalTools = GoalChatTools(hasConsent: { settings.goalPlanningConsent }, currentPlan: { budgets.plan(on: goalDay()) },
+                                            adopt: { goals.adopt($0) }, today: goalDay)
+        assistant.hasGoalConsent = { settings.goalPlanningConsent }
+        // Withdrawing the consent ends the goal session: the package is dropped and the history in memory is reduced to its stored form.
+        assistant.watchGoalConsent { settings.goalPlanningConsent }
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets,
                                   now: { UITestMode.now() })
+        // An adopted goal plan reaches the head of "Erfassen" and the widget at once, not with the next reload.
+        assistant.goalTools?.onAdopted = { [capture] in Task { await capture.reload() } }
+        let goalData = GoalDataBuilder(intake: intake, budgets: budgets, weights: capture.weights, health: healthStore,
+                                       bodyProfile: bodyProfile, goals: goals, calendar: .tagwerk, now: Date.init)
+        self.goalPlanning = GoalPlanningFlow(settings: settings, builder: goalData, assistant: assistant, isSignedIn: { ai.isSignedIn })
         self.routineStore = RoutineStore(context: context)
         // The habit sources of the routines read the evening wrap-ups, the journal and the Bible Study sessions.
         let routineDays = self.routineStore

@@ -29,18 +29,18 @@ private struct CaptureSettingsForm: View {
         let capture = environment.capture
         Form {
             Section {
-                ValueStepper("Kalorien (Grundziel)", value: goal(\.kcal), in: 1000...6000, step: 50, unit: "kcal") {
+                ValueStepper("Kalorien (Grundziel)", value: goal(\.kcal), in: GoalRanges.kcal, step: 50, unit: "kcal") {
                     IntakeFormat.kcal(Double($0), estimated: false)
                 }
-                ValueStepper("Wasser", value: goal(\.waterMilliliters), in: 500...6000, step: 250,
+                ValueStepper("Wasser", value: goal(\.waterMilliliters), in: GoalRanges.waterMilliliters, step: 250,
                              kind: .decimal(fractionDigits: 2), scale: 1000, unit: "l") { IntakeFormat.liters($0) }
-                ValueStepper("Training pro Woche", value: goal(\.workoutMinutesPerWeek), in: 0...1200, step: 15,
+                ValueStepper("Training pro Woche", value: goal(\.workoutMinutesPerWeek), in: GoalRanges.workoutMinutesPerWeek, step: 15,
                              kind: .durationMinutes, display: workoutGoalText)
-                ValueStepper("Schritte pro Tag", value: goal(\.stepsPerDay), in: 0...30000, step: 500,
+                ValueStepper("Schritte pro Tag", value: goal(\.stepsPerDay), in: GoalRanges.stepsPerDay, step: 500,
                              unit: "Schritte", display: stepGoalText)
                 Toggle("Eiweiß-Ziel", isOn: optionalGoal(\.proteinGrams, start: 120))
                 if let protein = editor.plan.proteinGrams {
-                    ValueStepper("Eiweiß", value: goal(\.proteinGrams, orStart: protein), in: 20...400, step: 5, unit: "g") {
+                    ValueStepper("Eiweiß", value: goal(\.proteinGrams, orStart: protein), in: GoalRanges.proteinGrams, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
                 }
@@ -103,6 +103,10 @@ private struct CaptureSettingsForm: View {
             } footer: {
                 Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
             }
+
+            BodyProfileSection(store: environment.bodyProfile)
+
+            GoalPlanningSettingsSection()
 
             Section {
                 ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in

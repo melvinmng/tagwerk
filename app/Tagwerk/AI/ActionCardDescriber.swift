@@ -23,6 +23,8 @@ struct ActionCardDescriber {
     var noteDefaultFolderID: () -> UUID? = { nil }
     /// False for a card that was answered: it then carries no `detail` and no summary of the text (the note holds it already).
     var isOpen = true
+    /// The content of a goal card (old and new values, cross-check, warning); `nil` for any other call.
+    var goalCard: (ToolCall) -> GoalCardContent? = { _ in nil }
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> AssistantModel.ActionCard {
@@ -130,6 +132,8 @@ struct ActionCardDescriber {
             return describeAssignment(task: task, found: found, args: args, title: found?.title ?? title, language: language, spoken: spoken)
         case "create_note", "update_note", "delete_note":
             return describeNote(call.name, args: args, language: language, spoken: spoken)
+        case "propose_nutrition_goals", "propose_activity_goals":
+            return describeGoals(call, language: language, spoken: spoken)
         case "create_event", "update_event", "delete_event":
             return describeEvent(call.name, series: args["series"] as? Bool == true, language: language, string: string)
         default:

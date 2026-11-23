@@ -13,6 +13,12 @@ protocol VoiceModeAssistant: AnyObject {
     func send(_ text: String, spoken: Bool) async
     func confirmCards(_ ids: [String]) async
     func declineCards(_ ids: [String]) async
+    /// False in a chat that has no voice mode (the goal planning: cards with numbers and warnings need the screen).
+    var allowsVoiceMode: Bool { get }
+}
+
+extension VoiceModeAssistant {
+    var allowsVoiceMode: Bool { true }
 }
 
 extension AssistantModel: VoiceModeAssistant {}
@@ -86,7 +92,7 @@ final class VoiceModeController {
     // MARK: Actions
 
     func start() {
-        guard !isRunning else { return }
+        guard !isRunning, assistant.allowsVoiceMode else { return }
         let current = settings()
         machine = VoiceModeMachine(language: current.language, sendDelay: current.sendDelay, silenceLimit: current.silenceLimit)
         output.stop()

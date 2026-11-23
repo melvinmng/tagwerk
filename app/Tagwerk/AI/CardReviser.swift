@@ -194,6 +194,10 @@ final class CardReviser {
             [String(localized: "Nur mich"), String(localized: "Niemanden entfernen")]
         case "add_comment":
             [String(localized: "Kürzer"), String(localized: "Freundlicher")]
+        case "propose_nutrition_goals":
+            [String(localized: "Langsamer"), String(localized: "Mehr Eiweiß")]
+        case "propose_activity_goals":
+            [String(localized: "Weniger"), String(localized: "Mehr")]
         default:
             []
         }

@@ -63,6 +63,30 @@ enum AccessibilityID {
         static let weightRow = "trend.weightRow"
     }
 
+    enum BodyProfile {
+        /// The section "Körper" in Einstellungen › Erfassen.
+        static let readButton = "bodyProfile.readButton"
+        static let heightField = "bodyProfile.heightField"
+        static let birthYearField = "bodyProfile.birthYearField"
+        static let sexPicker = "bodyProfile.sexPicker"
+        /// The sentence after a reading that delivered nothing.
+        static let nothingDelivered = "bodyProfile.nothingDelivered"
+    }
+
+    enum GoalPlanning {
+        /// The entries "Ziele planen" and "Fortschritt besprechen", the switch of the consent, and the buttons of the two sheets.
+        static let planEntry = "goalPlanning.planEntry"
+        static let reviewEntry = "goalPlanning.reviewEntry"
+        static let consentSwitch = "goalPlanning.consentSwitch"
+        static let consentAgree = "goalPlanning.consentAgree"
+        static let begin = "goalPlanning.begin"
+        static let packageJSON = "goalPlanning.packageJSON"
+        static let signInHint = "goalPlanning.signInHint"
+        static func groupSwitch(_ group: String) -> String { "goalPlanning.group.\(group)" }
+        /// The second confirmation of a goal card with a warning.
+        static let confirmAnyway = "goalPlanning.confirmAnyway"
+    }
+
     enum Food {
         /// A row of "Meine Lebensmittel" in the meal sheet.
         static let row = "food.row"
