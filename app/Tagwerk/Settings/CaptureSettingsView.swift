@@ -108,7 +108,7 @@ private struct CaptureSettingsForm: View {
                 Text("Schätzung")
             } footer: {
                 if environment.ai.isSignedIn {
-                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
+                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ oder „Etikett fotografieren“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
                 } else {
                     Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
                 }

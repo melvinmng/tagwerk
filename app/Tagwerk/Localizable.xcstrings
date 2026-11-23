@@ -3185,7 +3185,18 @@
         }
       }
     },
+    "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit, beim Etikett nur das Foto der Nährwerttabelle. Fotos gehen verkleinert und ohne Ortsangabe raus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent** is only the text and the photo of this meal, for a label only the photo of the nutrition table. Photos are sent scaled down and without location."
+          }
+        }
+      }
+    },
     "**Gesendet wird** nur der Text und das Foto dieser Mahlzeit. Fotos gehen verkleinert und ohne Ortsangabe raus.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3390,7 +3401,18 @@
         }
       }
     },
+    "**Nur auf dein Tippen:** Ohne „Schätzen“ oder „Etikett lesen“ verlässt nichts das iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Without “Estimate” or “Read label”, nothing leaves the iPhone."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Ohne „Schätzen“ verlässt nichts das iPhone.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5563,6 +5585,16 @@
         }
       }
     },
+    "Auf dem Foto war keine Nährwerttabelle zu erkennen. Versuch es mit einem schärferen Foto oder trag die Werte selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No nutrition table was recognized in the photo. Try a sharper photo or enter the values yourself."
+          }
+        }
+      }
+    },
     "Auf die Einkaufsliste": {
       "localizations": {
         "en": {
@@ -7061,6 +7093,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "The end isn’t after the start."
+          }
+        }
+      }
+    },
+    "Das Etikett ließ sich nicht lesen. Versuch es noch einmal oder trag die Werte selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The label could not be read. Try again or enter the values yourself."
+          }
+        }
+      }
+    },
+    "Das Foto wird verkleinert und ohne Ortsangabe an ChatGPT gesendet und nicht in Tagwerk gespeichert. Die gelesenen Werte füllen die Felder; gesichert wird erst, wenn du auf „Sichern“ tippst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo is scaled down and sent to ChatGPT without location, and it is not stored in Tagwerk. The values read fill the fields; nothing is saved until you tap “Save”."
           }
         }
       }
@@ -9787,6 +9839,16 @@
         }
       }
     },
+    "Einverstanden und Etikett lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and read label"
+          }
+        }
+      }
+    },
     "Einverstanden und Vorschläge holen": {
       "localizations": {
         "en": {
@@ -10524,6 +10586,26 @@
         }
       }
     },
+    "Etikett fotografieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph label"
+          }
+        }
+      }
+    },
+    "Etikett von ChatGPT lesen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have ChatGPT read a label"
+          }
+        }
+      }
+    },
     "Export wird gelesen …": {
       "localizations": {
         "en": {
@@ -11073,6 +11155,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove photo"
+          }
+        }
+      }
+    },
+    "Foto vom Etikett auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo of the label"
           }
         }
       }
@@ -14323,6 +14415,16 @@
         }
       }
     },
+    "Keine Verbindung. Das Lesen des Etiketts braucht Internet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection. Reading a label needs the internet."
+          }
+        }
+      }
+    },
     "Keine Verbindung. Das Lesen eines Rezepts braucht Internet.": {
       "localizations": {
         "en": {
@@ -14978,6 +15080,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insert guiding questions"
+          }
+        }
+      }
+    },
+    "Lese Etikett …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading label …"
           }
         }
       }
@@ -22129,6 +22241,16 @@
         }
       }
     },
+    "Vom Etikett gelesen. Bitte vergleiche die Werte mit der Verpackung, bevor du sicherst. Ein leeres Feld ist unbekannt, nicht 0.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read from the label. Please compare the values with the package before you save. An empty field is unknown, not 0."
+          }
+        }
+      }
+    },
     "Von Hand abhaken": {
       "localizations": {
         "en": {
@@ -24260,6 +24382,16 @@
         }
       }
     },
+    "Zum Lesen des Etiketts ist deine Einwilligung nötig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the label needs your consent."
+          }
+        }
+      }
+    },
     "Zum Lesen von Rezepten ist deine Einwilligung nötig.": {
       "localizations": {
         "en": {
@@ -24281,6 +24413,7 @@
       }
     },
     "Zum Schätzen sendet Tagwerk deine Beschreibung und, wenn du eines aufnimmst, das Foto der Mahlzeit an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -24290,12 +24423,33 @@
         }
       }
     },
+    "Zum Schätzen sendet Tagwerk deine Beschreibung und, wenn du eines aufnimmst, das Foto der Mahlzeit an ChatGPT (OpenAI), über das Konto, mit dem du angemeldet bist. Zum Lesen eines Etiketts sendet Tagwerk das Foto der Nährwerttabelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To estimate, Tagwerk sends your description and, if you take one, the photo of the meal to ChatGPT (OpenAI), through the account you are signed in with. To read a label, Tagwerk sends the photo of the nutrition table."
+          }
+        }
+      }
+    },
     "Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "To estimate, Tagwerk only sends the text and photo of the meal in question to ChatGPT (OpenAI), and only when you tap “Estimate”. Data from Health, goals and earlier entries are never sent. When turned off, you enter values yourself."
+          }
+        }
+      }
+    },
+    "Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ oder „Etikett fotografieren“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To estimate, Tagwerk sends only the text and photo of the respective meal to ChatGPT (OpenAI), and to read a label only its photo, and only when you tap “Estimate” or “Photograph label”. Data from Health, goals and earlier entries are never sent. Switched off, you enter values yourself."
           }
         }
       }

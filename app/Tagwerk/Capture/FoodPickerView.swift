@@ -21,7 +21,7 @@ final class FoodPickerCoordinator {
 
     func listChanged() { revision += 1 }
 
-    func startNewFood() { edit = FoodEditSheet.Seed() }
+    func startNewFood(withLabelPhoto: Bool = false) { edit = FoodEditSheet.Seed(startsWithLabelPhoto: withLabelPhoto) }
 
     func startEditing(_ food: FoodValue) { edit = FoodEditSheet.Seed(food: food, isExisting: true) }
 }
@@ -92,6 +92,9 @@ struct FoodPickerSection: View {
             }
             Button("Neues Lebensmittel", systemImage: "plus") { coordinator.startNewFood() }
                 .accessibilityIdentifier(AccessibilityID.Food.newButton)
+            if environment.ai.isSignedIn {
+                Button("Etikett fotografieren", systemImage: "camera") { coordinator.startNewFood(withLabelPhoto: true) }
+            }
         } footer: {
             Text("Tippe auf ein Lebensmittel und gib die Menge ein. Wische nach links, um es zu bearbeiten oder zu löschen.")
         }

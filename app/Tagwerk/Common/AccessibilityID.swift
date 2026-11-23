@@ -59,6 +59,7 @@ enum AccessibilityID {
         static let amountField = "food.amount"
         static let addButton = "food.add"
         static let searchField = "food.search"
+        static let labelCamera = "food.labelCamera"
     }
 
     enum NoteEditor {

@@ -89,6 +89,8 @@ final class AppEnvironment {
     let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
+    /// Reads the nutrition table of a package from a photo; same consent as the estimate, only on a tap (decision LM3b).
+    let labelReader: LabelReader
     /// Focus timer sessions and the collection (plan P3, #161); stays on this device.
     let focusStore: FocusStore
     /// The focus timer: one session at a time, Live Activity and one notification at the end of the phase.
@@ -338,6 +340,8 @@ final class AppEnvironment {
                                                               bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
+        self.labelReader = LabelReader(responder: ai.client, model: { try await ai.selectedModel() },
+                                       hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.hasShoppingSortConsent })
         self.shoppingTranslator = ShoppingTranslator(responder: ai.client, model: { try await ai.selectedModel() },
