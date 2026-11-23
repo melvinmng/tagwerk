@@ -32,7 +32,8 @@ final class BibleStudyUITests: UITestCase {
                       "The hint about the last session is missing")
     }
 
-    /// BS2b: "Anderes …" opens the list of books; the search finds a book by its abbreviation.
+    /// BS2b: "Anderes …" opens the list of books; the search finds a book by its abbreviation, and one tap on the result chooses it
+    /// while the keyboard is still open.
     func testOtherBookSearchFindsAlias() {
         openStartSheet()
         tapButton("Anderes …")
@@ -42,11 +43,9 @@ final class BibleStudyUITests: UITestCase {
         search.typeText("Offb")
         let book = app.buttons["Offenbarung"].firstMatch
         XCTAssertTrue(book.waitForExistence(timeout: Self.timeout), "The search did not find Offenbarung by its abbreviation")
-        // While the keyboard is open, the first tap on the row only closes it (the window-wide tap of `KeyboardDismissal.swift` runs
-        // while the sheet shrinks back to its medium detent). The keyboard is closed first with a tap on the section header.
-        app.staticTexts["Neues Testament"].firstMatch.tap()
-        waitUntilGone(app.keyboards.firstMatch)
-        waitUntilScreenIsStable()
+        // One tap on the result while the keyboard is open has to choose the book (the keyboard closes with that tap, the sheet shrinks
+        // to its medium detent afterwards): the keyboard dismissal of `KeyboardDismissal.swift` must not swallow the first tap.
+        XCTAssertTrue(app.keyboards.firstMatch.exists, "The keyboard should still be open when the result is tapped")
         book.tap()
         let start = app.buttons["bibleStudy.start"]
         XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "The start sheet did not come back after choosing the book")
