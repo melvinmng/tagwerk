@@ -71,6 +71,8 @@ final class AppEnvironment {
     let intake: IntakeStore
     /// Goal plans ("Zielstände"); the plan of a day is the goal that holds on it.
     let goals: GoalStore
+    /// "Meine Lebensmittel": own foods with values per 100 g, per 100 ml or per piece.
+    let foods: FoodStore
     /// The Health values kept for each day, and the budget that follows from them (one place for every screen).
     let dayHealth: DayHealthStore
     let budgets: DayBudgets
@@ -318,6 +320,7 @@ final class AppEnvironment {
         // Goals edited in the settings before the plans took over (one plan, never updated) carry over once; later it is a no-op.
         goals.reconcileWithSettings()
         self.goals = goals
+        self.foods = FoodStore(context: context)
         self.healthMirror = mirror
         let dayHealth = DayHealthStore(context: context)
         self.dayHealth = dayHealth

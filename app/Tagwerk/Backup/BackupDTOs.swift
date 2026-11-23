@@ -1295,6 +1295,62 @@ struct DayHealthBackup: BackupEntity {
     }
 }
 
+/// One food of "Meine Lebensmittel".
+struct FoodBackup: BackupEntity {
+    static let modelName = "FoodRecord"
+    var id: UUID
+    var name: String
+    var referenceRaw: String
+    var pieceGrams: Double?
+    var kcal: Double
+    var protein: Double?
+    var carbs: Double?
+    var fat: Double?
+    var fiber: Double?
+    var sugar: Double?
+    var saturatedFat: Double?
+    var salt: Double?
+    var originRaw: String
+    var barcode: String?
+    var sourceNote: String?
+    var createdAt: Date
+
+    init(_ record: FoodRecord) {
+        id = record.id
+        name = record.name
+        referenceRaw = record.referenceRaw
+        pieceGrams = record.pieceGrams
+        kcal = record.kcal
+        protein = record.protein
+        carbs = record.carbs
+        fat = record.fat
+        fiber = record.fiber
+        sugar = record.sugar
+        saturatedFat = record.saturatedFat
+        salt = record.salt
+        originRaw = record.originRaw
+        barcode = record.barcode
+        sourceNote = record.sourceNote
+        createdAt = record.createdAt
+    }
+
+    func makeRecord() -> FoodRecord {
+        let record = FoodRecord(FoodValue(id: id, name: name, reference: FoodReference(storageKind: referenceRaw, pieceGrams: pieceGrams),
+                                          kcal: kcal), createdAt: createdAt)
+        record.protein = protein
+        record.carbs = carbs
+        record.fat = fat
+        record.fiber = fiber
+        record.sugar = sugar
+        record.saturatedFat = saturatedFat
+        record.salt = salt
+        record.originRaw = originRaw
+        record.barcode = barcode
+        record.sourceNote = sourceNote
+        return record
+    }
+}
+
 struct AppSettingsBackup: Codable, Equatable {
     var workdayStartMinutes: Int
     var workdayEndMinutes: Int
@@ -1639,6 +1695,9 @@ struct BackupEntities: Codable, Equatable {
     var goalPlans: [GoalPlanBackup]?
     /// Optional like the focus data: a file without the list leaves the stored Health values of this device alone.
     var dayHealth: [DayHealthBackup]?
+    /// Optional like the focus data: a file written before "Meine Lebensmittel" has no list, and a restore then leaves the foods of this
+    /// device alone instead of wiping them.
+    var foods: [FoodBackup]?
 
     init() {}
 
@@ -1681,10 +1740,11 @@ struct BackupEntities: Codable, Equatable {
         weekReflections = try container.decodeIfPresent([WeekReflectionBackup].self, forKey: .weekReflections) ?? []
         goalPlans = try container.decodeIfPresent([GoalPlanBackup].self, forKey: .goalPlans)
         dayHealth = try container.decodeIfPresent([DayHealthBackup].self, forKey: .dayHealth)
+        foods = try container.decodeIfPresent([FoodBackup].self, forKey: .foods)
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName, DayHealthBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName, DayHealthBackup.modelName, FoodBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1736,6 +1796,7 @@ extension BackupEntities {
         weekReflections = Self.fetch(WeekReflectionRecord.self, in: context).map(WeekReflectionBackup.init)
         goalPlans = Self.fetch(GoalPlanRecord.self, in: context).map(GoalPlanBackup.init)
         dayHealth = Self.fetch(DayHealthRecord.self, in: context).map(DayHealthBackup.init)
+        foods = Self.fetch(FoodRecord.self, in: context).map(FoodBackup.init)
     }
 
     /// Replaces the data of every model in the file with the content of the file. The settings record is updated in place. When
@@ -1791,6 +1852,8 @@ extension BackupEntities {
         if goalPlans == nil { settings.goalPlansMigrated = false }
         // Files from before the stored Health values leave those of this device untouched.
         if dayHealth != nil { Self.delete(DayHealthRecord.self, in: context) { _ in true } }
+        // Files from before "Meine Lebensmittel" leave the foods of this device untouched.
+        if foods != nil { Self.delete(FoodRecord.self, in: context) { _ in true } }
         // Unique keys of the old records must be gone before records with the same keys come in.
         try context.save()
         for item in localTasks { context.insert(item.makeRecord()) }
@@ -1836,6 +1899,7 @@ extension BackupEntities {
         for item in weekReflections { context.insert(item.makeRecord()) }
         for item in goalPlans ?? [] { context.insert(item.makeRecord()) }
         for item in dayHealth ?? [] { context.insert(item.makeRecord()) }
+        for item in foods ?? [] { context.insert(item.makeRecord()) }
         try context.save()
         if goalPlans == nil { GoalStore(context: context, settings: settings).migrateIfNeeded() }
     }

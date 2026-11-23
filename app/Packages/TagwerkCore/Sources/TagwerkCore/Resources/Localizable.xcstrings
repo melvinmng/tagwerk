@@ -50,6 +50,16 @@
         }
       }
     },
+    "%@ Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ protein"
+          }
+        }
+      }
+    },
     "%@ Gramm": {
       "localizations": {
         "en": {
@@ -1974,6 +1984,16 @@
         }
       }
     },
+    "Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pc."
+          }
+        }
+      }
+    },
     "Tag reflektieren": {
       "localizations": {
         "en": {
@@ -2302,6 +2322,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "today"
+          }
+        }
+      }
+    },
+    "je 100 g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 g"
+          }
+        }
+      }
+    },
+    "je 100 ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 ml"
+          }
+        }
+      }
+    },
+    "je Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece"
+          }
+        }
+      }
+    },
+    "je Stück (%@ g)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece (%@ g)"
           }
         }
       }

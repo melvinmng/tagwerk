@@ -2706,5 +2706,10 @@
   "Wähle hier den entpackten Ordner.": "Choose the unpacked folder here.",
   "Zu Bible Study": "Go to Bible Study",
   "Zum Tagebuch": "Go to journal",
-  "kein Text": "no text"
+  "kein Text": "no text",
+  "Stück": "pc.",
+  "je 100 g": "per 100 g",
+  "je 100 ml": "per 100 ml",
+  "je Stück": "per piece",
+  "je Stück (%@ g)": "per piece (%@ g)"
 }
