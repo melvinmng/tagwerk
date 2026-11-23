@@ -953,12 +953,32 @@
         }
       }
     },
+    "%@ · aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · from Health"
+          }
+        }
+      }
+    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · dictated"
+          }
+        }
+      }
+    },
+    "%@ · eingetragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · entered"
           }
         }
       }
@@ -2362,6 +2382,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
+          }
+        }
+      }
+    },
+    "%lld cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cm"
           }
         }
       }
@@ -5937,6 +5967,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off"
+          }
+        }
+      }
+    },
+    "Aus Health lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read from Health"
           }
         }
       }
@@ -11684,6 +11724,16 @@
         }
       }
     },
+    "Geburtsjahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year of birth"
+          }
+        }
+      }
+    },
     "Gedanken": {
       "extractionState": "stale",
       "localizations": {
@@ -11938,6 +11988,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Finished"
+          }
+        }
+      }
+    },
+    "Geschlecht für die Formel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex for the formula"
           }
         }
       }
@@ -12728,6 +12788,26 @@
         }
       }
     },
+    "Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        }
+      }
+    },
+    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback."
+          }
+        }
+      }
+    },
     "Größere Portion": {
       "localizations": {
         "en": {
@@ -12815,6 +12895,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Health"
+          }
+        }
+      }
+    },
+    "Health hat nichts geliefert. Entweder fehlt die Angabe in Health oder das Lesen ist nicht erlaubt; iOS teilt Tagwerk das nicht mit. Trage die Werte hier ein oder erlaube das Lesen in Health › Teilen › Apps › Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health delivered nothing. Either the value is missing in Health or reading is not allowed; iOS does not tell Tagwerk which. Enter the values here or allow reading in Health › Sharing › Apps › Tagwerk."
           }
         }
       }
@@ -25131,6 +25221,16 @@
         }
       }
     },
+    "cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cm"
+          }
+        }
+      }
+    },
     "danach %@ von %@ geplant": {
       "localizations": {
         "de": {
@@ -25269,6 +25369,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "completed · %@"
+          }
+        }
+      }
+    },
+    "fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "missing"
           }
         }
       }
@@ -25885,6 +25995,16 @@
         }
       }
     },
+    "männlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "male"
+          }
+        }
+      }
+    },
     "nach %@": {
       "localizations": {
         "en": {
@@ -25954,6 +26074,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not completed"
+          }
+        }
+      }
+    },
+    "nicht gewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not chosen"
           }
         }
       }
@@ -26398,6 +26528,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld days ago"
+          }
+        }
+      }
+    },
+    "weiblich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "female"
           }
         }
       }

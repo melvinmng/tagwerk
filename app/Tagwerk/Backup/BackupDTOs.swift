@@ -1409,6 +1409,11 @@ struct AppSettingsBackup: Codable, Equatable {
     var shoppingLanguage: String?
     /// Optional, so a backup written before the adjustable drink portions still decodes; a missing value keeps the device's portions.
     var drinkPresets: [Int]?
+    /// Optional, so a backup written before the goal planning still decodes. The body values the user typed (height, birth year,
+    /// sex of the formula) are part of it; what Health delivered is not, it is read again.
+    var bodyHeightCm: Int?
+    var birthYear: Int?
+    var formulaSexRaw: String?
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
@@ -1506,6 +1511,9 @@ struct AppSettingsBackup: Codable, Equatable {
         voiceAnswerLanguage = record.voiceAnswerLanguage
         shoppingLanguage = record.shoppingLanguage
         drinkPresets = record.drinkPresets
+        bodyHeightCm = record.bodyHeightCm
+        birthYear = record.birthYear
+        formulaSexRaw = record.formulaSexRaw
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
@@ -1600,6 +1608,10 @@ struct AppSettingsBackup: Codable, Equatable {
         if let recipeLanguage { record.recipeLanguage = recipeLanguage }
         if let shoppingLanguage { record.shoppingLanguage = shoppingLanguage }
         if let drinkPresets { record.drinkPresets = drinkPresets }
+        // An older file has no typed body values; the device keeps its own. Health values are device state and read again.
+        if let bodyHeightCm { record.bodyHeightCm = bodyHeightCm }
+        if let birthYear { record.birthYear = birthYear }
+        if let formulaSexRaw { record.formulaSexRaw = formulaSexRaw }
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw

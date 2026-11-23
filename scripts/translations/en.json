@@ -2764,5 +2764,19 @@
   "gegessen": "eaten",
   "Über dem Ziel": "Above the target",
   "über Budget": "over budget",
-  "„Seit Start“ vergleicht das heutige Mittel mit dem ersten Mittel, das es gibt. Tagwerk gibt keine medizinische Beratung.": "“Since start” compares today's mean with the first mean there is. Tagwerk gives no medical advice."
+  "„Seit Start“ vergleicht das heutige Mittel mit dem ersten Mittel, das es gibt. Tagwerk gibt keine medizinische Beratung.": "“Since start” compares today's mean with the first mean there is. Tagwerk gives no medical advice.",
+  "%@ · aus Health": "%@ · from Health",
+  "%@ · eingetragen": "%@ · entered",
+  "%lld cm": "%lld cm",
+  "Aus Health lesen": "Read from Health",
+  "Geburtsjahr": "Year of birth",
+  "Geschlecht für die Formel": "Sex for the formula",
+  "Größe": "Height",
+  "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback.",
+  "Health hat nichts geliefert. Entweder fehlt die Angabe in Health oder das Lesen ist nicht erlaubt; iOS teilt Tagwerk das nicht mit. Trage die Werte hier ein oder erlaube das Lesen in Health › Teilen › Apps › Tagwerk.": "Health delivered nothing. Either the value is missing in Health or reading is not allowed; iOS does not tell Tagwerk which. Enter the values here or allow reading in Health › Sharing › Apps › Tagwerk.",
+  "cm": "cm",
+  "fehlt": "missing",
+  "männlich": "male",
+  "nicht gewählt": "not chosen",
+  "weiblich": "female"
 }

@@ -75,6 +75,8 @@ final class AppEnvironment {
     let dayHealth: DayHealthStore
     let budgets: DayBudgets
     let health: any HealthStoring
+    /// Height, birth year and sex for the cross-check of goals, from Health or typed.
+    let bodyProfile: BodyProfileStore
     let healthMirror: HealthMirror
     let capture: CaptureModel
     /// Habits of the "Erfassen" tab, their counter in "Planen" and in the widget (phase 7).
@@ -312,6 +314,7 @@ final class AppEnvironment {
         let intake = IntakeStore(context: context)
         let mirror = HealthMirror(store: intake, health: healthStore)
         self.health = healthStore
+        self.bodyProfile = BodyProfileStore(settings: settings, health: healthStore, calendar: .tagwerk)
         self.intake = intake
         let goals = GoalStore(context: context, settings: settings, calendar: .tagwerk)
         goals.migrateIfNeeded()

@@ -63,6 +63,16 @@ enum AccessibilityID {
         static let weightRow = "trend.weightRow"
     }
 
+    enum BodyProfile {
+        /// The section "Körper" in Einstellungen › Erfassen.
+        static let readButton = "bodyProfile.readButton"
+        static let heightField = "bodyProfile.heightField"
+        static let birthYearField = "bodyProfile.birthYearField"
+        static let sexPicker = "bodyProfile.sexPicker"
+        /// The sentence after a reading that delivered nothing.
+        static let nothingDelivered = "bodyProfile.nothingDelivered"
+    }
+
     enum NoteEditor {
         /// The "+" button of the bar above the keyboard (the "Einfügen" menu).
         static let insertMenu = "noteEditor.insertMenu"

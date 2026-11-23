@@ -103,6 +103,8 @@ private struct CaptureSettingsForm: View {
                 Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
             }
 
+            BodyProfileSection(store: environment.bodyProfile)
+
             Section {
                 ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in
                     ValueStepper("Portion \(index + 1)", value: presetBinding(index), in: DrinkPresets.range,
