@@ -429,4 +429,15 @@ struct NoteHTMLRendererTests {
         #expect(output(version: 2).contains("src=\"tagwerk-attachment://3F2504E0-4F89-41D3-9A0C-0305E82C3301?v=2\""))
         #expect(output(version: 2) != output(version: 3))
     }
+
+    @Test func renderer_marksTaskSuffixMuted() {
+        let page = html("- [ ] Mit Lea sprechen → Aufgabe\n- [ ] Anderes\n- [ ] Mark → Aufgabe in der Mitte")
+        #expect(page.contains("Mit Lea sprechen <span class=\"task-mark\">→ Aufgabe</span></li>"))
+        #expect(page.contains("<span class=\"box\"></span></a>Anderes</li>"))
+        #expect(!page.contains("task-mark\">→ Aufgabe</span> in der Mitte"), "only a marker at the end of the line counts")
+        #expect(NoteHTMLRenderer.page(body: page).contains(".task-mark { color: var(--muted)"))
+        // With edit links the marker sits inside the link and is still marked.
+        let linked = NoteHTMLRenderer.html(markdown: "- [ ] Mit Lea sprechen → Aufgabe", options: NoteHTMLRenderer.RenderOptions(editLinks: true))
+        #expect(linked.contains("<span class=\"task-mark\">→ Aufgabe</span></a></li>"))
+    }
 }

@@ -40,6 +40,7 @@ struct TagwerkApp: App {
             }
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
+            if !isTestHost { SystemNotificationCenter.registerCategories() }
         } catch {
             // A broken store makes the app unusable; fail loudly instead of losing data silently.
             fatalError("Failed to open the SwiftData store: \(error)")

@@ -137,6 +137,19 @@ final class AppSettings {
     var weekPlanningCardDismissedDayKey: String? = nil
     /// Where "Bible Study starten" is offered (`BibleStudyOffer` raw value): the evening wrap-up, as before the choice existed.
     var bibleStudyOfferRaw: String = "evening"
+    /// The reminder to read the Bible (BS6): off by default. The times with their weekdays are a JSON list of
+    /// `BibleStudyReminderTime`.
+    var bibleStudyReminderEnabled: Bool = false
+    var bibleStudyReminderTimesData: Data? = nil
+    /// The notification names the book and the next verse ("Weiter in Römer ab 3,27"); off, it only says "Zeit für Bible Study.".
+    var bibleStudyReminderShowsPassage: Bool = true
+    /// The day (`PlanDay.dayKey`) on which "Heute nicht" dropped the reminder. Not part of the backup: it only concerns today.
+    var bibleStudySkippedDayKey: String? = nil
+    /// "Nicht jetzt" on the suggested reminder time (BS8): no suggestion before this moment. Not part of the backup.
+    var bibleStudySuggestionSnoozedUntil: Date? = nil
+    /// The suggestions (`BibleStudyHabitTime.Suggestion.key`, comma separated) whose card was already shown after a completed
+    /// session: the card comes once per new suggestion; the settings page keeps showing it. Not part of the backup.
+    var bibleStudySuggestionShownKeys: String? = nil
     /// The one-time upgrade of "Helle Lichter ausmachen" (offset 60) in an untouched five-point list was done. Not part of the
     /// backup: it only keeps a list that the user changed afterwards from being upgraded again.
     var lightsOffsetUpgradeDone: Bool = false
@@ -286,6 +299,12 @@ final class AppSettings {
             drinkPreset2Milliliters = resolved[1]
             drinkPreset3Milliliters = resolved[2]
         }
+    }
+
+    /// The reminder times of Bible Study; an unreadable or missing list is empty.
+    var bibleStudyReminderTimes: [BibleStudyReminderTime] {
+        get { bibleStudyReminderTimesData.flatMap { try? JSONDecoder().decode([BibleStudyReminderTime].self, from: $0) } ?? [] }
+        set { bibleStudyReminderTimesData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue) }
     }
 
     var bibleStudyOffer: BibleStudyOffer {

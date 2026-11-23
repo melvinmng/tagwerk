@@ -44,6 +44,31 @@ struct BibleStudyStoreTests {
         #expect(second.note.id == started.note.id && second.note.text.contains("4,1-8") && store.sessions().count == 2)
     }
 
+    @Test func sessionChanges_tellTheReminder() {
+        var changes = 0
+        store.onBibleStudyChanged = { changes += 1 }
+        let started = store.startSession(book: romans, passage: "3,21-31", dayKey: "2026-11-19", dateText: "19.11.2026", locale: german)
+        #expect(changes == 1)
+        store.completeSession(started.session.id)
+        #expect(changes == 2)
+        // A second completion changes nothing and tells nothing.
+        store.completeSession(started.session.id)
+        #expect(changes == 2)
+    }
+
+    @Test func reminderContinuation_followsTheLatestSession() throws {
+        #expect(store.reminderContinuation() == nil)
+        let romansSession = store.startSession(book: romans, passage: BiblePassage(start: BibleReference(chapter: 3, verse: 1), end: BibleReference(chapter: 3, verse: 26)),
+                                               dayKey: "2026-11-17", dateText: "17.11.2026", locale: german)
+        store.completeSession(romansSession.session.id)
+        let continuation = try #require(store.reminderContinuation())
+        #expect(continuation.book == romans && continuation.next == .start(BibleReference(chapter: 3, verse: 27)))
+        // A session typed as free text has no verse to continue at.
+        clock.now = clock.now.addingTimeInterval(60)
+        store.startSession(book: john, passage: "Kap. 1", dayKey: "2026-11-18", dateText: "18.11.2026", locale: german)
+        #expect(store.reminderContinuation() == nil)
+    }
+
     @Test func completeSession_setsTheDateOnce() throws {
         let started = store.startSession(book: john, passage: "1,1-5", dayKey: "2026-11-19", dateText: "19.11.2026", locale: german)
         clock.now = clock.now.addingTimeInterval(600)
