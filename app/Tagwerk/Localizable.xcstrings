@@ -601,6 +601,16 @@
         }
       }
     },
+    "%@ noch offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ still open"
+          }
+        }
+      }
+    },
     "%@ noch offen in %@": {
       "localizations": {
         "de": {
@@ -4031,6 +4041,16 @@
         }
       }
     },
+    "Abschlusshut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graduation cap"
+          }
+        }
+      }
+    },
     "Abspielen": {
       "shouldTranslate": false
     },
@@ -5983,6 +6003,16 @@
         }
       }
     },
+    "Aufgeschlagenes Buch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open book"
+          }
+        }
+      }
+    },
     "Aufnahme beenden": {
       "localizations": {
         "en": {
@@ -6249,6 +6279,96 @@
         }
       }
     },
+    "Automatisch erfüllt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically"
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch das Schrittziel. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the step goal. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch das Tagebuch. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the journal. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch das Tageslicht. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by daylight. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch das Training. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the workout. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch das Wasserziel. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the water goal. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the daily wrap-up. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch die Bewegung. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by exercise. Cannot be unchecked."
+          }
+        }
+      }
+    },
+    "Automatisch erfüllt durch die Bible-Study-Sitzung. Lässt sich nicht abwählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfilled automatically by the Bible Study session. Cannot be unchecked."
+          }
+        }
+      }
+    },
     "Automatisch nach „%@“": {
       "localizations": {
         "en": {
@@ -6269,7 +6389,18 @@
         }
       }
     },
+    "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic sources check themselves, even on days you do not open the app. Until then you can check by hand; a check that was set automatically cannot be removed. Each source applies to one habit at most."
+          }
+        }
+      }
+    },
     "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6611,6 +6742,16 @@
         }
       }
     },
+    "Bett": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bed"
+          }
+        }
+      }
+    },
     "Bewegen": {
       "localizations": {
         "en": {
@@ -6627,6 +6768,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move to"
+          }
+        }
+      }
+    },
+    "Bewegung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exercise"
           }
         }
       }
@@ -6814,6 +6965,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please enter a number."
+          }
+        }
+      }
+    },
+    "Blatt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaf"
           }
         }
       }
@@ -9822,6 +9983,16 @@
         }
       }
     },
+    "Dusche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shower"
+          }
+        }
+      }
+    },
     "Eigene": {
       "localizations": {
         "en": {
@@ -11752,6 +11923,16 @@
         }
       }
     },
+    "Funken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparkles"
+          }
+        }
+      }
+    },
     "Funktionsaufruf mitschneiden": {
       "shouldTranslate": false
     },
@@ -12433,6 +12614,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Closed issues cannot be assigned here."
+          }
+        }
+      }
+    },
+    "Geschlossenes Buch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed book"
           }
         }
       }
@@ -13335,6 +13526,16 @@
         }
       }
     },
+    "Herz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart"
+          }
+        }
+      }
+    },
     "Heute": {
       "localizations": {
         "en": {
@@ -13531,6 +13732,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "High"
+          }
+        }
+      }
+    },
+    "Häkchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkmark"
           }
         }
       }
@@ -15414,6 +15625,16 @@
         }
       }
     },
+    "Kopf mit Gehirn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Head with brain"
+          }
+        }
+      }
+    },
     "Kopfzeile, Spalte %lld": {
       "localizations": {
         "en": {
@@ -16399,6 +16620,16 @@
         }
       }
     },
+    "Messer und Gabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knife and fork"
+          }
+        }
+      }
+    },
     "Messungen in dieser Woche": {
       "localizations": {
         "en": {
@@ -17046,6 +17277,16 @@
         }
       }
     },
+    "Mond und Sterne": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moon and stars"
+          }
+        }
+      }
+    },
     "Morgen": {
       "localizations": {
         "en": {
@@ -17092,6 +17333,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan tomorrow with %lld from today"
+          }
+        }
+      }
+    },
+    "Musiknote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music note"
           }
         }
       }
@@ -20222,6 +20473,16 @@
         }
       }
     },
+    "Schrittziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step goal"
+          }
+        }
+      }
+    },
     "Schrittziel erreicht": {
       "localizations": {
         "en": {
@@ -20957,6 +21218,16 @@
         }
       }
     },
+    "Sonne": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sun"
+          }
+        }
+      }
+    },
     "Sonstiges": {
       "localizations": {
         "en": {
@@ -21559,6 +21830,16 @@
         }
       }
     },
+    "Stift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencil"
+          }
+        }
+      }
+    },
     "Stimme": {
       "localizations": {
         "en": {
@@ -21655,6 +21936,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit table"
+          }
+        }
+      }
+    },
+    "Tabletten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pills"
           }
         }
       }
@@ -21866,6 +22157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evening wrap-up done"
+          }
+        }
+      }
+    },
+    "Tageslicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daylight"
           }
         }
       }
@@ -22211,6 +22512,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagwerk: “%1$@” · Notion: “%2$@”"
+          }
+        }
+      }
+    },
+    "Tasse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cup"
           }
         }
       }
@@ -22610,6 +22921,16 @@
         }
       }
     },
+    "Training erfasst oder Schrittziel erreicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout recorded or step goal reached"
+          }
+        }
+      }
+    },
     "Training in Tagwerk erfassen": {
       "localizations": {
         "en": {
@@ -22707,6 +23028,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drink portions"
+          }
+        }
+      }
+    },
+    "Tropfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drop"
           }
         }
       }
@@ -23255,6 +23586,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "From"
+          }
+        }
+      }
+    },
+    "Von Hand abgehakt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked by hand"
           }
         }
       }
@@ -24041,6 +24382,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Water: %@"
+          }
+        }
+      }
+    },
+    "Wasserziel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water goal"
           }
         }
       }
@@ -26199,11 +26550,22 @@
       }
     },
     "automatisch": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "automatic"
+          }
+        }
+      }
+    },
+    "automatisch erfüllt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fulfilled automatically"
           }
         }
       }
@@ -26578,6 +26940,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "h"
+          }
+        }
+      }
+    },
+    "hakt sich selbst ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checks itself"
           }
         }
       }
@@ -27175,6 +27547,16 @@
         }
       }
     },
+    "offen, hakt sich selbst ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open, checks itself"
+          }
+        }
+      }
+    },
     "ohne Erinnerung": {
       "extractionState": "stale",
       "localizations": {
@@ -27505,6 +27887,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "adjusted by ChatGPT"
+          }
+        }
+      }
+    },
+    "von Hand abgehakt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checked by hand"
           }
         }
       }

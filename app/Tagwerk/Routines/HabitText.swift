@@ -57,14 +57,13 @@ enum HabitText {
             let goal = IntakeFormat.liters(facts.goalWaterMilliliters, locale: locale)
             return String(localized: "\(value) von \(goal)")
         case .workout:
-            guard let workout else { return nil }
-            let name = workout.displayName
-            return workout.isOwn ? String(localized: "\(name) \(workout.minutes) min")
-                                 : String(localized: "\(name) \(workout.minutes) min aus Health")
+            return workout.map(workoutDetail)
         case .steps:
-            let value = IntakeFormat.grouped(facts.steps[day] ?? 0, locale: locale)
-            let goal = IntakeFormat.grouped(facts.goalSteps, locale: locale)
-            return String(localized: "\(value) von \(goal) Schritten")
+            return stepsDetail(on: day, facts: facts, locale: locale)
+        case .movement:
+            // A counted workout names itself; otherwise the steps tell how far the day is.
+            if facts.workoutDays.contains(day), let workout { return workoutDetail(workout) }
+            return stepsDetail(on: day, facts: facts, locale: locale)
         case .daylight:
             let minutes = facts.daylightMinutes[day] ?? 0
             return String(localized: "\(minutes) von \(habit.daylightMinutes) min Tageslicht")
@@ -75,6 +74,20 @@ enum HabitText {
         case .bibleStudy:
             return facts.bibleStudyDays.contains(day) ? String(localized: "Sitzung abgeschlossen") : nil
         }
+    }
+
+    private static func workoutDetail(_ workout: WorkoutValue) -> String {
+        let name = workout.displayName
+        return workout.isOwn ? String(localized: "\(name) \(workout.minutes) min")
+                             : String(localized: "\(name) \(workout.minutes) min aus Health")
+    }
+
+    /// "10.412 von 8.000 Schritten"; `nil` without a step goal (nothing to compare with).
+    private static func stepsDetail(on day: PlanDay, facts: HabitFacts, locale: Locale) -> String? {
+        guard facts.goalSteps > 0 else { return nil }
+        let value = IntakeFormat.grouped(facts.steps[day] ?? 0, locale: locale)
+        let goal = IntakeFormat.grouped(facts.goalSteps, locale: locale)
+        return String(localized: "\(value) von \(goal) Schritten")
     }
 
     /// "Täglich", "3 Tage pro Woche".
@@ -90,10 +103,135 @@ enum HabitText {
         case .water: String(localized: "Wasserziel erreicht")
         case .workout: String(localized: "Training erfasst")
         case .steps: String(localized: "Schrittziel erreicht")
+        case .movement: String(localized: "Bewegung")
         case .daylight: String(localized: "Zeit bei Tageslicht")
         case .eveningClosed: String(localized: "Tagesabschluss erledigt")
         case .journal: String(localized: "Tagebuch geschrieben")
         case .bibleStudy: String(localized: "Bible-Study-Sitzung abgeschlossen")
+        }
+    }
+
+    /// The line under the name of a source in the picker; `nil` where the title says it all.
+    static func sourceSubtitle(_ source: HabitSource) -> String? {
+        source == .movement ? String(localized: "Training erfasst oder Schrittziel erreicht") : nil
+    }
+
+    // MARK: States of a row (GW2a, GW3b)
+
+    /// Share of the goal for water and steps (0…1, never more); `nil` for sources without a measure: a workout, a closed evening, a
+    /// journal entry, a Bible Study session, daylight, and "Bewegung" without a step goal.
+    static func sourceProgress(_ habit: Habit, on day: PlanDay, facts: HabitFacts) -> Double? {
+        switch habit.source {
+        case .water:
+            return share(facts.waterMilliliters[day] ?? 0, of: facts.goalWaterMilliliters)
+        case .steps, .movement:
+            return share(facts.steps[day] ?? 0, of: facts.goalSteps)
+        case .manual, .workout, .daylight, .eveningClosed, .journal, .bibleStudy:
+            return nil
+        }
+    }
+
+    private static func share(_ value: Int, of goal: Int) -> Double? {
+        goal > 0 ? min(1, max(0, Double(value) / Double(goal))) : nil
+    }
+
+    /// The line under the subtitle of a row, by state:
+    /// (2) "Automatisch erfüllt · 2,1 l von 2,0 l", (3) "5.600 von 8.000 Schritten · hakt sich selbst ab",
+    /// (4) "Von Hand abgehakt · Tagebuch noch offen"; `nil` for habits by hand. A source without a measure says
+    /// "Tagebuch noch offen · hakt sich selbst ab" in (3).
+    static func stateLine(_ row: HabitsModel.Row, on day: PlanDay, facts: HabitFacts, workout: WorkoutValue?,
+                          locale: Locale = .current) -> String? {
+        let habit = row.habit
+        switch row.state {
+        case .manualOpen, .manualDone:
+            return nil
+        case .automaticDone:
+            let head = String(localized: "Automatisch erfüllt")
+            return sourceDetail(habit, on: day, facts: facts, workout: workout, locale: locale).map { "\(head) · \($0)" } ?? head
+        case .automaticPending(let progress):
+            let measure = progress == nil ? nil : sourceDetail(habit, on: day, facts: facts, workout: nil, locale: locale)
+            let first = measure ?? String(localized: "\(sourceNoun(habit.source)) noch offen")
+            return "\(first) · " + String(localized: "hakt sich selbst ab")
+        case .manualDoneSourcePending:
+            return String(localized: "Von Hand abgehakt") + " · " + String(localized: "\(sourceNoun(habit.source)) noch offen")
+        }
+    }
+
+    /// The source as a short noun, for "Tagebuch noch offen".
+    static func sourceNoun(_ source: HabitSource) -> String {
+        switch source {
+        case .manual: ""
+        case .water: String(localized: "Wasserziel")
+        case .workout: String(localized: "Training")
+        case .steps: String(localized: "Schrittziel")
+        case .movement: String(localized: "Bewegung")
+        case .daylight: String(localized: "Tageslicht")
+        case .eveningClosed: String(localized: "Tagesabschluss")
+        case .journal: String(localized: "Tagebuch")
+        case .bibleStudy: String(localized: "Bible Study")
+        }
+    }
+
+    /// What VoiceOver says for the state of a row, in words instead of the bolt.
+    static func accessibilityState(_ state: HabitsModel.Row.State) -> String {
+        switch state {
+        case .manualOpen: String(localized: "offen")
+        case .manualDone: String(localized: "erledigt")
+        case .automaticDone: String(localized: "automatisch erfüllt")
+        case .automaticPending: String(localized: "offen, hakt sich selbst ab")
+        case .manualDoneSourcePending: String(localized: "von Hand abgehakt")
+        }
+    }
+
+    // MARK: Hint, footer and symbol names (GW3, GW2)
+
+    /// Shown for three seconds under the list when an automatically fulfilled row is tapped: "Automatisch erfüllt durch das
+    /// Wasserziel. Lässt sich nicht abwählen."; `nil` for habits by hand.
+    static func automaticHint(_ source: HabitSource) -> String? {
+        switch source {
+        case .manual: nil
+        case .water: String(localized: "Automatisch erfüllt durch das Wasserziel. Lässt sich nicht abwählen.")
+        case .workout: String(localized: "Automatisch erfüllt durch das Training. Lässt sich nicht abwählen.")
+        case .steps: String(localized: "Automatisch erfüllt durch das Schrittziel. Lässt sich nicht abwählen.")
+        case .movement: String(localized: "Automatisch erfüllt durch die Bewegung. Lässt sich nicht abwählen.")
+        case .daylight: String(localized: "Automatisch erfüllt durch das Tageslicht. Lässt sich nicht abwählen.")
+        case .eveningClosed: String(localized: "Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen.")
+        case .journal: String(localized: "Automatisch erfüllt durch das Tagebuch. Lässt sich nicht abwählen.")
+        case .bibleStudy: String(localized: "Automatisch erfüllt durch die Bible-Study-Sitzung. Lässt sich nicht abwählen.")
+        }
+    }
+
+    /// The footer under "Erfüllt durch" in the habit sheet.
+    static var sourceFooter: String {
+        String(localized: "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.")
+    }
+
+    /// The name VoiceOver reads for a symbol in the picker ("Gehen" for `figure.walk`); the symbol itself for an unknown one.
+    static func symbolName(_ symbol: String) -> String {
+        switch symbol {
+        case "checkmark.circle": String(localized: "Häkchen")
+        case "book": String(localized: "Buch")
+        case "figure.walk": String(localized: "Gehen")
+        case "figure.run": String(localized: "Laufen")
+        case "figure.strengthtraining.traditional": String(localized: "Krafttraining")
+        case "drop": String(localized: "Tropfen")
+        case "bed.double": String(localized: "Bett")
+        case "leaf": String(localized: "Blatt")
+        case "pencil": String(localized: "Stift")
+        case "brain.head.profile": String(localized: "Kopf mit Gehirn")
+        case "heart": String(localized: "Herz")
+        case "sun.max": String(localized: "Sonne")
+        case "fork.knife": String(localized: "Messer und Gabel")
+        case "music.note": String(localized: "Musiknote")
+        case "pills": String(localized: "Tabletten")
+        case "cup.and.saucer": String(localized: "Tasse")
+        case "moon.stars": String(localized: "Mond und Sterne")
+        case "sparkles": String(localized: "Funken")
+        case "book.closed": String(localized: "Geschlossenes Buch")
+        case "shower": String(localized: "Dusche")
+        case "graduationcap": String(localized: "Abschlusshut")
+        case "book.pages": String(localized: "Aufgeschlagenes Buch")
+        default: symbol
         }
     }
 }

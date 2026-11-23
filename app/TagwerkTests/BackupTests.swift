@@ -1323,6 +1323,21 @@ struct BackupTests {
         backup.clearFolder()
         #expect(sourceSettings.backupFolderBookmark == nil && sourceSettings.lastBackupError == nil)
     }
+
+    // MARK: Habit sources
+
+    @Test func backup_roundTripsMovementSource() throws {
+        source.mainContext.insert(HabitRecord(Habit(name: "Bewegung", symbol: "figure.walk", order: 5, source: .movement,
+                                                    start: PlanDay(year: 2026, month: 11, day: 1)), createdAt: clock.now))
+        try source.mainContext.save()
+        let file = try backup.makeBackupData()
+        let target = try makeTarget()
+        try target.service.restore(try target.service.inspect(file))
+        let restored = entities(of: target.container.mainContext, settings: target.settings).habits
+        let movement = try #require(restored.first { $0.name == "Bewegung" })
+        #expect(HabitSource(rawValue: movement.source) == .movement)
+    }
+
     // MARK: Status card
 
     @Test func folderSummary_countsOnlyOwnFiles() throws {
