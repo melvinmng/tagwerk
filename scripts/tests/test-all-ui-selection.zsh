@@ -37,12 +37,12 @@ check "retries off with 0"            "rc=0" "$(selection TAGWERK_UI_TEST_RETRIE
 skip_arguments=$(grep -vE '^[[:space:]]*(#|$)' "$ROOT/app/TagwerkUITests/nightly-only.txt" | sed -e 's/[[:space:]]//g' -e 's#^#-skip-testing:TagwerkUITests/#')
 check "the repository list is not empty" "1" "$([[ -n "$skip_arguments" ]] && print 1 || print 0)"
 check "pr set from the repository list" "$skip_arguments"$'\nrc=0' "$(selection TAGWERK_UI_TEST_SET=pr)"
-check "pr set with one retry" \
-  "$skip_arguments"$'\n-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
-  "$(selection TAGWERK_UI_TEST_SET=pr TAGWERK_UI_TEST_RETRIES=1)"
-check "full set with one retry" \
-  $'-retry-tests-on-failure\n-test-iterations\n2\nrc=0' \
-  "$(selection TAGWERK_UI_TEST_RETRIES=1)"
+# The retry is a second xcodebuild call (run_ui_tests), no longer an argument of the first one.
+check "retries add no selection argument"  "$skip_arguments"$'\nrc=0' "$(selection TAGWERK_UI_TEST_SET=pr TAGWERK_UI_TEST_RETRIES=1)"
+check "retries are on without the variable" "1" "$( (unset TAGWERK_UI_TEST_RETRIES; export TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
+check "retries are on with 1"  "1" "$( (export TAGWERK_UI_TEST_RETRIES=1 TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
+check "retries are off with 0"  "0" "$( (export TAGWERK_UI_TEST_RETRIES=0 TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
+check "retries are off when empty" "0" "$( (export TAGWERK_UI_TEST_RETRIES= TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
 
 # Every entry of the repository list must name an existing UI test class (a typo would silently skip nothing).
 missing_classes=""
@@ -100,7 +100,7 @@ report_output() { # log
   (
     export TAGWERK_SOURCE_ONLY=1
     source "$ROOT/app/test-all.sh"
-    report_retried_ui_tests "$1" "$WORK_DIR/report.md"
+    report_retried_ui_tests "$WORK_DIR/report.md" "$@"
   )
 }
 check "retry report lists flaky tests only" \
@@ -113,6 +113,26 @@ print -n $'Executed 20 tests, with 1 failure (0 unexpected) in 100.0 (100.1) sec
 check "retry report flags unreadable logs" \
   $'RETRIED UI TESTS\n  The log reports failed attempts, but no test names could be read from it (log: '"$WORK_DIR/log-unparsed.txt)" \
   "$(report_output "$WORK_DIR/log-unparsed.txt")"
+
+# Two attempts in two logs (the retry of the UI stage): failed in the first, passed in the second.
+cat > "$WORK_DIR/log-first.txt" <<'LOG'
+Test Case '-[TagwerkUITests.TaskFlowUITests testFlaky]' failed (12.3 seconds).
+Test Case '-[TagwerkUITests.TaskFlowUITests testBroken]' failed (12.3 seconds).
+Test Case '-[TagwerkUITests.TaskFlowUITests testStable]' passed (9.0 seconds).
+LOG
+cat > "$WORK_DIR/log-second.txt" <<'LOG'
+Test Case '-[TagwerkUITests.TaskFlowUITests testFlaky]' passed (10.1 seconds).
+Test Case '-[TagwerkUITests.TaskFlowUITests testBroken]' failed (12.0 seconds).
+LOG
+check "retry report over two attempts" \
+  $'RETRIED UI TESTS\n  - TaskFlowUITests/testFlaky' \
+  "$(report_output "$WORK_DIR/log-first.txt" "$WORK_DIR/log-second.txt")"
+
+# The tests that failed (last result) are the ones to run again: both log styles, passed tests and retried tests excluded.
+failed_of() { /usr/bin/python3 -I "$ROOT/scripts/ui-test-log.py" failed "$@"; }
+check "failed tests of a log" "SearchUITests/testBroken" "$(failed_of "$WORK_DIR/log-retry.txt")"
+check "failed tests over two attempts" "TaskFlowUITests/testBroken" "$(failed_of "$WORK_DIR/log-first.txt" "$WORK_DIR/log-second.txt")"
+check "failed tests of a clean log" "" "$(failed_of "$WORK_DIR/log-clean.txt")"
 
 if (( failures > 0 )); then print "$failures check(s) failed"; exit 1; fi
 print "all checks passed"
