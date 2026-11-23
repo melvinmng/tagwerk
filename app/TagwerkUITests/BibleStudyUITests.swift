@@ -4,12 +4,17 @@ import XCTest
 /// of chapter 3, so the suggestion is 4,1.
 @MainActor
 final class BibleStudyUITests: UITestCase {
-    /// Aufgaben › Notizen › Bible Study › "Bible Study starten".
-    private func openStartSheet(file: StaticString = #filePath, line: UInt = #line) {
+    /// Aufgaben › Notizen › Bible Study. The folder sits in the section "Persönlich" below the fold of the overview.
+    private func openBibleStudyFolder(file: StaticString = #filePath, line: UInt = #line) {
         openNotes(file: file, line: line)
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study")).firstMatch
-        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout), "The folder \"Bible Study\" is missing", file: file, line: line)
+        scrollTo(folder, file: file, line: line)
         folder.tap()
+    }
+
+    /// Aufgaben › Notizen › Bible Study › "Bible Study starten".
+    private func openStartSheet(file: StaticString = #filePath, line: UInt = #line) {
+        openBibleStudyFolder(file: file, line: line)
         let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study starten")).firstMatch
         XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "\"Bible Study starten\" is missing", file: file, line: line)
         start.tap()
@@ -100,10 +105,7 @@ final class BibleStudyUITests: UITestCase {
 
     /// Aufgaben › Notizen › Bible Study › the note of Römer, shown as a page.
     private func openRomansNote(file: StaticString = #filePath, line: UInt = #line) {
-        openNotes(file: file, line: line)
-        let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study")).firstMatch
-        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout), "The folder \"Bible Study\" is missing", file: file, line: line)
-        folder.tap()
+        openBibleStudyFolder(file: file, line: line)
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Römer")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: Self.timeout), "The note of Römer is missing", file: file, line: line)
         card.tap()
