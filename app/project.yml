@@ -145,7 +145,10 @@ targets:
   TagwerkTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [TagwerkTests]
+    sources:
+      - TagwerkTests
+      # The rule that confirms audit findings is plain Swift of the UI test target; its unit test runs here, without a simulator app launch.
+      - path: TagwerkUITests/AuditConfirmation.swift
     dependencies:
       - target: Tagwerk
     settings:

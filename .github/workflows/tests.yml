@@ -7,11 +7,18 @@ name: Tests
 #   ui    UI tests including the accessibility audits (the slow stage)
 # Triggers:
 #   pull_request       reduced UI test set (TAGWERK_UI_TEST_SET=pr, see app/TagwerkUITests/nightly-only.txt) with one
-#                      retry per failed UI test; retried tests are listed in the job summary
+#                      retry per failed UI test (the failed tests run once more, alone, in a second xcodebuild call; a test
+#                      is red only when both attempts fail); retried tests are listed in the job summary
 #   schedule           nightly, only when main has new commits since the last successful nightly run; full UI test
 #                      set, no retries
 #   workflow_dispatch  full UI test set, no retries, for any branch
 #   push to main       build only, no tests: refreshes the build caches after every merge (see "Build cache" below)
+# Judging a pull request run: the run tests the merge of the branch into main as GitHub computes it, but a branch that is behind
+# main lacks the fixes that main already has (the recipe audit findings of one night came from branches that did not contain the
+# confirmation pass of main). Merge main into the branch before a failure counts as the branch's own; the "Changes" summary
+# of a pull request run says how far the branch is behind main.
+# Hangs: when the app stops answering during the UI tests, app/test-all.sh writes a stack sample of the app process
+# (hang-*.txt) into the log folder that the failure artifact contains.
 # A pull request that changes only documentation (docs/**, *.md, TODO.md) runs no tests: the jobs below still start
 # and finish green, so the checks stay usable as required status checks. The filter lives in the "changes" job and
 # not in on.paths, because a workflow that is never triggered would leave a required check pending forever.
@@ -105,6 +112,8 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           REF_NAME: ${{ github.ref_name }}
           CURRENT_SHA: ${{ github.sha }}
+          PULL_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           set -euo pipefail
           run_tests=true
@@ -152,6 +161,15 @@ jobs:
               reason="Manual run: full UI test set."
               ;;
           esac
+
+          # A pull request branch that is behind its base lacks the fixes the base already has: say so, so that a red run of such a
+          # branch is not judged before the base is merged into it. Informational only; a failed lookup changes nothing.
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            behind_by=$(gh api "repos/$REPOSITORY/compare/$BASE_REF...$PULL_REQUEST_HEAD_SHA" --jq '.behind_by' 2>/dev/null || echo "")
+            if [[ "$behind_by" =~ ^[0-9]+$ && "$behind_by" -gt 0 ]]; then
+              reason="$reason Note: the branch is $behind_by commit(s) behind $BASE_REF. Merge $BASE_REF into it before judging failures of this run."
+            fi
+          fi
 
           echo "$reason"
           {
@@ -322,9 +340,10 @@ jobs:
           TAGWERK_SKIP_UI_TESTS: ${{ matrix.skip_ui_tests }}
           TAGWERK_ONLY_UI_TESTS: ${{ matrix.only_ui_tests }}
           # Pull requests run the reduced UI test set with one retry per failed UI test (the unit stages never retry).
-          # Nightly and manual runs run every UI test once, so wobbling tests stay visible.
+          # Nightly and manual runs run every UI test once, so wobbling tests stay visible (0 = no retry; the script
+          # retries by default when the variable is not set, which is the local behaviour).
           TAGWERK_UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
-          TAGWERK_UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
+          TAGWERK_UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           TAGWERK_TEST_LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
           TAGWERK_TEST_RESULTS_DIR: ${{ runner.temp }}/tagwerk-test-results
         run: app/test-all.sh
@@ -336,7 +355,7 @@ jobs:
           JOB_STATUS: ${{ job.status }}
           BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
           UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
-          UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '' }}
+          UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
           LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
           CACHE_MATCHED_KEY: ${{ steps.build_cache.outputs.cache-matched-key }}
@@ -365,7 +384,7 @@ jobs:
             done
             echo
             if [[ "$JOB_NAME" == "ui" && -z "$BUILD_ONLY" ]]; then
-              echo "UI test set: $UI_TEST_SET, retries: ${UI_TEST_RETRIES:-none}"
+              echo "UI test set: $UI_TEST_SET, retries: $([[ "$UI_TEST_RETRIES" == "1" ]] && echo "failed tests once more" || echo none)"
               if [[ -f "$RETRIED_LIST" ]]; then
                 echo
                 echo '```'

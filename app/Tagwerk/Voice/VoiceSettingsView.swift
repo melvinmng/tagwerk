@@ -45,9 +45,7 @@ enum VoiceAvailability {
 /// languages themselves are on `LanguageSettingsView`.
 struct VoiceSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var microphone = AVAudioApplication.shared.recordPermission
-    @State private var packs: [VoiceLanguage: LanguagePackState] = [:]
-    @State private var voices: [VoiceLanguage: [SpokenVoice]] = [:]
+    @State private var model = VoiceSettingsModel()
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -56,7 +54,7 @@ struct VoiceSettingsView: View {
                 Toggle("Mikrofon in Gesprächen", isOn: $settings.voiceInputEnabled)
                 microphoneRow
                 ForEach(VoiceLanguage.allCases, id: \.self) { language in
-                    LabeledContent("Sprachpaket \(LanguageSettingsText.name(language))", value: packs[language]?.label ?? "…")
+                    LabeledContent("Sprachpaket \(LanguageSettingsText.name(language))", value: model.packs[language]?.label ?? "…")
                 }
             } header: {
                 Text("Spracheingabe")
@@ -110,13 +108,13 @@ struct VoiceSettingsView: View {
             }
         }
         .navigationTitle("Spracheingabe und Vorlesen")
-        .task { await refresh() }
+        .task { await model.refresh() }
         .onDisappear { environment.voiceOutput.stop() }
     }
 
     @ViewBuilder
     private var microphoneRow: some View {
-        switch microphone {
+        switch model.microphone {
         case .granted:
             LabeledContent("Mikrofon", value: "Erlaubt")
         case .denied:
@@ -133,18 +131,9 @@ struct VoiceSettingsView: View {
     private func voicePicker(_ language: VoiceLanguage, selection: Binding<String?>) -> some View {
         Picker("Stimme \(LanguageSettingsText.name(language))", selection: selection) {
             Text("Automatisch").tag(String?.none)
-            ForEach(voices[language] ?? []) { voice in
+            ForEach(model.voices[language] ?? []) { voice in
                 Text(voice.qualityLabel.map { "\(voice.name) (\($0))" } ?? voice.name).tag(Optional(voice.id))
             }
-        }
-    }
-
-    private func refresh() async {
-        microphone = AVAudioApplication.shared.recordPermission
-        let speaker = SystemSpeaker()
-        for language in VoiceLanguage.allCases {
-            packs[language] = await VoiceAvailability.packState(language)
-            voices[language] = speaker.voices(for: language)
         }
     }
 }
