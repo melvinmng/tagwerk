@@ -74,6 +74,116 @@ struct HabitTextTests {
                 == "Laufen 30 min")
     }
 
+    @Test func sourceDetail_movement_namesWhatCounted() {
+        let german = Locale(identifier: "de_DE")
+        let movement = habit(start: day(11, 1), source: .movement)
+        var data = HabitFacts.empty
+        data.goalSteps = 8000
+        data.steps[today] = 10_412
+        // A step goal reached on a day without a workout: the steps are named.
+        #expect(HabitText.sourceDetail(movement, on: today, facts: data, workout: nil, locale: german) == "10.412 von 8.000 Schritten")
+        // A counted workout names itself, also when the step goal is reached too.
+        data.workoutDays = [today]
+        let run = WorkoutValue(id: "1", activity: .running, start: testNow(), minutes: 42, kilocalories: nil, sourceName: nil, isOwn: true)
+        #expect(HabitText.sourceDetail(movement, on: today, facts: data, workout: run, locale: german) == "Laufen 42 min")
+        // Without a step goal and without workout details there is nothing to name.
+        #expect(HabitText.sourceDetail(movement, on: today, facts: .empty, workout: nil, locale: german) == nil)
+        #expect(HabitText.sourceTitle(.movement) == "Bewegung")
+        #expect(HabitText.sourceSubtitle(.movement) == "Training erfasst oder Schrittziel erreicht" && HabitText.sourceSubtitle(.water) == nil)
+    }
+
+    // MARK: States of a row
+
+    private let german = Locale(identifier: "de_DE")
+
+    private func row(_ habit: Habit, _ state: HabitsModel.Row.State) -> HabitsModel.Row {
+        HabitsModel.Row(habit: habit, isFulfilled: state == .automaticDone || state == .manualDone, isAutomatic: state == .automaticDone, state: state)
+    }
+
+    @Test func sourceProgress_waterAndSteps() {
+        var data = HabitFacts.empty
+        data.goalWaterMilliliters = 2000
+        data.waterMilliliters[today] = 500
+        data.goalSteps = 8000
+        data.steps[today] = 5600
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .water), on: today, facts: data) == 0.25)
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .steps), on: today, facts: data) == 0.7)
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .movement), on: today, facts: data) == 0.7)
+        data.steps[today] = 20_000
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .steps), on: today, facts: data) == 1)
+        // No goal, nothing to measure against.
+        data.goalWaterMilliliters = 0
+        data.goalSteps = 0
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .water), on: today, facts: data) == nil)
+        #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: .movement), on: today, facts: data) == nil)
+    }
+
+    @Test func sourceProgress_binarySources_nil() {
+        var data = HabitFacts.empty
+        data.goalWaterMilliliters = 2000
+        data.goalSteps = 8000
+        for source in [HabitSource.manual, .workout, .daylight, .eveningClosed, .journal, .bibleStudy] {
+            #expect(HabitText.sourceProgress(habit(start: day(11, 1), source: source), on: today, facts: data) == nil, "\(source)")
+        }
+    }
+
+    @Test func stateLine_perState() {
+        var data = HabitFacts.empty
+        data.goalWaterMilliliters = 2000
+        data.waterMilliliters[today] = 2100
+        data.goalSteps = 8000
+        data.steps[today] = 5600
+        func line(_ habit: Habit, _ state: HabitsModel.Row.State) -> String? {
+            HabitText.stateLine(row(habit, state), on: today, facts: data, workout: nil, locale: german)
+        }
+        let water = habit(start: day(11, 1), source: .water)
+        let steps = habit(start: day(11, 1), source: .steps)
+        let journal = habit(start: day(11, 1), source: .journal)
+        #expect(line(water, .automaticDone) == "Automatisch erfüllt · 2,1 l von 2,0 l")
+        #expect(line(journal, .automaticDone) == "Automatisch erfüllt")
+        #expect(line(steps, .automaticPending(progress: 0.7)) == "5.600 von 8.000 Schritten · hakt sich selbst ab")
+        #expect(line(journal, .automaticPending(progress: nil)) == "Tagebuch noch offen · hakt sich selbst ab")
+        #expect(line(journal, .manualDoneSourcePending) == "Von Hand abgehakt · Tagebuch noch offen")
+        #expect(line(habit(start: day(11, 1)), .manualOpen) == nil && line(habit(start: day(11, 1)), .manualDone) == nil)
+    }
+
+    @Test func accessibilityValue_namesState() {
+        #expect(HabitText.accessibilityState(.manualOpen) == "offen")
+        #expect(HabitText.accessibilityState(.manualDone) == "erledigt")
+        #expect(HabitText.accessibilityState(.automaticDone) == "automatisch erfüllt")
+        #expect(HabitText.accessibilityState(.automaticPending(progress: 0.5)) == "offen, hakt sich selbst ab")
+        #expect(HabitText.accessibilityState(.manualDoneSourcePending) == "von Hand abgehakt")
+    }
+
+    @Test func sourceNoun_existsForEveryAutomaticSource() {
+        for source in HabitSource.allCases where source != .manual { #expect(!HabitText.sourceNoun(source).isEmpty, "\(source)") }
+    }
+
+    @Test func automaticHint_namesSource() {
+        #expect(HabitText.automaticHint(.water) == "Automatisch erfüllt durch das Wasserziel. Lässt sich nicht abwählen.")
+        #expect(HabitText.automaticHint(.eveningClosed) == "Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen.")
+        #expect(HabitText.automaticHint(.manual) == nil)
+        // Every automatic source has its own sentence, and each one says it cannot be unchecked.
+        let hints = HabitSource.allCases.filter { $0 != .manual }.compactMap(HabitText.automaticHint)
+        #expect(hints.count == HabitSource.allCases.count - 1 && Set(hints).count == hints.count)
+        #expect(hints.allSatisfy { $0.hasSuffix("Lässt sich nicht abwählen.") && $0.hasPrefix("Automatisch erfüllt durch ") })
+    }
+
+    @Test func symbolName_coversEverySymbol() {
+        for symbol in HabitText.symbols {
+            let name = HabitText.symbolName(symbol)
+            #expect(!name.isEmpty && name != symbol, "No name for \(symbol)")
+        }
+        let names = HabitText.symbols.map(HabitText.symbolName)
+        #expect(Set(names).count == names.count)
+        #expect(HabitText.symbolName("figure.walk") == "Gehen")
+        #expect(HabitText.symbolName("unknown.symbol") == "unknown.symbol")
+    }
+
+    @Test func footer_matchesDecision() {
+        #expect(HabitText.sourceFooter == "Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Bis dahin kannst du von Hand abhaken; ein automatisch gesetzter Haken lässt sich nicht abwählen. Jede Quelle gilt für höchstens eine Gewohnheit.")
+    }
+
     @Test func sourceDetail_manualHabit_hasNone() {
         #expect(HabitText.sourceDetail(habit(start: day(11, 1)), on: today, facts: .empty, workout: nil) == nil)
     }
