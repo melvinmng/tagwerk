@@ -171,6 +171,11 @@ final class AppSettings {
     var lastAutoBackupAt: Date? = nil
     /// Why the last automatic backup failed; shown in the settings, blocks nothing.
     var lastBackupError: String? = nil
+    /// Backups are encrypted with the password of this device (DS6b). The key is in the Keychain of this iPhone; neither the switch
+    /// nor the key is part of a backup, so a restore never turns encryption on or off.
+    var backupEncryptionEnabled: Bool = false
+    /// The one-time question "Passwort festlegen?" when the automatic backup is switched on without a password was shown.
+    var backupPlainHintShown: Bool = false
 
     /// Quiet hours (plan quiet-hours, #169): task and deadline notifications that fall into the window move to its end.
     var quietHoursEnabled: Bool = false

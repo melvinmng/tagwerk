@@ -184,7 +184,7 @@ struct ShoppingTranslationModelTests {
         let model = await model(gated)
         model.refreshOffer()
         let running = Task { await model.translate() }
-        for _ in 0..<20 { await Task.yield() }
+        await awaitCondition("the translation is running") { model.isTranslating }
         #expect(model.isTranslating)
         model.cancel()
         gated.release()
