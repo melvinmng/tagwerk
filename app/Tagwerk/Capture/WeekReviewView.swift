@@ -48,6 +48,7 @@ struct WeekReviewView: View {
                     Section { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondaryText) }
                 }
                 caloriesSection(review)
+                nutrientsSection(review)
                 Section {
                     Text(Self.waterText(review))
                 } header: { header("Wasser", review) }
@@ -127,9 +128,10 @@ struct WeekReviewView: View {
             } else if let average = review.averageKcal {
                 Text("Ø \(IntakeFormat.kcalNumber(average, estimated: review.hasEstimate)) kcal an \(dayCount(review.daysWithMeals))")
             }
-            let goal = Double(max(1, review.goals.kcal))
-            GoalBars(days: review.days, values: review.days.map(\.kcal), goal: goal, calendar: model.calendar,
-                     color: { $0 > goal ? .orange : .green },
+            // Each day is measured against its own budget: the plan that held on it plus the activity it credited.
+            GoalBars(days: review.days, values: review.days.map(\.kcal), goals: review.days.map { Double($0.goalKcal) },
+                     calendar: model.calendar,
+                     color: { index, value in value > Double(review.days[index].goalKcal) ? .orange : .green },
                      label: { day, name in
                          guard let kcal = day.kcal else {
                              return day.isFuture ? name : String(localized: "\(name), keine Mahlzeit erfasst")
@@ -140,7 +142,34 @@ struct WeekReviewView: View {
                      })
                 .frame(height: 140)
                 .padding(.vertical, 4)
-        } header: { header("Kalorien", review) }
+        } header: { header("Kalorien", review) } footer: {
+            Text("Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.")
+        }
+    }
+
+    /// Fiber and sugar, and the optional nutrients that are switched on: the mean over the days that know the value (decision OR4b).
+    @ViewBuilder
+    private func nutrientsSection(_ review: WeekReview) -> some View {
+        let nutrients = model.settings.visibleNutrients
+        if nutrients.contains(where: { (review.nutrientDays[$0] ?? 0) > 0 }) {
+            Section {
+                ForEach(nutrients, id: \.self) { nutrient in
+                    LabeledContent(nutrient.displayName) {
+                        Text(Self.nutrientText(nutrient, review: review)).monospacedDigit()
+                    }
+                }
+            } header: { header("Nährwerte", review) } footer: {
+                Text("Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.")
+            }
+        }
+    }
+
+    /// "Ø 22 g an 3 Tagen", or "–" when no day knows the value (never 0).
+    static func nutrientText(_ nutrient: Nutrient, review: WeekReview) -> String {
+        guard let average = review.averageNutrients[nutrient], let days = review.nutrientDays[nutrient], days > 0 else { return "–" }
+        let value = average.formatted(.number.precision(.fractionLength(nutrient.fractionDigits)))
+        let dayCount = String(localized: "\(days) Tagen")
+        return String(localized: "Ø \(value) g an \(dayCount)")
     }
 
     /// ST1: mean and goal days, seven bars with a goal line; days without a value are dashed, never 0.
@@ -149,8 +178,8 @@ struct WeekReviewView: View {
             Text(IntakeFormat.weekSteps(average: review.averageSteps, goalDays: review.stepGoalDays,
                                         elapsedDays: review.days.filter { !$0.isFuture }.count, goal: review.goals.stepsPerDay))
             GoalBars(days: review.days, values: review.days.map { $0.steps.map(Double.init) },
-                     goal: Double(review.goals.stepsPerDay), calendar: model.calendar,
-                     color: { _ in .indigo },
+                     goals: review.days.map { Double($0.goalSteps) }, calendar: model.calendar,
+                     color: { _, _ in .indigo },
                      label: { day, name in
                          guard let steps = day.steps else {
                              return day.isFuture ? name : String(localized: "\(name), keine Schritte")
@@ -176,9 +205,11 @@ struct WeekReviewView: View {
 private struct GoalBars: View {
     let days: [WeekReview.Day]
     let values: [Double?]
-    let goal: Double
+    /// The goal of each day; a goal of 0 draws no mark.
+    let goals: [Double]
     let calendar: Calendar
-    let color: (Double) -> Color
+    /// The colour of a bar, from the index of the day and its value.
+    let color: (Int, Double) -> Color
     /// VoiceOver text of a day, given the full weekday name.
     let label: (WeekReview.Day, String) -> String
     private var weekdays: [String] { DateText.shortStandaloneWeekdaySymbols(calendar: calendar) }
@@ -186,21 +217,27 @@ private struct GoalBars: View {
 
     var body: some View {
         let highest = values.compactMap { $0 }.max() ?? 0
-        let top = max(goal * 1.2, highest * (goal > 0 ? 1 : 1.1), 1)
+        let highestGoal = goals.max() ?? 0
+        let top = max(highestGoal * 1.2, highest * (highestGoal > 0 ? 1 : 1.1), 1)
         GeometryReader { geometry in
             let barArea = geometry.size.height - 18
             ZStack(alignment: .bottomLeading) {
-                if goal > 0 {
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.6))
-                        .frame(height: 1)
-                        .offset(y: -18 - barArea * goal / top)
-                        .accessibilityHidden(true)
-                }
                 HStack(alignment: .bottom, spacing: 8) {
                     ForEach(Array(days.enumerated()), id: \.offset) { index, day in
                         VStack(spacing: 4) {
-                            bar(values[index], isFuture: day.isFuture, height: barArea, top: top)
+                            ZStack(alignment: .bottom) {
+                                bar(values[index], index: index, isFuture: day.isFuture, height: barArea, top: top)
+                                    .frame(maxHeight: barArea, alignment: .bottom)
+                                // The goal of this day: a mark across the bar, so a goal that changes within the week stays readable.
+                                if goals[index] > 0 {
+                                    Rectangle()
+                                        .fill(Color.secondary.opacity(0.6))
+                                        .frame(height: 1)
+                                        .offset(y: -barArea * min(1, goals[index] / top))
+                                        .accessibilityHidden(true)
+                                }
+                            }
+                            .frame(height: barArea, alignment: .bottom)
                             Text(weekdays[index]).font(.caption2).foregroundStyle(.secondaryText)
                         }
                         .frame(maxWidth: .infinity)
@@ -213,10 +250,10 @@ private struct GoalBars: View {
     }
 
     @ViewBuilder
-    private func bar(_ value: Double?, isFuture: Bool, height: CGFloat, top: Double) -> some View {
+    private func bar(_ value: Double?, index: Int, isFuture: Bool, height: CGFloat, top: Double) -> some View {
         if let value {
             RoundedRectangle(cornerRadius: 4)
-                .fill(color(value))
+                .fill(color(index, value))
                 .frame(height: max(3, height * value / top))
         } else if isFuture {
             Color.clear.frame(height: 3)

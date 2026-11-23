@@ -194,6 +194,34 @@ struct NotionImportPlannerTests {
         #expect(preview == NotionImportPreview(newCount: 1, conflictCount: 2, alreadyImportedCount: 1))
     }
 
+    private func entry(_ id: String, _ key: String, text: String) -> NotionJournalEntry {
+        NotionJournalEntry(id: id, title: key, day: NoteDayKey.day(key)!, createdAt: nil, text: text)
+    }
+
+    @Test func conflicts_listNewestFirstAndMatchThePreviewCount() {
+        let entries = [entry("a", "2024-03-16", text: "Notion A"), entry("b", "2024-03-17", text: "Notion B"),
+                       entry("c", "2024-03-17", text: "Notion C"), entry("d", "2024-03-18", text: "Notion D")]
+        let existing = ["2024-03-16": "Tagwerk A"]
+        let conflicts = NotionImportPlanner.conflicts(entries: entries, existingTexts: existing, importedIDs: ["d"])
+        // a: day taken by the entry in Tagwerk, c: day taken by b of the same import, d: already imported.
+        #expect(conflicts.map(\.id) == ["c", "a"])
+        #expect(conflicts.map(\.day) == [NoteDayKey.day("2024-03-17")!, NoteDayKey.day("2024-03-16")!])
+        #expect(conflicts.first?.existingExcerpt == "Notion B" && conflicts.first?.importedExcerpt == "Notion C")
+        #expect(conflicts.last?.existingExcerpt == "Tagwerk A" && conflicts.last?.importedExcerpt == "Notion A")
+        let preview = NotionImportPlanner.preview(entries: entries, existingDayKeys: Set(existing.keys), importedIDs: ["d"])
+        #expect(conflicts.count == preview.conflictCount)
+    }
+
+    @Test func excerpt_skipsTemplateLinesAndIsCutAtFortyCharacters() {
+        let text = "Allgemeine Stimmung\nWie geht es mir im Moment grundsätzlich?\n\n  Müde,   aber ruhig.\nZweite Zeile"
+        #expect(NotionImportPlanner.excerpt(text) == "Müde, aber ruhig.")
+        let long = String(repeating: "abcdefghij", count: 6)
+        #expect(NotionImportPlanner.excerpt(long) == String(long.prefix(40)) + "…")
+        let exact = String(repeating: "x", count: 40)
+        #expect(NotionImportPlanner.excerpt(exact) == exact)
+        #expect(NotionImportPlanner.excerpt("Allgemeine Stimmung\n\n") == "")
+    }
+
     @Test func appending_putsImportedTextBelowASeparator() {
         let german = Locale(identifier: "de_DE")
         let result = NotionImportPlanner.appending("Alt", to: "Heute geschrieben", locale: german)

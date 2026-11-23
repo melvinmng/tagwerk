@@ -398,6 +398,11 @@ public struct MealEstimateOutput: Sendable, Hashable, Decodable {
         public var proteinG: Double
         public var carbsG: Double
         public var fatG: Double
+        /// Fiber, sugar, saturated fat and salt in grams; `nil` when the model does not know the value (never 0).
+        public var fiberG: Double?
+        public var sugarG: Double?
+        public var saturatedFatG: Double?
+        public var saltG: Double?
 
         enum CodingKeys: String, CodingKey {
             case name, amount, kcal
@@ -406,6 +411,28 @@ public struct MealEstimateOutput: Sendable, Hashable, Decodable {
             case proteinG = "protein_g"
             case carbsG = "carbs_g"
             case fatG = "fat_g"
+            case fiberG = "fiber_g"
+            case sugarG = "sugar_g"
+            case saturatedFatG = "saturated_fat_g"
+            case saltG = "salt_g"
+        }
+
+        /// The answer format is strict: every field must be present. The four further nutrients may be `null`; a missing key is an
+        /// invalid answer (`decode` on an optional type throws for a missing key, `decodeIfPresent` would not).
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            amount = try container.decode(String.self, forKey: .amount)
+            kcalMin = try container.decode(Double.self, forKey: .kcalMin)
+            kcal = try container.decode(Double.self, forKey: .kcal)
+            kcalMax = try container.decode(Double.self, forKey: .kcalMax)
+            proteinG = try container.decode(Double.self, forKey: .proteinG)
+            carbsG = try container.decode(Double.self, forKey: .carbsG)
+            fatG = try container.decode(Double.self, forKey: .fatG)
+            fiberG = try container.decode(Double?.self, forKey: .fiberG)
+            sugarG = try container.decode(Double?.self, forKey: .sugarG)
+            saturatedFatG = try container.decode(Double?.self, forKey: .saturatedFatG)
+            saltG = try container.decode(Double?.self, forKey: .saltG)
         }
     }
 
@@ -431,6 +458,8 @@ public struct MealEstimateOutput: Sendable, Hashable, Decodable {
                             amount: item.amount.trimmingCharacters(in: .whitespacesAndNewlines),
                             kcalMin: min(values[0], values[2], kcal), kcal: kcal, kcalMax: max(values[0], values[2], kcal),
                             protein: max(0, item.proteinG), carbs: max(0, item.carbsG), fat: max(0, item.fatG),
+                            fiber: item.fiberG.map { max(0, $0) }, sugar: item.sugarG.map { max(0, $0) },
+                            saturatedFat: item.saturatedFatG.map { max(0, $0) }, salt: item.saltG.map { max(0, $0) },
                             isEstimated: true)
         }
         guard !cleaned.isEmpty else { return nil }

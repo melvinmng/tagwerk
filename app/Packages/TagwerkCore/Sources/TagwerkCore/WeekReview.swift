@@ -29,6 +29,13 @@ public struct WeekReview: Sendable, Hashable {
         public var hasEstimate: Bool
         public var waterMilliliters: Int?
         public var protein: Double?
+        /// The further nutrients of the day; a nutrient no meal knows stays `nil` (never 0).
+        public var nutrients: NutrientValues
+        /// Energy budget of the day: the base goal of the plan that held on it plus the credited activity (a later day: the base goal).
+        public var goalKcal: Int
+        /// Water and step goals of the plan that held on that day.
+        public var goalWaterMilliliters: Int
+        public var goalSteps: Int
         /// Steps from Health; `nil` without a value (shown dashed, never as 0) and for later days.
         public var steps: Int?
         /// Later days of the current week.
@@ -53,6 +60,10 @@ public struct WeekReview: Sendable, Hashable {
     public var averageSteps: Int?
     public var stepGoalDays: Int
     public var averageProtein: Double?
+    /// Mean per day over the days that know the nutrient, and how many days that are. Meals without a value are not in the sum, so
+    /// the mean is a lower bound.
+    public var averageNutrients: NutrientValues
+    public var nutrientDays: [Nutrient: Int]
     public var completedTasks: Int
     public var isCurrentWeek: Bool
 
@@ -61,9 +72,14 @@ public struct WeekReview: Sendable, Hashable {
 
     /// `workouts` are own and Health workouts; `steps` are Health day sums; `completedDates` are completion moments of
     /// reminders and local tasks.
+    ///
+    /// `totals` are what each day counts as eaten (own entries plus, when switched on, other apps' entries), `budgets` the energy
+    /// budget of each day and `plans` the goal plan that held on it. A day without an entry there uses the own entries and the
+    /// single `goals`, so the review of a week stays what it was while a caller does not know the budget.
     public static func make(weekStart: PlanDay, now: Date, meals: [MealValue], drinks: [DrinkValue], workouts: [WorkoutValue],
                             steps: [PlanDay: Int] = [:], completedDates: [Date], goals: Goals,
-                            calendar: Calendar) -> WeekReview {
+                            totals: [PlanDay: IntakeTotals] = [:], budgets: [PlanDay: EnergyBudget] = [:],
+                            plans: [PlanDay: GoalPlan] = [:], calendar: Calendar) -> WeekReview {
         let today = PlanDay(date: now, calendar: calendar)
         let start = weekStart.startDate(in: calendar)
         let end = weekStart.adding(days: 7, calendar: calendar).startDate(in: calendar)
@@ -75,33 +91,49 @@ public struct WeekReview: Sendable, Hashable {
             let day = weekStart.adding(days: offset, calendar: calendar)
             let dayMeals = mealsByDay[day] ?? []
             let dayDrinks = drinksByDay[day] ?? []
-            let intake = IntakeRules.dayIntake(meals: dayMeals, drinks: dayDrinks)
+            let own = IntakeRules.dayIntake(meals: dayMeals, drinks: dayDrinks)
+            let total = totals[day] ?? IntakeTotals(own: own, foreign: nil)
             let isFuture = day > today
-            return Day(day: day, kcal: dayMeals.isEmpty ? nil : intake.kcal, hasEstimate: intake.hasEstimate,
-                       waterMilliliters: dayDrinks.isEmpty ? nil : intake.waterMilliliters,
-                       protein: dayMeals.isEmpty ? nil : intake.protein, steps: isFuture ? nil : steps[day], isFuture: isFuture)
+            let foreign = total.foreign
+            var nutrients = NutrientValues()
+            for nutrient in Nutrient.allCases { nutrients[nutrient] = total.nutrient(nutrient).value }
+            return Day(day: day, kcal: dayMeals.isEmpty && foreign?.kcal == nil ? nil : total.kcal, hasEstimate: total.hasEstimate,
+                       waterMilliliters: dayDrinks.isEmpty && foreign?.waterMilliliters == nil ? nil : total.waterMilliliters,
+                       protein: dayMeals.isEmpty && foreign?.protein == nil ? nil : total.protein, nutrients: nutrients,
+                       goalKcal: budgets[day]?.budget ?? goals.kcal,
+                       goalWaterMilliliters: plans[day]?.waterMilliliters ?? goals.waterMilliliters,
+                       goalSteps: plans[day]?.stepsPerDay ?? goals.stepsPerDay,
+                       steps: isFuture ? nil : steps[day], isFuture: isFuture)
         }
 
         let kcalDays = days.compactMap(\.kcal)
         let waterDays = days.compactMap(\.waterMilliliters)
         let proteinDays = days.compactMap(\.protein)
         let stepDays = days.compactMap(\.steps)
+        var averageNutrients = NutrientValues()
+        var nutrientDays: [Nutrient: Int] = [:]
+        for nutrient in Nutrient.allCases {
+            let values = days.compactMap { $0.nutrients[nutrient] }
+            nutrientDays[nutrient] = values.count
+            averageNutrients[nutrient] = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        }
         let weekWorkouts = workouts.filter { inWeek($0.start) }
         return WeekReview(
             weekStart: weekStart, days: days, goals: goals,
             daysWithMeals: kcalDays.count,
             averageKcal: kcalDays.isEmpty ? nil : kcalDays.reduce(0, +) / Double(kcalDays.count),
             hasEstimate: days.contains { $0.kcal != nil && $0.hasEstimate },
-            waterGoalDays: waterDays.filter { $0 >= goals.waterMilliliters }.count,
+            waterGoalDays: days.filter { ($0.waterMilliliters ?? 0) >= $0.goalWaterMilliliters && $0.waterMilliliters != nil }.count,
             daysWithWater: waterDays.count,
             averageWaterMilliliters: waterDays.isEmpty ? nil : waterDays.reduce(0, +) / waterDays.count,
             workoutCount: weekWorkouts.filter { $0.minutes >= IntakeRules.minimumWorkoutMinutes }.count,
             workoutMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: start, end: end)),
             daysWithSteps: stepDays.count,
             averageSteps: stepDays.isEmpty ? nil : Int((Double(stepDays.reduce(0, +)) / Double(stepDays.count)).rounded()),
-            stepGoalDays: goals.stepsPerDay > 0 ? stepDays.filter { $0 >= goals.stepsPerDay }.count : 0,
+            stepGoalDays: days.filter { $0.goalSteps > 0 && ($0.steps ?? -1) >= $0.goalSteps }.count,
             averageProtein: goals.proteinGrams == nil || proteinDays.isEmpty
                 ? nil : proteinDays.reduce(0, +) / Double(proteinDays.count),
+            averageNutrients: averageNutrients, nutrientDays: nutrientDays,
             completedTasks: completedDates.filter(inWeek).count,
             isCurrentWeek: (weekStart...weekStart.adding(days: 6, calendar: calendar)).contains(today))
     }
@@ -128,21 +160,6 @@ public struct WeekReview: Sendable, Hashable {
 }
 
 extension IntakeFormat {
-    /// The line in the head of "Planen" (phase 4 design §5.7): "~1.240 / 2.300 kcal · 1,2 / 2,0 l", with today's steps
-    /// appended when known ("· 6.412 Schritte"); `nil` before the first entry of the day.
-    public static func planHeaderLine(intake: DayIntake, goalKcal: Int, goalWaterMilliliters: Int, hasEntries: Bool,
-                                      steps: Int? = nil, locale: Locale = .current) -> String? {
-        guard hasEntries else { return nil }
-        let energy = kcalNumber(intake.kcal, estimated: intake.hasEstimate, locale: locale)
-        let goalEnergy = grouped(goalKcal, locale: locale)
-        let water = intake.waterMilliliters == 0 ? "0" : litersNumber(intake.waterMilliliters, locale: locale)
-        let goalWater = liters(goalWaterMilliliters, locale: locale)
-        let line = String(localized: "\(energy) / \(goalEnergy) kcal · \(water) / \(goalWater)", bundle: .module)
-        guard let steps else { return line }
-        let count = self.steps(steps, locale: locale)
-        return line + " · " + String(localized: "\(count) Schritte", bundle: .module)
-    }
-
     /// Training in the weekly review: "2 h 7 min / 2 h 30 min · 3 Trainings"; the count only names workouts of at least
     /// 10 min, the goal part is left out when the goal is 0.
     public static func weekTraining(minutes: Int, count: Int, goal: Int) -> String {

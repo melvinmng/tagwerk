@@ -247,8 +247,8 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(IntakeFormat.kcalNumber(intake.kcal, estimated: intake.hasEstimate))
                     .font(.title3.weight(.semibold).monospacedDigit())
-                Text("/ \(IntakeFormat.grouped(intake.goalKcal)) kcal").font(.caption2).foregroundStyle(.secondary)
-                ProgressView(value: min(1, intake.kcal / Double(max(1, intake.goalKcal)))).tint(.orange)
+                Text("/ \(IntakeFormat.grouped(intake.budgetKcal)) kcal").font(.caption2).foregroundStyle(.secondary)
+                ProgressView(value: min(1, intake.kcal / Double(max(1, intake.budgetKcal)))).tint(.orange)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(water(intake.waterMilliliters)) / \(IntakeFormat.liters(intake.goalWaterMilliliters))")

@@ -21,7 +21,7 @@ struct MealEstimatorFollowUpTests {
     }
 
     private func answer(_ names: [(String, Double)]) -> String {
-        let items = names.map { #"{"name":"\#($0.0)","amount":"1 Stück","kcal_min":\#($0.1 - 20),"kcal":\#($0.1),"kcal_max":\#($0.1 + 20),"protein_g":5,"carbs_g":10,"fat_g":2}"# }
+        let items = names.map { #"{"name":"\#($0.0)","amount":"1 Stück","kcal_min":\#($0.1 - 20),"kcal":\#($0.1),"kcal_max":\#($0.1 + 20),"protein_g":5,"carbs_g":10,"fat_g":2,"fiber_g":null,"sugar_g":null,"saturated_fat_g":null,"salt_g":null}"# }
         return #"{"title":"Frühstück","items":[\#(items.joined(separator: ","))]}"#
     }
 

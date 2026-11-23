@@ -102,13 +102,39 @@ struct WidgetSnapshotEnvironmentTests {
         let environment = try environment(health: health)
         let calendar = environment.capture.calendar
         health.steps = [DailySteps(start: calendar.startOfDay(for: .now), count: 6412)]
-        environment.settings.goalStepsPerDay = 9000
+        var plan = try #require(environment.goals.current(on: environment.capture.today))
+        plan.stepsPerDay = 9000
+        environment.goals.adopt(plan)
         await environment.capture.reload()
         let intake = try #require(environment.makeSnapshot().days[0].intake)
         #expect(intake.steps == 6412)
         #expect(intake.goalSteps == 9000)
         environment.settings.widgetShowsNutrition = false
         #expect(environment.makeSnapshot().days.allSatisfy { $0.intake == nil })
+    }
+
+    /// Review focus 5: the head of "Erfassen", the head of "Planen", the widget and the weekly review show one number for one day.
+    @Test func oneDay_oneNumber_inHeadPlanHeaderWidgetAndWeekReview() async throws {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        let environment = try environment(health: health)
+        let today = environment.capture.today
+        health.activeEnergy = [DailyActiveEnergy(start: today.startDate(in: environment.capture.calendar), kilocalories: 520)]
+        environment.settings.activityCreditPercent = 100
+        let item = MealItem(name: "Essen", amount: "1", kcalMin: 1340, kcal: 1340, kcalMax: 1340, protein: 0, carbs: 0, fat: 0)
+        let meal = MealValue(id: UUID(), date: environment.capture.entryDate, kind: .lunch, title: "Essen", items: [item], origin: .manual)
+        await environment.capture.saveMeal(meal, estimatedAt: nil, isNew: true)
+        await environment.capture.reload()
+        let budget = environment.capture.figures.budget
+        #expect(budget.budget == 2820 && budget.remaining == 1480, "2.300 base plus 520 credited, minus 1.340")
+
+        #expect(environment.capture.planHeaderLine?.hasPrefix("noch 1.480 kcal") == true)
+        let widget = try #require(environment.makeSnapshot().days[0].intake)
+        #expect(widget.budgetKcal == budget.budget && widget.kcal == budget.eatenKcal)
+        let review = environment.makeWeekReviewModel()
+        await review.reload()
+        let day = try #require(review.review?.days.first { $0.day == today })
+        #expect(day.goalKcal == budget.budget && day.kcal == budget.eatenKcal)
     }
 
     @Test func makeSnapshot_noStepsWithoutStepPermission() async throws {
