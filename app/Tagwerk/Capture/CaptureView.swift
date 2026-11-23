@@ -135,19 +135,6 @@ struct CaptureView: View {
                         }
                     }
                     .foregroundStyle(.primary)
-                    // The trends of the intake and the weight; the value is the weight of the latest 7 days, when there is one.
-                    Button { showsTrends = true } label: {
-                        HStack {
-                            Label("Verlauf und Ziele", systemImage: "chart.line.uptrend.xyaxis")
-                            Spacer()
-                            if let kilograms = model.weightOverview.mean ?? model.weightOverview.latest {
-                                Text(WeightFormat.kilograms(kilograms)).monospacedDigit().foregroundStyle(.secondaryText)
-                            }
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    .accessibilityIdentifier(AccessibilityID.Trend.entry)
                 }
                 Section {
                     quickEntry
@@ -162,6 +149,23 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                // The trends of the intake and the weight, below the cards of the day: the entry is used less often than the routine and
+                // habit cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
+                Section {
+                    // The value is the weight of the latest 7 days, when there is one.
+                    Button { showsTrends = true } label: {
+                        HStack {
+                            Label("Verlauf und Ziele", systemImage: "chart.line.uptrend.xyaxis")
+                            Spacer()
+                            if let kilograms = model.weightOverview.mean ?? model.weightOverview.latest {
+                                Text(WeightFormat.kilograms(kilograms)).monospacedDigit().foregroundStyle(.secondaryText)
+                            }
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityIdentifier(AccessibilityID.Trend.entry)
+                }
                 // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
                 Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
