@@ -38,9 +38,15 @@
 #                              and "full" for the nightly and manual runs.
 #   TAGWERK_UI_ONLY            space-separated test classes or Class/testMethod entries to run (-only-testing);
 #                              implies TAGWERK_ONLY_UI_TESTS=1 and takes precedence over TAGWERK_UI_TEST_SET
-#   TAGWERK_UI_TEST_RETRIES=1  retry each failed UI test once (-retry-tests-on-failure -test-iterations 2) and list the
-#                              tests that only passed on the second attempt under "RETRIED UI TESTS". UI stage only;
-#                              the package and app unit stages never retry.
+#   TAGWERK_UI_TEST_RETRIES    "1" (default when unset, locally and on GitHub for pull requests): the tests that failed in the
+#                              UI stage run once more, alone, in a second xcodebuild call (-only-testing, own log
+#                              app-UI-tests-retry.log and result bundle); the stage is green when all of them pass the second time
+#                              and red when one fails twice. At most 5 failed tests are retried: more is not a flake. The tests
+#                              that only passed on the second attempt are listed under "RETRIED UI TESTS". "0" or empty: no
+#                              retry (nightly and manual runs, so wobbling tests stay visible). UI stage only; the package and
+#                              app unit stages never retry. The retry is a call of its own because xcodebuild's
+#                              -retry-tests-on-failure did not repeat tests that failed an assertion (the runner process ends after the
+#                              failure of a test with continueAfterFailure = false).
 #   TAGWERK_NIGHTLY_ONLY_FILE  alternative path of the nightly-only list (used by scripts/tests/test-all-ui-selection.zsh)
 
 set -euo pipefail
@@ -135,8 +141,16 @@ default_derived_data_folder() {
   done
 }
 
-# Fills UI_SELECTION_ARGS with the xcodebuild arguments that select and retry UI tests from the environment
-# (TAGWERK_UI_ONLY, TAGWERK_UI_TEST_SET, TAGWERK_UI_TEST_RETRIES). Prints a one-line summary on stdout.
+# More failed UI tests than this are not retried: that is a broken change or a broken runner, not a flake.
+MAX_RETRIED_UI_TESTS=5
+
+# True when failed UI tests run once more: TAGWERK_UI_TEST_RETRIES is 1 or not set (see the header).
+ui_retries_enabled() {
+  [[ "${TAGWERK_UI_TEST_RETRIES-1}" == "1" ]]
+}
+
+# Fills UI_SELECTION_ARGS with the xcodebuild arguments that select UI tests from the environment (TAGWERK_UI_ONLY,
+# TAGWERK_UI_TEST_SET) and checks TAGWERK_UI_TEST_RETRIES. Prints a one-line summary on stdout.
 # Without any of these variables the array stays empty, so the UI stage runs every UI test once.
 build_ui_selection_args() {
   UI_SELECTION_ARGS=()
@@ -148,7 +162,7 @@ build_ui_selection_args() {
     pr|full) ;;
     *) echo "Invalid TAGWERK_UI_TEST_SET \"$test_set\" (expected \"pr\" or \"full\")" >&2; return 1 ;;
   esac
-  case "${TAGWERK_UI_TEST_RETRIES:-}" in
+  case "${TAGWERK_UI_TEST_RETRIES-1}" in
     ""|0|1) ;;
     *) echo "Invalid TAGWERK_UI_TEST_RETRIES \"$TAGWERK_UI_TEST_RETRIES\" (expected empty, 0 or 1)" >&2; return 1 ;;
   esac
@@ -183,54 +197,26 @@ build_ui_selection_args() {
     summary="full set"
   fi
 
-  if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
-    UI_SELECTION_ARGS+=(-retry-tests-on-failure -test-iterations 2)
-    summary="$summary, one retry per failed test"
+  if ui_retries_enabled; then
+    summary="$summary, one retry per failed test (up to $MAX_RETRIED_UI_TESTS tests)"
   fi
   echo "    UI tests: $summary"
 }
 
-# Lists the UI tests that failed at least once and passed in the end, based on the stage log, under the heading
-# "RETRIED UI TESTS". The list is also written to <log dir>/retried-ui-tests.md (the CI workflow copies it into the job
-# summary). A test counts as retried when its last reported result is "passed" and an earlier attempt failed.
+# Lists the UI tests that failed in an attempt and passed in the last one, based on the logs of the attempts (first
+# attempt first), under the heading "RETRIED UI TESTS". The list is also written to <report> (the CI workflow copies it
+# into the job summary). Usage: report_retried_ui_tests REPORT LOG...
 report_retried_ui_tests() {
-  local log="$1" report="$2"
+  local report="$1"; shift
   local retried
-  retried=$(/usr/bin/python3 -c '
-import re, sys
-results = {}
-failed_once = set()
-summary_failures = 0
-pattern = re.compile(r"Test [Cc]ase \x27([^\x27]+)\x27 (passed|failed)")
-failure_summary = re.compile(r"Executed \d+ tests?, with ([1-9]\d*) failures?")
-with open(sys.argv[1], errors="replace") as handle:
-    for line in handle:
-        match = pattern.search(line)
-        if match:
-            raw, outcome = match.groups()
-            if raw.startswith("-["):
-                suite, _, method = raw[2:-1].partition(" ")
-            else:
-                suite, _, method = raw.rstrip("()").rpartition(".")
-            name = suite.split(".")[-1] + "/" + method
-            results[name] = outcome
-            if outcome == "failed":
-                failed_once.add(name)
-        elif failure_summary.search(line):
-            summary_failures += 1
-for name in sorted(failed_once):
-    if results.get(name) == "passed":
-        print(name)
-if not failed_once and summary_failures:
-    print("UNPARSED")
-' "$log") || retried=""
+  retried=$(/usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-test-log.py" retried "$@") || retried=""
 
   {
     echo "RETRIED UI TESTS"
     if [[ -z "$retried" ]]; then
       echo "  none"
     elif [[ "$retried" == "UNPARSED" ]]; then
-      echo "  The log reports failed attempts, but no test names could be read from it (log: $log)"
+      echo "  The log reports failed attempts, but no test names could be read from it (log: $*)"
     else
       print -r -- "$retried" | sed 's/^/  - /'
     fi
@@ -286,16 +272,19 @@ fi
 
 # Runs xcodebuild <verb> for the tests of a stage, keeps the full log and fails when no test was executed. The verb is
 # "test" (build and test in one call, used for the package stages) or "test-without-building" (the test half after
-# build_for_testing, which started the log of the stage; this output is appended to it). Usage: run_tests VERB ARGS...
+# build_for_testing, which started the log of the stage; this output is appended to it). The log and the result bundle are named
+# after the stage, or after RUN_TESTS_LABEL when it is set (the retry of the UI stage has files of its own and starts a new log).
+# Usage: run_tests VERB ARGS...
 run_tests() {
   local verb="$1"; shift
-  local log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
+  local label="${RUN_TESTS_LABEL:-${CURRENT_STAGE// /-}}"
+  local log="$LOG_DIR/$label.log"
   # The result bundle name is unique per stage because xcodebuild refuses to overwrite an existing bundle.
   local result_args=()
   if [[ -n "$RESULTS_DIR" ]]; then
-    result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}.xcresult")
+    result_args=(-resultBundlePath "$RESULTS_DIR/$label.xcresult")
   fi
-  [[ "$verb" == "test-without-building" ]] || : > "$log"
+  [[ "$verb" == "test-without-building" && -z "${RUN_TESTS_LABEL:-}" ]] || : > "$log"
   local started=$SECONDS
   # German is the source language; tests expect German texts and formats (plan english-app, Task 1).
   if ! xcodebuild "$verb" -testLanguage de -testRegion DE "${result_args[@]}" "$@" >> "$log" 2>&1; then
@@ -345,6 +334,72 @@ build_for_testing() {
     return 1
   fi
   echo "    build succeeded in $((SECONDS - started)) s (log: $log)"
+}
+
+# Takes a stack sample of the app process when a UI test shows that the app does not answer (scripts/ui-hang-sampler.py reads
+# the log of the run in the background and writes hang-*.txt into the log folder, which CI uploads). It only watches: it changes no
+# test result, and a hang-free run costs one idle process that reads the log once per second.
+# Usage: start_ui_hang_sampler LOG, then stop_ui_hang_sampler
+start_ui_hang_sampler() {
+  local log="$1" simulator_id=""
+  [[ "$DESTINATION" == *id=* ]] && simulator_id="${${DESTINATION#*id=}%%,*}"
+  UI_HANG_STOP_FILE="$LOG_DIR/.ui-hang-sampler-stop"
+  rm -f "$UI_HANG_STOP_FILE"
+  /usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-hang-sampler.py" "$log" "$LOG_DIR" "$UI_HANG_STOP_FILE" \
+    --simulator-id "$simulator_id" >> "$LOG_DIR/ui-hang-sampler.log" 2>&1 &
+  UI_HANG_SAMPLER_PID=$!
+}
+
+stop_ui_hang_sampler() {
+  [[ -n "${UI_HANG_SAMPLER_PID:-}" ]] || return 0
+  : > "$UI_HANG_STOP_FILE"
+  # The sampler ends after its current sample (3 seconds at most) once it sees the stop file.
+  wait "$UI_HANG_SAMPLER_PID" 2> /dev/null || true
+  UI_HANG_SAMPLER_PID=""
+}
+
+# Runs the UI tests of the stage and, when some fail, those tests once more alone (see TAGWERK_UI_TEST_RETRIES in the header).
+# Returns the status of the last attempt: 0 when every test passed, in the first or in the second attempt.
+# The retry is a second xcodebuild call, not -retry-tests-on-failure: a failed assertion ends the runner process, and
+# xcodebuild then did not repeat the test (the retry list stayed empty in every pull request run of 2026-11-23).
+# Usage: run_ui_tests XCODEBUILD_ARGS...
+run_ui_tests() {
+  local first_log="$LOG_DIR/${CURRENT_STAGE// /-}.log"
+  local retry_label="${CURRENT_STAGE// /-}-retry"
+  local retry_log="$LOG_DIR/$retry_label.log"
+  local attempt_status=0
+
+  rm -f "$retry_log"
+  start_ui_hang_sampler "$first_log"
+  run_tests test-without-building "$@" "${UI_SELECTION_ARGS[@]}" || attempt_status=$?
+  stop_ui_hang_sampler
+  if (( attempt_status == 0 )) || ! ui_retries_enabled; then return $attempt_status; fi
+
+  local failed_tests=() failed_test retry_args=()
+  failed_tests=(${(f)"$(/usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-test-log.py" failed "$first_log")"})
+  if (( ${#failed_tests} == 0 )); then
+    echo "    no failed test could be read from the log, so nothing is retried (log: $first_log)" >&2
+    return $attempt_status
+  fi
+  if (( ${#failed_tests} > MAX_RETRIED_UI_TESTS )); then
+    echo "    ${#failed_tests} UI tests failed (more than $MAX_RETRIED_UI_TESTS): not a flake, nothing is retried" >&2
+    return $attempt_status
+  fi
+  for failed_test in $failed_tests; do
+    if [[ ! "$failed_test" =~ '^[A-Za-z0-9_]+/[A-Za-z0-9_]+$' ]]; then
+      echo "    unexpected test name \"$failed_test\" in the log, so nothing is retried" >&2
+      return $attempt_status
+    fi
+    retry_args+=("-only-testing:$UI_TEST_TARGET/$failed_test")
+  done
+  echo "    ${#failed_tests} UI test(s) failed, running them once more: ${failed_tests[*]}"
+
+  attempt_status=0
+  : > "$retry_log"
+  start_ui_hang_sampler "$retry_log"
+  RUN_TESTS_LABEL="$retry_label" run_tests test-without-building "$@" "${retry_args[@]}" || attempt_status=$?
+  stop_ui_hang_sampler
+  return $attempt_status
 }
 
 # Runs a package stage: build and test in one xcodebuild call, only the build with TAGWERK_BUILD_ONLY=1. A package has its
@@ -449,10 +504,12 @@ else
     # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
     tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
     ui_status=0
-    run_tests test-without-building "${UI_ARGS[@]}" "${UI_SELECTION_ARGS[@]}" || ui_status=$?
-    # The list is reported even when the stage fails: a test that wobbles twice in one run is worth knowing about.
-    if [[ "${TAGWERK_UI_TEST_RETRIES:-}" == "1" ]]; then
-      report_retried_ui_tests "$LOG_DIR/app-UI-tests.log" "$LOG_DIR/retried-ui-tests.md"
+    run_ui_tests "${UI_ARGS[@]}" || ui_status=$?
+    # The list is reported even when the stage fails: a test that wobbles is worth knowing about.
+    if ui_retries_enabled; then
+      retry_logs=("$LOG_DIR/app-UI-tests.log")
+      [[ ! -s "$LOG_DIR/app-UI-tests-retry.log" ]] || retry_logs+=("$LOG_DIR/app-UI-tests-retry.log")
+      report_retried_ui_tests "$LOG_DIR/retried-ui-tests.md" "${retry_logs[@]}"
     fi
     tagwerk_release_ui_lock
     (( ui_status == 0 )) || stage_failed
