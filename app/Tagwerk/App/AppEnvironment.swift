@@ -72,6 +72,8 @@ final class AppEnvironment {
     let intake: IntakeStore
     /// Goal plans ("Zielstände"); the plan of a day is the goal that holds on it.
     let goals: GoalStore
+    /// "Meine Lebensmittel": own foods with values per 100 g, per 100 ml or per piece.
+    let foods: FoodStore
     /// The Health values kept for each day, and the budget that follows from them (one place for every screen).
     let dayHealth: DayHealthStore
     let budgets: DayBudgets
@@ -88,6 +90,12 @@ final class AppEnvironment {
     let routineNotifications: RoutineNotificationScheduler
     /// Meal estimates with ChatGPT; only after consent and a tap (main design §7).
     let mealEstimator: MealEstimator
+    /// Whether the device is online, for the buttons that need the network.
+    let connectivity: ConnectivityMonitor
+    /// The online search in Open Food Facts (decision LM1d); sends nothing without consent and a contact address.
+    let productLookup: any ProductLookingUp
+    /// Reads the nutrition table of a package from a photo; same consent as the estimate, only on a tap (decision LM3b).
+    let labelReader: LabelReader
     /// Focus timer sessions and the collection (plan P3, #161); stays on this device.
     let focusStore: FocusStore
     /// The focus timer: one session at a time, Live Activity and one notification at the end of the phase.
@@ -319,6 +327,7 @@ final class AppEnvironment {
         // Goals edited in the settings before the plans took over (one plan, never updated) carry over once; later it is a no-op.
         goals.reconcileWithSettings()
         self.goals = goals
+        self.foods = FoodStore(context: context)
         self.healthMirror = mirror
         let dayHealth = DayHealthStore(context: context)
         self.dayHealth = dayHealth
@@ -336,6 +345,27 @@ final class AppEnvironment {
                                                               bibleStudyDays: { noteDays.completedSessionDays(in: $0) }))
         self.mealEstimator = MealEstimator(responder: ai.client, model: { try await ai.selectedModel() },
                                            hasConsent: { settings.mealEstimationConsent })
+        let lookupTransport: any HTTPTransport
+        let connectivity: ConnectivityMonitor
+        #if DEBUG && targetEnvironment(simulator)
+        if DemoProductTransport.isRequested {
+            lookupTransport = DemoProductTransport()
+            connectivity = ConnectivityMonitor(fixed: true)
+        } else {
+            lookupTransport = ProductLookup.makeTransport()
+            connectivity = ConnectivityMonitor()
+        }
+        #else
+        lookupTransport = ProductLookup.makeTransport()
+        connectivity = ConnectivityMonitor()
+        #endif
+        self.connectivity = connectivity
+        self.productLookup = ProductLookup(
+            transport: lookupTransport, hasConsent: { settings.foodLookupConsent }, contact: { settings.foodLookupContact },
+            isOnline: { connectivity.isOnline },
+            version: { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0" })
+        self.labelReader = LabelReader(responder: ai.client, model: { try await ai.selectedModel() },
+                                       hasConsent: { settings.mealEstimationConsent })
         self.shoppingSorter = ShoppingSorter(responder: ai.client, model: { try await ai.selectedModel() },
                                              hasConsent: { settings.hasShoppingSortConsent })
         self.shoppingTranslator = ShoppingTranslator(responder: ai.client, model: { try await ai.selectedModel() },
