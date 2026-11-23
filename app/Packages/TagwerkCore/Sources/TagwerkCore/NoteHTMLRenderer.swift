@@ -96,6 +96,7 @@ public enum NoteHTMLRenderer {
         li > p { margin: .15em 0; }
         li.task { list-style: none; margin-left: -1.4em; }
         li.done { color: var(--muted); }
+        .task-mark { color: var(--muted); font-size: .85em; }
         a { color: var(--accent); text-decoration: none; }
         a.e { color: inherit; text-decoration: none; -webkit-touch-callout: none; }
         a.e.block { display: block; }
@@ -262,7 +263,14 @@ public enum NoteHTMLRenderer {
             // A link instead of an input: it needs no script to react, and a disabled input would swallow the tap.
             let box = "<a class=\"task-box\" href=\"\(NoteHTMLRenderer.toggleScheme):\(index)\" data-index=\"\(index)\" role=\"checkbox\" "
                 + "aria-checked=\"\(isChecked)\"><span class=\"box\">\(isChecked ? "✓" : "")</span></a>"
-            return "<li class=\"task\(isChecked ? " done" : "")\">\(box)\(content(of: item))</li>\n"
+            return "<li class=\"task\(isChecked ? " done" : "")\">\(box)\(markingTask(content(of: item)))</li>\n"
+        }
+
+        /// A task marker at the end of a checkbox line ("→ Aufgabe", BS5b) in the muted colour. Only a marker at the very end counts,
+        /// possibly inside the closing tags of the edit link around it.
+        private func markingTask(_ html: String) -> String {
+            guard let range = html.range(of: #"→ (?:Aufgabe|Task)(?=(?:</[a-z]+>)*\s*$)"#, options: .regularExpression) else { return html }
+            return html.replacingCharacters(in: range, with: "<span class=\"task-mark\">\(html[range])</span>")
         }
 
         /// The content of a list item. A single paragraph is written without its own <p>, so short items stay compact.

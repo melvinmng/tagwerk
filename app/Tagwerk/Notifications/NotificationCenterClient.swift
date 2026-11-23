@@ -115,7 +115,7 @@ final class SystemNotificationCenter: NotificationCenterClient {
         // With a weekday the reminder repeats weekly on that day, else daily.
         let components = DateComponents(hour: notification.hour, minute: notification.minute, weekday: notification.weekday)
         try await addRoutineRequest(id: notification.id, title: notification.title, body: notification.body, route: notification.route,
-                                    trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true))
+                                    category: nil, trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true))
     }
 
     func addDated(_ notification: DatedRoutineNotification) async throws {
@@ -123,11 +123,14 @@ final class SystemNotificationCenter: NotificationCenterClient {
         let components = DateComponents(year: notification.year, month: notification.month, day: notification.day,
                                         hour: notification.hour, minute: notification.minute)
         try await addRoutineRequest(id: notification.id, title: notification.title, body: notification.body, route: notification.route,
+                                    category: notification.categoryIdentifier,
                                     trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false))
     }
 
-    private func addRoutineRequest(id: String, title: String, body: String, route: AppRoute, trigger: UNCalendarNotificationTrigger) async throws {
+    private func addRoutineRequest(id: String, title: String, body: String, route: AppRoute, category: String?,
+                                   trigger: UNCalendarNotificationTrigger) async throws {
         let content = UNMutableNotificationContent()
+        if let category { content.categoryIdentifier = category }
         content.title = title
         content.body = body
         content.sound = .default
@@ -144,5 +147,15 @@ final class SystemNotificationCenter: NotificationCenterClient {
 
     func removePending(_ identifiers: [String]) async {
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    /// The actions of the Bible Study reminder (BS7): "Starten" opens the app, "Heute nicht" does not. Registered once at launch,
+    /// before the first reminder can be delivered; the titles follow the language of the app.
+    static func registerCategories() {
+        let start = UNNotificationAction(identifier: BibleStudyReminders.startAction, title: String(localized: "Starten"), options: [.foreground])
+        let skip = UNNotificationAction(identifier: BibleStudyReminders.skipAction, title: String(localized: "Heute nicht"), options: [])
+        let bible = UNNotificationCategory(identifier: BibleStudyReminders.categoryIdentifier, actions: [start, skip],
+                                           intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([bible])
     }
 }

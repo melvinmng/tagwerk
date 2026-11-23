@@ -193,4 +193,60 @@ struct MarkdownTextTests {
         #expect(MarkdownText.removingReference(to: id, in: "Skizze: \(reference) fertig\n\(other)") == "Skizze:  fertig\n\(other)")
         #expect(MarkdownText.removingReference(to: UUID(), in: "Vor\n\(reference)") == "Vor\n\(reference)")
     }
+
+    // MARK: Task marker (BS5b)
+
+    private let checklist = """
+    Notizen
+
+    - [ ] Römer 3 nochmal lesen
+    - [x] Mit Lea sprechen → Aufgabe
+    - normaler Punkt
+    ```
+    - [ ] im Code
+    ```
+    1. [ ] Gebet notieren   
+    """
+
+    @Test func checkboxTitle_stripsBoxAndMarker() {
+        #expect(MarkdownText.checkboxTitle(at: 0, in: checklist) == "Römer 3 nochmal lesen")
+        #expect(MarkdownText.checkboxTitle(at: 1, in: checklist) == "Mit Lea sprechen")
+        #expect(MarkdownText.checkboxTitle(at: 2, in: checklist) == "Gebet notieren")
+        #expect(MarkdownText.checkboxTitle(at: 3, in: checklist) == nil)
+        #expect(MarkdownText.checkboxTitle(at: -1, in: checklist) == nil)
+        #expect(MarkdownText.checkboxTitle(at: 0, in: "- [ ] Task erledigen → Task") == "Task erledigen")
+    }
+
+    @Test func markingCheckboxAsTask_appendsOnce() {
+        let marked = MarkdownText.markingCheckboxAsTask(at: 0, in: checklist)
+        #expect(marked.contains("- [ ] Römer 3 nochmal lesen → Aufgabe\n"))
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: marked) == marked)
+        // A line that already has the marker, also the English one, stays as it is.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 1, in: checklist) == checklist)
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: "- [ ] A → Task") == "- [ ] A → Task")
+        // Trailing spaces make no double space; a missing position changes nothing.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 2, in: checklist).hasSuffix("1. [ ] Gebet notieren → Aufgabe"))
+        #expect(MarkdownText.markingCheckboxAsTask(at: 9, in: checklist) == checklist)
+    }
+
+    @Test func markingCheckboxAsTask_keepsOtherLines() {
+        let marked = MarkdownText.markingCheckboxAsTask(at: 0, in: checklist)
+        let before = checklist.split(separator: "\n", omittingEmptySubsequences: false)
+        let after = marked.split(separator: "\n", omittingEmptySubsequences: false)
+        #expect(before.count == after.count)
+        for (index, line) in before.enumerated() where index != 2 { #expect(after[index] == line) }
+        #expect(MarkdownText.checkboxCount(in: marked) == MarkdownText.checkboxCount(in: checklist))
+        // The line endings of the text stay.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: "- [ ] A\r\n- [ ] B") == "- [ ] A → Aufgabe\r\n- [ ] B")
+    }
+
+    @Test func checkboxIndex_atLine_findsOnlyCheckboxes() {
+        #expect(MarkdownText.checkboxIndex(atLine: 3, in: checklist) == 0)
+        #expect(MarkdownText.checkboxIndex(atLine: 4, in: checklist) == 1)
+        #expect(MarkdownText.checkboxIndex(atLine: 5, in: checklist) == nil)
+        #expect(MarkdownText.checkboxIndex(atLine: 7, in: checklist) == nil, "inside a fence")
+        #expect(MarkdownText.checkboxIndex(atLine: 9, in: checklist) == 2)
+        #expect(MarkdownText.isCheckboxChecked(at: 0, in: checklist) == false && MarkdownText.isCheckboxChecked(at: 1, in: checklist) == true)
+        #expect(MarkdownText.isCheckboxChecked(at: 5, in: checklist) == nil)
+    }
 }

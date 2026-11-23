@@ -2762,6 +2762,22 @@
         }
       }
     },
+    "Weiter in %@ ab %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Weiter in %1$@ ab %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue in %1$@ from %2$@"
+          }
+        }
+      }
+    },
     "Wie geht es mir im Moment grundsätzlich?": {
       "localizations": {
         "en": {
@@ -2798,6 +2814,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yoga"
+          }
+        }
+      }
+    },
+    "Zeit für Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time for Bible Study."
           }
         }
       }

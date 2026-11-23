@@ -42,6 +42,8 @@ struct NoteEditorView: View {
     @State var lockIntroIDs: [UUID] = []
     /// What the insert features put on top of the page (scanner, share sheet, rename prompt).
     @State var inserts = NoteInsertState()
+    /// The checkbox line of a Bible Study note that is about to become a task.
+    @State var checkboxTask: CheckboxTaskDraft?
 
     /// Stage C switch of the line mapping: `false` renders the page without edit links and shows the pencil button again,
     /// so the editor opens with the cursor at the end. A constant, not a setting (decided by the device check).
@@ -83,6 +85,8 @@ struct NoteEditorView: View {
         content
             .navigationTitle(title(of: note))
             .navigationBarTitleDisplayMode(.inline)
+            // The running Bible Study session of this note (BS1b); it takes no space without one.
+            .safeAreaInset(edge: .top, spacing: 0) { BibleSessionBar(noteID: noteID, store: store, saveText: saveText) }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if mode == .edit, isTextFocused {
                     NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
@@ -132,6 +136,7 @@ struct NoteEditorView: View {
             .noteInsertPresentations(inserts, attachments: store.attachments,
                                      actions: NoteInsertActions(onScanFinished: addScan, onDrawingFinished: finishDrawing, onRename: renameAttachment,
                                                                 onTableFinished: finishTable, onEditTableAsText: { beginEditing(atLine: $0) }))
+            .checkboxTask($checkboxTask, model: environment.taskList, onCreated: markCheckboxAsTask)
             .alert(failureText ?? "", isPresented: failureBinding) { Button("OK", role: .cancel) {} }
             .alert(notice ?? "", isPresented: noticeBinding) { Button("OK", role: .cancel) {} }
             .sheet(isPresented: $isAddingToShopping) {
@@ -213,7 +218,7 @@ struct NoteEditorView: View {
                                      beginEditing(atLine: NoteEditTarget.approximateLine(fraction: fraction, in: text))
                                  } : nil,
                                  onEditTable: openTable(at:),
-                                 contextMenu: attachmentMenu)
+                                 contextMenu: pageMenu(for:))
                     .accessibilityAction(named: "Bearbeiten") { if Self.usesTapToEdit { beginEditing(atLine: nil) } }
             }
         }
@@ -318,7 +323,7 @@ struct NoteEditorView: View {
     }
 
     /// A tap on a checkbox of the page flips it in the text and saves.
-    private func toggleCheckbox(_ index: Int) {
+    func toggleCheckbox(_ index: Int) {
         let toggled = MarkdownText.togglingCheckbox(at: index, in: text)
         guard toggled != text else { return }
         text = toggled

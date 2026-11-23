@@ -132,10 +132,10 @@ struct NotificationPlanTests {
             task("T\(minute)", source: .local, due: DueDate(year: 2026, month: 12, day: 1, hour: 10, minute: minute))
         }
         let result = plan(tasks)
-        #expect(NotificationBudget.tasksAndDeadlines == 46)
+        #expect(NotificationBudget.tasksAndDeadlines == 44)
         #expect(result.count == NotificationBudget.tasksAndDeadlines)
         #expect(result.first?.title == "T0")
-        #expect(result.last?.title == "T45")
+        #expect(result.last?.title == "T43")
     }
 
     @Test func identifiers_areStable() {

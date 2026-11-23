@@ -247,10 +247,10 @@ struct NotificationSchedulerTests {
         }
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()
-        #expect(center.pending.count == 46)
-        // Ten requests were kept, so 36 of the new ones fit under the limit of 46.
-        #expect(center.pendingIDs.contains("tagwerk.task.local:L35#0"))
-        #expect(!center.pendingIDs.contains("tagwerk.task.local:L36#0"))
+        #expect(center.pending.count == 44)
+        // Ten requests were kept, so 34 of the new ones fit under the limit of 44.
+        #expect(center.pendingIDs.contains("tagwerk.task.local:L33#0"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:L34#0"))
     }
 
     @Test func requestAuthorization_grantedReschedulesAtOnce() async {
@@ -422,7 +422,7 @@ struct NotificationSchedulerTests {
         local.tasks = (0..<60).map { makeTask("T\($0)", source: .local, due: due(20 + $0 % 5, 12)) }
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()
-        #expect(center.added.count == 46)
+        #expect(center.added.count == 44)
         #expect(Set(routineIDs).isSubset(of: center.pendingIDs))
     }
 }
