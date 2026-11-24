@@ -66,6 +66,9 @@ struct TimelineCanvas: View {
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
     @State private var session: Session?
+    /// The entry whose resize grip is touched. A gesture state, so the system resets it when the touch ends or is
+    /// cancelled; a cancelled drag never calls `onEnded` and would leave `session` (and the scroll lock) set (#304).
+    @GestureState private var resizingEntryID: String?
     /// The hold-and-drag on an entry (UIKit recognizer, SR1 path B).
     @State private var hold = HoldMoveState()
     @State private var pending: [String: Range<Int>] = [:]
@@ -201,6 +204,10 @@ struct TimelineCanvas: View {
         .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
         // Scrolling stops as soon as an entry is held, not only once it moves (SR1).
         .onChange(of: hold.blocksScroll || session != nil) { _, dragging in isDragging = dragging }
+        // A resize that the system cancelled (no `onEnded`) is dropped here; the hold-and-drag has its own cancelled callback.
+        .onChange(of: resizingEntryID) { old, new in
+            if new == nil, let old, let current = session, current.id == old, current.mode != .move { session = nil }
+        }
     }
 
     /// Visible hours: working time widened to every entry, with an hour of margin.
@@ -416,6 +423,7 @@ struct TimelineCanvas: View {
             .contentShape(Rectangle())
             .frame(maxWidth: .infinity, alignment: alignment)
             .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("canvas"))
+                .updating($resizingEntryID) { _, state, _ in state = entry.id }
                 .onChanged { drag in
                     if session == nil { session = Session(id: entry.id, mode: mode, original: displayRange(entry), delta: 0) }
                     session?.delta = drag.translation.height
