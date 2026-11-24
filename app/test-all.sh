@@ -48,6 +48,21 @@
 #                              -retry-tests-on-failure did not repeat tests that failed an assertion (the runner process ends after the
 #                              failure of a test with continueAfterFailure = false).
 #   TAGWERK_NIGHTLY_ONLY_FILE  alternative path of the nightly-only list (used by scripts/tests/test-all-ui-selection.zsh)
+#   TAGWERK_UI_SHARD           "I/N" (for example 1/2): run only shard I of N of the UI test classes. The classes are read from the
+#                              sources of the UI test target and distributed by their measured durations
+#                              (scripts/ui-test-shards.py, app/TagwerkUITests/ui-test-durations.txt); the shards of one run
+#                              together are the selection of TAGWERK_UI_TEST_SET. Excludes TAGWERK_UI_ONLY. CI runs one job per shard.
+#
+# Watchdog (every xcodebuild call runs under scripts/ui-watchdog.py): the log of the call is followed, the test progress
+# (Test Case started/passed/failed) and a heartbeat go to stdout, and a call that stays silent or runs too long is stopped after
+# diagnostics were written into the log folder (watchdog-<phase>-<time>/: ps, simctl, samples, simulator log). 0 switches a limit off.
+#   TAGWERK_UI_SILENCE_SECONDS     seconds without a new log line before the UI test run is stopped (default 600)
+#   TAGWERK_UI_MAX_SECONDS         run time limit of one UI test call, in seconds (default 0 = off: a full local run under load
+#                                  takes well over an hour; CI sets 3600)
+#   TAGWERK_STAGE_SILENCE_SECONDS  the same silence limit for builds and the other test calls (default 900)
+#   TAGWERK_STAGE_MAX_SECONDS      run time limit of one build or other test call (default 0 = off; CI sets 1800 to 2700)
+#   TAGWERK_HEARTBEAT_SECONDS      interval of the heartbeat line (default 300)
+#   TAGWERK_BOOT_TIMEOUT_SECONDS   limit for the boot of the simulator before the UI tests (default 300, see scripts/test-env.sh)
 
 set -euo pipefail
 
@@ -167,7 +182,35 @@ build_ui_selection_args() {
     *) echo "Invalid TAGWERK_UI_TEST_RETRIES \"$TAGWERK_UI_TEST_RETRIES\" (expected empty, 0 or 1)" >&2; return 1 ;;
   esac
 
-  if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
+  if [[ -n "${TAGWERK_UI_SHARD:-}" ]]; then
+    if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
+      echo "TAGWERK_UI_SHARD and TAGWERK_UI_ONLY exclude each other" >&2
+      return 1
+    fi
+    # Shards 1 to N-1 select their classes; the last shard skips the classes of all the others instead, so a class that the
+    # source scan of scripts/ui-test-shards.py does not see still runs (in the last shard) and is never left out of every shard.
+    local shard_classes shard_class shard_mode="shard" shard_flag="-only-testing"
+    local shard_index="${TAGWERK_UI_SHARD%%/*}" shard_total="${TAGWERK_UI_SHARD##*/}"
+    if [[ "$shard_index" == "$shard_total" && "$shard_total" =~ '^[0-9]+$' && "$shard_total" -gt 1 ]]; then
+      shard_mode="others"
+      shard_flag="-skip-testing"
+    fi
+    shard_classes=$(/usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-test-shards.py" "$shard_mode" "$TAGWERK_UI_SHARD" \
+      --tests-dir "$SCRIPT_DIR/TagwerkUITests" --nightly-only-file "$nightly_file" --set "$test_set") || return 1
+    for shard_class in ${(f)shard_classes}; do
+      UI_SELECTION_ARGS+=("$shard_flag:$UI_TEST_TARGET/$shard_class")
+      entries=$((entries + 1))
+    done
+    # The nightly-only entries of the pull request set still apply inside the classes of the shard.
+    if [[ "$test_set" == "pr" && -f "$nightly_file" ]]; then
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        identifier="${line//[[:space:]]/}"
+        [[ -z "$identifier" || "$identifier" == \#* ]] && continue
+        UI_SELECTION_ARGS+=("-skip-testing:$UI_TEST_TARGET/$identifier")
+      done < "$nightly_file"
+    fi
+    summary="shard $TAGWERK_UI_SHARD of the $test_set set ($shard_flag for $entries test classes)"
+  elif [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
     for identifier in ${=TAGWERK_UI_ONLY}; do
       if [[ ! "$identifier" =~ '^[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?$' ]]; then
         echo "Invalid TAGWERK_UI_ONLY entry \"$identifier\" (expected Class or Class/testMethod)" >&2
@@ -240,7 +283,9 @@ FAILED_PHASE=""
 
 # Reports the failing stage and stops the script.
 stage_failed() {
-  if [[ -n "${TAGWERK_BUILD_ONLY:-}" || "$FAILED_PHASE" == "build" ]]; then
+  if [[ "$FAILED_PHASE" == "hang" ]]; then
+    echo "HUNG in stage: $CURRENT_STAGE (stopped by the watchdog, diagnostics in $LOG_DIR/watchdog-*)" >&2
+  elif [[ -n "${TAGWERK_BUILD_ONLY:-}" || "$FAILED_PHASE" == "build" ]]; then
     echo "BUILD FAILED in stage: $CURRENT_STAGE" >&2
   else
     echo "TESTS FAILED in stage: $CURRENT_STAGE" >&2
@@ -270,6 +315,34 @@ if [[ -n "${TAGWERK_BUILD_ONLY:-}" ]]; then
   echo "    build only (TAGWERK_BUILD_ONLY): build-for-testing, no tests are run"
 fi
 
+# Runs "xcodebuild VERB ARGS..." under scripts/ui-watchdog.py (see "Watchdog" in the header): the output goes to LOG (appended or
+# truncated first), the progress goes to stdout, and the call is stopped with status 124 when it stays silent or runs too long.
+# The limits are the UI ones for the test run of the UI stage and the stage ones for everything else.
+# Usage: run_xcodebuild_watched PHASE LOG append|truncate VERB ARGS...
+run_xcodebuild_watched() {
+  local phase="$1" log="$2" mode="$3" verb="$4"; shift 4
+  local silence="${TAGWERK_STAGE_SILENCE_SECONDS:-900}" max_seconds="${TAGWERK_STAGE_MAX_SECONDS:-0}"
+  local options=(--heartbeat "${TAGWERK_HEARTBEAT_SECONDS:-300}") simulator_id=""
+  if [[ "$verb" == "test-without-building" && "$CURRENT_STAGE" == "app UI tests" ]]; then
+    silence="${TAGWERK_UI_SILENCE_SECONDS:-600}"
+    max_seconds="${TAGWERK_UI_MAX_SECONDS:-0}"
+  fi
+  [[ "$mode" == "append" ]] && options+=(--append)
+  # Only the stages that use the simulator get its diagnostics; a simulator chosen with TAGWERK_TEST_SIMULATOR is never shut down.
+  if [[ "$CURRENT_STAGE" == app* && "$DESTINATION" == *id=* ]]; then
+    simulator_id="${${DESTINATION#*id=}%%,*}"
+    [[ -n "${TAGWERK_TEST_SIMULATOR:-}" ]] || options+=(--shutdown-simulator)
+  fi
+  local watched_status=0
+  /usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-watchdog.py" --phase "$phase" --log "$log" --diag-dir "$LOG_DIR" \
+    --silence "$silence" --max-seconds "$max_seconds" --simulator-id "$simulator_id" "${options[@]}" \
+    -- xcodebuild "$verb" "$@" || watched_status=$?
+  if (( watched_status == 124 )); then
+    echo "STOPPED BY THE WATCHDOG in phase \"$phase\": see the diagnostics folder watchdog-* in $LOG_DIR" >&2
+  fi
+  return $watched_status
+}
+
 # Runs xcodebuild <verb> for the tests of a stage, keeps the full log and fails when no test was executed. The verb is
 # "test" (build and test in one call, used for the package stages) or "test-without-building" (the test half after
 # build_for_testing, which started the log of the stage; this output is appended to it). The log and the result bundle are named
@@ -285,10 +358,13 @@ run_tests() {
     result_args=(-resultBundlePath "$RESULTS_DIR/$label.xcresult")
   fi
   [[ "$verb" == "test-without-building" && -z "${RUN_TESTS_LABEL:-}" ]] || : > "$log"
-  local started=$SECONDS
+  local started=$SECONDS watchdog_status=0
   # German is the source language; tests expect German texts and formats (plan english-app, Task 1).
-  if ! xcodebuild "$verb" -testLanguage de -testRegion DE "${result_args[@]}" "$@" >> "$log" 2>&1; then
+  echo "    $CURRENT_STAGE: xcodebuild $verb started (log: $log)"
+  run_xcodebuild_watched "$CURRENT_STAGE: $label $verb" "$log" append "$verb" -testLanguage de -testRegion DE "${result_args[@]}" "$@" || watchdog_status=$?
+  if (( watchdog_status != 0 )); then
     FAILED_PHASE="test"
+    (( watchdog_status != 124 )) || FAILED_PHASE="hang"
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
@@ -326,9 +402,12 @@ build_for_testing() {
   if [[ -n "$RESULTS_DIR" ]]; then
     result_args=(-resultBundlePath "$RESULTS_DIR/${CURRENT_STAGE// /-}-build.xcresult")
   fi
-  local started=$SECONDS
-  if ! xcodebuild build-for-testing "${result_args[@]}" "$@" > "$log" 2>&1; then
+  local started=$SECONDS watchdog_status=0
+  echo "    $CURRENT_STAGE: xcodebuild build-for-testing started (log: $log)"
+  run_xcodebuild_watched "$CURRENT_STAGE: build" "$log" truncate build-for-testing "${result_args[@]}" "$@" || watchdog_status=$?
+  if (( watchdog_status != 0 )); then
     FAILED_PHASE="build"
+    (( watchdog_status != 124 )) || FAILED_PHASE="hang"
     grep -E "error:|✘|failed" "$log" | tail -n 30 >&2 || true
     echo "Full log: $log" >&2
     return 1
@@ -374,6 +453,8 @@ run_ui_tests() {
   run_tests test-without-building "$@" "${UI_SELECTION_ARGS[@]}" || attempt_status=$?
   stop_ui_hang_sampler
   if (( attempt_status == 0 )) || ! ui_retries_enabled; then return $attempt_status; fi
+  # A run stopped by the watchdog is a hang, not a flaky test: it is reported as it is, without a second attempt.
+  if [[ "$FAILED_PHASE" == "hang" ]]; then return $attempt_status; fi
 
   local failed_tests=() failed_test retry_args=()
   failed_tests=(${(f)"$(/usr/bin/python3 -I "$SCRIPT_DIR/../scripts/ui-test-log.py" failed "$first_log")"})
@@ -499,10 +580,13 @@ else
   verify_embedded_resource_bundles "$DERIVED/Build/Products" || { FAILED_PHASE="build"; stage_failed; }
   if [[ -z "${TAGWERK_BUILD_ONLY:-}" ]]; then
     # Only one UI test stage runs on the machine at a time (waits up to 60 minutes, then exits with code 2).
+    echo "    taking the UI stage lock"
     tagwerk_acquire_ui_lock || exit 2
     # The UI tests read the demo data from the Calendar and Reminders stores; the permissions are granted
     # beforehand, so no system dialog can interrupt a test. The simulator is booted for this (the end of the run shuts it down).
+    echo "    preparing the simulator for the UI tests"
     tagwerk_prepare_ui_simulator "$DESTINATION" "$SCRIPT_DIR/Tagwerk.xcodeproj" || stage_failed
+    echo "    running the UI tests"
     ui_status=0
     run_ui_tests "${UI_ARGS[@]}" || ui_status=$?
     # The list is reported even when the stage fails: a test that wobbles is worth knowing about.
