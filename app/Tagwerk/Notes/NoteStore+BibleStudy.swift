@@ -33,12 +33,17 @@ extension NoteStore {
 
     func sessions() -> [BibleStudySessionRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<BibleStudySessionRecord>())) ?? []
+        return sessionsCache.fetch(in: context)
     }
 
     /// The open session of a note, if there is one.
     func openSession(noteID: UUID) -> BibleStudySessionRecord? {
         sessions().filter { $0.noteID == noteID && $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
+    }
+
+    /// The latest session that is still open, in whatever note (the capsule above the tab bar and the row in "Aufgaben").
+    var latestOpenSession: BibleStudySessionRecord? {
+        sessions().filter { $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
     }
 
     /// The latest session, open or completed.

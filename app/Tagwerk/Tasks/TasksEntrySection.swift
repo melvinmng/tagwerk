@@ -57,6 +57,7 @@ struct TasksEntrySection: View {
         Section {
             shoppingRow
             notesRow
+            bibleStudyRow
         }
     }
 
@@ -101,6 +102,31 @@ struct TasksEntrySection: View {
                        subtitle: NotesListView.entrySubtitle(latest: notes.latest, now: .now, calendar: environment.planning.calendar),
                        trailing: notes.count > 0 ? "\(notes.count)" : nil)
         }
+    }
+
+    /// "Bible Study" (#306, decision 1B): a plain row like the other two, no highlight; it is only part of the evening routine. With
+    /// a session running it leads into its note, otherwise to the start sheet (the way of the reminder "Starten"). Not shown while
+    /// the user offers Bible Study nowhere (Einstellungen › Routinen › Bible Study).
+    @ViewBuilder private var bibleStudyRow: some View {
+        if environment.settings.bibleStudyOffer != .never {
+            let notes = environment.notes
+            let running = notes.latestOpenSession
+            Button {
+                if let running { environment.openBibleSessionNote(running) } else { environment.router.open(.bibleStudyStart) }
+            } label: {
+                entryLabel(symbol: "book.pages", title: "Bible Study", subtitle: bibleStudySubtitle(running: running, store: notes), trailing: nil)
+            }
+            .accessibilityIdentifier("tasks.bibleStudy")
+        }
+    }
+
+    private func bibleStudySubtitle(running: BibleStudySessionRecord?, store: NoteStore) -> String? {
+        if let running {
+            return BibleSessionEndModel(session: running, store: store)?.runningTitle
+                ?? String(localized: "Sitzung läuft · \(NotesListView.sessionTitle(running))")
+        }
+        guard let last = store.lastSession else { return nil }
+        return String(localized: "Zuletzt: \(NotesListView.sessionTitle(last))")
     }
 
     private func entryLabel(symbol: String, title: LocalizedStringKey, subtitle: String?, trailing: String?) -> some View {

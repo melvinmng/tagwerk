@@ -24,6 +24,15 @@ final class NoteStore {
     @ObservationIgnored let now: () -> Date
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
+    /// Bumped by every write that can change what the habits read (a journal entry, a Bible Study session, a folder), but not by the
+    /// autosave of a free note or of a Bible Study note: the habits do not read their text, and the refresh writes the widget snapshot.
+    private(set) var habitRevision = 0
+
+    /// What the last read of the store returned; invalidated by every save, also one of another writer on this context.
+    @ObservationIgnored let notesCache = NoteFetchCache<NoteRecord>()
+    @ObservationIgnored let foldersCache = NoteFetchCache<NoteFolderRecord>()
+    @ObservationIgnored let sessionsCache = NoteFetchCache<BibleStudySessionRecord>()
+    @ObservationIgnored nonisolated(unsafe) private var didSaveObserver: (any NSObjectProtocol)?
 
     /// Called after a Bible Study session was started or completed: the reminder names the next verse and drops the day of a
     /// completed session, so the app plans it again (BS7). Set by the app environment; the store knows nothing of notifications.
@@ -37,6 +46,25 @@ final class NoteStore {
         self.context = context
         self.now = now
         self.attachments = attachments
+        // Code that saves the context without the store (the backup restore) leaves the caches stale; its save invalidates them.
+        didSaveObserver = NotificationCenter.default.addObserver(forName: ModelContext.didSave, object: nil, queue: nil) { [weak self] _ in
+            if Thread.isMainThread {
+                MainActor.assumeIsolated { self?.invalidateCaches() }
+            } else {
+                Task { @MainActor in self?.invalidateCaches() }
+            }
+        }
+    }
+
+    deinit {
+        if let didSaveObserver { NotificationCenter.default.removeObserver(didSaveObserver) }
+    }
+
+    /// The next read of notes, folders and sessions goes to the store.
+    func invalidateCaches() {
+        notesCache.invalidate()
+        foldersCache.invalidate()
+        sessionsCache.invalidate()
     }
 
     // MARK: Reading
@@ -68,6 +96,27 @@ final class NoteStore {
 
     func note(id: UUID) -> NoteRecord? {
         all().first { $0.id == id }
+    }
+
+    /// What a lookup of one note found. `unreadable` is a failed read of the store, not a missing note: a page that follows its note
+    /// must not treat it as deleted (#305).
+    enum NoteState {
+        case present(NoteRecord)
+        case absent
+        case unreadable(any Error)
+    }
+
+    /// Looks the note up in the store itself and tells a missing note from a read that failed. A note in the trash is present.
+    func noteState(id: UUID) -> NoteState {
+        _ = revision
+        var descriptor = FetchDescriptor<NoteRecord>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        do {
+            if let record = try context.fetch(descriptor).first { return .present(record) }
+            return .absent
+        } catch {
+            return .unreadable(error)
+        }
     }
 
     /// True when the note must not reach ChatGPT right now: a private kind, a note in a private folder or below one (always), or
@@ -174,7 +223,8 @@ final class NoteStore {
         guard let record = note(id: id), record.text != text else { return }
         record.text = text
         record.updatedAt = now()
-        save()
+        // The autosave of a free note or a Bible Study note changes nothing the habits read; a journal entry does (written or not).
+        save(affectsHabits: record.kind != .free && record.kind != .bibleStudy)
     }
 
     /// Pinning is not a change of the note: the change date stays.
@@ -273,7 +323,7 @@ final class NoteStore {
 
     func folders() -> [NoteFolderRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<NoteFolderRecord>())) ?? []
+        return foldersCache.fetch(in: context)
     }
 
     func folder(id: UUID) -> NoteFolderRecord? {
@@ -381,12 +431,15 @@ final class NoteStore {
 
     private func all() -> [NoteRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<NoteRecord>())) ?? []
+        return notesCache.fetch(in: context)
     }
 
-    /// Saves and bumps `revision`; internal so the routines' extension can write through the same path.
-    func save() {
+    /// Saves and bumps `revision`; internal so the routines' extension can write through the same path. `affectsHabits: false` leaves
+    /// `habitRevision` alone (see there).
+    func save(affectsHabits: Bool = true) {
         try? context.save()
+        invalidateCaches()
         revision += 1
+        if affectsHabits { habitRevision += 1 }
     }
 }

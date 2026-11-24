@@ -9,6 +9,8 @@ struct RootView: View {
     @State private var openEvent: CalendarEvent?
     @State private var recurringEdit: RecurringEdit?
     @State private var shareOffer: Task<Void, Never>?
+    /// "Abschließen" of the session capsule asks "Bis wohin gelesen?" in a sheet.
+    @State private var endingBibleSession: BibleSessionEndModel?
 
     /// K1 (the separate place of the tab bar) did not hold on iOS 27: the search tab sits inside the bar.
     /// The fallback K2 puts the button top right in every tab (`AssistantButton`).
@@ -82,9 +84,19 @@ struct RootView: View {
             }
 
         }
-        // FO5b: the running focus session sits in the accessory of the tab bar, in every tab.
-        .tabViewBottomAccessory(isEnabled: environment.focus.isRunning) {
-            FocusAccessoryBar()
+        // FO5b: the running focus session sits in the accessory of the tab bar, in every tab. A running Bible Study session takes
+        // the place when no focus session runs (the tab bar has one accessory; the focus timer counts down, so it wins).
+        .tabViewBottomAccessory(isEnabled: environment.focus.isRunning || sessionCapsule != nil) {
+            if environment.focus.isRunning {
+                FocusAccessoryBar()
+            } else if let session = sessionCapsule {
+                BibleSessionAccessoryBar(session: session, store: environment.notes,
+                                         onOpen: { environment.openBibleSessionNote(session) },
+                                         onComplete: { completeBibleSession(session) })
+            }
+        }
+        .sheet(item: $endingBibleSession) { model in
+            BibleSessionEndSheet(model: model) {}
         }
         .overlay(alignment: .topLeading) {
             // UI tests only: tells them that the demo data exists. Never shown outside the UI test mode.
@@ -202,6 +214,23 @@ struct RootView: View {
                 await environment.taskList.reload()
             }
         }
+    }
+
+    /// The session the capsule above the tab bar shows: the running Bible Study session, except while its note is the open page of
+    /// "Aufgaben" (the bar above the text says it there).
+    private var sessionCapsule: BibleStudySessionRecord? {
+        guard let session = environment.notes.latestOpenSession else { return nil }
+        if selectedTab == 1, environment.tasksPath.last == .note(session.noteID) { return nil }
+        return session
+    }
+
+    /// "Abschließen" of the capsule: the same question as in the note and in the folder list.
+    private func completeBibleSession(_ session: BibleStudySessionRecord) {
+        guard let model = BibleSessionEndModel(session: session, store: environment.notes) else {
+            environment.notes.completeSession(session.id)
+            return
+        }
+        if model.asksForEnd { endingBibleSession = model } else { model.complete() }
     }
 
     /// "Aufgabe zeigen": the task list with the task scrolled into view and marked (design §13.8 G3).

@@ -462,4 +462,106 @@ struct NoteStoreTests {
         #expect(store.duplicate(note.id, text: "Kopie") == nil)
         #expect(store.count == 2)
     }
+
+    // MARK: Lookup that tells a missing note from an unreadable store (#305)
+
+    @Test func noteState_presentTrashedAndAbsent() throws {
+        let note = try #require(store.create(text: "Gedanke"))
+        guard case .present(let found) = store.noteState(id: note.id) else { Issue.record("expected a present note"); return }
+        #expect(found.id == note.id)
+        store.trash(note.id)
+        guard case .present(let trashed) = store.noteState(id: note.id) else { Issue.record("a trashed note is still present"); return }
+        #expect(trashed.deletedAt != nil)
+        store.delete(note.id)
+        guard case .absent = store.noteState(id: note.id) else { Issue.record("a deleted note is absent"); return }
+        guard case .absent = store.noteState(id: UUID()) else { Issue.record("an unknown id is absent"); return }
+    }
+
+    @Test func noteState_seesANoteThatIsNotSavedYet() {
+        let record = NoteRecord(text: "Neu", now: clock.now)
+        container.mainContext.insert(record)
+        guard case .present = store.noteState(id: record.id) else { Issue.record("a pending insert is present"); return }
+    }
+
+    // MARK: Read cache (#310)
+
+    @Test func reads_comeFromTheCacheUntilSomethingSaves() throws {
+        let note = try #require(store.create(text: "Gedanke"))
+        _ = store.notes(); _ = store.folders(); _ = store.sessions()
+        let notesBefore = store.notesCache.fetchCount, foldersBefore = store.foldersCache.fetchCount
+        for _ in 0..<5 { _ = store.notes(); _ = store.note(id: note.id); _ = store.folders(); _ = store.sessions(); _ = store.count }
+        #expect(store.notesCache.fetchCount == notesBefore, "repeated reads must not fetch again")
+        #expect(store.foldersCache.fetchCount == foldersBefore)
+        store.updateText(note.id, text: "Geändert")
+        #expect(store.notes().first?.text == "Geändert")
+        #expect(store.notesCache.fetchCount == notesBefore + 1, "a save invalidates the cache once")
+        _ = store.notes()
+        #expect(store.notesCache.fetchCount == notesBefore + 1)
+    }
+
+    @Test func cache_seesInsertsAndDeletesThatAreNotSavedYet() throws {
+        let kept = try #require(store.create(text: "Bleibt"))
+        _ = store.notes()
+        let pending = NoteRecord(text: "Noch nicht gespeichert", now: clock.now)
+        container.mainContext.insert(pending)
+        #expect(Set(store.notes().map(\.id)) == [kept.id, pending.id], "an unsaved insert is listed")
+        container.mainContext.delete(pending)
+        #expect(store.notes().map(\.id) == [kept.id], "an unsaved delete is not listed")
+        try container.mainContext.save()
+        #expect(store.notes().map(\.id) == [kept.id])
+    }
+
+    @Test func cache_followsAWriteThatBypassesTheStore() throws {
+        _ = try #require(store.create(text: "Eins"))
+        _ = store.notes(); _ = store.folders()
+        // Like the backup restore: records go straight into the context, which is saved without `NoteStore.save()`.
+        let restored = NoteRecord(text: "Zurückgespielt", now: clock.now)
+        let folder = NoteFolderRecord(name: "Zurückgespielter Ordner", parentID: nil, order: 0, now: clock.now)
+        container.mainContext.insert(restored)
+        container.mainContext.insert(folder)
+        try container.mainContext.save()
+        #expect(store.notes().contains { $0.id == restored.id }, "the cache follows the save of the context")
+        #expect(store.folders().contains { $0.id == folder.id })
+    }
+
+    @Test func cache_followsFoldersAndSessions() throws {
+        _ = store.folders(); _ = store.sessions()
+        let folder = try store.createFolder(name: "Ideen")
+        #expect(store.folders().contains { $0.id == folder.id })
+        let romans = try #require(BibleBooks.book(number: 45))
+        let started = store.startSession(book: romans, passage: BiblePassage(start: BibleReference(chapter: 3, verse: 21), end: nil),
+                                         dayKey: "2026-11-20", dateText: "20.11.2026", locale: Locale(identifier: "de_DE"))
+        #expect(store.openSession(noteID: started.note.id)?.id == started.session.id)
+        store.completeSession(started.session.id)
+        #expect(store.openSession(noteID: started.note.id) == nil, "the completed session is read from the store, not from the cache")
+    }
+
+    // MARK: Habit revision (#310)
+
+    @Test func habitRevision_ignoresTheAutosaveOfFreeAndBibleStudyNotes() throws {
+        let free = try #require(store.create(text: "Gedanke"))
+        let romans = try #require(BibleBooks.book(number: 45))
+        let bible = store.openBibleNote(book: romans, locale: Locale(identifier: "de_DE"))
+        let revision = store.revision, habits = store.habitRevision
+        store.updateText(free.id, text: "Gedanke mehr")
+        store.updateText(bible.id, text: bible.text + "\nNeue Zeile")
+        #expect(store.revision == revision + 2, "views still follow every write")
+        #expect(store.habitRevision == habits, "the habits do not read the text of these notes")
+    }
+
+    @Test func habitRevision_followsJournalTextSessionsAndOtherWrites() throws {
+        let entry = store.openJournalEntry(dayKey: "2026-11-20", locale: Locale(identifier: "de_DE"))
+        var habits = store.habitRevision
+        store.updateText(entry.id, text: entry.text + "\nHeute geschrieben")
+        #expect(store.habitRevision == habits + 1, "writing into the journal entry ticks the habit")
+        #expect(store.journalDays(in: PlanDay(dayKey: "2026-11-20")!...PlanDay(dayKey: "2026-11-20")!).count == 1)
+        habits = store.habitRevision
+        let romans = try #require(BibleBooks.book(number: 45))
+        let started = store.startSession(book: romans, passage: nil, freeText: "3,21", dayKey: "2026-11-20", dateText: "20.11.2026",
+                                         locale: Locale(identifier: "de_DE"))
+        #expect(store.habitRevision > habits, "a started session is written")
+        habits = store.habitRevision
+        store.completeSession(started.session.id)
+        #expect(store.habitRevision > habits, "a completed session ticks the Bible Study habit")
+    }
 }

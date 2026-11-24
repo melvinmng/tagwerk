@@ -122,6 +122,8 @@ enum AccessibilityID {
         static let tableDone = "noteEditor.tableDone"
         /// The table button of the bar above the keyboard, shown while the cursor is in a table.
         static let tableButton = "noteEditor.tableButton"
+        /// "Als Aufgabe" of the bar above the keyboard in a Bible Study note.
+        static let checkboxTaskButton = "noteEditor.checkboxTask"
     }
 
     enum Common {
