@@ -14,7 +14,9 @@ Rules, applied recursively to every object (a list or a scalar counts as one val
 
 The result is written in the format of the file (scripts/catalog_format.py): String Catalogs sorted by code point,
 en.json in insertion order (keys that only "theirs" added follow the keys of "ours"). A merge that changes nothing on
-our side leaves the file byte for byte as it was.
+our side leaves the file byte for byte as it was. The format comes from --format or, with "auto", from the content of
+the file (a String Catalog has the top-level keys "sourceLanguage" and "strings"), never from the file name: git passes
+temporary file names, and the path argument (%P) is optional.
 
 On a real conflict the driver reports the conflicting paths on stderr, writes the merged file with standard conflict
 markers around the conflicting values only (everything else is merged already) and exits with 1.
@@ -22,7 +24,8 @@ markers around the conflicting values only (everything else is merged already) a
 Usage (git merge driver protocol, see scripts/setup-git-merge-drivers.sh):
   scripts/merge-xcstrings.py [--format auto|xcstrings|ordered-json] BASE OURS THEIRS [PATH]
 BASE, OURS and THEIRS are the temporary files git passes as %O, %A and %B; the result is written to OURS. PATH (%P) only
-names the file in messages and selects the format ("auto": *.xcstrings are sorted catalogs, everything else keeps its order).
+names the file in messages and serves as a fallback for the format ("auto": a document that looks like a String Catalog
+is sorted; otherwise *.xcstrings are sorted and everything else keeps its order).
 Exit codes: 0 merged cleanly, 1 conflict (markers in OURS), 2 usage error.
 """
 import argparse
@@ -135,14 +138,29 @@ def _conflict_merge(base, ours, theirs, ours_path, ours_text, file_format, marke
         _write_text(ours_path, _read_text(paths["ours"]))
 
 
-def resolve_format(requested, display_path):
+def looks_like_string_catalog(document):
+    """True for the top level of a String Catalog: an object with "sourceLanguage" and an object "strings"."""
+    return isinstance(document, dict) and "sourceLanguage" in document and isinstance(document.get("strings"), dict)
+
+
+def resolve_format(requested, display_path, documents=()):
+    """Format of the file: an explicit request wins; "auto" looks at the content first and at the file name second.
+
+    The content decides because the file name is unreliable: without %P in the driver command git only hands over
+    temporary names, and a catalog would be written in insertion order instead of sorted.
+    """
     if requested != "auto":
         return requested
+    if any(looks_like_string_catalog(document) for document in documents):
+        return "xcstrings"
     return "xcstrings" if str(display_path).endswith(".xcstrings") else "ordered-json"
 
 
 def run(base_path, ours_path, theirs_path, display_path, file_format, marker_size=7):
-    """Merges the three files into `ours_path`. Returns the exit code of the driver."""
+    """Merges the three files into `ours_path`. Returns the exit code of the driver.
+
+    `file_format` is "xcstrings", "ordered-json" or "auto" (decided from the content once the files are parsed).
+    """
     ours_text = _read_text(ours_path)
     try:
         base = json.loads(_read_text(base_path))
@@ -152,6 +170,7 @@ def run(base_path, ours_path, theirs_path, display_path, file_format, marker_siz
         print(f"merge-xcstrings: {display_path}: not valid JSON ({error}); falling back to the text merge", file=sys.stderr)
         return 1 if _text_merge(base_path, ours_path, theirs_path, marker_size) != 0 else 0
 
+    file_format = resolve_format(file_format, display_path, (ours, theirs, base))
     merged, conflicts = merge_documents(base, ours, theirs)
     if conflicts:
         print(f"merge-xcstrings: {display_path}: {len(conflicts)} conflict(s) that need a decision:", file=sys.stderr)
@@ -177,8 +196,7 @@ def main(arguments):
     parser.add_argument("path", nargs="?", default=None)
     options = parser.parse_args(arguments)
     display_path = options.path or options.ours
-    return run(options.base, options.ours, options.theirs, display_path,
-               resolve_format(options.format, display_path), options.marker_size)
+    return run(options.base, options.ours, options.theirs, display_path, options.format, options.marker_size)
 
 
 if __name__ == "__main__":

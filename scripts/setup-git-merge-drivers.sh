@@ -32,7 +32,7 @@ fi
 [[ -f "$DRIVER_SCRIPT" ]] || { echo "error: $DRIVER_SCRIPT not found in $REPO_ROOT" >&2; exit 1; }
 
 git config --local merge.xcstrings.name "Tagwerk String Catalog (key-level three-way merge)"
-git config --local merge.xcstrings.driver "$PYTHON $DRIVER_SCRIPT --marker-size %L %O %A %B %P"
+git config --local merge.xcstrings.driver "$PYTHON $DRIVER_SCRIPT --format xcstrings --marker-size %L %O %A %B %P"
 git config --local merge.translationsjson.name "Tagwerk translations en.json (key-level three-way merge)"
 git config --local merge.translationsjson.driver "$PYTHON $DRIVER_SCRIPT --format ordered-json --marker-size %L %O %A %B %P"
 
