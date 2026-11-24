@@ -38,6 +38,8 @@ SettingsNavigationUITests 42
 ShoppingTranslateUITests 105
 ShoppingUITests 120
 TaskFlowUITests 266
+# est. new class (one test, voice page in the settings)
+VoiceChoiceUITests 45
 # est. nightly-only classes (full set only)
 AccessibilityAuditRecipesLargeTextUITests 600
 AccessibilityAuditEveningLargeTextUITests 100
