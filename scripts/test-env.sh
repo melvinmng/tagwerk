@@ -17,6 +17,7 @@
 #   TAGWERK_SLOT_WAIT_SECONDS  how long to wait for a free slot before giving up with exit code 2 (default 1800)
 #   TAGWERK_UI_LOCK_WAIT_SECONDS  how long to wait for the UI stage lock (default 3600)
 #   TAGWERK_LOCK_POLL_SECONDS  polling interval while waiting for a lock (default 5)
+#   TAGWERK_BOOT_TIMEOUT_SECONDS  how long the simulator may take to finish booting for the UI tests (default 300)
 #
 # Sets: TAGWERK_CHECKOUT_KEY, TAGWERK_TEST_DERIVED, TAGWERK_TEST_LOG_DIR
 # Provides: tagwerk_test_destination (prints the xcodebuild destination; takes a pool slot and creates its simulator if
@@ -131,18 +132,67 @@ for devices in json.load(sys.stdin)["devices"].values():
             sys.exit(0)
 ' "${destination##*name=}") || return 1
   fi
-  bundle_id=$(xcodebuild -project "$project" -scheme Tagwerk -showBuildSettings 2>/dev/null \
-    | sed -nE 's/^ *PRODUCT_BUNDLE_IDENTIFIER = (.*)$/\1/p' | head -n 1)
+  echo "    resolving the bundle ID (limit 180 s)"
+  local build_settings_file
+  build_settings_file=$(mktemp "${TMPDIR:-/tmp}/tagwerk-build-settings.XXXXXX")
+  _tagwerk_run_limited 180 /bin/sh -c 'exec xcodebuild -project "$1" -scheme Tagwerk -showBuildSettings > "$2" 2> /dev/null' sh "$project" "$build_settings_file" || true
+  bundle_id=$(sed -nE 's/^ *PRODUCT_BUNDLE_IDENTIFIER = (.*)$/\1/p' "$build_settings_file" | head -n 1)
+  rm -f "$build_settings_file"
   if [[ -z "$simulator" || -z "$bundle_id" ]]; then
     echo "Could not resolve the simulator or the bundle ID" >&2
     return 1
   fi
-  xcrun simctl boot "$simulator" 2>/dev/null || true
-  xcrun simctl bootstatus "$simulator" -b > /dev/null 2>&1 || true
+  local boot_limit="${TAGWERK_BOOT_TIMEOUT_SECONDS:-300}" started=$SECONDS boot_status=0
+  echo "    simulator $simulator: booting (limit $boot_limit s)"
+  # A boot that hangs is reported like a bootstatus that hangs (an already booted simulator answers with an error, which is fine).
+  _tagwerk_run_limited "$boot_limit" xcrun simctl boot "$simulator" 2> /dev/null || boot_status=$?
+  if (( boot_status == 124 )); then
+    echo "Simulator $simulator did not accept the boot command within $boot_limit s" >&2
+    xcrun simctl list devices >&2 || true
+    return 1
+  fi
+  boot_status=0
+  # bootstatus -b waits until the boot has finished and shows its progress; a simulator that never gets there is a failure with
+  # a message, not a silent wait until the step limit of the CI job (bootstatus itself has no time limit).
+  _tagwerk_run_limited "$boot_limit" xcrun simctl bootstatus "$simulator" -b || boot_status=$?
+  if (( boot_status == 124 )); then
+    echo "Simulator $simulator did not finish booting within $boot_limit s" >&2
+    xcrun simctl list devices >&2 || true
+    return 1
+  elif (( boot_status != 0 )); then
+    echo "    simulator $simulator: bootstatus ended with status $boot_status, continuing" >&2
+  fi
+  echo "    simulator $simulator: ready after $(( SECONDS - started )) s"
   local service
   for service in calendar reminders; do
-    xcrun simctl privacy "$simulator" grant "$service" "$bundle_id" || return 1
+    echo "    simulator $simulator: granting $service access to $bundle_id"
+    if ! _tagwerk_run_limited 120 xcrun simctl privacy "$simulator" grant "$service" "$bundle_id"; then
+      echo "Could not grant $service access to $bundle_id on $simulator" >&2
+      return 1
+    fi
   done
+}
+
+# Runs a command with a time limit (macOS has no timeout command). Returns the status of the command, or 124 when the limit was
+# reached (TERM first, KILL after two seconds). Usage: _tagwerk_run_limited SECONDS COMMAND...
+_tagwerk_run_limited() {
+  local limit="$1" command_pid deadline command_status=0
+  shift
+  "$@" &
+  command_pid=$!
+  deadline=$(( SECONDS + limit ))
+  while kill -0 "$command_pid" 2>/dev/null; do
+    if (( SECONDS >= deadline )); then
+      kill -TERM "$command_pid" 2>/dev/null || true
+      sleep 2
+      kill -KILL "$command_pid" 2>/dev/null || true
+      wait "$command_pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 1
+  done
+  wait "$command_pid" || command_status=$?
+  return $command_status
 }
 
 # One test run per checkout: two runs would share the simulator and the derived data folder. The lock is a folder that
@@ -270,7 +320,7 @@ tagwerk_shutdown_pool_simulator() {
 # Only one UI test stage runs on the machine at a time: UI tests are the main load and several at once make each other
 # flaky. Waits up to TAGWERK_UI_LOCK_WAIT_SECONDS and then returns 2. A process that holds the lock keeps it.
 tagwerk_acquire_ui_lock() {
-  local lock="$TAGWERK_LOCK_DIR/ui-stage.lock" deadline=$(( SECONDS + TAGWERK_UI_LOCK_WAIT_SECONDS )) announced=0
+  local lock="$TAGWERK_LOCK_DIR/ui-stage.lock" deadline=$(( SECONDS + TAGWERK_UI_LOCK_WAIT_SECONDS )) announced=0 next_notice=0
   if [[ "$(cat "$lock/pid" 2>/dev/null || true)" == "$$" ]]; then return 0; fi
   while ! _tagwerk_try_lock "$lock"; do
     if (( SECONDS >= deadline )); then
@@ -280,6 +330,10 @@ tagwerk_acquire_ui_lock() {
     if (( ! announced )); then
       echo "Another UI test stage (process $(cat "$lock/pid" 2>/dev/null || true)) is running; waiting up to $(( TAGWERK_UI_LOCK_WAIT_SECONDS / 60 )) min for it to finish." >&2
       announced=1
+      next_notice=$(( SECONDS + 300 ))
+    elif (( SECONDS >= next_notice )); then
+      echo "Still waiting for the UI test stage lock (process $(cat "$lock/pid" 2>/dev/null || true), $(( deadline - SECONDS )) s left)." >&2
+      next_notice=$(( SECONDS + 300 ))
     fi
     sleep "$TAGWERK_LOCK_POLL_SECONDS"
   done
