@@ -168,6 +168,25 @@ struct BodyProfileStoreTests {
         #expect(store.profile.height == BodyValue(value: 181, source: .typed), "Tagwerk calculates with it anyway")
     }
 
+    @Test func pendingHeight_isWrittenOnceThePermissionComes() async {
+        let store = store()
+        #expect(await store.updateHeight(181) == .notAllowed)
+        #expect(await store.writePendingHeight() == .notAllowed, "still no permission")
+        health.setWriteAccess(.allowed, for: .height)
+        #expect(await store.writePendingHeight() == .written)
+        #expect(health.heights.map(\.centimeters) == [181])
+        settings.healthBodyHeightCm = 181
+        #expect(await store.writePendingHeight() == .notNeeded, "Health holds the value now")
+    }
+
+    @Test func pendingHeight_withoutAnEditedHeight_writesNothing() async {
+        health.setWriteAccess(.allowed, for: .height)
+        settings.typedBodyValues = BodyProfileValues(heightCm: 170)
+        let store = store()
+        #expect(await store.writePendingHeight() == .notNeeded, "a typed value without the marker is only a fallback")
+        #expect(health.heights.isEmpty)
+    }
+
     @Test func updateHeight_outOfRange_writesNothing() async {
         health.setWriteAccess(.allowed, for: .height)
         let store = store()

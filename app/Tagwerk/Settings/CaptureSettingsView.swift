@@ -110,6 +110,8 @@ private struct CaptureSettingsForm: View {
                 }
                 writeRow("Größe schreiben", access: capture.heightWriteAccess, connected: capture.healthConnected) {
                     await capture.allowHeightWriting()
+                    // A height typed before the permission existed goes to Health now.
+                    await environment.bodyProfile.writePendingHeight()
                 }
             } header: {
                 Text("Apple Health")

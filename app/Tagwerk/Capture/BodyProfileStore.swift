@@ -126,6 +126,19 @@ final class BodyProfileStore {
         let before = profile.height.value
         setTypedHeight(centimetres)
         guard let centimetres, BodyProfile.heightRangeCm.contains(centimetres), centimetres != before else { return .notNeeded }
+        return await writeHeight(centimetres)
+    }
+
+    /// Writes an edited height that Health does not know yet: it was typed while the permission was missing, and the permission came
+    /// later (the Health card or "Größe schreiben"). Does nothing without an edited height or when Health already holds that value.
+    @discardableResult
+    func writePendingHeight() async -> HeightWriteResult {
+        guard settings.bodyOverrides.contains(.height), let typed = settings.bodyHeightCm,
+              BodyProfile.heightRangeCm.contains(typed), settings.healthBodyHeightCm != typed else { return .notNeeded }
+        return await writeHeight(typed)
+    }
+
+    private func writeHeight(_ centimetres: Int) async -> HeightWriteResult {
         do {
             return try await health.saveHeight(HealthHeight(centimeters: Double(centimetres), date: now())) ? .written : .notAllowed
         } catch {

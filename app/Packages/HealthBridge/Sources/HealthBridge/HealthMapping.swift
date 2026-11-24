@@ -64,9 +64,9 @@ public enum HealthMapping {
     static let heightEntryID = UUID(uuidString: "6D3A1C2E-0000-4000-8000-0000000000A1")!
 
     /// Metadata of the height sample. Health replaces a sample of the same sync identifier only for a higher version, so the version
-    /// is the time of the edit in seconds.
+    /// is the time of the edit in milliseconds, so two edits within a second still replace each other.
     static func heightMetadata(date: Date) -> [String: Any] {
-        metadata(syncIdentifier: heightSyncIdentifier, entryID: heightEntryID, version: Int(date.timeIntervalSince1970),
+        metadata(syncIdentifier: heightSyncIdentifier, entryID: heightEntryID, version: Int(date.timeIntervalSince1970 * 1000),
                  estimated: false, userEntered: true)
     }
 

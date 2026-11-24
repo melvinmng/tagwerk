@@ -23,7 +23,10 @@ struct BodyProfileSection: View {
             Button("Aus Health lesen") { Task { await store.readFromHealth() } }
                 .accessibilityIdentifier(AccessibilityID.BodyProfile.readButton)
                 // Once when the section appears; a modifier on the `Section` itself would run once per row.
-                .task { await store.refresh() }
+                .task {
+                    await store.refresh()
+                    await store.writePendingHeight()
+                }
             Button("Geburtsdatum und Geschlecht in Health ändern") {
                 if let url = URL(string: "x-apple-health://") { openURL(url) }
             }
