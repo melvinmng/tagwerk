@@ -50,6 +50,18 @@ final class BibleStudyUITests: UITestCase {
         let start = app.buttons["bibleStudy.start"]
         XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "The start sheet did not come back after choosing the book")
         XCTAssertEqual(start.label, "Sitzung starten · Offenbarung 1,1", "The start button does not name the chosen book")
+        // #308: the chosen book is the first, selected chip; the book read last stays as the next one.
+        let chips = app.buttons.matching(NSPredicate(format: "label IN %@", ["Offenbarung", "Römer"])).allElementsBoundByIndex
+        XCTAssertEqual(chips.first?.label, "Offenbarung", "The chosen book is not the first chip")
+        XCTAssertTrue(chips.first?.isSelected ?? false, "The chip of the chosen book is not selected")
+        XCTAssertEqual(chips.dropFirst().first?.label, "Römer", "The book read last is missing from the chips")
+    }
+
+    /// #306: "Heute nicht" in the start sheet closes it (the reminder of today is dropped, as with the action of the notification).
+    func testStartSheetOffersNotToday() {
+        openStartSheet()
+        tapButton("bibleStudy.skipToday")
+        waitUntilGone(app.navigationBars["Bible Study starten"])
     }
 
     // MARK: Running session (BS1b, BV2b)
