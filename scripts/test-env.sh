@@ -165,8 +165,19 @@ for devices in json.load(sys.stdin)["devices"].values():
   echo "    simulator $simulator: ready after $(( SECONDS - started )) s"
   local service
   for service in calendar reminders; do
-    echo "    simulator $simulator: granting $service access to $bundle_id"
-    if ! _tagwerk_run_limited 120 xcrun simctl privacy "$simulator" grant "$service" "$bundle_id"; then
+    # Right after a slow boot the privacy service of the simulator can take minutes to answer (seen on CI: more than 120 s
+    # after a 168 s boot). Two attempts with a generous limit each, so a slow service is waited for and a stuck one fails
+    # with a message instead of hanging until the step limit.
+    local grant_limit="${TAGWERK_PRIVACY_TIMEOUT_SECONDS:-240}" attempt granted=0
+    for attempt in 1 2; do
+      echo "    simulator $simulator: granting $service access to $bundle_id (attempt $attempt, limit $grant_limit s)"
+      if _tagwerk_run_limited "$grant_limit" xcrun simctl privacy "$simulator" grant "$service" "$bundle_id"; then
+        granted=1
+        break
+      fi
+      echo "    simulator $simulator: granting $service access did not finish (attempt $attempt)" >&2
+    done
+    if (( ! granted )); then
       echo "Could not grant $service access to $bundle_id on $simulator" >&2
       return 1
     fi
