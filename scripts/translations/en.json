@@ -2483,8 +2483,6 @@
   "Aktiv gesamt": "Active in total",
   "Aktiv heute": "Active today",
   "Aktiv · %@": "Active · %@",
-  "Aktivität in Health erlauben": "Allow activity in Health",
-  "Aktivität in Health erlauben %@": "Allow activity in Health %@",
   "Alltag": "Everyday activity",
   "Alltag ist der Rest der Aktivität aus Health ohne die Trainings oben.": "Everyday activity is the rest of the activity from Health without the workouts above.",
   "Angerechnet": "Credited",
@@ -2700,7 +2698,6 @@
   "Für den Verlauf zählt die früheste Messung des Tages. Weitere Messungen am selben Tag bleiben in der Liste.": "For the trend, the earliest measurement of the day counts. Further measurements on the same day stay in the list.",
   "Gewicht": "Weight",
   "Gewicht abfragen": "Ask for weight",
-  "Gewicht in Health": "Weight in Health",
   "Körper": "Body",
   "Körperfett": "Body fat",
   "Körperfett erfassen": "Record body fat",
@@ -3112,5 +3109,14 @@
   "Du beginnst werktags meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": "You usually begin on workdays between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?",
   "Erinnern": "Remind me",
   "Vorschlag aus deinen Sitzungen": "Suggestion from your sessions",
-  "Zeit ändern": "Change time"
+  "Zeit ändern": "Change time",
+  "Tagwerk speichert Mahlzeiten, Wasser, Trainings, Gewicht und Größe zusätzlich in Health und liest Schritte, aktive Energie, Gewicht sowie Trainings der Apple Watch und anderer Apps. iOS fragt einmal nach allem. Deine Einträge bleiben auch ohne Health in Tagwerk.": "Tagwerk also saves meals, water, workouts, weight and height to Health and reads steps, active energy, weight and workouts from Apple Watch and other apps. iOS asks once for everything. Your entries stay in Tagwerk even without Health.",
+  "Aktivität nicht verbunden. Erlauben unter Einstellungen › Erfassen.": "Activity is not connected. Allow it under Settings › Capture.",
+  "Apple Health": "Apple Health",
+  "Aktive Energie lesen": "Read active energy",
+  "Gewicht schreiben": "Write weight",
+  "Größe schreiben": "Write height",
+  "noch nicht gefragt": "not asked yet",
+  "Nicht erlaubt · Health öffnen": "Not allowed · Open Health",
+  "Hier steht, was Tagwerk in Health schreiben darf. „Nicht erlaubt“ ändert nur die Health-App, unter Profil › Apps › Tagwerk; solange es fehlt, bleibt der Eintrag in Tagwerk und wird nicht nach Health übertragen. Ob das Lesen erlaubt ist, zeigt iOS nicht an.": "This shows what Tagwerk may write to Health. A refusal can only be changed in the Health app under Profile › Apps › Tagwerk; until then the entry stays in Tagwerk and is not transferred to Health. iOS does not show whether reading is allowed."
 }

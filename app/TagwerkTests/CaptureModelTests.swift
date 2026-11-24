@@ -95,23 +95,111 @@ struct CaptureModelTests {
         #expect(model.figures.totals.foreign?.sources == ["Yazio"])
     }
 
-    @Test func activeEnergyTile_isOfferedUntilTheGroupWasAsked_andRequestsOnce() async {
+    @Test func activeEnergyNote_showsUntilTheGroupWasAsked_andAllowingAsksOnce() async {
         let health = FakeHealthStore()
         let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
         await model.reload()
-        #expect(model.offersActiveEnergy(for: model.figures.budget))
+        #expect(model.activeEnergyNeedsAccess(for: model.figures.budget))
         await model.allowActiveEnergy()
         #expect(health.groupRequests(.activeEnergy) == 1)
-        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        #expect(!model.activeEnergyNeedsAccess(for: model.figures.budget))
         await model.reload()
         #expect(health.groupRequests(.activeEnergy) == 1, "a reload never asks again")
     }
 
-    @Test func activeEnergyTile_isHiddenWhenCreditingIsOff() async {
+    @Test func activeEnergyNote_isHiddenWhenCreditingIsOff() async {
         settings.activityCreditPercent = 0
         let model = makeWithBudget(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
         await model.reload()
-        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        #expect(!model.activeEnergyNeedsAccess(for: model.figures.budget))
+    }
+
+    // MARK: Health consent (#314)
+
+    @Test func connectHealth_asksForEverythingInOneSheet() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        #expect(model.showsHealthCard)
+        #expect(model.activeEnergyAccess == .notAsked)
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 1)
+        #expect(health.groupRequests(.activeEnergy) == 0 && health.groupRequests(.body) == 0, "no second sheet for a group")
+        #expect(health.stepsAuthorizationRequests == 0)
+        #expect(model.access == .authorized)
+        #expect(model.stepsAccess == .asked)
+        #expect(model.activeEnergyAccess == .asked)
+        #expect(model.bodyAccess == .asked)
+        #expect(model.weightWriteAccess == .allowed && model.heightWriteAccess == .allowed)
+        #expect(!model.showsHealthCard)
+    }
+
+    @Test func healthCard_doesNotComeBack_afterTheAnswer() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        await model.connectHealth()
+        for _ in 0..<3 {
+            await model.reload()
+            #expect(!model.showsHealthCard)
+        }
+        #expect(health.authorizationRequests == 1 && health.groupRequests(.activeEnergy) == 0)
+    }
+
+    @Test func concurrentConnects_showOneSheet() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        async let first: Void = model.connectHealth()
+        async let second: Void = model.connectHealth()
+        _ = await (first, second)
+        #expect(health.authorizationRequests == 1)
+    }
+
+    @Test func otherRequests_whileTheCardSheetIsOpen_areDropped() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        async let connect: Void = model.connectHealth()
+        async let energy: Void = model.allowActiveEnergy()
+        async let steps: Void = model.connectSteps()
+        _ = await (connect, energy, steps)
+        #expect(health.authorizationRequests == 1)
+        #expect(health.groupRequests(.activeEnergy) == 0, "the budget line never opens a second sheet")
+        #expect(health.stepsAuthorizationRequests == 0)
+    }
+
+    @Test func whileTheCardShows_stepsTileOffersNoSecondPrompt() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.showsHealthCard)
+        #expect(model.stepsTile != .allow)
+        // After "Nicht jetzt" the card is gone and the tile may offer the one entry again.
+        model.dismissHealthCard()
+        #expect(model.stepsTile == .allow)
+    }
+
+    @Test func connectedUser_withoutSteps_keepsTheStepsTileOffer() async {
+        let model = make(FakeHealthStore(access: .authorized, stepsAccess: .notAsked))
+        await model.reload()
+        #expect(!model.showsHealthCard)
+        #expect(model.stepsTile == .allow)
+    }
+
+    @Test func failingRequest_isNotSwallowed_staysRetryable() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        health.failRequests = true
+        let model = make(health)
+        await model.reload()
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 1)
+        #expect(model.access == .notDetermined, "the state stays as it was")
+        #expect(model.showsHealthCard)
+        health.failRequests = false
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 2, "the guard is released after a failure")
+        #expect(model.access == .authorized)
     }
 
     @Test func summaryRows_followThePlanOfThePage() async {

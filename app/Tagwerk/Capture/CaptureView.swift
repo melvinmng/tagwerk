@@ -405,8 +405,7 @@ private struct DaySummary: View {
     var body: some View {
         let budget = data.figures.budget
         VStack(alignment: .leading, spacing: 10) {
-            BudgetHead(budget: budget, offersAllow: model.offersActiveEnergy(for: budget), onShowActive: onShowActive,
-                       onAllow: { Task { await model.allowActiveEnergy() } })
+            BudgetHead(budget: budget, activeEnergyNotConnected: model.activeEnergyNeedsAccess(for: budget), onShowActive: onShowActive)
             // ST1: water and protein, then steps and the weekly training; single tiles share one row.
             ForEach(Array(model.summaryRows(steps: data.steps, plan: data.figures.plan).enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 16) {
@@ -550,7 +549,7 @@ private struct HealthCard: View {
             Label("Mit Apple Health verbinden", systemImage: "heart.fill")
                 .font(.headline)
                 .foregroundStyle(.pink)
-            Text("Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.")
+            Text("Tagwerk speichert Mahlzeiten, Wasser, Trainings, Gewicht und Größe zusätzlich in Health und liest Schritte, aktive Energie, Gewicht sowie Trainings der Apple Watch und anderer Apps. iOS fragt einmal nach allem. Deine Einträge bleiben auch ohne Health in Tagwerk.")
                 .font(.subheadline)
             HStack {
                 Button("Verbinden") { Task { await model.connectHealth() } }

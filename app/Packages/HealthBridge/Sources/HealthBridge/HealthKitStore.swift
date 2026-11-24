@@ -1,5 +1,6 @@
 import Foundation
 @preconcurrency import HealthKit
+import OSLog
 import TagwerkCore
 
 /// `HealthStoring` on top of HealthKit. HealthKit objects are created and used inside one function only;
@@ -7,6 +8,7 @@ import TagwerkCore
 public final class HealthKitStore: HealthStoring, Sendable {
     private let store: HKHealthStore
     private let ownBundleID: String?
+    private let logger = Logger(subsystem: "local.tagwerk", category: "health")
 
     public init(ownBundleID: String? = Bundle.main.bundleIdentifier) {
         self.store = HKHealthStore()
@@ -37,8 +39,17 @@ public final class HealthKitStore: HealthStoring, Sendable {
     private static var stepType: HKQuantityType { HKQuantityType(.stepCount) }
     /// Steps have their own status (`stepsAccess()`) and their own request.
     static var stepReadTypes: Set<HKObjectType> { [stepType] }
-    /// The Health card asks for everything in one sheet.
+    /// Core and step read types: what the Health card used to ask for.
     static var connectReadTypes: Set<HKObjectType> { coreReadTypes.union(stepReadTypes) }
+    /// Write types of the single consent sheet of the Health card: the core group plus weight and body fat (group `body`) and the
+    /// height. Optional extras (further nutrients, other apps' nutrition, date of birth and sex) stay behind their own switches.
+    static var consentShareTypes: Set<HKSampleType> {
+        shareTypes.union(shareTypes(of: .body)).union(shareTypes(of: .height))
+    }
+    /// Read types of the single consent sheet: core and steps, the active energy and weight and body fat.
+    static var consentReadTypes: Set<HKObjectType> {
+        connectReadTypes.union(readTypes(of: .activeEnergy)).union(readTypes(of: .body))
+    }
 
     private static func sampleTypes(_ identifiers: [HKQuantityTypeIdentifier]) -> Set<HKSampleType> {
         Set(identifiers.map { HKQuantityType($0) as HKSampleType })
@@ -53,6 +64,7 @@ public final class HealthKitStore: HealthStoring, Sendable {
         switch group {
         case .moreNutrients: sampleTypes([.dietaryFiber, .dietarySugar, .dietaryFatSaturated, .dietarySodium])
         case .body: sampleTypes([.bodyMass, .bodyFatPercentage])
+        case .height: sampleTypes([.height])
         case .activeEnergy, .foreignNutrition, .bodyProfile: []
         }
     }
@@ -60,7 +72,7 @@ public final class HealthKitStore: HealthStoring, Sendable {
     /// Types a group reads.
     static func readTypes(of group: HealthAccessGroup) -> Set<HKObjectType> {
         switch group {
-        case .moreNutrients: []
+        case .moreNutrients, .height: []
         case .activeEnergy: objectTypes([.activeEnergyBurned])
         case .body: objectTypes([.bodyMass, .bodyFatPercentage])
         case .foreignNutrition:
@@ -79,23 +91,38 @@ public final class HealthKitStore: HealthStoring, Sendable {
 
     // MARK: Access
 
-    public func access() async -> HealthAccess {
-        guard Self.isAvailable else { return .unavailable }
-        let status = (try? await store.statusForAuthorizationRequest(toShare: Self.shareTypes, read: Self.coreReadTypes)) ?? .unknown
-        let denied = Set(HealthShareKind.allCases.filter { !mayWrite($0) })
-        return HealthMapping.access(shouldRequest: status != .unnecessary, denied: denied)
+    /// The request status of a set of types. A failing query is logged (error domain and code only) and reported as `unknown`,
+    /// which the mapping treats like every other status instead of silently counting it as "not asked".
+    private func requestStatus(toShare share: Set<HKSampleType>, read: Set<HKObjectType>, scope: String) async -> HKAuthorizationRequestStatus {
+        do {
+            return try await store.statusForAuthorizationRequest(toShare: share, read: read)
+        } catch {
+            let nsError = error as NSError
+            logger.error("Health status request for \(scope, privacy: .public) failed: \(nsError.domain, privacy: .public) \(nsError.code)")
+            return .unknown
+        }
     }
 
+    public func access() async -> HealthAccess {
+        guard Self.isAvailable else { return .unavailable }
+        let status = await requestStatus(toShare: Self.shareTypes, read: Self.coreReadTypes, scope: "core")
+        let writeStatuses = Dictionary(uniqueKeysWithValues: HealthShareKind.allCases.map {
+            ($0, store.authorizationStatus(for: Self.type(of: $0)))
+        })
+        return HealthMapping.access(status: status, shareStatuses: writeStatuses)
+    }
+
+    /// One system sheet for everything the app needs (see `consentShareTypes`). Types answered before are not shown again.
     public func requestAuthorization() async throws {
         guard Self.isAvailable else { return }
-        try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.connectReadTypes)
+        try await store.requestAuthorization(toShare: Self.consentShareTypes, read: Self.consentReadTypes)
     }
 
     public func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess {
         guard Self.isAvailable else { return .unavailable }
-        let status = (try? await store.statusForAuthorizationRequest(toShare: Self.shareTypes(of: group),
-                                                                     read: Self.readTypes(of: group))) ?? .unknown
-        return HealthMapping.groupAccess(status)
+        let share = Self.shareTypes(of: group)
+        let status = await requestStatus(toShare: share, read: Self.readTypes(of: group), scope: "group \(group.rawValue)")
+        return HealthMapping.groupAccess(status, shareStatuses: share.map { store.authorizationStatus(for: $0) })
     }
 
     public func requestAuthorization(for group: HealthAccessGroup) async throws {
@@ -105,13 +132,22 @@ public final class HealthKitStore: HealthStoring, Sendable {
 
     public func stepsAccess() async -> StepsAccess {
         guard Self.isAvailable else { return .unavailable }
-        let status = (try? await store.statusForAuthorizationRequest(toShare: [], read: Self.stepReadTypes)) ?? .unknown
+        let status = await requestStatus(toShare: [], read: Self.stepReadTypes, scope: "steps")
         return HealthMapping.stepsAccess(status)
     }
 
     public func requestStepsAuthorization() async throws {
         guard Self.isAvailable else { return }
         try await store.requestAuthorization(toShare: [], read: Self.stepReadTypes)
+    }
+
+    public func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess {
+        guard Self.isAvailable else { return .unavailable }
+        let type: HKQuantityTypeIdentifier = switch target {
+        case .weight: .bodyMass
+        case .height: .height
+        }
+        return HealthMapping.writeAccess(store.authorizationStatus(for: HKQuantityType(type)))
     }
 
     // MARK: Writing

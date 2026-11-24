@@ -6,7 +6,8 @@ import Foundation
 /// ("not complete"), so the entry stays marked for a later retry. They throw only on real failures.
 public protocol HealthStoring: Sendable {
     func access() async -> HealthAccess
-    /// Shows the system sheet. Call only after a user tap.
+    /// Shows the one system sheet for everything the app needs: core types, steps, active energy, weight and height. Types answered
+    /// before are not shown again. Call only after a user tap.
     func requestAuthorization() async throws
     func save(_ meal: HealthMeal) async throws -> Bool
     func save(_ drink: HealthDrink) async throws -> Bool
@@ -18,6 +19,10 @@ public protocol HealthStoring: Sendable {
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool
     /// Workouts of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed.
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout]
+
+    /// Whether Tagwerk may write the weight or the height. iOS reports the write permission per type, so a refusal is visible
+    /// (unlike reading); a denied write is never silent.
+    func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess
 
     /// Whether the system sheet of `group` was shown; independent of `access()` and of the other groups.
     func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess

@@ -23,6 +23,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
         lock.withLock { askedGroups.contains(group) ? .asked : .notAsked }
     }
     func requestAuthorization(for group: HealthAccessGroup) async throws { lock.withLock { _ = askedGroups.insert(group) } }
+    func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess { .allowed }
     func stepsAccess() async -> StepsAccess { lock.withLock { stepsAsked ? .asked : .notAsked } }
     func requestStepsAuthorization() async throws { lock.withLock { stepsAsked = true } }
 
