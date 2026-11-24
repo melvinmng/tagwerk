@@ -19,6 +19,37 @@ struct SpokenVoice: Identifiable, Equatable, Sendable {
     }
 }
 
+extension SpokenVoice {
+    /// Best first, voices of the same quality by name: the order of the list and of the "Automatisch" choice.
+    static func isOrderedBefore(_ lhs: SpokenVoice, _ rhs: SpokenVoice) -> Bool {
+        (lhs.quality, rhs.name) > (rhs.quality, lhs.name)
+    }
+}
+
+/// The voices of one quality, for one section of the voice page.
+struct VoiceSection: Identifiable, Equatable, Sendable {
+    let quality: Int
+    let voices: [SpokenVoice]
+
+    var id: Int { quality }
+
+    var title: String {
+        switch quality {
+        case 3: String(localized: "Premium · geladen")
+        case 2: String(localized: "Erweitert · geladen")
+        default: String(localized: "Standard")
+        }
+    }
+
+    /// Premium, then enhanced, then standard; a quality without voices has no section. `voices` keeps its order inside a section.
+    static func grouped(_ voices: [SpokenVoice]) -> [VoiceSection] {
+        [3, 2, 1].compactMap { quality in
+            let inSection = voices.filter { min(max($0.quality, 1), 3) == quality }
+            return inSection.isEmpty ? nil : VoiceSection(quality: quality, voices: inSection)
+        }
+    }
+}
+
 enum SpeakerEvent: Equatable, Sendable {
     case sentenceStarted(Int)
     case finished
@@ -34,13 +65,19 @@ protocol SpeechSpeaking: AnyObject {
     func speak(_ sentences: [String], language: VoiceLanguage, voiceID: String?, rate: Float)
     func stop()
     func voices(for language: VoiceLanguage) -> [SpokenVoice]
+    /// Whether the system knows a voice by its identifier. The list of `voices(for:)` can omit a downloaded voice the system
+    /// still speaks with.
+    func voiceExists(_ id: String) -> Bool
 }
 
 extension SpeechSpeaking {
-    /// The chosen voice if it is installed, else the best installed one.
+    func voiceExists(_ id: String) -> Bool { false }
+
+    /// The chosen voice if it is installed, else the best installed one. A chosen voice the list lacks but the system knows
+    /// stays chosen: replacing it by the best listed voice made downloaded voices sound like the default ones (#309).
     func resolvedVoiceID(_ chosen: String?, language: VoiceLanguage) -> String? {
         let voices = voices(for: language)
-        if let chosen, voices.contains(where: { $0.id == chosen }) { return chosen }
+        if let chosen, voices.contains(where: { $0.id == chosen }) || voiceExists(chosen) { return chosen }
         return voices.max { ($0.quality, $1.name) < ($1.quality, $0.name) }?.id
     }
 }
@@ -112,6 +149,21 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
 
     func voices(for language: VoiceLanguage) -> [SpokenVoice] { Self.installedVoices(for: language) }
 
+    func voiceExists(_ id: String) -> Bool { AVSpeechSynthesisVoice(identifier: id) != nil }
+
+    /// The voice the system knows by `id`, for `language`; nil when it does not exist or speaks another language. Needs no
+    /// synthesizer and no main actor, like `installedVoices(for:)`.
+    nonisolated static func installedVoice(withID id: String, for language: VoiceLanguage) -> SpokenVoice? {
+        AVSpeechSynthesisVoice(identifier: id).map(SystemVoice.init).flatMap { spokenVoice($0, for: language) }
+    }
+
+    /// `voice` as a voice of `language`, or nil when it speaks another language. Novelty voices are not filtered: the list
+    /// leaves them out, a voice the user chose earlier stays usable.
+    nonisolated static func spokenVoice(_ voice: SystemVoice, for language: VoiceLanguage) -> SpokenVoice? {
+        guard voice.language.hasPrefix(String(language.rawValue.prefix(2))) else { return nil }
+        return SpokenVoice(id: voice.id, name: voice.name, language: language, quality: voice.quality)
+    }
+
     /// The installed voices for `language`, best first. Needs no synthesizer and no main actor; the system call can take long on a
     /// cold device, so callers on a screen load it off the main actor (`VoiceSettingsModel`).
     nonisolated static func installedVoices(for language: VoiceLanguage) -> [SpokenVoice] {
@@ -123,8 +175,8 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
         let prefix = String(language.rawValue.prefix(2))
         return systemVoices
             .filter { $0.language.hasPrefix(prefix) && !$0.isNovelty }
-            .map { SpokenVoice(id: $0.id, name: $0.name, language: language, quality: $0.quality) }
-            .sorted { ($0.quality, $1.name) > ($1.quality, $0.name) }
+            .compactMap { spokenVoice($0, for: language) }
+            .sorted(by: SpokenVoice.isOrderedBefore)
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {

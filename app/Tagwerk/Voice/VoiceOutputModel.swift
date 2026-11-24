@@ -70,6 +70,30 @@ final class VoiceOutputModel {
     /// and even while VoiceOver runs; automatic reading does neither. `completion` is called exactly once.
     func speak(id: String, text: String, explicit: Bool, fallback: VoiceLanguage,
                completion: ((Ending) -> Void)? = nil) {
+        speak(id: id, text: text, explicit: explicit, fallback: fallback, voice: nil, completion: completion)
+    }
+
+    /// The `speakingID` of the sample of one voice row; `nil` is the row "Automatisch".
+    static func sampleID(voiceID: String?) -> String { "voice-sample-\(voiceID ?? "automatic")" }
+
+    /// A sample sentence in `voiceID` (the best installed voice for `nil`), whatever the settings say: the voice page tests a
+    /// voice before it is chosen. A second tap on the same row stops it.
+    func speakSample(voiceID: String?, language: VoiceLanguage) {
+        let id = Self.sampleID(voiceID: voiceID)
+        if speakingID == id { stop(); return }
+        let text = language == .german ? "So klingt Tagwerk, wenn es dir eine Antwort vorliest."
+            : "This is how Tagwerk sounds when it reads an answer to you."
+        speak(id: id, text: text, explicit: true, fallback: language, voice: .init(language: language, voiceID: voiceID))
+    }
+
+    /// A voice that replaces the settings for one reading.
+    private struct VoiceOverride {
+        let language: VoiceLanguage
+        let voiceID: String?
+    }
+
+    private func speak(id: String, text: String, explicit: Bool, fallback: VoiceLanguage, voice: VoiceOverride?,
+                       completion: ((Ending) -> Void)? = nil) {
         stop()
         notice = nil
         if !explicit && isVoiceOverRunning() { completion?(.notSpoken); return }
@@ -80,7 +104,7 @@ final class VoiceOutputModel {
             return
         }
         // Markdown and HTML symbols neither skew the language detection nor are they ever spoken (#225).
-        let language = VoiceLanguage.detect(SpokenText.plainText(text), fallback: fallback)
+        let language = voice?.language ?? VoiceLanguage.detect(SpokenText.plainText(text), fallback: fallback)
         let parts = SpokenText.sentences(SpokenText.prepare(text, language: language))
         guard !parts.isEmpty else { completion?(.notSpoken); return }
         let mode: VoiceAudioMode = explicit ? .speakingExplicit : .speakingAutomatic
@@ -92,8 +116,13 @@ final class VoiceOutputModel {
             return
         }
         let preferences = preferences()
-        let voiceID = speaker.resolvedVoiceID(language == .german ? preferences.germanVoiceID : preferences.englishVoiceID,
-                                              language: language)
+        let chosenVoiceID: String?
+        if let voice {
+            chosenVoiceID = voice.voiceID
+        } else {
+            chosenVoiceID = language == .german ? preferences.germanVoiceID : preferences.englishVoiceID
+        }
+        let voiceID = speaker.resolvedVoiceID(chosenVoiceID, language: language)
         activeMode = mode
         speakingID = id
         sentences = parts

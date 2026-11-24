@@ -9924,6 +9924,16 @@
         }
       }
     },
+    "Die gewählte Stimme ist nicht mehr auf dem iPhone. Tagwerk liest mit der besten geladenen Stimme.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chosen voice is no longer on this iPhone. Tagwerk reads with the best downloaded voice."
+          }
+        }
+      }
+    },
     "Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.": {
       "localizations": {
         "en": {
@@ -11780,6 +11790,16 @@
         }
       }
     },
+    "Erweitert · geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enhanced · downloaded"
+          }
+        }
+      }
+    },
     "Es bleibt ein Vorschlag, bis du ihn übernimmst.": {
       "localizations": {
         "en": {
@@ -13112,6 +13132,16 @@
         }
       }
     },
+    "Gefunden: %lld · zuletzt geprüft %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found: %lld · last checked %@"
+          }
+        }
+      }
+    },
     "Gegenrechnung": {
       "localizations": {
         "en": {
@@ -13886,6 +13916,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Habits, routines and reflections"
+          }
+        }
+      }
+    },
+    "Gewählte Stimme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen voice"
           }
         }
       }
@@ -19166,6 +19206,16 @@
         }
       }
     },
+    "Nicht mehr geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer downloaded"
+          }
+        }
+      }
+    },
     "Nicht nach Health geschrieben werden: %@. Deine Einträge bleiben in Tagwerk.": {
       "localizations": {
         "en": {
@@ -19302,6 +19352,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove nobody"
+          }
+        }
+      }
+    },
+    "Nimmt die beste geladene Stimme des iPhones": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses the best voice on this iPhone"
+          }
+        }
+      }
+    },
+    "Nimmt die beste geladene Stimme: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses the best downloaded voice: %@"
           }
         }
       }
@@ -20963,6 +21033,16 @@
         }
       }
     },
+    "Premium · geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium · downloaded"
+          }
+        }
+      }
+    },
     "Priorität": {
       "localizations": {
         "en": {
@@ -21005,6 +21085,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lock private folders"
+          }
+        }
+      }
+    },
+    "Probe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample"
+          }
+        }
+      }
+    },
+    "Probe %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample %@"
+          }
+        }
+      }
+    },
+    "Probe Automatisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample Automatic"
+          }
+        }
+      }
+    },
+    "Probe beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop sample"
           }
         }
       }
@@ -23324,6 +23444,26 @@
         }
       }
     },
+    "Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can download voices under iOS Settings › Accessibility › Spoken Content › Voices."
+          }
+        }
+      }
+    },
+    "Stimmen werden geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading voices …"
+          }
+        }
+      }
+    },
     "Stopp": {
       "localizations": {
         "en": {
@@ -25463,12 +25603,12 @@
         }
       }
     },
-    "Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": {
+    "Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read-aloud uses the voices on this iPhone. You can download better voices under iOS Settings › Accessibility › Spoken Content › Voices. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”."
+            "value": "Read-aloud uses the voices on this iPhone. You choose the voice for each language on its own page, with a sample. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”."
           }
         }
       }
@@ -26140,6 +26280,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Weitere Stimmen laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download more voices"
           }
         }
       }

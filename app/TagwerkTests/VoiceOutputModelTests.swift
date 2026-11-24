@@ -10,9 +10,9 @@ struct VoiceOutputModelTests {
     let speaker = FakeSpeaker()
     let audio = FakeAudioSession()
 
-    func makeModel(voiceOver: Bool = false) -> VoiceOutputModel {
+    func makeModel(voiceOver: Bool = false, germanVoiceID: String? = nil, englishVoiceID: String? = nil) -> VoiceOutputModel {
         VoiceOutputModel(speaker: speaker, audio: audio,
-                         preferences: { VoiceOutputModel.Preferences(germanVoiceID: nil, englishVoiceID: nil, rate: 0.5) },
+                         preferences: { VoiceOutputModel.Preferences(germanVoiceID: germanVoiceID, englishVoiceID: englishVoiceID, rate: 0.5) },
                          isVoiceOverRunning: { voiceOver })
     }
 
@@ -33,6 +33,60 @@ struct VoiceOutputModelTests {
         model.speak(id: "a1", text: "You have three meetings today and two open tasks.", explicit: true, fallback: .german)
         #expect(speaker.spoken.first?.language == .english)
         #expect(speaker.spoken.first?.voiceID == "en.default")
+    }
+
+    /// #309: the chosen voice is the one that speaks, not the best installed one.
+    @Test func speak_usesTheChosenVoice() {
+        let model = makeModel(germanVoiceID: "de.default", englishVoiceID: "en.default")
+        model.speak(id: "a1", text: "Heute sind drei Termine.", explicit: true, fallback: .german)
+        #expect(speaker.spoken.last?.voiceID == "de.default")
+    }
+
+    @Test func speak_usesAChosenVoiceThatTheListLacksButTheSystemKnows() {
+        speaker.known = ["de.hidden"]
+        let model = makeModel(germanVoiceID: "de.hidden")
+        model.speak(id: "a1", text: "Heute sind drei Termine.", explicit: true, fallback: .german)
+        #expect(speaker.spoken.last?.voiceID == "de.hidden")
+    }
+
+    @Test func speak_fallsBackToTheBestVoiceWhenTheChosenOneIsGone() {
+        let model = makeModel(germanVoiceID: "de.removed")
+        model.speak(id: "a1", text: "Heute sind drei Termine.", explicit: true, fallback: .german)
+        #expect(speaker.spoken.last?.voiceID == "de.premium")
+    }
+
+    @Test func sample_speaksWithTheVoiceOfTheRowRegardlessOfTheSettings() {
+        let model = makeModel(germanVoiceID: "de.premium")
+        model.speakSample(voiceID: "de.default", language: .german)
+        let call = try! #require(speaker.spoken.last)
+        #expect(call.voiceID == "de.default")
+        #expect(call.language == .german)
+        #expect(model.speakingID == VoiceOutputModel.sampleID(voiceID: "de.default"))
+        #expect(audio.modes == [.speakingExplicit])
+    }
+
+    @Test func sample_englishUsesEnglishText() {
+        let model = makeModel()
+        model.speakSample(voiceID: "en.default", language: .english)
+        let call = try! #require(speaker.spoken.last)
+        #expect(call.language == .english)
+        #expect(call.voiceID == "en.default")
+        #expect(call.sentences.joined(separator: " ").contains("Tagwerk"))
+    }
+
+    @Test func sample_automaticTakesTheBestVoice() {
+        let model = makeModel()
+        model.speakSample(voiceID: nil, language: .german)
+        #expect(speaker.spoken.last?.voiceID == "de.premium")
+        #expect(model.speakingID == VoiceOutputModel.sampleID(voiceID: nil))
+    }
+
+    @Test func sample_secondTapOnTheSameRowStops() {
+        let model = makeModel()
+        model.speakSample(voiceID: "de.default", language: .german)
+        model.speakSample(voiceID: "de.default", language: .german)
+        #expect(model.speakingID == nil)
+        #expect(speaker.spoken.count == 1)
     }
 
     @Test func automatic_usesAmbient() {
