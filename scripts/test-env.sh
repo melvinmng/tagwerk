@@ -17,7 +17,7 @@
 #   TAGWERK_SLOT_WAIT_SECONDS  how long to wait for a free slot before giving up with exit code 2 (default 1800)
 #   TAGWERK_UI_LOCK_WAIT_SECONDS  how long to wait for the UI stage lock (default 3600)
 #   TAGWERK_LOCK_POLL_SECONDS  polling interval while waiting for a lock (default 5)
-#   TAGWERK_BOOT_TIMEOUT_SECONDS  how long the simulator may take to finish booting for the UI tests (default 300)
+#   TAGWERK_BOOT_TIMEOUT_SECONDS  how long the simulator may take to finish booting for the UI tests (default 600)
 #
 # Sets: TAGWERK_CHECKOUT_KEY, TAGWERK_TEST_DERIVED, TAGWERK_TEST_LOG_DIR
 # Provides: tagwerk_test_destination (prints the xcodebuild destination; takes a pool slot and creates its simulator if
@@ -142,7 +142,7 @@ for devices in json.load(sys.stdin)["devices"].values():
     echo "Could not resolve the simulator or the bundle ID" >&2
     return 1
   fi
-  local boot_limit="${TAGWERK_BOOT_TIMEOUT_SECONDS:-300}" started=$SECONDS boot_status=0
+  local boot_limit="${TAGWERK_BOOT_TIMEOUT_SECONDS:-600}" started=$SECONDS boot_status=0
   echo "    simulator $simulator: booting (limit $boot_limit s)"
   # A boot that hangs is reported like a bootstatus that hangs (an already booted simulator answers with an error, which is fine).
   _tagwerk_run_limited "$boot_limit" xcrun simctl boot "$simulator" 2> /dev/null || boot_status=$?
