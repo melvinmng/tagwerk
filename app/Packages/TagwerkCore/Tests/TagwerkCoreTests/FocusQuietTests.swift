@@ -93,6 +93,42 @@ struct FocusQuietTests {
         #expect(result.catchUp == nil && result.state == FocusQuiet.State())
     }
 
+    @Test func catchUpMomentPassingDuringASecondFocus_isKept() {
+        // Focus A ended; a run chose 10:01 for its catch-up. Focus B started at 10:00 and is still active at 10:05.
+        let pending = FocusQuiet.State(since: nil, catchUpFrom: at(18, 9), catchUpAt: at(18, 10, 1))
+        let restarted = FocusQuiet.applying(active: true, now: at(18, 10), to: pending, quietHours: nil, calendar: calendar)
+        #expect(FocusQuiet.dropping(staleIn: restarted, now: at(18, 10, 5)) == restarted)
+        // A notification run during Focus B keeps the state and plans nothing.
+        let run = FocusQuiet.scheduling(restarted, now: at(18, 10, 5))
+        #expect(run.catchUp == nil)
+        #expect(run.state == restarted)
+        // Applying the active filter again during Focus B does not lose it either.
+        #expect(FocusQuiet.applying(active: true, now: at(18, 10, 6), to: restarted, quietHours: nil, calendar: calendar) == restarted)
+    }
+
+    @Test func catchUpMomentPassingDuringASecondFocus_isReplayedAfterItEndsBeforeItsTarget() {
+        let pending = FocusQuiet.State(since: nil, catchUpFrom: at(18, 9), catchUpAt: at(18, 10, 1))
+        let restarted = FocusQuiet.applying(active: true, now: at(18, 10), to: pending, quietHours: nil, calendar: calendar)
+        let ended = FocusQuiet.applying(active: false, now: at(18, 11), to: restarted, quietHours: nil, calendar: calendar)
+        #expect(ended == FocusQuiet.State(since: nil, catchUpFrom: at(18, 9), catchUpAt: nil, catchUpUntil: nil))
+        let scheduled = FocusQuiet.scheduling(ended, now: at(18, 11))
+        #expect(scheduled.catchUp == FocusCatchUp(from: at(18, 9), at: at(18, 11, 1)))
+    }
+
+    @Test func catchUpMomentPassingDuringASecondFocus_isReplayedAfterItEndsAfterItsTarget_withoutTheSecondSpan() {
+        let pending = FocusQuiet.State(since: nil, catchUpFrom: at(18, 9), catchUpAt: at(18, 10, 1))
+        let restarted = FocusQuiet.applying(active: true, now: at(18, 10), to: pending, quietHours: nil, calendar: calendar)
+        let ended = FocusQuiet.applying(active: false, now: at(18, 15), to: restarted, quietHours: nil, calendar: calendar)
+        let scheduled = FocusQuiet.scheduling(ended, now: at(18, 15))
+        #expect(scheduled.catchUp == FocusCatchUp(from: at(18, 9), at: at(18, 15, 1), until: at(18, 10)))
+    }
+
+    @Test func staleSecondFocus_isDroppedAndTheLostCatchUpMomentWithIt() {
+        // Focus B's end was never reported: after the maximum age its start is dropped, and the passed moment goes too.
+        let state = FocusQuiet.State(since: at(18, 10), catchUpFrom: at(18, 9), catchUpAt: at(18, 10, 1), catchUpUntil: at(18, 10))
+        #expect(FocusQuiet.dropping(staleIn: state, now: at(19, 11)) == FocusQuiet.State())
+    }
+
     // MARK: Catch-up
 
     @Test func scheduling_firstRunAfterTheEnd_picksAMinuteAhead_andLaterRunsKeepIt() {
