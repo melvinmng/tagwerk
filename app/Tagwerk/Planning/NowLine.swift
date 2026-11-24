@@ -57,9 +57,12 @@ struct NowTimeCapsule: View {
 }
 
 /// The current time in the hour grid of today: the time as a capsule in the label column and a 2-pt line.
-/// Draws nothing when the shown day is not today or the time lies outside the shown hours. Moves once a minute.
+/// Draws nothing when the shown day is not today or the time lies outside the shown hours. Moves once a minute, driven by the
+/// timer of the canvas.
 struct NowLine: View {
     let model: PlanningModel
+    /// The tick of the canvas' minute timer (`MinuteTimeline`); a new value makes SwiftUI evaluate the line again.
+    let minute: Date
     let day: PlanDay
     let shown: Range<Int>
     let labelWidth: CGFloat
@@ -67,7 +70,7 @@ struct NowLine: View {
     let width: CGFloat
 
     var body: some View {
-        TimelineView(.everyMinute) { _ in
+        Group {
             if let minutes = NowMarker.minutes(now: model.now(), day: day, calendar: model.calendar),
                let position = NowMarker.position(nowMinutes: minutes, shown: shown) {
                 let time = NowText.time(minutes: minutes, calendar: model.calendar)
@@ -114,7 +117,7 @@ struct NowRowSlot: View {
 
     var body: some View {
         if isShown {
-            TimelineView(.everyMinute) { _ in
+            MinuteTimeline { _ in
                 if let minutes = NowMarker.minutes(now: model.now(), day: day, calendar: model.calendar) {
                     NowRow(minutes: minutes, calendar: model.calendar)
                 }

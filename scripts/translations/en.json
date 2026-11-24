@@ -3127,5 +3127,8 @@
   "Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.": "You can download voices under iOS Settings › Accessibility › Spoken Content › Voices.",
   "Stimmen werden geladen …": "Loading voices …",
   "Gefunden: %lld · zuletzt geprüft %@": "Found: %lld · last checked %@",
-  "Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": "Read-aloud uses the voices on this iPhone. You choose the voice for each language on its own page, with a sample. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”."
+  "Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": "Read-aloud uses the voices on this iPhone. You choose the voice for each language on its own page, with a sample. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”.",
+  "Als Aufgabe": "As task",
+  "seit %@ · tippen zum Weiterschreiben": "since %@ · tap to keep writing",
+  "%@, %@": "%@, %@"
 }

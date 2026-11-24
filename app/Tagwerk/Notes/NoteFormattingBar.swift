@@ -11,6 +11,10 @@ struct NoteFormattingBar: View {
     /// The cursor is in a table: the button for the table editor takes the place of the insert menu.
     var isInTable = false
     var onTable: () -> Void = {}
+    /// "Als Aufgabe" (Bible Study notes only; `nil` shows no button): turns the checkbox line at the cursor into a task. Enabled
+    /// only while the cursor stands in a checkbox line that is not a task yet.
+    var onTask: (() -> Void)?
+    var canCreateTask = false
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -20,6 +24,17 @@ struct NoteFormattingBar: View {
                 button(.italic, symbol: "italic", label: "Kursiv")
                 button(.list, symbol: "list.bullet", label: "Liste")
                 button(.checkbox, symbol: "checklist", label: "Checkbox")
+                if let onTask {
+                    Button(action: onTask) {
+                        Label("Als Aufgabe", systemImage: "plus.circle")
+                            .font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .disabled(!canCreateTask)
+                    .accessibilityIdentifier(AccessibilityID.NoteEditor.checkboxTaskButton)
+                }
                 if isInTable {
                     Button(action: onTable) {
                         Image(systemName: "tablecells").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())

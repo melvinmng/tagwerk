@@ -31,6 +31,24 @@ extension NoteEditorView {
         return UIMenu(children: actions)
     }
 
+    /// The checkbox line at the cursor as a task draft ("Als Aufgabe" of the bar above the keyboard, #307); `nil` while the cursor
+    /// stands in no checkbox line, in a line that is a task already, or without a cursor.
+    func checkboxDraftAtCursor() -> CheckboxTaskDraft? {
+        guard case .selection(let range)? = selection?.indices else { return nil }
+        let offset = text.distance(from: text.startIndex, to: range.lowerBound)
+        let line = text.prefix(offset).filter(\.isNewline).count + 1
+        guard let index = MarkdownText.checkboxIndex(atLine: line, in: text), !hasTaskMarker(at: index),
+              let title = MarkdownText.checkboxTitle(at: index, in: text), !title.isEmpty else { return nil }
+        return CheckboxTaskDraft(index: index, title: title)
+    }
+
+    /// "Als Aufgabe" of the bar: saves the text first, so the line the draft points at is the one in the store, and asks for the task.
+    func createTaskAtCursor() {
+        guard let draft = checkboxDraftAtCursor() else { return }
+        saveText()
+        checkboxTask = draft
+    }
+
     /// The task was created: the line gets the marker, saved like every other write of this page. A text that changed meanwhile
     /// and no longer has this title at the position is left alone.
     func markCheckboxAsTask(_ draft: CheckboxTaskDraft) {
