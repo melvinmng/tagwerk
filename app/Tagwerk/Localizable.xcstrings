@@ -31111,6 +31111,36 @@
           }
         }
       }
+    },
+    "%@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        }
+      }
+    },
+    "Als Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As task"
+          }
+        }
+      }
+    },
+    "seit %@ · tippen zum Weiterschreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "since %@ · tap to keep writing"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

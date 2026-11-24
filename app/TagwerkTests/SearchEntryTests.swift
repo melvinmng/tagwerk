@@ -229,6 +229,30 @@ struct SearchEntryTests {
         #expect(environment.requestedTab == 1)
     }
 
+    // MARK: A note that is open stays open (#305)
+
+    @Test func openBibleStudyStart_replacesThePathWhenNoNoteIsOpen() {
+        environment.tasksPath = [.notes]
+        environment.openBibleStudyStart()
+        let folder = environment.notes.folder(role: .bibleStudy)
+        #expect(folder != nil)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder!.id))])
+        #expect(environment.requestedTab == 1)
+    }
+
+    @Test func openBibleStudyStart_keepsAnOpenNoteAndDropsTheRequest() {
+        let noteID = UUID()
+        let path: [TasksDestination] = [.notes, .notesFolder(.standard), .note(noteID)]
+        environment.tasksPath = path
+        environment.router.open(.bibleStudyStart)
+        _ = environment.router.takeRequest(setupCompleted: true)
+        #expect(environment.router.bibleStudyStartRequested)
+        environment.openBibleStudyStart()
+        #expect(environment.tasksPath == path, "the path under the note is not replaced")
+        #expect(!environment.router.bibleStudyStartRequested, "the request must not open the sheet later, when the note is left")
+        #expect(environment.requestedTab == 1)
+    }
+
     @Test func showNotes_standard_opensTheDefaultFolder() {
         environment.tasksPath = [.shopping]
         environment.showNotes(.standard)

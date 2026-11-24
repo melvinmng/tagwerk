@@ -62,7 +62,9 @@ struct NoteMarkdownView: UIViewRepresentable {
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
-        webView.allowsLinkPreview = false
+        // On, so WebKit asks the delegate for the menu of a link. Every menu of this view answers without a preview of the page
+        // (see `contextMenuConfigurationFor`), and the page loads nothing.
+        webView.allowsLinkPreview = true
         context.coordinator.webView = webView
         context.coordinator.installRules(on: configuration.userContentController)
         return webView
@@ -164,8 +166,16 @@ struct NoteMarkdownView: UIViewRepresentable {
             pendingTap?.cancel()
         }
 
+        /// A touch that lasts longer than this is a long press (the menu of a link), not a tap on the text.
+        static let longPressThreshold: TimeInterval = 0.4
+        /// When the touch of the running tap began (`UITouch.timestamp`, in the time base of `ProcessInfo.systemUptime`).
+        private var touchBegan: TimeInterval?
+
         @objc func tapped(_ recognizer: UITapGestureRecognizer) {
             guard recognizer.state == .ended, onUnansweredTap != nil, let webView else { return }
+            // A tap recognizer has no time limit: without this check the long press on a checkbox ended in "start writing" at once and
+            // took the menu of the link away again (#307).
+            if let began = touchBegan, ProcessInfo.processInfo.systemUptime - began > Self.longPressThreshold { return }
             let scrollView = webView.scrollView
             // A tap that stops a scrolling page is not meant for the text.
             guard !scrollView.isDragging, !scrollView.isDecelerating, scrollView.contentSize.height > 0 else { return }
@@ -179,20 +189,37 @@ struct NoteMarkdownView: UIViewRepresentable {
         /// A touch that lands while the page still scrolls (a tap that stops a fling) is not a tap on the text. Decided at
         /// touch-down: by the end of the tap the page has already stopped.
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            touchBegan = touch.timestamp
             guard let scrollView = webView?.scrollView else { return true }
             return !scrollView.isDragging && !scrollView.isDecelerating
         }
 
         // MARK: Context menu
 
-        func webView(_ webView: WKWebView, contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
-                     completionHandler: @escaping (UIContextMenuConfiguration?) -> Void) {
-            guard let url = elementInfo.linkURL, let menu = contextMenu?(url) else {
-                completionHandler(nil)
-                return
+        /// The menu of a link of the page. Every answer is a menu without a preview of the page behind the link: the page must not
+        /// load anything, and the links of this page (checkbox, edit target, attachment) have no page to preview. Links that have
+        /// no menu of the note get "Öffnen" and "Link kopieren" for web, mail and phone links and no menu for everything else.
+        ///
+        /// The `async` form is the one the SDK of iOS 27 declares (the completion handler of the older form is `@MainActor`). The
+        /// older spelling of this method with a plain `@escaping` handler matched no requirement of `WKUIDelegate`, so it was never
+        /// exposed to Objective-C and WebKit never asked: no menu on a long press (#307).
+        func webView(_ webView: WKWebView, contextMenuConfigurationFor elementInfo: WKContextMenuElementInfo) async -> UIContextMenuConfiguration? {
+            guard let url = elementInfo.linkURL else { return nil }
+            if let menu = contextMenu?(url) {
+                return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in menu }
             }
-            completionHandler(UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in menu })
+            guard Self.externalSchemes.contains(url.scheme?.lowercased() ?? "") else { return nil }
+            let open = UIAction(title: String(localized: "Öffnen"), image: UIImage(systemName: "safari")) { _ in
+                Task { @MainActor in await UIApplication.shared.open(url) }
+            }
+            let copy = UIAction(title: String(localized: "Link kopieren"), image: UIImage(systemName: "doc.on.doc")) { _ in
+                UIPasteboard.general.url = url
+            }
+            return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in UIMenu(children: [open, copy]) }
         }
+
+        /// The links a tap hands to the system (`activate`).
+        private static let externalSchemes: Set<String> = ["http", "https", "mailto", "tel"]
 
         /// The page is loaded only after the rule list is in place, so there is no moment without it.
         func installRules(on controller: WKUserContentController) {
