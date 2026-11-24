@@ -87,6 +87,10 @@ enum AuditAllowlist {
             + "pair is not fixed by a colour alone (#188, \"Sekundärtexte auf getönten Karten\")."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
+        Entry(auditType: .contrast, labels: ["P\\d", "Demo Aufgaben"], screens: ["Aufgaben"], reason: "The priority mark and the section title of the last rows that reach under the translucent tab bar of "
+            + "\"Aufgaben\" (frame at the lower edge of the screen, behind the bar). The row \"Bible Study\" above the list moved the rows down, so "
+            + "the audit measures the mark against the glass of the bar; it is a position artefact of the demo list, not a colour of the mark itself "
+            + "(same group as the other texts on the translucent bar, #188)."),
         Entry(auditType: .contrast, labels: [
             "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte", "Projektwoche", "Essen", "Trinken", "Training",
         ], reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
@@ -172,6 +176,10 @@ enum AuditAllowlist {
         ], screens: ["Tagesabschluss", "Tagesabschluss (Abend)"], reason: "Texts of the evening sheet (hint line, buttons, date of the next planning day, the rows of "
             + "\"Zeit mit Gott\", the leftover row with `.subheadline` that wraps) report a partial lack of Dynamic Type support; no fixed frame, line limit or fixed font in the code, 15 view "
             + "variants gave the same findings, no clipping in the large text run. Stays on the device test list (largest text size)."),
+        Entry(auditType: .dynamicType, labels: ["Bible Study", "Zuletzt: .*", "Sitzung läuft · .*"], screens: ["Aufgaben"], reason:
+            "Title and second line of the row \"Bible Study\" in \"Aufgaben\" (where the last session ended): `.subheadline` in the same entry label as the "
+            + "row of the notes, so it grows with the text size and is not clipped in the large text run; the audit reports a partial lack of "
+            + "support for single-line `.subheadline` texts from run to run, as for the evening sheet above. Stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "

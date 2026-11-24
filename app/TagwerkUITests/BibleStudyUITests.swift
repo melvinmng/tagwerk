@@ -225,4 +225,22 @@ final class BibleStudyUITests: UITestCase {
         tab("Planen")
         XCTAssertFalse(capsule.waitForExistence(timeout: 3), "The capsule shows although no session is open")
     }
+
+    /// 1B: the plain row "Bible Study" in "Aufgaben" opens the start sheet while no session runs.
+    func testTasksRowOpensTheStartSheet() {
+        tab("Aufgaben")
+        let row = app.buttons["tasks.bibleStudy"]
+        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row \"Bible Study\" is missing in Aufgaben")
+        row.tap()
+        XCTAssertTrue(app.navigationBars["Bible Study starten"].waitForExistence(timeout: Self.timeout), "The start sheet did not open")
+    }
+
+    /// 1B: with a session running the row leads into its note.
+    func testTasksRowLeadsIntoTheRunningSession() {
+        startSuggestedSession()
+        // Back to the root of "Aufgaben": note, folder, notes overview.
+        for _ in 0..<3 { leaveNote() }
+        tapButton("tasks.bibleStudy")
+        XCTAssertTrue(app.buttons["bibleSession.complete"].waitForExistence(timeout: Self.timeout), "The row did not lead into the note")
+    }
 }
