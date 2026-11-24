@@ -158,6 +158,25 @@ struct HealthMappingTests {
     }
 }
 
+struct HeightMappingTests {
+    @Test func heightSample_usesOneFixedSyncIdentifier_withAGrowingVersion() {
+        let first = HealthMapping.heightMetadata(date: Date(timeIntervalSince1970: 1_800_000_000))
+        let later = HealthMapping.heightMetadata(date: Date(timeIntervalSince1970: 1_800_000_600))
+        #expect(first[HKMetadataKeySyncIdentifier] as? String == HealthMapping.heightSyncIdentifier)
+        #expect(later[HKMetadataKeySyncIdentifier] as? String == HealthMapping.heightSyncIdentifier)
+        let firstVersion = first[HKMetadataKeySyncVersion] as? Int ?? 0
+        let laterVersion = later[HKMetadataKeySyncVersion] as? Int ?? 0
+        #expect(laterVersion > firstVersion, "a later edit replaces the earlier sample in Health")
+    }
+
+    @Test func heightSample_isMarkedAsOwnAndUserEntered() {
+        let metadata = HealthMapping.heightMetadata(date: .now)
+        #expect(metadata[HealthMapping.markerKey] as? Int == 1)
+        #expect(metadata[HKMetadataKeyWasUserEntered] as? Bool == true)
+        #expect(HealthMapping.isOwn(metadata: metadata, sourceBundleID: "other", ownBundleID: nil))
+    }
+}
+
 struct HealthRequestStatusTests {
     @Test func shouldRequest_isNotAsked_unnecessary_isAsked() {
         #expect(!HealthMapping.isAsked(.shouldRequest, shareStatuses: []))

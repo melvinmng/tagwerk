@@ -107,6 +107,109 @@ struct BodyProfileStoreTests {
         #expect(store.profile.ageYears(inYear: store.currentYear) == store.currentYear - 1990)
     }
 
+    // MARK: Overrides and writing (#317)
+
+    @Test func typedBirthYearAndSex_overrideHealth_andSurviveANewReading() async {
+        health.bodyProfileValue = HealthBodyProfile(heightCm: 180, birthYear: 1994, sex: .male)
+        let store = store()
+        _ = await store.readFromHealth()
+        store.setTypedBirthYear(1995)
+        store.setTypedSex(.female)
+        #expect(store.profile.birthYear == BodyValue(value: 1995, source: .typed))
+        #expect(store.profile.sex == BodyValue(value: .female, source: .typed))
+        _ = await store.refresh()
+        #expect(store.profile.birthYear.value == 1995, "reading Health again does not undo the override")
+        #expect(settings.healthBodyValues.birthYear == 1994, "what Health says stays known, for the hint")
+        #expect(store.profile.height == BodyValue(value: 180, source: .health), "a field without an edit stays with Health")
+    }
+
+    @Test func clearingAField_returnsToTheValueOfHealth() async {
+        health.bodyProfileValue = HealthBodyProfile(heightCm: 180, birthYear: 1994, sex: .male)
+        let store = store()
+        _ = await store.readFromHealth()
+        store.setTypedBirthYear(1995)
+        store.setTypedBirthYear(nil)
+        #expect(store.profile.birthYear == BodyValue(value: 1994, source: .health))
+        #expect(settings.bodyOverrides.isEmpty)
+    }
+
+    @Test func staleTypedValue_withoutAnOverride_doesNotWinOverHealth() async {
+        // A value typed while Health was silent (before the override existed) must not resurface.
+        settings.typedBodyValues = BodyProfileValues(heightCm: 170, birthYear: 1980, sex: .female)
+        health.bodyProfileValue = HealthBodyProfile(heightCm: 180, birthYear: 1994, sex: .male)
+        let store = store()
+        _ = await store.readFromHealth()
+        #expect(store.profile.values == BodyProfileValues(heightCm: 180, birthYear: 1994, sex: .male))
+    }
+
+    @Test func rejectedInput_setsNoOverride() {
+        let store = store()
+        store.setTypedBirthYear(3000)
+        store.setTypedHeight(900)
+        #expect(settings.bodyOverrides.isEmpty)
+    }
+
+    @Test func updateHeight_writesToHealthOnce_andReplacesTheEarlierValue() async {
+        health.setWriteAccess(.allowed, for: .height)
+        let store = store()
+        #expect(await store.updateHeight(181) == .written)
+        #expect(health.heights.map(\.centimeters) == [181])
+        #expect(store.profile.height == BodyValue(value: 181, source: .typed))
+        #expect(await store.updateHeight(182) == .written)
+        #expect(health.heights.map(\.centimeters) == [182], "one sample, not one per edit")
+        #expect(await store.updateHeight(182) == .notNeeded, "an unchanged value writes nothing")
+        #expect(health.heights.count == 1)
+    }
+
+    @Test func updateHeight_withoutPermission_keepsTheValueLocal_andSaysSo() async {
+        let store = store()
+        #expect(await store.updateHeight(181) == .notAllowed)
+        #expect(health.heights.isEmpty)
+        #expect(store.profile.height == BodyValue(value: 181, source: .typed), "Tagwerk calculates with it anyway")
+    }
+
+    @Test func updateHeight_outOfRange_writesNothing() async {
+        health.setWriteAccess(.allowed, for: .height)
+        let store = store()
+        #expect(await store.updateHeight(900) == .notNeeded)
+        #expect(health.heights.isEmpty)
+    }
+
+    @Test func updateHeight_cleared_removesTheOverrideWithoutWriting() async {
+        health.setWriteAccess(.allowed, for: .height)
+        let store = store()
+        _ = await store.updateHeight(181)
+        #expect(await store.updateHeight(nil) == .notNeeded)
+        #expect(settings.bodyHeightCm == nil && !settings.bodyOverrides.contains(.height))
+    }
+
+    @Test func notes_sayWhereAValueComesFrom() {
+        #expect(BodyProfileSection.note(source: .health, value: "1994", health: "1994") == "aus Health")
+        #expect(BodyProfileSection.note(source: .typed, value: "1995", health: "1994") == "eingetragen · Health sagt 1994")
+        #expect(BodyProfileSection.note(source: .typed, value: "1995", health: nil) == "eingetragen")
+        #expect(BodyProfileSection.note(source: .typed, value: "1994", health: "1994") == "eingetragen")
+        #expect(BodyProfileSection.note(source: .missing, value: nil, health: nil) == "fehlt")
+    }
+
+    @Test func heightNote_saysWhetherHealthTakesTheValue() {
+        #expect(BodyProfileSection.heightNote(source: .typed, value: 181, health: 180, writeAccess: .allowed)
+                == "eingetragen · wird nach Health geschrieben")
+        #expect(BodyProfileSection.heightNote(source: .typed, value: 181, health: 180, writeAccess: .denied)
+                == "eingetragen · nicht nach Health geschrieben")
+        #expect(BodyProfileSection.heightNote(source: .typed, value: 181, health: nil, writeAccess: .notAsked)
+                == "eingetragen · nicht nach Health geschrieben")
+        #expect(BodyProfileSection.heightNote(source: .health, value: 180, health: 180, writeAccess: .allowed) == "aus Health")
+    }
+
+    @Test func overrides_roundTripThroughTheBackup() throws {
+        settings.bodyOverrides = [.birthYear, .sex]
+        let data = try JSONEncoder().encode(AppSettingsBackup(settings))
+        let target = try ModelContainerFactory.make(inMemory: true)
+        let targetSettings = try AppSettings.current(in: target.mainContext)
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: targetSettings)
+        #expect(targetSettings.bodyOverrides == [.birthYear, .sex])
+    }
+
     // MARK: Backup
 
     @Test func backup_roundTripsTypedValuesButNotWhatHealthDelivered() throws {

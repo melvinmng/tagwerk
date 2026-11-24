@@ -1027,32 +1027,12 @@
         }
       }
     },
-    "%@ · aus Health": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · from Health"
-          }
-        }
-      }
-    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · dictated"
-          }
-        }
-      }
-    },
-    "%@ · eingetragen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · entered"
           }
         }
       }
@@ -2457,16 +2437,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
-          }
-        }
-      }
-    },
-    "%lld cm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld cm"
           }
         }
       }
@@ -13101,6 +13071,16 @@
         }
       }
     },
+    "Geburtsdatum und Geschlecht in Health ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change date of birth and sex in Health"
+          }
+        }
+      }
+    },
     "Geburtsjahr": {
       "localizations": {
         "en": {
@@ -14363,12 +14343,12 @@
         }
       }
     },
-    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": {
+    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback."
+            "value": "Height, age and sex are only calculated on this iPhone: Tagwerk uses them to check goal suggestions. Stored are the height in whole centimetres, the birth year and the sex of the formula, never the date of birth. Tagwerk writes the height to Health. Only the Health app can change date of birth and sex; iOS does not allow apps to: if you enter something different here, Tagwerk calculates with it and Health stays unchanged. Clear the field to use the value from Health again."
           }
         }
       }
@@ -28362,6 +28342,16 @@
         }
       }
     },
+    "aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from Health"
+          }
+        }
+      }
+    },
     "ausgewählt": {
       "localizations": {
         "en": {
@@ -28515,6 +28505,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "logged"
+          }
+        }
+      }
+    },
+    "eingetragen · Health sagt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · Health says %@"
+          }
+        }
+      }
+    },
+    "eingetragen · nicht nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · not written to Health"
+          }
+        }
+      }
+    },
+    "eingetragen · wird nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · written to Health"
           }
         }
       }

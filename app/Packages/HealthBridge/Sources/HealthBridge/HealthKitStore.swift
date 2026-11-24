@@ -205,6 +205,15 @@ public final class HealthKitStore: HealthStoring, Sendable {
         return true
     }
 
+    public func saveHeight(_ height: HealthHeight) async throws -> Bool {
+        guard Self.isAvailable, mayWrite(type: HKQuantityType(.height)) else { return false }
+        let sample = HKQuantitySample(type: HKQuantityType(.height),
+                                      quantity: HKQuantity(unit: .meterUnit(with: .centi), doubleValue: height.centimeters),
+                                      start: height.date, end: height.date, metadata: HealthMapping.heightMetadata(date: height.date))
+        try await store.save(sample)
+        return true
+    }
+
     /// Workouts cannot be replaced by sync version reliably, so the old one (and its energy sample) is removed first.
     public func save(_ workout: HealthWorkout) async throws -> Bool {
         guard mayWrite(.workouts) else { return false }

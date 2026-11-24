@@ -24,6 +24,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _bodyProfile = HealthBodyProfile.empty
     private var _nutritionSamples: [FakeNutritionSample] = []
     private var _weights: [HealthWeight] = []
+    private var _heights: [HealthHeight] = []
     private var _foreignWeights: [ForeignWeight] = []
     private var _activeEnergy: [DailyActiveEnergy] = []
     private var _activeEnergyReads: [DateInterval] = []
@@ -131,6 +132,13 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
+    /// The height replaces the one written before, like the fixed sync identifier in Health; without the permission nothing is written.
+    func saveHeight(_ height: HealthHeight) async throws -> Bool {
+        guard await writeAccess(for: .height) == .allowed else { return false }
+        return try await write { _heights = [height] }
+    }
+    /// The one height sample Tagwerk keeps in Health.
+    var heights: [HealthHeight] { lock.withLock { _heights } }
     /// A weight is written only into the group `body`; without its sheet shown the fake reports "not complete", like the real store.
     func save(_ weight: HealthWeight) async throws -> Bool {
         guard await groupAccess(.body) == .asked else { return false }

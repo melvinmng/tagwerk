@@ -14,6 +14,9 @@ public protocol HealthStoring: Sendable {
     /// Writes the weight (and the body fat percentage, when given) of the group `body`; `false` when the weight may not be written.
     func save(_ weight: HealthWeight) async throws -> Bool
     func save(_ workout: HealthWorkout) async throws -> Bool
+    /// Writes the height as the one sample Tagwerk keeps in Health (a new value replaces the old one); `false` when the height may not
+    /// be written. Date of birth and biological sex cannot be written by apps at all: iOS offers them read-only.
+    func saveHeight(_ height: HealthHeight) async throws -> Bool
     /// Removes every sample of the entry, in the types of its kind. Types Tagwerk may not write count as done,
     /// because nothing of the entry can be stored there.
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool

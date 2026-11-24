@@ -102,6 +102,17 @@ public struct HealthWeight: Sendable, Hashable {
     }
 }
 
+/// The height as written to Health: one value that replaces the one Tagwerk wrote before.
+public struct HealthHeight: Sendable, Hashable {
+    public var centimeters: Double
+    public var date: Date
+
+    public init(centimeters: Double, date: Date) {
+        self.centimeters = centimeters
+        self.date = date
+    }
+}
+
 /// A body weight another app (a smart scale, the Health app) wrote to Health.
 public struct ForeignWeight: Sendable, Hashable, Identifiable {
     public var id: UUID

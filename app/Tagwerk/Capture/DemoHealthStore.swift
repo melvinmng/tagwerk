@@ -49,6 +49,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
     func save(_ drink: HealthDrink) async throws -> Bool { true }
     func save(_ workout: HealthWorkout) async throws -> Bool { true }
     func save(_ weight: HealthWeight) async throws -> Bool { true }
+    func saveHeight(_ height: HealthHeight) async throws -> Bool { true }
     func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] { [] }
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { true }
 

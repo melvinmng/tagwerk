@@ -71,6 +71,8 @@ enum AccessibilityID {
         static let heightField = "bodyProfile.heightField"
         static let birthYearField = "bodyProfile.birthYearField"
         static let sexPicker = "bodyProfile.sexPicker"
+        /// "Geburtsdatum und Geschlecht in Health ändern" (opens the Health app).
+        static let openHealthButton = "bodyProfile.openHealthButton"
         /// The sentence after a reading that delivered nothing.
         static let nothingDelivered = "bodyProfile.nothingDelivered"
     }

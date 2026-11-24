@@ -57,6 +57,19 @@ public enum HealthMapping {
         "tagwerk.\(kind.rawValue).\(id.uuidString)" + (part.map { ".\($0)" } ?? "")
     }
 
+    /// Sync identifier of the height Tagwerk wrote: one fixed identifier, so a new value replaces the old sample and repeated edits
+    /// never pile up in Health.
+    public static let heightSyncIdentifier = "tagwerk.height"
+    /// The entry id of the height sample: the height is not an entry of the log, so it carries a fixed id for the marker.
+    static let heightEntryID = UUID(uuidString: "6D3A1C2E-0000-4000-8000-0000000000A1")!
+
+    /// Metadata of the height sample. Health replaces a sample of the same sync identifier only for a higher version, so the version
+    /// is the time of the edit in seconds.
+    static func heightMetadata(date: Date) -> [String: Any] {
+        metadata(syncIdentifier: heightSyncIdentifier, entryID: heightEntryID, version: Int(date.timeIntervalSince1970),
+                 estimated: false, userEntered: true)
+    }
+
     /// Metadata of one sample. Created and consumed locally; never crosses a concurrency boundary.
     static func metadata(syncIdentifier: String, entryID: UUID, version: Int, estimated: Bool,
                          userEntered: Bool) -> [String: Any] {
