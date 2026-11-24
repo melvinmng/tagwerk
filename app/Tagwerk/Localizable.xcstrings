@@ -20436,6 +20436,26 @@
         }
       }
     },
+    "Open Food Facts bekommt von deinem Anschluss gerade zu viele Anfragen. Warte etwa eine Minute und versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts is receiving too many requests from your connection. Wait about a minute and try again."
+          }
+        }
+      }
+    },
+    "Open Food Facts hat die Anfrage abgelehnt (Fehler 403). Das betrifft meist die Netzadresse oder die Kennung der App, nicht deine Eingabe. Versuch es später oder in einem anderen Netz noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts refused the request (error 403). This usually concerns the network address or the app's identification, not your input. Try again later or on a different network."
+          }
+        }
+      }
+    },
     "Open Food Facts nimmt gerade keine Anfragen an. Versuch es später noch einmal.": {
       "localizations": {
         "en": {
