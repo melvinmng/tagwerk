@@ -179,6 +179,38 @@ class DriverFilesTests(unittest.TestCase):
         self.assertEqual(merged_text, catalog_format.serialize(expected, style))
         self.assertTrue(catalog_format.is_canonical(merged_text))
 
+    def test_catalog_is_sorted_whatever_the_file_name_or_missing_path_argument(self):
+        """Regression: the driver command without %P left the temporary file name as the path, and the catalog was merged
+        in insertion order (keys of theirs appended at the end) instead of sorted."""
+        base = catalog(M=entry("M", "m"))
+        ours, theirs = copy.deepcopy(base), copy.deepcopy(base)
+        ours["strings"]["Z"] = entry("Z", "z")
+        theirs["strings"]["A"] = entry("A", "a")
+        style = Style(" : ", False)
+        texts = [catalog_format.serialize(side, style) for side in (base, ours, theirs)]
+        for path in (None, ".merge_file_a1b2c3", "ours", "scripts/translations/en.json"):
+            with self.subTest(path=path):
+                arguments = [self.write("base", texts[0]), self.write("ours", texts[1]), self.write("theirs", texts[2])]
+                if path:
+                    arguments.append(path)
+                result = subprocess.run([PYTHON, str(SCRIPTS / "merge-xcstrings.py"), *arguments], capture_output=True, text=True)
+                merged_text = (self.directory / "ours").read_bytes().decode("utf-8")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(catalog_format.is_canonical(merged_text), merged_text)
+                self.assertEqual(list(json.loads(merged_text)["strings"]), ["A", "M", "Z"])
+
+    def test_explicit_format_overrides_the_detection(self):
+        base = {"strings": {"m": "1"}, "sourceLanguage": "de"}
+        ours = {"strings": {"m": "1", "z": "2"}, "sourceLanguage": "de"}
+        theirs = {"strings": {"m": "1", "a": "3"}, "sourceLanguage": "de"}
+        paths = [self.write(name, catalog_format.serialize(side, Style(": ", True), sort_keys=False))
+                 for name, side in (("base", base), ("ours", ours), ("theirs", theirs))]
+        result = subprocess.run([PYTHON, str(SCRIPTS / "merge-xcstrings.py"), "--format", "ordered-json", *paths],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        merged = json.loads((self.directory / "ours").read_text(encoding="utf-8"))
+        self.assertEqual(list(merged["strings"]), ["m", "z", "a"])
+
     def test_en_json_keeps_its_insertion_order_and_final_line_break(self):
         base = {"Zebra": "zebra", "Apfel": "apple"}
         ours = {**base, "Müll": "waste"}
@@ -314,6 +346,21 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(list(translations), ["Anfang", "Apfel", "Zebra"])
         self.assertTrue(catalog_format.is_canonical(self.catalog_path.read_text(encoding="utf-8")))
         self.assertEqual(git(self.directory, "status", "--porcelain").stdout, "")
+
+    def test_driver_command_without_the_path_argument_writes_the_canonical_format(self):
+        """Regression: `git -c merge.xcstrings.driver="python3 scripts/merge-xcstrings.py %O %A %B" merge …` (no %P) wrote the
+        keys of the other side at the end of the catalog, and check-strings.py rejected the result."""
+        # The key of theirs sorts before the key of ours: appending it instead of sorting is visible.
+        self.branch_with_new_key("feature-a", "Apfel", "apple")
+        self.branch_with_new_key("feature-b", "Zebra", "zebra")
+        driver = f"{PYTHON} scripts/merge-xcstrings.py %O %A %B"
+        translations_driver = f"{PYTHON} scripts/merge-xcstrings.py --format ordered-json %O %A %B"
+        merge = git(self.directory, "-c", f"merge.xcstrings.driver={driver}",
+                    "-c", f"merge.translationsjson.driver={translations_driver}", "merge", "--no-edit", "feature-a", check=False)
+        self.assertEqual(merge.returncode, 0, merge.stdout + merge.stderr)
+        text = self.catalog_path.read_text(encoding="utf-8")
+        self.assertTrue(catalog_format.is_canonical(text), text)
+        self.assertEqual(list(json.loads(text)["strings"]), ["Anfang", "Apfel", "Zebra"])
 
     def make_old_branch_and_advanced_main(self):
         """A branch cut before the driver existed (no .gitattributes) and a main that moved on with a new key."""
