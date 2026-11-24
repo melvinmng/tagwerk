@@ -149,8 +149,11 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
-                // The trends of the intake and the weight, below the cards of the day: the entry is used less often than the routine and
-                // habit cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
+                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
+                // The nutrients come before the entry to the trends (#318): the card belongs to the day, the entry is a way out of it.
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
+                // The trends of the intake and the weight, below the nutrients: the entry is used less often than the routine, habit and
+                // nutrient cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
                 Section {
                     // The value is the weight of the latest 7 days, when there is one.
                     Button { showsTrends = true } label: {
@@ -166,8 +169,6 @@ struct CaptureView: View {
                     .foregroundStyle(.primary)
                     .accessibilityIdentifier(AccessibilityID.Trend.entry)
                 }
-                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
-                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
                 drinkSection(data)
                 workoutSection(data)
