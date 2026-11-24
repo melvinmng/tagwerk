@@ -3,6 +3,14 @@
 Arbeitsstand für die offenen Punkte aus #173, #188, #232 und #233. Wird bei jedem Schritt aktualisiert.
 Branch mit Plänen und Mockups: `chore/fable-open-items` (Worktree `t3-638057bd-99a71137283b18c0`).
 
+## Abschluss 24.11.
+
+- Runde abgeschlossen: #173, #188, #232, #233, #255 und Epic #113 geschlossen; #254 bleibt in Arbeit.
+- Gerätetest des Nutzers am 24.11. (Stand `main` `255c3ca3`): Gewicht, Health-Statistik, Tastatur-Erstklick, Widget, Ziele mit ChatGPT funktionieren.
+- Befunde und Reste als Issues: #304 (Ziehen löst Kontextmenü aus, App friert ein), #305 (Bible Study wirft aus der Notiz), #306 (Startblatt nicht auffindbar), #307 (Checkbox → Aufgabe geht nicht), #308 (Buchauswahl zeigt „Others“), #309 (heruntergeladene Stimmen nicht wählbar), #310 (Leistung), #311 (Release-Link), #312 (Fokus-Nachholer), #313 (offene Gerätetests), #314 (Health-Einwilligung endlos), #315 (Open Food Facts), #316 (Gewicht nach Health), #317 (Profilfelder nach Health), #318 (Reihenfolge Erfassen), #319 (Strichcode E6), #320 (Wochenrückblick C4).
+- Nächste Runde in eigenem Thread: Plan und Mockups durch ein Council, zuerst an den Nutzer; Prüfung Opus, Umsetzung Sonnet.
+- Apple-ID in Xcode verschwand ohne bekannte Ursache; Wächter `scripts/xcode-account-watch.sh` (PR #303).
+
 ## Regeln
 
 - Rollen: Fable (Effort medium) plant und macht Mockups; Sonnet (Effort high) setzt um; die Hauptsitzung prüft jeden Branch, bevor ein PR entsteht.
