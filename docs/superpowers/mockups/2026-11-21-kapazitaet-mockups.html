@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · Tageskapazität · Mockups KA</title>
+<style>
+  /* Mockup frame uses the host theme (with fallbacks); phone snippets depict the app in iOS dark mode. */
+  :root { color-scheme: light dark; }
+  body { font: 14px var(--font-sans, system-ui, sans-serif); color: var(--foreground, CanvasText); margin: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 38px 0 4px; padding-top: 16px; border-top: 1px solid rgba(128,128,128,.3); }
+  .lead { color: var(--muted-foreground, #777); margin: 0 0 14px; line-height: 1.5; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(392px, 1fr)); gap: 22px; align-items: start; }
+  .label { font: 600 13px var(--font-sans, system-ui); color: var(--muted-foreground, #777); margin: 0 0 8px 4px; }
+  .label b { color: var(--foreground, CanvasText); }
+  .code { display: inline-block; background: rgba(128,128,128,.28); border-radius: 6px; padding: 1px 8px; font: 800 13px system-ui; margin-right: 4px; }
+  .code.r { background: #30d158; color: #000; }
+  .rec { background: #30d158; color: #000; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+  .pc { font-size: 12.5px; color: var(--muted-foreground, #777); line-height: 1.5; margin: 8px 4px 0; max-width: 390px; }
+  .pc b { color: var(--foreground, CanvasText); }
+  .box { border: 1px solid rgba(128,128,128,.4); background: rgba(128,128,128,.07); border-radius: 12px; padding: 12px 16px; margin-top: 16px; line-height: 1.55; font-size: 13px; max-width: 1100px; }
+  .box.warn { border-color: rgba(255,159,10,.6); background: rgba(255,159,10,.08); }
+  .box h3 { margin: 0 0 6px; font-size: 14px; }
+  .tablewrap { overflow-x: auto; }
+  table.sum { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  table.sum td, table.sum th { padding: 5px 14px 5px 0; vertical-align: top; text-align: left; border-bottom: 1px solid rgba(128,128,128,.22); }
+  table.sum th { font-size: 12px; color: var(--muted-foreground, #777); }
+
+  .phone {
+    --bg: #000; --card: #1c1c1e; --sep: #38383a; --text: #fff; --sub: #8e8e93;
+    --green: #30d158; --purple: #bf5af2; --blue: #0a84ff; --orange: #ff9f0a; --grey: #636366; --frame: #2a2a2c;
+    background: var(--bg); color: var(--text); border-radius: 24px; padding: 12px; border: 6px solid var(--frame);
+    font: 15px -apple-system, "SF Pro Text", system-ui, sans-serif; width: 390px; max-width: 100%; box-sizing: border-box;
+  }
+  .card { background: var(--card); border-radius: 18px; padding: 14px 14px 12px; }
+  .head { display: flex; justify-content: space-between; align-items: center; font: 700 19px system-ui; }
+  .head i { font-style: normal; color: var(--sub); font-size: 16px; }
+  .bar { height: 6px; border-radius: 99px; background: rgba(120,120,128,.36); margin: 10px 0 0; display: flex; overflow: hidden; }
+  .bar span { display: block; height: 100%; }
+  .cap { font-size: 12.5px; color: var(--sub); margin-top: 6px; line-height: 1.45; }
+  .cap.new { box-shadow: inset 3px 0 0 #ffd60a; padding-left: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--sub); margin-top: 8px; }
+  .legend.new { box-shadow: inset 3px 0 0 #ffd60a; padding-left: 8px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .line { border-top: 1px solid var(--sep); margin: 12px 0 10px; }
+  .pill { display: inline-block; background: rgba(191,90,242,.22); color: var(--purple); border-radius: 99px; padding: 8px 16px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Tageskapazität: was zählt, sichtbar gemacht</h1>
+<p class="lead">Zum Plan <code>docs/superpowers/plans/2026-11-21-kapazitaet.md</code>. Nur die Anzeige der Kapazitätskarte im Tag ist betroffen (Entscheidung <b>KA6</b>); alle übrigen KA-Entscheidungen sind Rechenregeln ohne eigenes Bild. Gelber Rand = neu. Beispiel ist der Tag aus der Meldung: Di. 24. Nov., Arbeitszeit 9:00–18:00 (Vorgabe im Code), Pause 12:00–13:00, „Away“ 12:00–13:00 belegt, sonst nur freie Termine. Die Zeile „4 h 30 wiederkehrend“ ist eine <b>Annahme</b> zur Erklärung der gemeldeten 3 h 10; sie ist am Gerät nicht geprüft.</p>
+
+<h2>KA6 · Wie erklärt die Karte, was abgezogen wurde?</h2>
+<div class="grid">
+  <div>
+    <p class="label"><span class="code">heute</span> <b>Stand im Code</b></p>
+    <div class="phone"><div class="card">
+      <div class="head"><span>3 h 10 free of 3 h 10</span><i>☰</i></div>
+      <div class="bar"></div>
+      <div class="line"></div><span class="pill">✦ Plan day</span>
+    </div></div>
+    <p class="pc">Die Gesamtzahl ist bereits um Pause, Termine, Puffer und reservierten Aufwand gekürzt. <b>Woher 3 h 10 kommen, ist nicht ablesbar.</b></p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">KA6a</span> <b>Eine Erklärzeile</b> <span class="rec">Empfehlung</span></p>
+    <div class="phone"><div class="card">
+      <div class="head"><span>3 h 30 free of 8 h</span><i>☰</i></div>
+      <div class="bar"><span style="width:56%;background:var(--green)"></span></div>
+      <div class="cap new">9:00–18:00 · 1 h break · 4 h 30 recurring</div>
+      <div class="line"></div><span class="pill">✦ Plan day</span>
+    </div></div>
+    <p class="pc">Eine Zeile unter dem Balken, nur mit den Teilen, die an diesem Tag vorkommen: Arbeitszeit, Pause, Termine (mit Puffer), Fahrzeit, wiederkehrend, eingeplant. Ohne Abzüge außer der Pause: „9:00–18:00 · 1 h break“. <b>Kleinster Eingriff, erklärt jede Zahl.</b></p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code">KA6b</span> <b>Geteilter Balken mit Legende</b></p>
+    <div class="phone"><div class="card">
+      <div class="head"><span>3 h 30 free of 8 h</span><i>☰</i></div>
+      <div class="bar"><span style="width:11%;background:var(--grey)"></span><span style="width:50%;background:var(--orange)"></span><span style="width:39%;background:transparent"></span></div>
+      <div class="legend new"><span><span class="dot" style="background:var(--grey)"></span>Break 1 h</span><span><span class="dot" style="background:var(--orange)"></span>Recurring 4 h 30</span><span><span class="dot" style="background:rgba(120,120,128,.6)"></span>Free 3 h 30</span></div>
+      <div class="line"></div><span class="pill">✦ Plan day</span>
+    </div></div>
+    <p class="pc">Der Balken zeigt die ganze Arbeitszeit in Teilen. Anschaulicher, aber höher, mit bis zu sechs Farben, und der Balken bedeutet dann etwas anderes als in Woche und Monat.</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">KA6a</span> <b>Derselbe Tag ohne reservierten Aufwand</b></p>
+    <div class="phone"><div class="card">
+      <div class="head"><span>8 h free of 8 h</span><i>☰</i></div>
+      <div class="bar"></div>
+      <div class="cap new">9:00–18:00 · 1 h break</div>
+      <div class="line"></div><span class="pill">✦ Plan day</span>
+    </div></div>
+    <p class="pc">So sieht der gemeldete Tag nach den neuen Regeln aus, wenn nichts reserviert ist: „Away“ liegt ganz in der Pause und kostet nichts zusätzlich (KA1c).</p>
+  </div>
+
+  <div>
+    <p class="label"><span class="code r">KA6a</span> <b>Voller Tag</b></p>
+    <div class="phone"><div class="card">
+      <div class="head"><span>1 h 20 free of 5 h 10</span><i>☰</i></div>
+      <div class="bar"><span style="width:74%;background:var(--green)"></span></div>
+      <div class="cap new">9:00–18:00 · 1 h break · 2 h 20 events · 30 min travel · 3 h 50 planned</div>
+      <div class="line"></div><span class="pill">✦ Plan day</span>
+    </div></div>
+    <p class="pc">„events“ ist die Vereinigung der belegten Termine samt Puffer innerhalb der Arbeitszeit; Überschneidungen zählen einmal. „planned“ enthält Zeitblöcke, Aufgaben ohne Zeit und reservierten Aufwand (KA3a).</p>
+  </div>
+</div>
+
+<div class="box">
+  <h3>Übrige Entscheidungen (ohne Bild, Einzelheiten im Plan)</h3>
+  <div class="tablewrap"><table class="sum">
+    <tr><th>Kürzel</th><th>Frage</th><th>Empfehlung</th></tr>
+    <tr><td>KA1</td><td>Puffer um einen Termin, der ganz in Pause oder Fahrzeit liegt</td><td><b>KA1c</b>: kein Puffer für solche Termine</td></tr>
+    <tr><td>KA2</td><td>Was ist die Gesamtzahl „von …“?</td><td><b>KA2a</b>: Arbeitszeit minus Pause, Termine, Puffer, Fahrzeit (wie bisher, ohne reservierten Aufwand)</td></tr>
+    <tr><td>KA3</td><td>Reservierter Aufwand wiederkehrender Aufgaben</td><td><b>KA3a</b>: zählt als Eingeplantes, nicht als Kürzung der Gesamtzahl</td></tr>
+    <tr><td>KA4</td><td>Ganztägige Termine</td><td><b>KA4a</b>: kürzen den Tag nie; „kein Arbeitstag“ bleibt eine Handeinstellung</td></tr>
+    <tr><td>KA5</td><td>Zeitblöcke außerhalb der Arbeitszeit</td><td><b>KA5a</b>: verbrauchen keine freie Arbeitszeit</td></tr>
+  </table></div>
+</div>
+<div class="box warn">
+  <h3>Nicht geprüft</h3>
+  Die Farben und Abstände sind Skizzen, nicht am Gerät geprüft. Ob die Erklärzeile bei großer Schrift (Dynamic Type) in zwei Zeilen lesbar bleibt, zeigt erst ein Gerätetest.
+</div>
+</body>
+</html>
