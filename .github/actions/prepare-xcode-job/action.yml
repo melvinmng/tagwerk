@@ -1,0 +1,88 @@
+name: Prepare the Xcode test job
+description: >-
+  Steps that the fast job and every UI shard of .github/workflows/tests.yml share, after the checkout: restore the modification
+  times of the sources, select and verify the Xcode toolchain, set the time zone and install XcodeGen. Reads XCODE_APP,
+  XCODE_BUILD_VERSION, SIMULATOR_RUNTIME, XCODEGEN_VERSION, XCODEGEN_SHA256 and TZ from the environment of the workflow.
+
+outputs:
+  image_version:
+    description: Version of the runner image, part of the build cache key.
+    value: ${{ steps.toolchain.outputs.image_version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Restore the modification times of the sources
+      # Every checked-out file would otherwise get the current time and be compiled again, cached or not.
+      shell: bash
+      run: /usr/bin/python3 -I scripts/ci-restore-mtimes.py
+
+    - name: Select Xcode and verify the toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        developer_dir="$XCODE_APP/Contents/Developer"
+        if [[ ! -d "$developer_dir" ]]; then
+          echo "::error::$XCODE_APP is not installed on this runner image. Installed Xcode versions:"
+          ls -d /Applications/Xcode*.app
+          exit 1
+        fi
+        sudo xcode-select --switch "$developer_dir"
+        # The test scripts export DEVELOPER_DIR from TAGWERK_DEVELOPER_DIR; the rest of the job uses DEVELOPER_DIR.
+        {
+          echo "TAGWERK_DEVELOPER_DIR=$developer_dir"
+          echo "DEVELOPER_DIR=$developer_dir"
+        } >> "$GITHUB_ENV"
+        export DEVELOPER_DIR="$developer_dir"
+
+        # Output is captured before grep: with pipefail, grep -q closing the pipe early could fail the step.
+        xcode_version=$(xcodebuild -version)
+        echo "$xcode_version"
+        if ! grep -q "Build version $XCODE_BUILD_VERSION" <<<"$xcode_version"; then
+          echo "::error::Expected Xcode build $XCODE_BUILD_VERSION (27.2). The runner image has changed."
+          exit 1
+        fi
+        runtimes=$(xcrun simctl list runtimes)
+        echo "$runtimes"
+        if ! grep -q "$SIMULATOR_RUNTIME " <<<"$runtimes"; then
+          echo "::error::The $SIMULATOR_RUNTIME simulator runtime is not installed on this runner image."
+          exit 1
+        fi
+        device_types=$(xcrun simctl list devicetypes)
+        if ! grep -q "iPhone 18 Pro (" <<<"$device_types"; then
+          echo "::error::The iPhone 18 Pro device type is not available."
+          exit 1
+        fi
+        df -h /
+
+        # The cache key contains the runner image version, so a new image does not reuse an older build.
+        echo "image_version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+        # The app build folder is fixed, so the cached folder does not depend on the checkout key that
+        # scripts/test-env.sh derives from the checkout path. The package stages build in the default
+        # DerivedData folder (xcodebuild is called there without -derivedDataPath).
+        echo "TAGWERK_TEST_DERIVED_DATA=$HOME/Library/Developer/Tagwerk/DerivedData-ci" >> "$GITHUB_ENV"
+
+    - name: Set the time zone
+      # TZ and TEST_RUNNER_TZ (job environment) cover the build and the test runner. Setting the system time zone as
+      # well is best effort and also covers processes that do not inherit the environment (the app in the UI tests).
+      shell: bash
+      run: |
+        sudo systemsetup -settimezone "$TZ" || echo "::warning::Could not set the system time zone; only TZ and TEST_RUNNER_TZ apply."
+        echo "System time zone: $(readlink /etc/localtime || echo unknown), TZ=$TZ, now: $(date)"
+
+    - name: Install XcodeGen
+      shell: bash
+      run: |
+        set -euo pipefail
+        archive="$RUNNER_TEMP/xcodegen.zip"
+        install_dir="$RUNNER_TEMP/xcodegen-$XCODEGEN_VERSION"
+        curl --fail --silent --show-error --location \
+          --output "$archive" \
+          "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+        echo "$XCODEGEN_SHA256  $archive" | shasum -a 256 --check -
+        mkdir -p "$install_dir"
+        unzip -q "$archive" -d "$install_dir"
+        # The binary reads its setting presets from ../share/xcodegen, so the unpacked layout stays intact.
+        echo "$install_dir/xcodegen/bin" >> "$GITHUB_PATH"
+        "$install_dir/xcodegen/bin/xcodegen" --version

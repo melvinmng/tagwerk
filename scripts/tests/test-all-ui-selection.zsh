@@ -15,7 +15,7 @@ check() { # name expected actual
 # one per line, followed by "rc=<exit code>". The one-line summary on stdout is dropped.
 selection() {
   (
-    unset TAGWERK_UI_TEST_SET TAGWERK_UI_ONLY TAGWERK_UI_TEST_RETRIES TAGWERK_SKIP_UI_TESTS TAGWERK_ONLY_UI_TESTS
+    unset TAGWERK_UI_TEST_SET TAGWERK_UI_ONLY TAGWERK_UI_TEST_RETRIES TAGWERK_SKIP_UI_TESTS TAGWERK_ONLY_UI_TESTS TAGWERK_UI_SHARD
     export TAGWERK_SOURCE_ONLY=1
     local assignment
     for assignment in "$@"; do export "$assignment"; done
@@ -43,6 +43,33 @@ check "retries are on without the variable" "1" "$( (unset TAGWERK_UI_TEST_RETRI
 check "retries are on with 1"  "1" "$( (export TAGWERK_UI_TEST_RETRIES=1 TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
 check "retries are off with 0"  "0" "$( (export TAGWERK_UI_TEST_RETRIES=0 TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
 check "retries are off when empty" "0" "$( (export TAGWERK_UI_TEST_RETRIES= TAGWERK_SOURCE_ONLY=1; source "$ROOT/app/test-all.sh"; ui_retries_enabled && print 1 || print 0) )"
+
+# Shards (TAGWERK_UI_SHARD): shards 1 to N-1 select their classes (-only-testing); the last shard skips the classes of all the others
+# (-skip-testing), so a class that the source scan does not see still runs in the last shard. Together the shards cover the set, and
+# the nightly-only entries of the pull request set still apply (as -skip-testing) in every shard.
+shard_args() { selection "$@" | grep -E '^-(only|skip)-testing:TagwerkUITests/[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?$' | sort; }
+for test_set in pr full; do
+  first=$(shard_args TAGWERK_UI_TEST_SET=$test_set TAGWERK_UI_SHARD=1/2 | grep '^-only-testing:')
+  last_skips=$(shard_args TAGWERK_UI_TEST_SET=$test_set TAGWERK_UI_SHARD=2/2 | grep '^-skip-testing:' | sed 's/^-skip-/-only-/')
+  expected_first=$(/usr/bin/python3 -I "$ROOT/scripts/ui-test-shards.py" shard 1/2 --set $test_set | sed 's#^#-only-testing:TagwerkUITests/#' | sort)
+  check "shard $test_set: shard 1 selects its classes" "$expected_first" "$first"
+  check "shard $test_set: shard 1 has classes" "1" "$([[ -n "$first" ]] && print 1 || print 0)"
+  check "shard $test_set: the last shard has no -only-testing" "" "$(selection TAGWERK_UI_TEST_SET=$test_set TAGWERK_UI_SHARD=2/2 | grep '^-only-testing:')"
+  if [[ "$test_set" == "pr" ]]; then
+    # The skips of the last shard are the classes of shard 1 plus the nightly-only entries (classes among them are listed twice).
+    check "shard $test_set: the last shard skips shard 1 and the nightly-only entries" "$(print -r -- "$first"$'\n'"$(print -r -- "$skip_arguments" | sed 's/^-skip-/-only-/')" | sort -u)" \
+      "$(print -r -- "$last_skips" | sort -u)"
+  else
+    check "shard $test_set: the last shard skips exactly shard 1" "$first" "$last_skips"
+  fi
+done
+check "shard pr: the nightly-only entries are skipped inside shard 1" "$skip_arguments" \
+  "$(selection TAGWERK_UI_TEST_SET=pr TAGWERK_UI_SHARD=1/2 | grep '^-skip-testing:')"
+check "shard full: shard 1 has no skip arguments" "" "$(selection TAGWERK_UI_TEST_SET=full TAGWERK_UI_SHARD=1/2 | grep '^-skip-testing:')"
+check "shard and TAGWERK_UI_ONLY exclude each other" "rc=1" "$(selection TAGWERK_UI_SHARD=1/2 TAGWERK_UI_ONLY=NotesUITests)"
+check "shard 3/2 is invalid" "rc=1" "$(selection TAGWERK_UI_SHARD=3/2)"
+check "shard 0/2 is invalid" "rc=1" "$(selection TAGWERK_UI_SHARD=0/2)"
+check "shard without a slash is invalid" "rc=1" "$(selection TAGWERK_UI_SHARD=2)"
 
 # Every entry of the repository list must name an existing UI test class (a typo would silently skip nothing).
 missing_classes=""
