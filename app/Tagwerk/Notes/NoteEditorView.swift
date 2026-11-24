@@ -88,11 +88,7 @@ struct NoteEditorView: View {
             // The running Bible Study session of this note (BS1b); it takes no space without one.
             .safeAreaInset(edge: .top, spacing: 0) { BibleSessionBar(noteID: noteID, store: store, saveText: saveText) }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if mode == .edit, isTextFocused {
-                    NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
-                                      attachments: store.attachments != nil ? AnyView(insertMenu) : nil,
-                                      isInTable: tableIndexAtCursor != nil, onTable: openTableAtCursor)
-                }
+                if mode == .edit, isTextFocused { formattingBar(isBibleStudy: note?.kind == .bibleStudy) }
             }
             .toolbar {
                 if Self.usesTapToEdit {
@@ -194,6 +190,15 @@ struct NoteEditorView: View {
                     isLoaded = false
                 }
             }
+    }
+
+    /// The bar above the keyboard; a Bible Study note adds "Als Aufgabe" (#307).
+    private func formattingBar(isBibleStudy: Bool) -> some View {
+        let onTask: (() -> Void)? = isBibleStudy ? { createTaskAtCursor() } : nil
+        return NoteFormattingBar(onFormat: applyFormatting, onHideKeyboard: { isTextFocused = false },
+                                 attachments: store.attachments != nil ? AnyView(insertMenu) : nil,
+                                 isInTable: tableIndexAtCursor != nil, onTable: openTableAtCursor,
+                                 onTask: onTask, canCreateTask: isBibleStudy && checkboxDraftAtCursor() != nil)
     }
 
     // MARK: Content

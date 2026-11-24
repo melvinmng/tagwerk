@@ -3112,5 +3112,8 @@
   "Du beginnst werktags meist zwischen %@ und %@. Soll Tagwerk dich %@ um %@ erinnern?": "You usually begin on workdays between %1$@ and %2$@. Should Tagwerk remind you on %3$@ at %4$@?",
   "Erinnern": "Remind me",
   "Vorschlag aus deinen Sitzungen": "Suggestion from your sessions",
-  "Zeit ändern": "Change time"
+  "Zeit ändern": "Change time",
+  "Als Aufgabe": "As task",
+  "seit %@ · tippen zum Weiterschreiben": "since %@ · tap to keep writing",
+  "%@, %@": "%@, %@"
 }

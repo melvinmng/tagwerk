@@ -41,6 +41,11 @@ extension NoteStore {
         sessions().filter { $0.noteID == noteID && $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
     }
 
+    /// The latest session that is still open, in whatever note (the capsule above the tab bar and the row in "Aufgaben").
+    var latestOpenSession: BibleStudySessionRecord? {
+        sessions().filter { $0.completedAt == nil }.max { $0.startedAt < $1.startedAt }
+    }
+
     /// The latest session, open or completed.
     var lastSession: BibleStudySessionRecord? {
         sessions().max { $0.startedAt < $1.startedAt }

@@ -646,6 +646,15 @@ final class AppEnvironment {
         await routineNotifications.reschedule()
     }
 
+    /// Leads into the note of a running Bible Study session from any tab: the tab "Aufgaben" with the path folder › note. The note
+    /// stays as it is when it is open already.
+    func openBibleSessionNote(_ session: BibleStudySessionRecord) {
+        requestedTab = 1
+        if tasksPath.last == .note(session.noteID) { return }
+        let folderID = notes.note(id: session.noteID)?.folderID ?? notes.ensureBibleStudyFolder().id
+        tasksPath = [.notes, .notesFolder(.folder(folderID)), .note(session.noteID)]
+    }
+
     /// Shows the list of the Bible Study folder in the "Aufgaben" tab; it opens the start sheet once
     /// (`AppRouter.bibleStudyStartRequested`).
     func openBibleStudyStart() {

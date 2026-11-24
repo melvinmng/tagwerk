@@ -1139,6 +1139,16 @@
         }
       }
     },
+    "%@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        }
+      }
+    },
     "%@, %@ Kilokalorien": {
       "localizations": {
         "de": {
@@ -4932,6 +4942,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everyday activity is the rest of the activity from Health without the workouts above."
+          }
+        }
+      }
+    },
+    "Als Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As task"
           }
         }
       }
@@ -29538,6 +29558,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "since %@"
+          }
+        }
+      }
+    },
+    "seit %@ · tippen zum Weiterschreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "since %@ · tap to keep writing"
           }
         }
       }
