@@ -176,6 +176,7 @@ struct NoteEditorView: View {
             // otherwise the delayed save above would write the old text over it.
             .onChange(of: store.revision) { adoptStoredText() }
             .onDisappear {
+                NotesNavigationLog.editorDisappeared(noteID: noteID, pathHoldsNote: environment.tasksPath.contains(.note(noteID)))
                 guard isLoaded, !wasDeleted else { return }
                 saveText()
                 // The camera and Quick Look cover this page; SwiftUI may report that as the page going away. The note is
@@ -256,7 +257,15 @@ struct NoteEditorView: View {
     /// Follows a change of the stored note that did not come from this page.
     private func adoptStoredText() {
         guard isLoaded, !wasDeleted else { return }
-        let note = store.note(id: noteID)
+        // A failed read of the store is not a deleted note: the page stays and its own save writes the text again (#305).
+        let note: NoteRecord?
+        switch store.noteState(id: noteID) {
+        case .present(let record): note = record
+        case .absent: note = nil
+        case .unreadable(let error):
+            NotesNavigationLog.noteUnreadable(noteID: noteID, error: String(describing: error))
+            return
+        }
         switch NoteEditorSync.resolution(local: text, lastSaved: lastSavedText, stored: note?.text, isTrashed: note?.deletedAt != nil) {
         case .keep: break
         case .adopt(let stored):
@@ -271,6 +280,7 @@ struct NoteEditorView: View {
             lastSavedText = stored
             refreshShareURLs()
         case .close:
+            NotesNavigationLog.editorClosed(noteID: noteID, reason: note == nil ? "note missing" : "note in the trash")
             wasDeleted = true
             dismiss()
         }

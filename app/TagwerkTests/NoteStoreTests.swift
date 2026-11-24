@@ -462,4 +462,24 @@ struct NoteStoreTests {
         #expect(store.duplicate(note.id, text: "Kopie") == nil)
         #expect(store.count == 2)
     }
+
+    // MARK: Lookup that tells a missing note from an unreadable store (#305)
+
+    @Test func noteState_presentTrashedAndAbsent() throws {
+        let note = try #require(store.create(text: "Gedanke"))
+        guard case .present(let found) = store.noteState(id: note.id) else { Issue.record("expected a present note"); return }
+        #expect(found.id == note.id)
+        store.trash(note.id)
+        guard case .present(let trashed) = store.noteState(id: note.id) else { Issue.record("a trashed note is still present"); return }
+        #expect(trashed.deletedAt != nil)
+        store.delete(note.id)
+        guard case .absent = store.noteState(id: note.id) else { Issue.record("a deleted note is absent"); return }
+        guard case .absent = store.noteState(id: UUID()) else { Issue.record("an unknown id is absent"); return }
+    }
+
+    @Test func noteState_seesANoteThatIsNotSavedYet() {
+        let record = NoteRecord(text: "Neu", now: clock.now)
+        container.mainContext.insert(record)
+        guard case .present = store.noteState(id: record.id) else { Issue.record("a pending insert is present"); return }
+    }
 }

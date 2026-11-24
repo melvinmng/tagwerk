@@ -70,6 +70,27 @@ final class NoteStore {
         all().first { $0.id == id }
     }
 
+    /// What a lookup of one note found. `unreadable` is a failed read of the store, not a missing note: a page that follows its note
+    /// must not treat it as deleted (#305).
+    enum NoteState {
+        case present(NoteRecord)
+        case absent
+        case unreadable(any Error)
+    }
+
+    /// Looks the note up in the store itself and tells a missing note from a read that failed. A note in the trash is present.
+    func noteState(id: UUID) -> NoteState {
+        _ = revision
+        var descriptor = FetchDescriptor<NoteRecord>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        do {
+            if let record = try context.fetch(descriptor).first { return .present(record) }
+            return .absent
+        } catch {
+            return .unreadable(error)
+        }
+    }
+
     /// True when the note must not reach ChatGPT right now: a private kind, a note in a private folder or below one (always), or
     /// a note the user locked while it is not unlocked (`lockHoldsBack`). A locked note that is unlocked in the current lock
     /// session is available to the assistant until the app goes to the background or the lock closes (decision of 2026-11-22,

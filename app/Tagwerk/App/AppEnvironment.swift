@@ -127,7 +127,13 @@ final class AppEnvironment {
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
-    var tasksPath: [TasksDestination] = []
+    /// A change that drops an open note leaves a line in the log (`NotesNavigationLog`), whether it was a pop or a replacement.
+    var tasksPath: [TasksDestination] = [] {
+        didSet {
+            guard case .note? = oldValue.last, !tasksPath.starts(with: oldValue) else { return }
+            NotesNavigationLog.pathDroppedNote(old: oldValue.count, new: tasksPath.count, isPrefix: oldValue.starts(with: tasksPath))
+        }
+    }
     /// Pages on top of the settings (`SettingsDestination`); set by the UI test mode to open a settings page at launch.
     var settingsPath: [SettingsDestination] = []
     private let gitHubCache: SwiftDataGitHubCache
@@ -643,6 +649,14 @@ final class AppEnvironment {
     /// Shows the list of the Bible Study folder in the "Aufgaben" tab; it opens the start sheet once
     /// (`AppRouter.bibleStudyStartRequested`).
     func openBibleStudyStart() {
+        // A note that is open stays open: the request is dropped, so the start sheet does not appear when the user leaves the note
+        // later. Replacing the path under a note the user is writing in is what threw the user out of a running session (#305).
+        if case .note? = tasksPath.last {
+            _ = router.takeBibleStudyStartRequest()
+            NotesNavigationLog.startRequestKeptNote()
+            requestedTab = 1
+            return
+        }
         let folder = notes.ensureBibleStudyFolder()
         tasksPath = [.notes, .notesFolder(.folder(folder.id))]
         requestedTab = 1

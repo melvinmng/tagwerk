@@ -85,6 +85,25 @@ final class BibleStudyUITests: UITestCase {
                       "The heading of the section was not completed")
     }
 
+    /// #305: writing in a running session must never close the note. The note saves half a second after the last keystroke; every
+    /// pause longer than that writes to the store, so the page has to stay when the stored text changes underneath it.
+    func testRunningSessionStaysOpenWhileTyping() {
+        startSuggestedSession()
+        let editor = app.textViews.firstMatch
+        XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "The note of the session has no text view")
+        editor.tap()
+        for round in 1...5 {
+            editor.typeText("Gedanke \(round). ")
+            // A real wait on purpose: the autosave is a timer, no element query can express it. Longer than its delay of 500 ms,
+            // so the text is stored between the rounds.
+            RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+            XCTAssertTrue(app.buttons["bibleSession.complete"].exists, "The note closed by itself after round \(round)")
+            XCTAssertTrue(app.textViews.firstMatch.exists, "The text view is gone after round \(round)")
+        }
+        let text = app.textViews.firstMatch.value as? String ?? ""
+        XCTAssertTrue(text.contains("Gedanke 5."), "The typed text is missing: \(text)")
+    }
+
     /// Leaving the note keeps the session open: the folder list still offers to complete it.
     func testLeavingKeepsSessionOpen() {
         startSuggestedSession()
