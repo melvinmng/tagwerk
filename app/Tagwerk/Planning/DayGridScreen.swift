@@ -466,7 +466,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                     state = (task, value.location)
                 }
                 .onEnded { value in
-                    guard TaskGripDrag.hasStarted(translation: value.translation), isDropZone(value.location) else { return }
+                    // `taskDrag` is a gesture state and may be reset already here, so the drop zone must not depend on it.
+                    guard TaskGripDrag.hasStarted(translation: value.translation),
+                          isDropZone(value.location, dragging: true) else { return }
                     let minutes = canvasMinutes(atY: value.location.y)
                     drops += 1
                     Task { await model.dropTask(key: task.id.key, atMinutes: minutes, on: plan.day) }
@@ -476,13 +478,17 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     }
 
     /// Top of the panel while dragging (it has slid down to its header).
-    private var dropLimitY: CGFloat {
-        panelHeaderMinY + (taskDrag != nil && panelExpanded ? panelBodyHeight : 0)
+    private var dropLimitY: CGFloat { dropLimitY(dragging: taskDrag != nil) }
+
+    /// `dragging` is passed explicitly where the gesture state may already be reset (the end of the drag): a drag always
+    /// starts from an expanded panel, so the limit is the same as during the drag.
+    private func dropLimitY(dragging: Bool) -> CGFloat {
+        panelHeaderMinY + (dragging && panelExpanded ? panelBodyHeight : 0)
     }
 
     /// Only the visible part of the grid above the panel accepts a drop; the panel's header cancels.
-    private func isDropZone(_ point: CGPoint) -> Bool {
-        canvasFrame.contains(point) && scrollFrame.contains(point) && point.y < dropLimitY
+    private func isDropZone(_ point: CGPoint, dragging: Bool = true) -> Bool {
+        canvasFrame.contains(point) && scrollFrame.contains(point) && point.y < dropLimitY(dragging: dragging)
     }
 
     private func canvasMinutes(atY y: CGFloat) -> Int {
