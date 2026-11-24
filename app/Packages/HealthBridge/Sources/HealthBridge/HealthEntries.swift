@@ -102,6 +102,17 @@ public struct HealthWeight: Sendable, Hashable {
     }
 }
 
+/// The height as written to Health: one value that replaces the one Tagwerk wrote before.
+public struct HealthHeight: Sendable, Hashable {
+    public var centimeters: Double
+    public var date: Date
+
+    public init(centimeters: Double, date: Date) {
+        self.centimeters = centimeters
+        self.date = date
+    }
+}
+
 /// A body weight another app (a smart scale, the Health app) wrote to Health.
 public struct ForeignWeight: Sendable, Hashable, Identifiable {
     public var id: UUID
@@ -182,6 +193,9 @@ public enum HealthAccessGroup: String, Sendable, CaseIterable, Hashable {
     case foreignNutrition
     /// Reads height, date of birth and biological sex.
     case bodyProfile
+    /// Writes the height. A group of its own: the height type must not join `body`, because that would put the status of everyone
+    /// who already allowed the weight back to "should request" and stop mirroring their weights.
+    case height
 }
 
 /// Whether the system sheet of a group was shown. iOS never tells whether reading was allowed: `asked` only means the sheet is
@@ -190,6 +204,21 @@ public enum HealthGroupAccess: Sendable, Hashable {
     case unavailable
     case notAsked
     case asked
+}
+
+/// A type Tagwerk writes in a Tagwerk-specific way outside the core list; its write permission is known exactly (unlike reading).
+public enum HealthWriteTarget: Sendable, Hashable, CaseIterable {
+    case weight, height
+}
+
+/// Whether Tagwerk may write a `HealthWriteTarget`. Unlike reading, iOS reports the write permission per type.
+public enum HealthWriteAccess: Sendable, Hashable {
+    case unavailable
+    /// The system sheet was not shown for the type yet.
+    case notAsked
+    case allowed
+    /// The user refused writing; only the Health app can change that.
+    case denied
 }
 
 /// The step sum of one day as Health reports it (iPhone and Apple Watch merged by Health's source order).

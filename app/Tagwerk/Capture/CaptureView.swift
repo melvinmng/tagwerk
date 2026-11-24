@@ -149,8 +149,11 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
-                // The trends of the intake and the weight, below the cards of the day: the entry is used less often than the routine and
-                // habit cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
+                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
+                // The nutrients come before the entry to the trends (#318): the card belongs to the day, the entry is a way out of it.
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
+                // The trends of the intake and the weight, below the nutrients: the entry is used less often than the routine, habit and
+                // nutrient cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
                 Section {
                     // The value is the weight of the latest 7 days, when there is one.
                     Button { showsTrends = true } label: {
@@ -166,8 +169,6 @@ struct CaptureView: View {
                     .foregroundStyle(.primary)
                     .accessibilityIdentifier(AccessibilityID.Trend.entry)
                 }
-                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
-                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
                 drinkSection(data)
                 workoutSection(data)
@@ -405,8 +406,7 @@ private struct DaySummary: View {
     var body: some View {
         let budget = data.figures.budget
         VStack(alignment: .leading, spacing: 10) {
-            BudgetHead(budget: budget, offersAllow: model.offersActiveEnergy(for: budget), onShowActive: onShowActive,
-                       onAllow: { Task { await model.allowActiveEnergy() } })
+            BudgetHead(budget: budget, activeEnergyNotConnected: model.activeEnergyNeedsAccess(for: budget), onShowActive: onShowActive)
             // ST1: water and protein, then steps and the weekly training; single tiles share one row.
             ForEach(Array(model.summaryRows(steps: data.steps, plan: data.figures.plan).enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 16) {
@@ -550,7 +550,7 @@ private struct HealthCard: View {
             Label("Mit Apple Health verbinden", systemImage: "heart.fill")
                 .font(.headline)
                 .foregroundStyle(.pink)
-            Text("Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.")
+            Text("Tagwerk speichert Mahlzeiten, Wasser, Trainings, Gewicht und Größe zusätzlich in Health und liest Schritte, aktive Energie, Gewicht sowie Trainings der Apple Watch und anderer Apps. iOS fragt einmal nach allem. Deine Einträge bleiben auch ohne Health in Tagwerk.")
                 .font(.subheadline)
             HStack {
                 Button("Verbinden") { Task { await model.connectHealth() } }

@@ -1,9 +1,18 @@
 import Foundation
 import HealthBridge
+import Observation
 import SwiftData
 import Testing
 import TagwerkCore
 @testable import Tagwerk
+
+/// Set from the `onChange` closure of `withObservationTracking`, which is `@Sendable`.
+final class ChangeFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    var fired: Bool { lock.withLock { value } }
+    func fire() { lock.withLock { value = true } }
+}
 
 @MainActor
 struct CaptureModelTests {
@@ -95,23 +104,111 @@ struct CaptureModelTests {
         #expect(model.figures.totals.foreign?.sources == ["Yazio"])
     }
 
-    @Test func activeEnergyTile_isOfferedUntilTheGroupWasAsked_andRequestsOnce() async {
+    @Test func activeEnergyNote_showsUntilTheGroupWasAsked_andAllowingAsksOnce() async {
         let health = FakeHealthStore()
         let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
         await model.reload()
-        #expect(model.offersActiveEnergy(for: model.figures.budget))
+        #expect(model.activeEnergyNeedsAccess(for: model.figures.budget))
         await model.allowActiveEnergy()
         #expect(health.groupRequests(.activeEnergy) == 1)
-        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        #expect(!model.activeEnergyNeedsAccess(for: model.figures.budget))
         await model.reload()
         #expect(health.groupRequests(.activeEnergy) == 1, "a reload never asks again")
     }
 
-    @Test func activeEnergyTile_isHiddenWhenCreditingIsOff() async {
+    @Test func activeEnergyNote_isHiddenWhenCreditingIsOff() async {
         settings.activityCreditPercent = 0
         let model = makeWithBudget(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
         await model.reload()
-        #expect(!model.offersActiveEnergy(for: model.figures.budget))
+        #expect(!model.activeEnergyNeedsAccess(for: model.figures.budget))
+    }
+
+    // MARK: Health consent (#314)
+
+    @Test func connectHealth_asksForEverythingInOneSheet() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        #expect(model.showsHealthCard)
+        #expect(model.activeEnergyAccess == .notAsked)
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 1)
+        #expect(health.groupRequests(.activeEnergy) == 0 && health.groupRequests(.body) == 0, "no second sheet for a group")
+        #expect(health.stepsAuthorizationRequests == 0)
+        #expect(model.access == .authorized)
+        #expect(model.stepsAccess == .asked)
+        #expect(model.activeEnergyAccess == .asked)
+        #expect(model.bodyAccess == .asked)
+        #expect(model.weightWriteAccess == .allowed && model.heightWriteAccess == .allowed)
+        #expect(!model.showsHealthCard)
+    }
+
+    @Test func healthCard_doesNotComeBack_afterTheAnswer() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        await model.connectHealth()
+        for _ in 0..<3 {
+            await model.reload()
+            #expect(!model.showsHealthCard)
+        }
+        #expect(health.authorizationRequests == 1 && health.groupRequests(.activeEnergy) == 0)
+    }
+
+    @Test func concurrentConnects_showOneSheet() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        async let first: Void = model.connectHealth()
+        async let second: Void = model.connectHealth()
+        _ = await (first, second)
+        #expect(health.authorizationRequests == 1)
+    }
+
+    @Test func otherRequests_whileTheCardSheetIsOpen_areDropped() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        async let connect: Void = model.connectHealth()
+        async let energy: Void = model.allowActiveEnergy()
+        async let steps: Void = model.connectSteps()
+        _ = await (connect, energy, steps)
+        #expect(health.authorizationRequests == 1)
+        #expect(health.groupRequests(.activeEnergy) == 0, "the budget line never opens a second sheet")
+        #expect(health.stepsAuthorizationRequests == 0)
+    }
+
+    @Test func whileTheCardShows_stepsTileOffersNoSecondPrompt() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = makeWithBudget(health, plans: [plan(from: PlanDay(year: 2026, month: 11, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.showsHealthCard)
+        #expect(model.stepsTile != .allow)
+        // After "Nicht jetzt" the card is gone and the tile may offer the one entry again.
+        model.dismissHealthCard()
+        #expect(model.stepsTile == .allow)
+    }
+
+    @Test func connectedUser_withoutSteps_keepsTheStepsTileOffer() async {
+        let model = make(FakeHealthStore(access: .authorized, stepsAccess: .notAsked))
+        await model.reload()
+        #expect(!model.showsHealthCard)
+        #expect(model.stepsTile == .allow)
+    }
+
+    @Test func failingRequest_isNotSwallowed_staysRetryable() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        health.failRequests = true
+        let model = make(health)
+        await model.reload()
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 1)
+        #expect(model.access == .notDetermined, "the state stays as it was")
+        #expect(model.showsHealthCard)
+        health.failRequests = false
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 2, "the guard is released after a failure")
+        #expect(model.access == .authorized)
     }
 
     @Test func summaryRows_followThePlanOfThePage() async {
@@ -681,6 +778,81 @@ struct CaptureModelTests {
         #expect(page.dayMinutes == 60)
         // A day far outside what was read has no numbers rather than wrong ones.
         #expect(model.page(for: yesterday.adding(days: -20, calendar: calendar)).steps == nil)
+    }
+
+    // #310: the preview calls `page(for:)` on every body evaluation, so the page is built once per state of the model.
+
+    @Test func pageForNeighbourDay_isBuiltOnceUntilTheModelChanges() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let noon = yesterday.startDate(in: calendar).addingTimeInterval(12 * 3600)
+        let first = model.page(for: yesterday)
+        // A direct store edit is invisible to the cached page; every change through the model passes `refreshLocal` and rebuilds it.
+        store.addDrink(DrinkValue(id: UUID(), date: noon, milliliters: 300))
+        #expect(model.page(for: yesterday) == first, "the second call returns the cached page")
+        await model.reload()
+        #expect(model.page(for: yesterday).intake.waterMilliliters == 300, "a reload rebuilds it")
+    }
+
+    @Test func pageForNeighbourDay_followsAnEntryAddedThroughTheModel() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        await model.goBack()
+        let beforeYesterday = model.day.adding(days: -1, calendar: calendar)
+        #expect(model.page(for: beforeYesterday).intake == .empty)
+        let today = model.day.adding(days: 1, calendar: calendar)
+        let cachedToday = model.page(for: today)
+        await model.addWater(250, at: model.day.startDate(in: calendar).addingTimeInterval(9 * 3600))
+        #expect(model.page(for: today) == cachedToday, "an entry of the shown day leaves the neighbour as it was")
+        #expect(model.page(for: model.day) == model.current)
+        #expect(model.current.intake.waterMilliliters == 250)
+    }
+
+    /// The neighbour prefetch runs after `reload()` has returned; a page built in between must not stay cached without its numbers.
+    @Test func pageForNeighbourDay_isRebuiltWhenThePrefetchArrives() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let clock = self.clock
+        let mirror = HealthMirror(store: store, health: health, now: { clock.now })
+        let model = CaptureModel(store: store, mirror: mirror, health: health, settings: settings, calendar: calendar,
+                                 now: { clock.now }, waitsForHealth: false)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let early = model.page(for: yesterday)
+        await model.waitForPrefetch()
+        #expect(early.steps == nil, "the prefetch had not arrived when the first page was built")
+        #expect(model.page(for: yesterday).steps == 8240)
+    }
+
+    /// The preview is rendered again when the prefetch drops the cached pages, although no other observed value changes.
+    @Test func pageForNeighbourDay_announcesItsInvalidationToTheView() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let clock = self.clock
+        let mirror = HealthMirror(store: store, health: health, now: { clock.now })
+        let model = CaptureModel(store: store, mirror: mirror, health: health, settings: settings, calendar: calendar,
+                                 now: { clock.now }, waitsForHealth: false)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let flag = ChangeFlag()
+        withObservationTracking { _ = model.page(for: yesterday) } onChange: { flag.fire() }
+        await model.waitForPrefetch()
+        #expect(flag.fired, "a view that shows the preview must be rendered again when the neighbour numbers arrive")
+    }
+
+    @Test func reload_readsTheIndependentStatusesAndStillFillsEverything() async {
+        let health = FakeHealthStore(access: .authorized, stepsAccess: .asked)
+        health.steps = [steps(6412)]
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        health.setWriteAccess(.denied, for: .weight)
+        let model = make(health)
+        await model.reload()
+        #expect(model.access == .authorized && model.stepsAccess == .asked)
+        #expect(model.activeEnergyAccess == .asked && model.bodyAccess == .notAsked)
+        #expect(model.weightWriteAccess == .denied && model.heightWriteAccess == .notAsked)
+        #expect(model.healthConnected)
+        #expect(model.steps == 6412 && model.todaySteps == 6412)
     }
 
     @Test func show_withReadNeighbour_hasItsHealthNumbersAtOnce() async {

@@ -209,10 +209,24 @@ struct ProductLookupTests {
         let lookup = make()
         await #expect(throws: ProductLookupError.serverBusy) { try await lookup.search("skyr", page: 1) }
         transport.enqueue("denied", status: 403)
-        await #expect(throws: ProductLookupError.serverBusy) { try await lookup.search("quark", page: 1) }
+        await #expect(throws: ProductLookupError.blocked) { try await lookup.search("quark", page: 1) }
+        transport.enqueue("slow down", status: 429)
+        await #expect(throws: ProductLookupError.tooManyRequests) { try await lookup.search("joghurt", page: 1) }
         transport.enqueue("nope", status: 404)
         await #expect(throws: ProductLookupError.failed) { try await lookup.search("milch", page: 1) }
-        #expect(transport.requests.count == 3, "a failed request is not repeated by itself")
+        #expect(transport.requests.count == 4, "a failed request is not repeated by itself")
+    }
+
+    @Test func statusMapping_tellsRefusalLimitAndOutageApart() {
+        #expect(ProductLookup.error(forStatus: 200) == nil)
+        #expect(ProductLookup.error(forStatus: 204) == nil)
+        #expect(ProductLookup.error(forStatus: 403) == .blocked)
+        #expect(ProductLookup.error(forStatus: 429) == .tooManyRequests)
+        #expect(ProductLookup.error(forStatus: 500) == .serverBusy)
+        #expect(ProductLookup.error(forStatus: 503) == .serverBusy)
+        #expect(ProductLookup.error(forStatus: 404) == .failed)
+        let messages = [ProductLookupError.blocked, .tooManyRequests, .serverBusy].map(\.message)
+        #expect(Set(messages).count == 3, "each cause has its own message")
     }
 
     @Test func unreadableAnswer_isAFailure_andNotRemembered() async {

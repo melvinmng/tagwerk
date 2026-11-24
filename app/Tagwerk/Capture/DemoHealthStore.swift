@@ -23,6 +23,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
         lock.withLock { askedGroups.contains(group) ? .asked : .notAsked }
     }
     func requestAuthorization(for group: HealthAccessGroup) async throws { lock.withLock { _ = askedGroups.insert(group) } }
+    func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess { .allowed }
     func stepsAccess() async -> StepsAccess { lock.withLock { stepsAsked ? .asked : .notAsked } }
     func requestStepsAuthorization() async throws { lock.withLock { stepsAsked = true } }
 
@@ -48,6 +49,7 @@ final class DemoHealthStore: HealthStoring, @unchecked Sendable {
     func save(_ drink: HealthDrink) async throws -> Bool { true }
     func save(_ workout: HealthWorkout) async throws -> Bool { true }
     func save(_ weight: HealthWeight) async throws -> Bool { true }
+    func saveHeight(_ height: HealthHeight) async throws -> Bool { true }
     func foreignWeights(in interval: DateInterval) async throws -> [ForeignWeight] { [] }
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool { true }
 

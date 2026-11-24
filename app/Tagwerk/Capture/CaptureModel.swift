@@ -1,6 +1,7 @@
 import Foundation
 import HealthBridge
 import Observation
+import OSLog
 import TagwerkCore
 
 /// Everything the page of one day shows from the model: its entries, the sums against the goals, the training time
@@ -26,8 +27,8 @@ struct CaptureDay: Equatable {
 /// State of the "Erfassen" tab (mockup E1a, ST1): one day with totals against the goals, own entries, Health workouts
 /// and steps.
 ///
-/// Health is only read after the user was asked once; permission is requested only from `connectHealth()` and
-/// `allowSteps()`. Steps stay in memory: no SwiftData, no log; only today's count reaches the plan header and,
+/// Health is only read after the user was asked once. The Health card asks for everything in one system sheet
+/// (`connectHealth()`); every other request goes through the same guard, so two sheets never compete. Steps stay in memory: no SwiftData, no log; only today's count reaches the plan header and,
 /// with the nutrition switch, the widget.
 @MainActor
 @Observable
@@ -88,6 +89,12 @@ final class CaptureModel {
     private(set) var bodyAccess: HealthGroupAccess?
     /// Whether Health is connected at all (the core group was asked); only then a weight asks for its own group.
     private(set) var healthConnected = false
+    /// Write permission for the weight and the height; `nil` until the first query. A refusal is shown in the settings.
+    private(set) var weightWriteAccess: HealthWriteAccess?
+    private(set) var heightWriteAccess: HealthWriteAccess?
+    @ObservationIgnored private let logger = Logger(subsystem: "local.tagwerk", category: "health")
+    /// Whether a system sheet of Health is being requested right now; a second request in that time is dropped.
+    @ObservationIgnored private var healthRequestInFlight = false
     /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
     private(set) var steps: Int?
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
@@ -99,6 +106,15 @@ final class CaptureModel {
     /// Health workouts and steps of the weeks around the shown day, read after each reload. A day change inside this
     /// window shows them at once, so the neighbour page and the page after it carry the same numbers.
     @ObservationIgnored private var healthCache: HealthCache?
+    /// The read of the neighbouring weeks runs after `reload()` has returned, so the day is on screen without waiting for it. A newer
+    /// reload cancels it.
+    @ObservationIgnored private var prefetch: Task<Void, Never>?
+    /// The neighbour pages built since the model last changed: the preview asks for them on every body evaluation, and each one is a
+    /// set of SwiftData fetches. Emptied by every change (`refreshLocal`) and by the arrival of the prefetch.
+    @ObservationIgnored private var pageCache: [PlanDay: CaptureDay] = [:]
+    /// Bumped whenever the neighbour pages are dropped. `page(for:)` reads it, so a view that shows a preview is rendered again when the
+    /// pages change without any other observed value changing (the neighbour numbers arriving from the prefetch).
+    private var pageRevision = 0
 
     struct HealthCache {
         /// The weeks of the day before and the day after the shown day.
@@ -117,12 +133,16 @@ final class CaptureModel {
 
     /// Tests wait for each Health run, so no run outlives the test's store.
     @ObservationIgnored private let waitsForHealth: Bool
+    /// Whether `reload()` waits for the read of the neighbouring weeks; defaults to `waitsForHealth`.
+    @ObservationIgnored private let waitsForPrefetch: Bool
 
     /// `budgets` defaults to a service without stored plans and Health values: the single goals of the settings and the own
     /// entries stand in (previews, tests that do not care for the budget).
     init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
-         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false) {
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false,
+         waitsForPrefetch: Bool? = nil) {
         self.waitsForHealth = waitsForHealth
+        self.waitsForPrefetch = waitsForPrefetch ?? waitsForHealth
         self.store = store
         self.mirror = mirror
         self.health = health
@@ -166,7 +186,8 @@ final class CaptureModel {
     func stepsTile(for steps: Int?) -> StepsTile {
         switch stepsAccess {
         case .unavailable: .hidden
-        case .notAsked: .allow
+        // The Health card asks for the steps as well; while it is shown, the tile must not offer a second prompt.
+        case .notAsked: showsHealthCard ? .value(steps) : .allow
         case .asked, nil: .value(steps)
         }
     }
@@ -208,31 +229,41 @@ final class CaptureModel {
         lastToday = today
         if refreshingLocalFirst { refreshLocal() }
         let requestedDay = day
-        let access = await health.access()
-        self.access = access
         let weekStart = IntakeRules.weekStart(containing: day.startDate(in: calendar), calendar: calendar)
         let weekEnd = PlanDay(date: weekStart, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
         let week = DateInterval(start: weekStart, end: weekEnd)
-        var foreignOfWeek: [WorkoutValue] = []
-        if access.wasAsked {
-            let foreign = (try? await health.foreignWorkouts(in: week)) ?? []
-            foreignOfWeek = foreign.map(Self.workoutValue)
-        }
-        let stepsAccess = await health.stepsAccess()
+        // The statuses do not depend on each other: asked together instead of one HealthKit call after the other on the main actor.
+        let health = self.health
+        async let accessRead = health.access()
+        async let stepsAccessRead = health.stepsAccess()
+        async let activeEnergyRead = health.groupAccess(.activeEnergy)
+        async let furtherNutrientsRead = health.groupAccess(.moreNutrients)
+        async let foreignNutritionRead = health.groupAccess(.foreignNutrition)
+        async let bodyRead = health.groupAccess(.body)
+        async let weightWriteRead = health.writeAccess(for: .weight)
+        async let heightWriteRead = health.writeAccess(for: .height)
+        let access = await accessRead
+        let stepsAccess = await stepsAccessRead
+        // The reads that follow depend on the statuses; the workouts of the week and the steps of the day and of today go together.
+        async let foreignRead = foreignWorkouts(in: week, access: access)
+        async let stepsRead = readSteps(requestedDay: requestedDay, today: today, stepsAccess: stepsAccess)
+        self.access = access
         self.stepsAccess = stepsAccess
-        self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
-        self.furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
-        self.foreignNutritionAccess = await health.groupAccess(.foreignNutrition)
-        self.bodyAccess = await health.groupAccess(.body)
+        self.activeEnergyAccess = await activeEnergyRead
+        self.furtherNutrientsAccess = await furtherNutrientsRead
+        self.foreignNutritionAccess = await foreignNutritionRead
+        self.bodyAccess = await bodyRead
+        self.weightWriteAccess = await weightWriteRead
+        self.heightWriteAccess = await heightWriteRead
         self.healthConnected = access.wasAsked
+        let foreignOfWeek = await foreignRead
+        let stepReads = await stepsRead
         var stepsOfDay: Int?
-        if stepsAccess == .asked {
+        if stepReads.asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
-            let readOfDay = await dailySteps(on: requestedDay)
-            stepsOfDay = readOfDay ?? (shownBefore == requestedDay ? stepsBefore : nil)
+            stepsOfDay = stepReads.day ?? (shownBefore == requestedDay ? stepsBefore : nil)
             // Today's count is current even when a later navigation discards the displayed day's result below.
-            let readOfToday = requestedDay == today ? readOfDay : await dailySteps(on: today)
-            let stepsOfToday = readOfToday ?? todayStepsBefore
+            let stepsOfToday = stepReads.today ?? todayStepsBefore
             todayStepsValue = stepsOfToday.map { DaySteps(day: today, count: $0) }
         } else {
             todayStepsValue = nil
@@ -246,7 +277,40 @@ final class CaptureModel {
         guard day == requestedDay else { return }
         refreshLocal(week: week)
         await refreshWeightOverview()
-        await prefetchNeighbourHealth()
+        prefetch?.cancel()
+        let run = Task { await prefetchNeighbourHealth() }
+        prefetch = run
+        // Tests wait for it; the app does not: the page is complete without the neighbours' Health numbers.
+        if waitsForPrefetch { await run.value }
+    }
+
+    /// Waits for the read of the neighbouring weeks that the last reload started (tests).
+    func waitForPrefetch() async {
+        await prefetch?.value
+    }
+
+    /// The Health workouts of the week as values; empty when Health was not asked or the read fails.
+    private func foreignWorkouts(in week: DateInterval, access: HealthAccess) async -> [WorkoutValue] {
+        guard access.wasAsked else { return [] }
+        return ((try? await health.foreignWorkouts(in: week)) ?? []).map(Self.workoutValue)
+    }
+
+    /// What the step reads of a reload brought. `day` and `today` are `.some(nil)` for "no statistics" and `nil` for a failed read.
+    private struct StepReads {
+        var asked: Bool
+        var day: Int??
+        var today: Int??
+    }
+
+    /// The steps of the shown day and of today, read together; nothing is read before the step sheet was shown. When the shown day
+    /// is today, one read serves both.
+    private func readSteps(requestedDay: PlanDay, today: PlanDay, stepsAccess: StepsAccess) async -> StepReads {
+        guard stepsAccess == .asked else { return StepReads(asked: false, day: nil, today: nil) }
+        async let dayRead = dailySteps(on: requestedDay)
+        async let otherRead: Int?? = requestedDay == today ? nil : dailySteps(on: today)
+        let readOfDay = await dayRead
+        let readOfToday = requestedDay == today ? readOfDay : await otherRead
+        return StepReads(asked: true, day: readOfDay, today: readOfToday)
     }
 
     /// The weight figures from own entries and, once the group "body" was asked, the measurements of other apps.
@@ -285,7 +349,11 @@ final class CaptureModel {
         }
         guard !Task.isCancelled else { return }
         healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
+        // The neighbour pages built before this point lack these numbers; drop them now and once more after the budgets changed.
+        invalidatePages()
         await budgets.refreshHealth(in: interval)
+        guard !Task.isCancelled else { return }
+        invalidatePages()
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -297,7 +365,13 @@ final class CaptureModel {
         return .some(count)
     }
 
+    private func invalidatePages() {
+        pageCache.removeAll()
+        pageRevision += 1
+    }
+
     private func refreshLocal(week: DateInterval? = nil) {
+        invalidatePages()
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let weekInterval = week ?? {
@@ -325,7 +399,15 @@ final class CaptureModel {
     /// The page of another day for the preview beside the shown one: the local entries and, from the Health cache,
     /// the Health workouts and the steps. Reads no Health and changes nothing.
     func page(for target: PlanDay) -> CaptureDay {
+        _ = pageRevision
         if target == day { return current }
+        if let cached = pageCache[target] { return cached }
+        let page = buildPage(for: target)
+        pageCache[target] = page
+        return page
+    }
+
+    private func buildPage(for target: PlanDay) -> CaptureDay {
         let dayStart = target.startDate(in: calendar)
         let dayEnd = target.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let weekStart = IntakeRules.weekStart(containing: dayStart, calendar: calendar)
@@ -491,9 +573,10 @@ final class CaptureModel {
     private func requestBodyAccessIfDue(force: Bool = false) async {
         let connected = await health.access().wasAsked
         if (force || connected), await health.groupAccess(.body) == .notAsked {
-            try? await health.requestAuthorization(for: .body)
+            await requestingHealth("body") { try await $0.requestAuthorization(for: .body) }
         }
         bodyAccess = await health.groupAccess(.body)
+        weightWriteAccess = await health.writeAccess(for: .weight)
     }
 
     func delete(_ id: UUID) async {
@@ -542,10 +625,29 @@ final class CaptureModel {
 
     // MARK: Health
 
+    /// The one consent of the Health card: a single system sheet for everything the app needs (core types, steps, active energy,
+    /// weight and height). Does nothing while another Health sheet is being requested.
     func connectHealth() async {
-        try? await health.requestAuthorization()
+        guard await requestingHealth("connect", { try await $0.requestAuthorization() }) else { return }
         await reload()
         await mirror.sync()
+    }
+
+    /// Runs one request of a Health sheet. Only one runs at a time: a second call while the first is open is dropped, so the two
+    /// sheets of the old cards can never appear together. A failing request is logged (error domain and code, never values) and
+    /// leaves the state as it was. Returns whether this call ran its request.
+    @discardableResult
+    private func requestingHealth(_ scope: String, _ request: (any HealthStoring) async throws -> Void) async -> Bool {
+        guard !healthRequestInFlight else { return false }
+        healthRequestInFlight = true
+        defer { healthRequestInFlight = false }
+        do {
+            try await request(health)
+        } catch {
+            let nsError = error as NSError
+            logger.error("Health request \(scope, privacy: .public) failed: \(nsError.domain, privacy: .public) \(nsError.code)")
+        }
+        return true
     }
 
     /// "In Health erlauben" in the steps tile: before Health was ever connected, the full sheet (one sheet for
@@ -558,15 +660,15 @@ final class CaptureModel {
         }
     }
 
-    /// The budget line offers "In Health erlauben" for the active energy until its sheet was shown; with crediting switched off
-    /// (share 0) there is nothing to offer.
-    func offersActiveEnergy(for budget: EnergyBudget) -> Bool {
+    /// The budget line says that the active energy is not connected; with crediting switched off (share 0) there is nothing to say.
+    /// Asking happens in the Health card or in the settings, never at the budget line.
+    func activeEnergyNeedsAccess(for budget: EnergyBudget) -> Bool {
         activeEnergyAccess == .notAsked && budget.creditPercent > 0
     }
 
-    /// "In Health erlauben" at the budget line: the sheet for the active energy only, which leaves the other permissions alone.
+    /// "Aktive Energie lesen" in the settings: the sheet for the active energy only, which leaves the other permissions alone.
     func allowActiveEnergy() async {
-        try? await health.requestAuthorization(for: .activeEnergy)
+        guard await requestingHealth("activeEnergy", { try await $0.requestAuthorization(for: .activeEnergy) }) else { return }
         await reload()
     }
 
@@ -574,7 +676,7 @@ final class CaptureModel {
     /// then mirrors the meals that carry such values again (the mirror skips types that stay denied).
     func allowFurtherNutrients() async {
         if await health.groupAccess(.moreNutrients) == .notAsked {
-            try? await health.requestAuthorization(for: .moreNutrients)
+            await requestingHealth("moreNutrients") { try await $0.requestAuthorization(for: .moreNutrients) }
         }
         furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
         await mirror.furtherNutrientsGranted()
@@ -585,13 +687,21 @@ final class CaptureModel {
     func setCountsForeignNutrition(_ enabled: Bool) async {
         settings.countsForeignNutrition = enabled
         if enabled, await health.groupAccess(.foreignNutrition) == .notAsked {
-            try? await health.requestAuthorization(for: .foreignNutrition)
+            await requestingHealth("foreignNutrition") { try await $0.requestAuthorization(for: .foreignNutrition) }
         }
         await reload()
     }
 
+    /// "Größe in Health" in the settings: asks for the write permission of the height once.
+    func allowHeightWriting() async {
+        if await health.groupAccess(.height) == .notAsked {
+            await requestingHealth("height") { try await $0.requestAuthorization(for: .height) }
+        }
+        heightWriteAccess = await health.writeAccess(for: .height)
+    }
+
     func connectSteps() async {
-        try? await health.requestStepsAuthorization()
+        guard await requestingHealth("steps", { try await $0.requestStepsAuthorization() }) else { return }
         await reload()
     }
 

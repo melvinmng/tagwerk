@@ -24,6 +24,26 @@ struct BodyProfileTests {
         #expect(BodyProfile.resolved(health: .empty, typed: .empty).missingFields == [.height, .birthYear, .sex])
     }
 
+    @Test func resolved_overriddenField_prefersTheTypedValueOverHealth() {
+        let health = BodyProfileValues(heightCm: 180, birthYear: 1994, sex: .male)
+        let typed = BodyProfileValues(heightCm: 181, birthYear: 1995, sex: .female)
+        let profile = BodyProfile.resolved(health: health, typed: typed, overridden: [.birthYear, .sex])
+        #expect(profile.height == BodyValue(value: 180, source: .health), "a field without an override keeps Health first")
+        #expect(profile.birthYear == BodyValue(value: 1995, source: .typed))
+        #expect(profile.sex == BodyValue(value: .female, source: .typed))
+    }
+
+    @Test func resolved_overrideWithoutATypedValue_fallsBackToHealth() {
+        let profile = BodyProfile.resolved(health: BodyProfileValues(birthYear: 1994), typed: .empty, overridden: [.birthYear])
+        #expect(profile.birthYear == BodyValue(value: 1994, source: .health))
+    }
+
+    @Test func resolved_staleTypedValueWithoutOverride_staysAFallbackOnly() {
+        // A value typed while Health was silent must not come back once Health delivers: only an override marker wins.
+        let profile = BodyProfile.resolved(health: BodyProfileValues(birthYear: 1994), typed: BodyProfileValues(birthYear: 1980))
+        #expect(profile.birthYear == BodyValue(value: 1994, source: .health))
+    }
+
     @Test func updated_silentAnswerKeepsLastValue() {
         let stored = BodyProfileValues(heightCm: 181, birthYear: 1990, sex: .male)
         #expect(stored.updated(with: .empty) == stored)

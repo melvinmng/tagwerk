@@ -5,10 +5,10 @@ import TagwerkCore
 /// element for VoiceOver with a spoken sentence; a tap on it opens the breakdown of the active energy.
 struct BudgetHead: View {
     let budget: EnergyBudget
-    /// The permission for the active energy was not asked yet: the line offers "In Health erlauben".
-    let offersAllow: Bool
+    /// The permission for the active energy was not asked yet: the line says so. It does not ask itself; the Health card and the
+    /// settings do, so two prompts never compete.
+    let activeEnergyNotConnected: Bool
     let onShowActive: () -> Void
-    let onAllow: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private struct Term: Identifiable {
@@ -85,17 +85,13 @@ struct BudgetHead: View {
         }
     }
 
-    /// "In Health erlauben" while the active energy was not asked; a note when Health gives no value.
+    /// A note while the active energy was not asked or when Health gives no value.
     @ViewBuilder
     private var footnote: some View {
-        if offersAllow {
-            Button(action: onAllow) {
-                Text("Aktivität in Health erlauben \(Image(systemName: "chevron.right"))")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Aktivität in Health erlauben")
-            .accessibilityIdentifier(AccessibilityID.Capture.allowActiveEnergy)
+        if activeEnergyNotConnected {
+            Text("Aktivität nicht verbunden. Erlauben unter Einstellungen › Erfassen.")
+                .font(.caption).foregroundStyle(.secondaryText)
+                .accessibilityIdentifier(AccessibilityID.Capture.activeEnergyNotConnected)
         } else if budget.creditPercent > 0, !budget.active.isFromHealth {
             Text(budget.active.unsyncedOwnKcal > 0
                  ? "Health liefert keine Aktivität. Es zählen nur Trainings aus Tagwerk."

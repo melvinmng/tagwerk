@@ -1027,32 +1027,12 @@
         }
       }
     },
-    "%@ · aus Health": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · from Health"
-          }
-        }
-      }
-    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · dictated"
-          }
-        }
-      }
-    },
-    "%@ · eingetragen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · entered"
           }
         }
       }
@@ -2467,16 +2447,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
-          }
-        }
-      }
-    },
-    "%lld cm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld cm"
           }
         }
       }
@@ -4377,6 +4347,16 @@
         }
       }
     },
+    "Aktive Energie lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read active energy"
+          }
+        }
+      }
+    },
     "Aktivität": {
       "localizations": {
         "en": {
@@ -4397,22 +4377,12 @@
         }
       }
     },
-    "Aktivität in Health erlauben": {
+    "Aktivität nicht verbunden. Erlauben unter Einstellungen › Erfassen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow activity in Health"
-          }
-        }
-      }
-    },
-    "Aktivität in Health erlauben %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow activity in Health %@"
+            "value": "Activity is not connected. Allow it under Settings › Capture."
           }
         }
       }
@@ -5766,6 +5736,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Reminders"
+          }
+        }
+      }
+    },
+    "Apple Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health"
           }
         }
       }
@@ -13111,6 +13091,16 @@
         }
       }
     },
+    "Geburtsdatum und Geschlecht in Health ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change date of birth and sex in Health"
+          }
+        }
+      }
+    },
     "Geburtsjahr": {
       "localizations": {
         "en": {
@@ -13764,22 +13754,22 @@
         }
       }
     },
-    "Gewicht in Health": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weight in Health"
-          }
-        }
-      }
-    },
     "Gewicht je Stück": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Weight per piece"
+          }
+        }
+      }
+    },
+    "Gewicht schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write weight"
           }
         }
       }
@@ -14363,12 +14353,22 @@
         }
       }
     },
-    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": {
+    "Größe schreiben": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback."
+            "value": "Write height"
+          }
+        }
+      }
+    },
+    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height, age and sex are only calculated on this iPhone: Tagwerk uses them to check goal suggestions. Stored are the height in whole centimetres, the birth year and the sex of the formula, never the date of birth. Tagwerk writes the height to Health. Only the Health app can change date of birth and sex; iOS does not allow apps to: if you enter something different here, Tagwerk calculates with it and Health stays unchanged. Clear the field to use the value from Health again."
           }
         }
       }
@@ -14640,6 +14640,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meals you’ve logged before appear here."
+          }
+        }
+      }
+    },
+    "Hier steht, was Tagwerk in Health schreiben darf. „Nicht erlaubt“ ändert nur die Health-App, unter Profil › Apps › Tagwerk; solange es fehlt, bleibt der Eintrag in Tagwerk und wird nicht nach Health übertragen. Ob das Lesen erlaubt ist, zeigt iOS nicht an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shows what Tagwerk may write to Health. A refusal can only be changed in the Health app under Profile › Apps › Tagwerk; until then the entry stays in Tagwerk and is not transferred to Health. iOS does not show whether reading is allowed."
           }
         }
       }
@@ -19145,6 +19155,16 @@
         }
       }
     },
+    "Nicht erlaubt · Health öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not allowed · Open Health"
+          }
+        }
+      }
+    },
     "Nicht gesichert": {
       "localizations": {
         "en": {
@@ -20412,6 +20432,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Online results open on GitHub. To edit an issue in Tagwerk it must be assigned to you and belong to a project."
+          }
+        }
+      }
+    },
+    "Open Food Facts bekommt von deinem Anschluss gerade zu viele Anfragen. Warte etwa eine Minute und versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts is receiving too many requests from your connection. Wait about a minute and try again."
+          }
+        }
+      }
+    },
+    "Open Food Facts hat die Anfrage abgelehnt (Fehler 403). Das betrifft meist die Netzadresse oder die Kennung der App, nicht deine Eingabe. Versuch es später oder in einem anderen Netz noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts refused the request (error 403). This usually concerns the network address or the app's identification, not your input. Try again later or on a different network."
           }
         }
       }
@@ -23939,12 +23979,12 @@
         }
       }
     },
-    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
+    "Tagwerk speichert Mahlzeiten, Wasser, Trainings, Gewicht und Größe zusätzlich in Health und liest Schritte, aktive Energie, Gewicht sowie Trainings der Apple Watch und anderer Apps. iOS fragt einmal nach allem. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk also saves meals, water and workouts to Health and shows your steps and workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
+            "value": "Tagwerk also saves meals, water, workouts, weight and height to Health and reads steps, active energy, weight and workouts from Apple Watch and other apps. iOS asks once for everything. Your entries stay in Tagwerk even without Health."
           }
         }
       }
@@ -28322,6 +28362,16 @@
         }
       }
     },
+    "aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from Health"
+          }
+        }
+      }
+    },
     "ausgewählt": {
       "localizations": {
         "en": {
@@ -28475,6 +28525,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "logged"
+          }
+        }
+      }
+    },
+    "eingetragen · Health sagt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · Health says %@"
+          }
+        }
+      }
+    },
+    "eingetragen · nicht nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · not written to Health"
+          }
+        }
+      }
+    },
+    "eingetragen · wird nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · written to Health"
           }
         }
       }
@@ -29406,6 +29486,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not scheduled yet"
+          }
+        }
+      }
+    },
+    "noch nicht gefragt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not asked yet"
           }
         }
       }
