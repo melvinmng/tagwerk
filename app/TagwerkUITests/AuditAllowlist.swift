@@ -240,7 +240,7 @@ enum AuditAllowlist {
             "(?s)Eine Notiz mit den Abschnitten .*", "(?s)Notizen liegen nur auf diesem iPhone\\..*",
             "(?s)Die gewählte Liste erscheint als Einkaufsliste\\..*", "(?s)Sendet auf dein Tippen die Namen .*",
             "(?s)„Rezept hinzufügen“ sendet .*", "Vorrat & Konserven", "\\d+ h \\d+ min", "Spracheingabe", "Titel", "Zutaten", "Zubereitung",
-            "Inhalte", "Stimme", "Ziele", "Aktivität", "Nährwerte", "Liste", "Kategorien",
+            "Inhalte", "Stimme", "Ziele", "Aktivität", "Nährwerte", "Apple Health", "Liste", "Kategorien",
             "(?s)(Tagwerk wandelt Sprache|Beim Diktieren und in der Einkaufsliste|Mikrofon, Sprachpakete|Die Sprache der Oberfläche|Die Vorgaben sind Platzhalter|Zum Schätzen sendet|Ein Teil der Aktivitätsenergie|Ballaststoffe und Zucker sind immer dabei).*",
             "Die drei Schnellknöpfe im Tab .*", "\\d+ von \\d+ Artikeln · .*", "(?s)Portionen: \\d+\\nZutaten.*", "wird mit ChatGPT gelesen",
             "Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an\\.",
