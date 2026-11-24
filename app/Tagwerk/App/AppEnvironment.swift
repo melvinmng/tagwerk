@@ -1027,14 +1027,14 @@ final class AppEnvironment {
     }
 
     /// The habit sources of the routines (a closed wrap-up, a written journal entry, a completed Bible Study session) live in
-    /// other stores. Every write there bumps a `revision`; the habits read their facts again, so the rows and the counter follow
+    /// other stores. Every write there bumps a `revision` (the notes bump `habitRevision`, so the autosave of a free note does not run this); the habits read their facts again, so the rows and the counter follow
     /// without opening the tab or relaunching.
     func startHabitSourceUpdates() {
         guard habitSourceUpdates == nil else { return }
         let changes = Observations { @MainActor [weak self] () -> Int in
             guard let self else { return 0 }
             var hasher = Hasher()
-            hasher.combine(notes.revision)
+            hasher.combine(notes.habitRevision)
             hasher.combine(routineStore.revision)
             return hasher.finalize()
         }

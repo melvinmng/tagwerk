@@ -24,6 +24,15 @@ final class NoteStore {
     @ObservationIgnored let now: () -> Date
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
+    /// Bumped by every write that can change what the habits read (a journal entry, a Bible Study session, a folder), but not by the
+    /// autosave of a free note or of a Bible Study note: the habits do not read their text, and the refresh writes the widget snapshot.
+    private(set) var habitRevision = 0
+
+    /// What the last read of the store returned; invalidated by every save, also one of another writer on this context.
+    @ObservationIgnored let notesCache = NoteFetchCache<NoteRecord>()
+    @ObservationIgnored let foldersCache = NoteFetchCache<NoteFolderRecord>()
+    @ObservationIgnored let sessionsCache = NoteFetchCache<BibleStudySessionRecord>()
+    @ObservationIgnored nonisolated(unsafe) private var didSaveObserver: (any NSObjectProtocol)?
 
     /// Called after a Bible Study session was started or completed: the reminder names the next verse and drops the day of a
     /// completed session, so the app plans it again (BS7). Set by the app environment; the store knows nothing of notifications.
@@ -37,6 +46,25 @@ final class NoteStore {
         self.context = context
         self.now = now
         self.attachments = attachments
+        // Code that saves the context without the store (the backup restore) leaves the caches stale; its save invalidates them.
+        didSaveObserver = NotificationCenter.default.addObserver(forName: ModelContext.didSave, object: nil, queue: nil) { [weak self] _ in
+            if Thread.isMainThread {
+                MainActor.assumeIsolated { self?.invalidateCaches() }
+            } else {
+                Task { @MainActor in self?.invalidateCaches() }
+            }
+        }
+    }
+
+    deinit {
+        if let didSaveObserver { NotificationCenter.default.removeObserver(didSaveObserver) }
+    }
+
+    /// The next read of notes, folders and sessions goes to the store.
+    func invalidateCaches() {
+        notesCache.invalidate()
+        foldersCache.invalidate()
+        sessionsCache.invalidate()
     }
 
     // MARK: Reading
@@ -195,7 +223,8 @@ final class NoteStore {
         guard let record = note(id: id), record.text != text else { return }
         record.text = text
         record.updatedAt = now()
-        save()
+        // The autosave of a free note or a Bible Study note changes nothing the habits read; a journal entry does (written or not).
+        save(affectsHabits: record.kind != .free && record.kind != .bibleStudy)
     }
 
     /// Pinning is not a change of the note: the change date stays.
@@ -294,7 +323,7 @@ final class NoteStore {
 
     func folders() -> [NoteFolderRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<NoteFolderRecord>())) ?? []
+        return foldersCache.fetch(in: context)
     }
 
     func folder(id: UUID) -> NoteFolderRecord? {
@@ -402,12 +431,15 @@ final class NoteStore {
 
     private func all() -> [NoteRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<NoteRecord>())) ?? []
+        return notesCache.fetch(in: context)
     }
 
-    /// Saves and bumps `revision`; internal so the routines' extension can write through the same path.
-    func save() {
+    /// Saves and bumps `revision`; internal so the routines' extension can write through the same path. `affectsHabits: false` leaves
+    /// `habitRevision` alone (see there).
+    func save(affectsHabits: Bool = true) {
         try? context.save()
+        invalidateCaches()
         revision += 1
+        if affectsHabits { habitRevision += 1 }
     }
 }

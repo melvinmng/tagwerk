@@ -33,7 +33,7 @@ extension NoteStore {
 
     func sessions() -> [BibleStudySessionRecord] {
         _ = revision
-        return (try? context.fetch(FetchDescriptor<BibleStudySessionRecord>())) ?? []
+        return sessionsCache.fetch(in: context)
     }
 
     /// The open session of a note, if there is one.
