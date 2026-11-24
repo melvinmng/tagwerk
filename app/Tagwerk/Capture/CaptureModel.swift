@@ -112,6 +112,9 @@ final class CaptureModel {
     /// The neighbour pages built since the model last changed: the preview asks for them on every body evaluation, and each one is a
     /// set of SwiftData fetches. Emptied by every change (`refreshLocal`) and by the arrival of the prefetch.
     @ObservationIgnored private var pageCache: [PlanDay: CaptureDay] = [:]
+    /// Bumped whenever the neighbour pages are dropped. `page(for:)` reads it, so a view that shows a preview is rendered again when the
+    /// pages change without any other observed value changing (the neighbour numbers arriving from the prefetch).
+    private var pageRevision = 0
 
     struct HealthCache {
         /// The weeks of the day before and the day after the shown day.
@@ -346,10 +349,11 @@ final class CaptureModel {
         }
         guard !Task.isCancelled else { return }
         healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
+        // The neighbour pages built before this point lack these numbers; drop them now and once more after the budgets changed.
+        invalidatePages()
         await budgets.refreshHealth(in: interval)
         guard !Task.isCancelled else { return }
-        // The neighbour pages built before this point lack these numbers.
-        pageCache.removeAll()
+        invalidatePages()
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -361,8 +365,13 @@ final class CaptureModel {
         return .some(count)
     }
 
-    private func refreshLocal(week: DateInterval? = nil) {
+    private func invalidatePages() {
         pageCache.removeAll()
+        pageRevision += 1
+    }
+
+    private func refreshLocal(week: DateInterval? = nil) {
+        invalidatePages()
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let weekInterval = week ?? {
@@ -390,6 +399,7 @@ final class CaptureModel {
     /// The page of another day for the preview beside the shown one: the local entries and, from the Health cache,
     /// the Health workouts and the steps. Reads no Health and changes nothing.
     func page(for target: PlanDay) -> CaptureDay {
+        _ = pageRevision
         if target == day { return current }
         if let cached = pageCache[target] { return cached }
         let page = buildPage(for: target)

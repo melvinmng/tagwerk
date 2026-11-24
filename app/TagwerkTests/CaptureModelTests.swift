@@ -1,9 +1,18 @@
 import Foundation
 import HealthBridge
+import Observation
 import SwiftData
 import Testing
 import TagwerkCore
 @testable import Tagwerk
+
+/// Set from the `onChange` closure of `withObservationTracking`, which is `@Sendable`.
+final class ChangeFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    var fired: Bool { lock.withLock { value } }
+    func fire() { lock.withLock { value = true } }
+}
 
 @MainActor
 struct CaptureModelTests {
@@ -814,6 +823,22 @@ struct CaptureModelTests {
         await model.waitForPrefetch()
         #expect(early.steps == nil, "the prefetch had not arrived when the first page was built")
         #expect(model.page(for: yesterday).steps == 8240)
+    }
+
+    /// The preview is rendered again when the prefetch drops the cached pages, although no other observed value changes.
+    @Test func pageForNeighbourDay_announcesItsInvalidationToTheView() async {
+        let health = FakeHealthStore()
+        health.steps = [steps(6412), steps(8240, daysAgo: 1)]
+        let clock = self.clock
+        let mirror = HealthMirror(store: store, health: health, now: { clock.now })
+        let model = CaptureModel(store: store, mirror: mirror, health: health, settings: settings, calendar: calendar,
+                                 now: { clock.now }, waitsForHealth: false)
+        await model.reload()
+        let yesterday = model.day.adding(days: -1, calendar: calendar)
+        let flag = ChangeFlag()
+        withObservationTracking { _ = model.page(for: yesterday) } onChange: { flag.fire() }
+        await model.waitForPrefetch()
+        #expect(flag.fired, "a view that shows the preview must be rendered again when the neighbour numbers arrive")
     }
 
     @Test func reload_readsTheIndependentStatusesAndStillFillsEverything() async {
