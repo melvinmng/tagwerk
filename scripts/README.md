@@ -53,6 +53,28 @@ Sofort neu installieren, zum Beispiel nach einer Änderung der GitHub-Client-ID 
 | `build: git update failed` | Internetverbindung und `origin` im Hintergrund-Klon prüfen. Der zu bauende Branch muss sich per Fast-forward aktualisieren lassen. |
 | LaunchAgent startet nicht | `launchctl print "gui/$(id -u)/de.tagwerk.refresh"` und `/tmp/de.tagwerk.refresh.err` prüfen. Code 64 weist auf die lokale Konfiguration hin. |
 
+## Apple-ID in Xcode überwachen
+
+Die Profil-Erneuerung braucht eine Apple-ID in **Xcode → Settings → Accounts**. Die Kontenliste in `~/Library/Preferences/com.apple.dt.Xcode.plist` war mehrmals ohne bekannte Ursache leer; die Datei sah danach aus wie nach einem Erststart von Xcode. `xcode-account-watch.sh` soll den Verursacher finden.
+
+- Der LaunchAgent `de.tagwerk.xcode-account-watch` startet das Skript bei jeder Änderung dieser Datei, beim Anmelden und alle 10 Minuten.
+- Das Skript zählt die Konten und vergleicht mit dem vorigen Lauf (`xcode-account-count` im Ordner `~/Library/Application Support/Tagwerk`). Solange ein Konto da ist, legt es eine Kopie der Datei als `xcode-prefs-last-good.plist` ab. Diese Kopie dient nur dem Vergleich; das Skript stellt nichts wieder her, weil die Anmeldedaten im Schlüsselbund liegen und eine zurückkopierte Liste sie nicht ersetzt.
+- Wird die Liste leer, sichert es unter `~/Library/Logs/Tagwerk/xcode-account-lost-<Zeit>/` die Prozessliste, Zeitstempel und Größe der Datei, beide Dateistände und die Einträge des Systemprotokolls der letzten 20 Minuten zu `cfprefsd`, `defaults`, Xcode und `xcodebuild`. Dazu kommen eine Zeile in `xcode-account.log` und eine macOS-Mitteilung.
+
+Einrichten (aus dem Git-Klon; launchd ersetzt `$HOME` in `WatchPaths` nicht, deshalb setzt `sed` den Pfad ein):
+
+```zsh
+sed "s|__HOME__|$HOME|g" scripts/de.tagwerk.xcode-account-watch.plist > "$HOME/Library/LaunchAgents/de.tagwerk.xcode-account-watch.plist"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/de.tagwerk.xcode-account-watch.plist"
+```
+
+Entfernen:
+
+```zsh
+launchctl bootout "gui/$(id -u)/de.tagwerk.xcode-account-watch"
+rm "$HOME/Library/LaunchAgents/de.tagwerk.xcode-account-watch.plist"
+```
+
 ## Bestehende Installation übernehmen
 
 Falls deine lokale Konfiguration bisher nur `DEVICE_ID` enthält, ergänze `DEVELOPMENT_TEAM` und `TAGWERK_BUNDLE_ID` mit den Werten deiner bestehenden Installation. Wenn du bisher mit der Bundle-ID `com.melvinmng.tagwerk` signiert hast, trage diesen Wert ein, damit iOS die App beim Refresh als Update installiert. Bei einem Wechsel auf eine eigene OAuth App melde dich anschließend in Tagwerk neu bei GitHub an.
