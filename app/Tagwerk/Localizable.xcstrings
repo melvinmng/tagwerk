@@ -1119,6 +1119,16 @@
         }
       }
     },
+    "%@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        }
+      }
+    },
     "%@, %@ Kilokalorien": {
       "localizations": {
         "de": {
@@ -4902,6 +4912,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everyday activity is the rest of the activity from Health without the workouts above."
+          }
+        }
+      }
+    },
+    "Als Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As task"
           }
         }
       }
@@ -29632,6 +29652,16 @@
         }
       }
     },
+    "seit %@ · tippen zum Weiterschreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "since %@ · tap to keep writing"
+          }
+        }
+      }
+    },
     "seit %lld Tagen": {
       "localizations": {
         "de": {
@@ -31108,36 +31138,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "✦ Suggested by ChatGPT. Change it or leave it; nothing is saved until the next step."
-          }
-        }
-      }
-    },
-    "%@, %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, %@"
-          }
-        }
-      }
-    },
-    "Als Aufgabe": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As task"
-          }
-        }
-      }
-    },
-    "seit %@ · tippen zum Weiterschreiben": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "since %@ · tap to keep writing"
           }
         }
       }
