@@ -41,12 +41,11 @@ enum VoiceAvailability {
     }
 }
 
-/// Einstellungen › KI › Sprache (mockup SP7a), with the voice mode section (Task 12).
+/// Einstellungen › Sprachen › Spracheingabe und Vorlesen (mockup SP7a), with the voice mode section (Task 12). The content
+/// languages themselves are on `LanguageSettingsView`.
 struct VoiceSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var microphone = AVAudioApplication.shared.recordPermission
-    @State private var packs: [VoiceLanguage: LanguagePackState] = [:]
-    @State private var voices: [VoiceLanguage: [SpokenVoice]] = [:]
+    @State private var model = VoiceSettingsModel()
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -55,35 +54,12 @@ struct VoiceSettingsView: View {
                 Toggle("Mikrofon in Gesprächen", isOn: $settings.voiceInputEnabled)
                 microphoneRow
                 ForEach(VoiceLanguage.allCases, id: \.self) { language in
-                    LabeledContent("Sprachpaket \(Self.name(language))", value: packs[language]?.label ?? "…")
+                    LabeledContent("Sprachpaket \(LanguageSettingsText.name(language))", value: model.packs[language]?.label ?? "…")
                 }
             } header: {
                 Text("Spracheingabe")
             } footer: {
                 Text("Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.")
-            }
-
-            Section {
-                // Same stored value as the former "Erkennung in" ("auto", "de-DE", "en-US"), so nothing was migrated.
-                Picker("Sprache im Sprachchat", selection: $settings.voiceRecognitionLanguage) {
-                    Text("Wie die App").tag(VoiceChatLanguage.automatic)
-                    ForEach(VoiceChatLanguage.choices, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
-                }
-            } header: {
-                Text("Sprachchat")
-            } footer: {
-                Text("Die Sprache gilt für die Spracherkennung (auch beim Diktieren in Notizen, Einkauf und Mahlzeiten), für die Antwort von ChatGPT im Sprechmodus und für die Stimme beim Vorlesen. „Wie die App“ nimmt die Sprache der App; ChatGPT antwortet dann in der Sprache, in der du sprichst. Im getippten Chat antwortet ChatGPT weiter in der Sprache, in der du schreibst.")
-            }
-
-            Section {
-                Picker("Sprache für Rezepte", selection: $settings.recipeLanguage) {
-                    Text("Wie die App").tag(RecipeLanguage.automatic)
-                    ForEach(RecipeLanguage.choices, id: \.self) { Text(Self.name($0)).tag($0.rawValue) }
-                }
-            } header: {
-                Text("Rezepte")
-            } footer: {
-                Text("Titel, Zutaten und Zubereitung eines Rezepts schreibt ChatGPT in dieser Sprache und übersetzt, wenn das Rezept eine andere hat. Die Artikel auf der Einkaufsliste folgen ihr. „Wie die App“ nimmt die Sprache der App.")
             }
 
             Section {
@@ -104,7 +80,7 @@ struct VoiceSettingsView: View {
                     }
                 }
                 Button("Probe hören") {
-                    let german = VoiceAvailability.recognitionLanguage(setting: settings.voiceRecognitionLanguage) == .german
+                    let german = settings.contentLanguages.dictationLanguage(at: nil) == .german
                     environment.voiceOutput.speak(
                         id: "sample",
                         text: german ? "So klingt Tagwerk, wenn es dir eine Antwort vorliest."
@@ -115,6 +91,7 @@ struct VoiceSettingsView: View {
                 Text("Vorlesen")
             } footer: {
                 Text("Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -130,14 +107,14 @@ struct VoiceSettingsView: View {
                 Text("Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.")
             }
         }
-        .navigationTitle("Sprache")
-        .task { await refresh() }
+        .navigationTitle("Spracheingabe und Vorlesen")
+        .task { await model.refresh() }
         .onDisappear { environment.voiceOutput.stop() }
     }
 
     @ViewBuilder
     private var microphoneRow: some View {
-        switch microphone {
+        switch model.microphone {
         case .granted:
             LabeledContent("Mikrofon", value: "Erlaubt")
         case .denied:
@@ -152,22 +129,11 @@ struct VoiceSettingsView: View {
     }
 
     private func voicePicker(_ language: VoiceLanguage, selection: Binding<String?>) -> some View {
-        Picker("Stimme \(Self.name(language))", selection: selection) {
+        Picker("Stimme \(LanguageSettingsText.name(language))", selection: selection) {
             Text("Automatisch").tag(String?.none)
-            ForEach(voices[language] ?? []) { voice in
+            ForEach(model.voices[language] ?? []) { voice in
                 Text(voice.qualityLabel.map { "\(voice.name) (\($0))" } ?? voice.name).tag(Optional(voice.id))
             }
         }
     }
-
-    private func refresh() async {
-        microphone = AVAudioApplication.shared.recordPermission
-        let speaker = SystemSpeaker()
-        for language in VoiceLanguage.allCases {
-            packs[language] = await VoiceAvailability.packState(language)
-            voices[language] = speaker.voices(for: language)
-        }
-    }
-
-    static func name(_ language: VoiceLanguage) -> String { language == .german ? String(localized: "Deutsch") : String(localized: "English") }
 }

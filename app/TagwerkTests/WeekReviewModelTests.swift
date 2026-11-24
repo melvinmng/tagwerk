@@ -22,14 +22,16 @@ struct WeekReviewModelTests {
 
     final class Calls { var reminderIntervals: [DateInterval] = [] }
 
-    private func make(_ health: FakeHealthStore, calls: Calls = Calls(), reminders: [Date] = [], local: [Date] = []) -> WeekReviewModel {
+    private func make(_ health: FakeHealthStore, calls: Calls = Calls(), reminders: [Date] = [], local: [Date] = [],
+                      closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil) -> WeekReviewModel {
         let now = self.now
         return WeekReviewModel(store: store, health: health, settings: settings, calendar: calendar, now: { now },
                                completedReminders: { interval in
                                    calls.reminderIntervals.append(interval)
                                    return reminders.filter { interval.contains($0) }
                                },
-                               completedLocalTasks: { interval in local.filter { interval.contains($0) } })
+                               completedLocalTasks: { interval in local.filter { interval.contains($0) } },
+                               closedIssueDates: closedIssueDates)
     }
 
     @Test func review_readsHealthOnlyWhenAsked() async {
@@ -89,6 +91,98 @@ struct WeekReviewModelTests {
         #expect(model.review?.isCurrentWeek == true)
     }
 
+    // MARK: Closed GitHub issues (D6)
+
+    private struct GitHubDown: Error {}
+
+    /// Calls of the closed-issues reader, in order.
+    final class ClosedCalls { var intervals: [DateInterval] = [] }
+
+    /// Lets a test hold an answer of GitHub back until it decides to deliver it.
+    @MainActor final class Gate {
+        var continuation: CheckedContinuation<[Date], Never>?
+        func wait() async -> [Date] { await withCheckedContinuation { continuation = $0 } }
+        func open(_ dates: [Date]) { continuation?.resume(returning: dates); continuation = nil }
+    }
+
+    @Test func reload_withoutGitHub_isNotConnected_countsLocalOnly() async {
+        let model = make(FakeHealthStore(), reminders: [now], local: [now])
+        await model.reload()
+        #expect(model.gitHub == .notConnected)
+        #expect(model.review?.completedTasks == 2)
+    }
+
+    @Test func reload_withGitHub_addsClosedIssuesToCompletedTasks() async {
+        let closed = [now, now.addingTimeInterval(-86_400)]
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in closed })
+        await model.reload()
+        #expect(model.gitHub == .counted(2))
+        #expect(model.review?.completedTasks == 4)
+    }
+
+    @Test func reload_gitHubFails_isUnavailable_keepsLocalNumbers() async {
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in throw GitHubDown() })
+        await model.reload()
+        #expect(model.gitHub == .unavailable)
+        #expect(model.review?.completedTasks == 2)
+    }
+
+    @Test func reload_showsLocalNumbersFirst_thenAddsGitHub() async {
+        let gate = Gate()
+        let model = make(FakeHealthStore(), reminders: [now], local: [now], closedIssueDates: { _ in await gate.wait() })
+        let loading = Task { await model.reload() }
+        while gate.continuation == nil { await Task.yield() }
+        #expect(model.gitHub == .loading)
+        #expect(model.review?.completedTasks == 2)
+        gate.open([now])
+        await loading.value
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.completedTasks == 3)
+    }
+
+    @Test func reload_usesIntervalOfTheShownWeek() async {
+        let calls = ClosedCalls()
+        let model = make(FakeHealthStore(), closedIssueDates: { interval in calls.intervals.append(interval); return [] })
+        await model.reload()
+        let thisWeek = PlanDay(year: 2026, month: 11, day: 16)
+        let before = PlanDay(year: 2026, month: 10, day: 19)
+        #expect(calls.intervals.last == DateInterval(start: thisWeek.startDate(in: calendar),
+                                                      end: thisWeek.adding(days: 7, calendar: calendar).startDate(in: calendar)))
+        await model.go(toWeekOf: PlanDay(year: 2026, month: 10, day: 22))
+        #expect(calls.intervals.last == DateInterval(start: before.startDate(in: calendar),
+                                                      end: before.adding(days: 7, calendar: calendar).startDate(in: calendar)))
+    }
+
+    @Test func reload_lateAnswerOfAnotherWeek_isDropped() async {
+        let gate = Gate()
+        let currentWeek = PlanDay(year: 2026, month: 11, day: 16).startDate(in: calendar)
+        let model = make(FakeHealthStore(), closedIssueDates: { interval in
+            // The answer for the running week is held back; the earlier week answers at once with one issue.
+            if interval.start == currentWeek { return await gate.wait() }
+            return [interval.start.addingTimeInterval(3600)]
+        })
+        let late = Task { await model.reload() }
+        while gate.continuation == nil { await Task.yield() }
+        await model.goBack()
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.completedTasks == 1)
+        // Two issues of the week that was left arrive now and must not touch the week on screen.
+        gate.open([now, now])
+        await late.value
+        #expect(model.weekStart == PlanDay(year: 2026, month: 11, day: 9))
+        #expect(model.gitHub == .counted(1))
+        #expect(model.review?.weekStart == PlanDay(year: 2026, month: 11, day: 9))
+        #expect(model.review?.completedTasks == 1)
+    }
+
+    @Test func completedFooter_coversAllStates() {
+        #expect(WeekReviewModel.completedFooter(.notConnected) == "Erinnerungen und lokale Aufgaben")
+        #expect(WeekReviewModel.completedFooter(.loading) == "Erinnerungen und lokale Aufgaben. GitHub wird geladen …")
+        #expect(WeekReviewModel.completedFooter(.counted(2)) == "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues")
+        #expect(WeekReviewModel.completedFooter(.unavailable)
+                == "Erinnerungen und lokale Aufgaben. GitHub ist gerade nicht erreichbar.")
+    }
+
     @Test func review_goBack_onlyPast() async {
         let calls = Calls()
         let model = make(FakeHealthStore(), calls: calls)
@@ -129,6 +223,60 @@ struct WeekReviewModelTests {
         settings.proteinGoalEnabled = true
         await model.reload()
         #expect(model.review?.averageProtein == 40)
+    }
+
+    // MARK: Budget, goal plans and stored Health values (nutrition plan, C4)
+
+    private func makeWithBudgets(_ health: FakeHealthStore, plans: [GoalPlan]) -> WeekReviewModel {
+        let now = self.now
+        let context = container.mainContext
+        let goals = GoalStore(context: context, settings: settings, calendar: calendar, now: { now })
+        for plan in plans { goals.adopt(plan) }
+        let budgets = DayBudgets(intake: store, goals: goals, dayHealth: DayHealthStore(context: context, now: { now }), health: health,
+                                 settings: settings, calendar: calendar, now: { now })
+        return WeekReviewModel(store: store, health: health, settings: settings, budgets: budgets, calendar: calendar, now: { now },
+                               completedReminders: { _ in [] }, completedLocalTasks: { _ in [] })
+    }
+
+    private func plan(from day: PlanDay, kcal: Int) -> GoalPlan {
+        GoalPlan(validFrom: day, kcal: kcal, waterMilliliters: 2000, stepsPerDay: 8000, workoutMinutesPerWeek: 150)
+    }
+
+    @Test func weekReview_dayWithinBudget_usesPlanAndStoredHealthOfThatDay() async {
+        let monday = PlanDay(year: 2026, month: 11, day: 16)
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .activeEnergy)
+        health.activeEnergy = [DailyActiveEnergy(start: monday.startDate(in: calendar), kilocalories: 800)]
+        settings.activityCreditPercent = 100
+        // The goal rose from Tuesday on; Monday keeps its old plan and its stored activity.
+        let model = makeWithBudgets(health, plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2000),
+                                                    plan(from: monday.adding(days: 1, calendar: calendar), kcal: 2600)])
+        await model.reload()
+        let days = model.review?.days
+        #expect(days?[0].goalKcal == 2800, "2.000 of the old plan plus the 800 credited that day")
+        #expect(days?[1].goalKcal == 2600)
+        health.activeEnergy = []
+        await model.reload()
+        #expect(model.review?.days[0].goalKcal == 2800, "a later silent Health does not change the past day")
+    }
+
+    @Test func weekReview_unknownActivity_fallsBackToBaseGoal() async {
+        let model = makeWithBudgets(FakeHealthStore(), plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2100)])
+        await model.reload()
+        #expect(model.review?.days.map(\.goalKcal) == Array(repeating: 2100, count: 7))
+    }
+
+    @Test func weekReview_foreignEntries_countOnlyWhenSwitchedOn() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .foreignNutrition)
+        health.addForeignNutrition(day: PlanDay(year: 2026, month: 11, day: 17).startDate(in: calendar).addingTimeInterval(11 * 3600),
+                                   kilocalories: 600, source: "Yazio")
+        let model = makeWithBudgets(health, plans: [plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2300)])
+        await model.reload()
+        #expect(model.review?.daysWithMeals == 0 && health.nutritionReads.isEmpty)
+        settings.countsForeignNutrition = true
+        await model.reload()
+        #expect(model.review?.days[1].kcal == 600)
     }
 
     // MARK: Habits and reflection (phase 7)

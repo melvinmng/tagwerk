@@ -71,4 +71,28 @@ struct PageDragTests {
             #expect(actual == expected)
         }
     }
+
+    // MARK: Prevailing page (PL6b)
+
+    @Test func prevailingPage_belowHalf_isNil() {
+        #expect(PageDrag.prevailingPage(offset: 150, width: 390, canGoBack: true, canGoForward: true) == nil)
+        #expect(PageDrag.prevailingPage(offset: -195, width: 390, canGoBack: true, canGoForward: true) == nil)
+        #expect(PageDrag.prevailingPage(offset: 0, width: 390, canGoBack: true, canGoForward: true) == nil)
+    }
+
+    @Test func prevailingPage_aboveHalf_isTheNeighbour() {
+        // Dragging right shows the previous page, dragging left the next one.
+        #expect(PageDrag.prevailingPage(offset: 200, width: 390, canGoBack: true, canGoForward: true) == .back)
+        #expect(PageDrag.prevailingPage(offset: -260, width: 390, canGoBack: true, canGoForward: true) == .forward)
+    }
+
+    @Test func prevailingPage_atBlockedEdge_isNil() {
+        #expect(PageDrag.prevailingPage(offset: 300, width: 390, canGoBack: false, canGoForward: true) == nil)
+        #expect(PageDrag.prevailingPage(offset: -300, width: 390, canGoBack: true, canGoForward: false) == nil)
+    }
+
+    @Test func prevailingPage_withoutWidth_isNil() {
+        #expect(PageDrag.prevailingPage(offset: 10, width: 0, canGoBack: true, canGoForward: true) == nil)
+    }
 }
+

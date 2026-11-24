@@ -56,7 +56,7 @@ struct UndoCapsule: View {
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(.black, .green)
             VStack(alignment: .leading, spacing: 1) {
-                Text(caption).font(.caption).foregroundStyle(.secondary)
+                Text(caption).font(.caption).foregroundStyle(.secondaryText)
                 Text(title).font(.subheadline.weight(.semibold)).lineLimit(2)
             }
         }
@@ -83,6 +83,19 @@ struct UndoCapsule: View {
         }
         .buttonStyle(.glass)
         .accessibilityHint(Text(actionHint))
+    }
+}
+
+/// Where the confirmation capsules that float over a tab (not those inside a safe area inset) sit (FO5b).
+enum UndoCapsuleMetrics {
+    /// Distance of a capsule from the bottom edge without the focus bar.
+    static let baseInset: CGFloat = 60
+    /// Height the bar for a running focus session takes above the tab bar.
+    static let focusBarHeight: CGFloat = 52
+
+    /// Distance of an undo capsule from the bottom edge; larger while the focus bar is shown.
+    static func bottomInset(focusBarVisible: Bool) -> CGFloat {
+        baseInset + (focusBarVisible ? focusBarHeight : 0)
     }
 }
 

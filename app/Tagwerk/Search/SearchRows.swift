@@ -7,7 +7,7 @@ struct SearchSnippetLine: View {
     let snippet: SearchMatch.Snippet
 
     var body: some View {
-        (Text(verbatim: "\(SearchTexts.snippetLabel(snippet.field)): ").foregroundStyle(.secondary)
+        (Text(verbatim: "\(SearchTexts.snippetLabel(snippet.field)): ").foregroundStyle(.secondaryText)
             + Text(SearchTexts.highlighted(snippet.text, ranges: snippet.ranges)))
             .font(.caption)
             .lineLimit(2)
@@ -30,21 +30,21 @@ struct SearchEventRow: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(SearchTexts.eventDate(event, now: now, calendar: calendar)).font(.caption.weight(.semibold))
-                Text(SearchTexts.eventTime(event, calendar: calendar)).font(.caption).foregroundStyle(.secondary)
+                Text(SearchTexts.eventTime(event, calendar: calendar)).font(.caption).foregroundStyle(.secondaryText)
             }
             .frame(minWidth: 72, alignment: .trailing)
             .monospacedDigit()
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(SearchTexts.highlighted(event.title, ranges: match.titleRanges))
-                    .foregroundStyle(isPast ? .secondary : .primary)
+                    .foregroundStyle(isPast ? Color.secondaryText : Color.primary)
                 if isDeadline {
-                    Label("Deadline", systemImage: "flag.fill").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    Label("Deadline", systemImage: "flag.fill").font(.caption.weight(.semibold)).foregroundStyle(.orangeText)
                 }
-                if let subtitle { Text(subtitle).font(.caption).foregroundStyle(.secondary) }
+                if let subtitle { Text(subtitle).font(.caption).foregroundStyle(.secondaryText) }
                 if let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
                 if let series = SearchTexts.seriesText(row, calendar: calendar) {
-                    Text(series).font(.caption).foregroundStyle(.secondary)
+                    Text(series).font(.caption).foregroundStyle(.secondaryText)
                 }
             }
             Spacer(minLength: 0)
@@ -80,13 +80,14 @@ struct SearchTaskRow: View {
     let now: Date
     let calendar: Calendar
     var isReadOnly = false
+    var reminderMark: ReminderMark?
     let onComplete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             TaskRow(item: item, section: section(for: item, now: now, calendar: calendar), now: now, calendar: calendar,
-                    isReadOnly: isReadOnly, titleText: SearchTexts.highlighted(item.title, ranges: match.titleRanges),
-                    onComplete: onComplete)
+                    isReadOnly: isReadOnly, reminderMark: reminderMark,
+                    titleText: SearchTexts.highlighted(item.title, ranges: match.titleRanges), onComplete: onComplete)
             if let snippet = match.snippet {
                 SearchSnippetLine(snippet: snippet).padding(.leading, 34)
             }
@@ -104,11 +105,11 @@ struct SearchCompletedRow: View {
     var body: some View {
         let item = group.latest.item
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "checkmark.circle.fill").font(.title3).foregroundStyle(.secondary)
+            Image(systemName: "checkmark.circle.fill").font(.title3).foregroundStyle(.secondaryText)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(SearchTexts.highlighted(item.title, ranges: match.titleRanges)).foregroundStyle(.secondary)
-                Text(SearchTexts.completedText(group, calendar: calendar, now: now)).font(.caption).foregroundStyle(.secondary)
+                Text(SearchTexts.highlighted(item.title, ranges: match.titleRanges)).foregroundStyle(.secondaryText)
+                Text(SearchTexts.completedText(group, calendar: calendar, now: now)).font(.caption).foregroundStyle(.secondaryText)
                 if let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
             }
             Spacer(minLength: 0)
@@ -129,7 +130,7 @@ struct SearchLoadingRow: View {
     var body: some View {
         HStack(spacing: 10) {
             ProgressView()
-            Text("Termine werden durchsucht …").foregroundStyle(.secondary)
+            Text("Termine werden durchsucht …").foregroundStyle(.secondaryText)
         }
         .accessibilityElement(children: .combine)
     }
@@ -144,10 +145,10 @@ struct SearchOnlineRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "circle.dashed").font(.title3).foregroundStyle(.secondary).opacity(0.45).accessibilityHidden(true)
+            Image(systemName: "circle.dashed").font(.title3).foregroundStyle(.secondaryText).opacity(0.45).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: "#\(issue.number) \(issue.title)")
-                    .foregroundStyle(issue.marker == .closed ? .secondary : .primary)
+                    .foregroundStyle(issue.marker == .closed ? Color.secondaryText : Color.primary)
                 if let marker = issue.marker {
                     Text(SearchTexts.markerText(marker))
                         .font(.caption2.weight(.semibold))
@@ -155,7 +156,7 @@ struct SearchOnlineRow: View {
                         .padding(.vertical, 2)
                         .background(.quaternary, in: Capsule())
                 }
-                Text(SearchTexts.onlineSubtitle(issue, now: now, calendar: calendar)).font(.caption).foregroundStyle(.secondary)
+                Text(SearchTexts.onlineSubtitle(issue, now: now, calendar: calendar)).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 0)
         }
@@ -181,14 +182,14 @@ struct SearchOnlineAskRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if case .failed(let error) = state {
-                Text(SearchTexts.onlineError(error)).font(.footnote).foregroundStyle(.red)
+                Text(SearchTexts.onlineError(error)).font(.footnote).foregroundStyle(.redText)
             }
             Button(action: action) {
                 HStack(spacing: 12) {
                     Image(systemName: "network").frame(width: 24)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(isFailed ? "Erneut versuchen" : "Auf GitHub suchen")
-                        Text("auch geschlossene und fremde").font(.caption).foregroundStyle(.secondary)
+                        Text("auch geschlossene und fremde").font(.caption).foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -209,20 +210,25 @@ struct SearchNoteRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "note.text").font(.title3).foregroundStyle(.secondary).frame(width: 24).accessibilityHidden(true)
+            Image(systemName: note.isConcealed ? "lock.fill" : "note.text").font(.title3).foregroundStyle(.secondaryText).frame(width: 24)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(SearchTexts.highlighted(title, ranges: match.titleRanges)).lineLimit(2)
-                Text(SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar))
-                    .font(.caption).foregroundStyle(.secondary)
-                if let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
+                Text(subtitle).font(.caption).foregroundStyle(.secondaryText)
+                // A hidden note shows no passage: that would tell what its text holds.
+                if !note.isConcealed, let snippet = match.snippet { SearchSnippetLine(snippet: snippet) }
             }
             Spacer(minLength: 0)
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([String(localized: "Notiz"), title,
-                             SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar)]
-            .joined(separator: ", "))
+        .accessibilityLabel([String(localized: "Notiz"), title, subtitle].joined(separator: ", "))
+    }
+
+    /// The kind and day; a hidden note shows "Ordner · Gesperrt" instead.
+    private var subtitle: String {
+        note.isConcealed ? "\(note.kindLabel) · " + String(localized: "Gesperrt")
+            : SearchTexts.noteSubtitle(kindLabel: note.kindLabel, updatedAt: note.updatedAt, dayKey: note.dayKey, calendar: calendar)
     }
 
     /// The first line of the text, as the search document reads it.
@@ -241,18 +247,18 @@ struct SearchShoppingRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Button { onCheckOff?() } label: {
-                Image(systemName: "circle").font(.title3).foregroundStyle(.secondary)
+                Image(systemName: "circle").font(.title3).foregroundStyle(.secondaryText)
             }
             .buttonStyle(.plain)
             .disabled(onCheckOff == nil)
             .accessibilityLabel("Abhaken")
             VStack(alignment: .leading, spacing: 2) {
                 Text(SearchTexts.highlighted(item.name, ranges: match.titleRanges))
-                if let quantity = item.quantity { Text(quantity).font(.caption).foregroundStyle(.secondary) }
+                if let quantity = item.quantity { Text(quantity).font(.caption).foregroundStyle(.secondaryText) }
                 if let snippet = match.snippet, snippet.field != .quantity { SearchSnippetLine(snippet: snippet) }
             }
             Spacer(minLength: 8)
-            Text("Einkauf").font(.caption).foregroundStyle(.secondary)
+            Text("Einkauf").font(.caption).foregroundStyle(.secondaryText)
         }
         .contentShape(Rectangle())
     }

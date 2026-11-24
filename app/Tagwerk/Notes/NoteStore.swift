@@ -25,6 +25,10 @@ final class NoteStore {
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
+    /// Called after a Bible Study session was started or completed: the reminder names the next verse and drops the day of a
+    /// completed session, so the app plans it again (BS7). Set by the app environment; the store knows nothing of notifications.
+    @ObservationIgnored var onBibleStudyChanged: (() -> Void)?
+
     /// The pictures and files of the notes; `nil` where nothing needs them (most tests). A note that goes for good takes
     /// its attachments with it.
     @ObservationIgnored let attachments: NoteAttachmentStore?
@@ -37,8 +41,9 @@ final class NoteStore {
 
     // MARK: Reading
 
-    /// The notes of a filter. Pinned notes first, then by `order`; the trash lists the newest deletion first.
-    func notes(_ filter: Filter = .all, sortedBy order: NoteSortOrder = .modified) -> [NoteRecord] {
+    /// The notes of a filter. Pinned notes first, then by `order`; `ascending` turns the order inside the pinned and the
+    /// unpinned notes around (oldest first, "Z bis A"). The trash lists the newest deletion first.
+    func notes(_ filter: Filter = .all, sortedBy order: NoteSortOrder = .modified, ascending: Bool = false) -> [NoteRecord] {
         let folderIDs = Set(folders().map(\.id))
         let matching = all().filter { note in
             if case .trash = filter { return note.deletedAt != nil }
@@ -54,16 +59,39 @@ final class NoteStore {
         if case .trash = filter {
             return matching.sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
         }
-        return matching.sorted { order.precedes(Self.sortKey($0), Self.sortKey($1)) }
+        return matching.sorted { order.precedes(Self.sortKey($0), Self.sortKey($1), reversed: ascending) }
     }
 
-    private static func sortKey(_ note: NoteRecord) -> NoteSortKey {
+    static func sortKey(_ note: NoteRecord) -> NoteSortKey {
         NoteSortKey(isPinned: note.isPinned, createdAt: note.createdAt, updatedAt: note.updatedAt, title: NoteText.title(note.text))
     }
 
     func note(id: UUID) -> NoteRecord? {
         all().first { $0.id == id }
     }
+
+    /// True when the note must not reach ChatGPT right now: a private kind, a note in a private folder or below one (always), or
+    /// a note the user locked while it is not unlocked (`lockHoldsBack`). A locked note that is unlocked in the current lock
+    /// session is available to the assistant until the app goes to the background or the lock closes (decision of 2026-11-22,
+    /// #188); closing the lock ends the assistant's note session (`onNoteLocked` and `NoteLock.onSessionClosed`). The only rule the
+    /// assistant's note access, the suggestions, the translations and the recipe picker use (`NoteFolderRules.mayLeaveDevice`).
+    func isPrivate(_ note: NoteRecord) -> Bool {
+        !NoteFolderRules.mayLeaveDevice(kind: note.kind, folderID: note.folderID,
+                                        privateFolderIDs: NoteFolderRules.privateFolderIDs(in: folders().map(\.info)),
+                                        isLocked: lockHoldsBack(note.isLocked))
+    }
+
+    /// Whether the lock keeps a locked note away from the assistant right now; the argument is the lock mark of the note. The
+    /// app wires it to the lock session (`NoteProtection.holdsBack`); a store without a lock keeps every locked note back.
+    @ObservationIgnored var lockHoldsBack: @MainActor (_ isLocked: Bool) -> Bool = { $0 }
+
+    /// How many notes carry the lock mark (notes in the trash included: they stay locked there).
+    var lockedCount: Int { all().filter(\.isLocked).count }
+
+    /// Called when notes get locked, so the assistant forgets what it read of them (`AssistantModel.endNoteSession`).
+    @ObservationIgnored var onNoteLocked: (@MainActor () -> Void)?
+    /// Called after any change of a lock mark, so an open search reads the notes again.
+    @ObservationIgnored var onLockMarksChanged: (@MainActor () -> Void)?
 
     /// The thought note of a kind and day, if there is one (a note in the trash does not count).
     func note(kind: NoteKind, dayKey: String) -> NoteRecord? {
@@ -123,6 +151,24 @@ final class NoteStore {
         return record
     }
 
+    /// A copy of a note with `text` (trimmed; empty creates nothing): a new free note in the same folder, not pinned. The
+    /// pictures and files the text refers to are copied for the new note and the references are rewritten, so the copy keeps
+    /// them when the original is deleted for good. Without an attachment store the text stays as it is. A private, trashed or
+    /// unknown note is not copied.
+    @discardableResult
+    func duplicate(_ id: UUID, text: String) -> NoteRecord? {
+        guard let original = note(id: id), original.deletedAt == nil, original.kind == .free else { return nil }
+        if let folderID = original.folderID, folder(id: folderID)?.role?.isPrivate == true { return nil }
+        guard let copy = create(text: text, kind: .free, folderID: original.folderID) else { return nil }
+        guard let attachments else { return copy }
+        let referenced = MarkdownText.attachmentReferences(in: copy.text)
+        let mapping = attachments.duplicate(ids: referenced, to: copy.id)
+        guard !mapping.isEmpty else { return copy }
+        copy.text = MarkdownText.replacingAttachmentIDs(in: copy.text, with: mapping)
+        save()
+        return copy
+    }
+
     /// Replaces the text; the change date moves only when the text differs.
     func updateText(_ id: UUID, text: String) {
         guard let record = note(id: id), record.text != text else { return }
@@ -136,6 +182,21 @@ final class NoteStore {
         guard let record = note(id: id), record.isPinned != pinned else { return }
         record.isPinned = pinned
         save()
+    }
+
+    /// Sets or clears the lock mark. Locking and unlocking are not changes of the note: the change date stays. Locking ends the
+    /// assistant's note session (`onNoteLocked`), so what it read of the note earlier is forgotten; unlocking does not.
+    func setLocked(_ ids: [UUID], _ locked: Bool) {
+        let wanted = Set(ids)
+        var changed = false
+        for record in all() where wanted.contains(record.id) && record.isLocked != locked {
+            record.isLocked = locked
+            changed = true
+        }
+        guard changed else { return }
+        save()
+        onLockMarksChanged?()
+        if locked { onNoteLocked?() }
     }
 
     func markProcessed(_ id: UUID, at date: Date) {

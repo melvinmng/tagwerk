@@ -89,10 +89,61 @@ struct RoutineScheduleTests {
         #expect(items.map(\.title) == ["Helle Lichter ausmachen", "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen",
                                        "Eine Stunde vorm Schlafen fertig machen", "Zähne putzen, umziehen, Haus/Wohnung aufräumen",
                                        "Eine halbe Stunde vorm Schlafen ins Bett legen"])
-        #expect(items.map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
-        let checklist = items.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
-        #expect(RoutineSchedule.reminderItems(checklist).count == 3)
         #expect(items.allSatisfy { $0.title.count <= RoutineSchedule.titleLimit })
+    }
+
+    @Test func suggestedItems_lightsRemindSixtyMinutesBefore() {
+        let items = RoutineSchedule.suggestedItems
+        #expect(items.map(\.offsetMinutes) == [60, 90, 60, nil, 30])
+        // 60 minutes before the default bedtime of 23:00 is the 22:00 of the original template, and it moves with the bedtime.
+        #expect(RoutineSchedule.anchorMinutes(bedtimeMinutes: 1380, offsetMinutes: 60) == 1320)
+        #expect(RoutineSchedule.anchorMinutes(bedtimeMinutes: 1410, offsetMinutes: 60) == 1350)
+    }
+
+    @Test func suggestedItems_fourPointsRemind() {
+        let checklist = RoutineSchedule.suggestedItems.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
+        #expect(RoutineSchedule.reminderItems(checklist).count == RoutineSchedule.maximumReminders)
+        #expect(RoutineSchedule.reminderItems(checklist).map(\.offsetMinutes) == [60, 90, 60, 30])
+    }
+
+    private func fivePointList(_ titles: [String] = RoutineSchedule.fivePointSuggestionTitles[0], offsets: [Int?] = [nil, 90, 60, nil, 30]) -> [ChecklistItem] {
+        titles.enumerated().map { ChecklistItem(title: $1, order: $0, offsetMinutes: offsets[$0]) }
+    }
+
+    @Test func upgradedLightsOffset_untouchedList_setsSixty() throws {
+        for titles in RoutineSchedule.fivePointSuggestionTitles {
+            let upgraded = try #require(RoutineSchedule.upgradedLightsOffset(fivePointList(titles)))
+            #expect(upgraded.map(\.offsetMinutes) == [60, 90, 60, nil, 30])
+            #expect(upgraded.map(\.title) == titles)
+        }
+    }
+
+    @Test func upgradedLightsOffset_changedList_isNil() {
+        #expect(RoutineSchedule.upgradedLightsOffset([]) == nil)
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(offsets: [nil, 90, 60, nil, 45])) == nil)
+        var renamed = RoutineSchedule.fivePointSuggestionTitles[0]
+        renamed[3] = "Zähne putzen"
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(renamed)) == nil)
+        // A list that mixes both languages is not the untouched suggestion.
+        var mixed = RoutineSchedule.fivePointSuggestionTitles[0]
+        mixed[0] = RoutineSchedule.fivePointSuggestionTitles[1][0]
+        #expect(RoutineSchedule.upgradedLightsOffset(fivePointList(mixed)) == nil)
+    }
+
+    @Test func upgradedLightsOffset_runsOnce() throws {
+        let upgraded = try #require(RoutineSchedule.upgradedLightsOffset(fivePointList()))
+        #expect(RoutineSchedule.upgradedLightsOffset(upgraded) == nil)
+    }
+
+    @Test func eveningNotifications_twoItemsAtSameMinute_bothPlanned() {
+        let checklist = RoutineSchedule.suggestedItems.enumerated().map { ChecklistItem(title: $1.title, order: $0, offsetMinutes: $1.offsetMinutes) }
+        let planned = RoutineSchedule.eveningNotifications(
+            items: checklist, bedtimeMinutes: 1380, enabled: true, checked: { _ in [] },
+            now: Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 10))!,
+            calendar: Calendar(identifier: .gregorian), locale: Locale(identifier: "de_DE"), days: 1)
+        let at2200 = planned.filter { $0.hour == 22 && $0.minute == 0 }
+        #expect(planned.count == 4 && at2200.count == 2)
+        #expect(Set(at2200.map(\.id)).count == 2)
     }
 
     private func legacyList(_ titles: [String], offsets: [Int?] = [90, 60, 30]) -> [ChecklistItem] {
@@ -153,50 +204,163 @@ struct RoutineScheduleTests {
         text.replacingOccurrences(of: "\u{202F}", with: " ").replacingOccurrences(of: "\u{00A0}", with: " ")
     }
 
+    /// The evening reminders for a first look at 2026-11-20 10:00 unless `now` says otherwise.
+    private func evening(_ items: [ChecklistItem], bedtime: Int = 1380, enabled: Bool = true,
+                         checked: [PlanDay: Set<UUID>] = [:], now: Date = instant(2026, 11, 20, 10),
+                         locale: Locale = Locale(identifier: "de_DE"), days: Int = RoutineSchedule.eveningHorizonDays) -> [DatedRoutineNotification] {
+        RoutineSchedule.eveningNotifications(items: items, bedtimeMinutes: bedtime, enabled: enabled, checked: { checked[$0] ?? [] },
+                                             now: now, calendar: calendar, locale: locale, days: days)
+    }
+
+    private func day(_ notification: DatedRoutineNotification) -> PlanDay {
+        PlanDay(year: notification.year, month: notification.month, day: notification.day)
+    }
+
     @Test func eveningNotifications_textAndTime() {
         let handy = item("Handy weglegen", order: 0, offset: 60)
-        let result = RoutineSchedule.eveningNotifications(items: [handy], bedtimeMinutes: 1380, enabled: true,
-                                                          locale: Locale(identifier: "de_DE"))
-        #expect(result.count == 1)
-        #expect(result[0].hour == 22 && result[0].minute == 0)
-        #expect(result[0].title == "Handy weglegen")
-        #expect(result[0].body == "Noch 60 min bis zur Schlafzeit (23:00)")
-        #expect(result[0].route == .routineEvening)
-        #expect(result[0].id == "tagwerk.routine.evening.\(handy.id.uuidString)")
+        let result = evening([handy])
+        #expect(result.count == 3)
+        let first = result[0]
+        #expect(day(first) == PlanDay(year: 2026, month: 11, day: 20))
+        #expect(first.hour == 22 && first.minute == 0)
+        #expect(first.title == "Handy weglegen")
+        #expect(first.body == "Noch 60 min bis zur Schlafzeit (23:00)")
+        #expect(first.route == .routineEvening)
+        #expect(first.id == "tagwerk.routine.evening.\(handy.id.uuidString).2026-11-20")
+        #expect(first.id == RoutineSchedule.eveningIdentifier(item: handy.id, day: PlanDay(year: 2026, month: 11, day: 20)))
     }
 
     @Test func eveningNotifications_atBedtime() {
-        let bed = item("Ins Bett", order: 0, offset: 0)
-        let result = RoutineSchedule.eveningNotifications(items: [bed], bedtimeMinutes: 1380, enabled: true,
-                                                          locale: Locale(identifier: "de_DE"))
+        let result = evening([item("Ins Bett", order: 0, offset: 0)])
         #expect(result[0].body == "Schlafzeit (23:00)")
         #expect(result[0].hour == 23 && result[0].minute == 0)
     }
 
     @Test func eveningNotifications_english() {
         let handy = item("Phone away", order: 0, offset: 60)
-        let result = RoutineSchedule.eveningNotifications(items: [handy], bedtimeMinutes: 1380, enabled: true,
-                                                          locale: Locale(identifier: "en_US"))
+        let result = evening([handy], locale: Locale(identifier: "en_US"))
         #expect(noSpaceVariants(result[0].body) == "60 min until bedtime (11:00 PM)")
-        let atBedtime = RoutineSchedule.eveningNotifications(items: [item("Bed", order: 0, offset: 0)], bedtimeMinutes: 1380,
-                                                             enabled: true, locale: Locale(identifier: "en_US"))
+        let atBedtime = evening([item("Bed", order: 0, offset: 0)], locale: Locale(identifier: "en_US"))
         #expect(noSpaceVariants(atBedtime[0].body) == "Bedtime (11:00 PM)")
     }
 
-    @Test func eveningNotifications_atMostFour_andNoneWhenDisabledOrWithoutItems() {
-        let items = (0..<6).map { item("P\($0)", order: $0, offset: 30 + $0 * 5) }
-        let locale = Locale(identifier: "de_DE")
-        #expect(RoutineSchedule.eveningNotifications(items: items, bedtimeMinutes: 1380, enabled: true, locale: locale).count == 4)
-        #expect(RoutineSchedule.eveningNotifications(items: items, bedtimeMinutes: 1380, enabled: false, locale: locale).isEmpty)
-        #expect(RoutineSchedule.eveningNotifications(items: [], bedtimeMinutes: 1380, enabled: true, locale: locale).isEmpty)
-        #expect(RoutineSchedule.eveningNotifications(items: [item("Ohne", order: 0, offset: nil)], bedtimeMinutes: 1380,
-                                                     enabled: true, locale: locale).isEmpty)
+    @Test func eveningNotifications_planThreeDays() {
+        let result = evening([item("A", order: 0, offset: 60)])
+        #expect(result.map(day) == [PlanDay(year: 2026, month: 11, day: 20), PlanDay(year: 2026, month: 11, day: 21),
+                                    PlanDay(year: 2026, month: 11, day: 22)])
+        #expect(RoutineSchedule.eveningHorizonDays == 3)
+        #expect(evening([item("A", order: 0, offset: 60)], days: 1).count == 1)
     }
 
-    @Test func eveningNotifications_wrapAroundMidnight() {
-        let result = RoutineSchedule.eveningNotifications(items: [item("A", order: 0, offset: 90)], bedtimeMinutes: 30, enabled: true,
-                                                          locale: Locale(identifier: "de_DE"))
+    @Test func eveningNotifications_wrapAroundMidnightOfTheAnchor() {
+        // Bedtime 00:30 minus 90 minutes is 23:00 of the routine day itself.
+        let result = evening([item("A", order: 0, offset: 90)], bedtime: 30)
         #expect(result[0].hour == 23 && result[0].minute == 0)
+        #expect(day(result[0]) == PlanDay(year: 2026, month: 11, day: 20))
+    }
+
+    @Test func eveningNotifications_skipCheckedItemOnlyOnItsDay() {
+        let first = item("A", order: 0, offset: 60), second = item("B", order: 1, offset: 30)
+        let result = evening([first, second], checked: [PlanDay(year: 2026, month: 11, day: 21): [first.id]])
+        #expect(result.count == 5)
+        #expect(!result.contains { $0.id == RoutineSchedule.eveningIdentifier(item: first.id, day: PlanDay(year: 2026, month: 11, day: 21)) })
+        #expect(result.contains { $0.id == RoutineSchedule.eveningIdentifier(item: first.id, day: PlanDay(year: 2026, month: 11, day: 20)) })
+        #expect(result.contains { $0.id == RoutineSchedule.eveningIdentifier(item: first.id, day: PlanDay(year: 2026, month: 11, day: 22)) })
+        #expect(result.contains { $0.id == RoutineSchedule.eveningIdentifier(item: second.id, day: PlanDay(year: 2026, month: 11, day: 21)) })
+    }
+
+    @Test func eveningNotifications_skipPastMoments() {
+        let one = item("A", order: 0, offset: 60)
+        // 22:30 is after today's 22:00; the window still ends with the routine day 22.
+        #expect(evening([one], now: instant(2026, 11, 20, 22, 30)).map(day) ==
+                [PlanDay(year: 2026, month: 11, day: 21), PlanDay(year: 2026, month: 11, day: 22)])
+        // Exactly at the moment counts as past: the notification would not be after `now`.
+        #expect(evening([one], now: instant(2026, 11, 20, 22, 0)).first.map(day) == PlanDay(year: 2026, month: 11, day: 21))
+        #expect(evening([one], now: instant(2026, 11, 20, 21, 59)).first.map(day) == PlanDay(year: 2026, month: 11, day: 20))
+    }
+
+    @Test func eveningNotifications_afterMidnightBelongToPreviousRoutineDay() {
+        // Bedtime 00:30 minus 15 minutes is 00:15, which still belongs to the routine day before (rule 10).
+        let point = item("A", order: 0, offset: 15)
+        let checkedOn20 = [PlanDay(year: 2026, month: 11, day: 20): Set([point.id])]
+        let result = evening([point], bedtime: 30, checked: checkedOn20)
+        // Routine day 20 fires on the 21st at 00:15 and is checked: no notification then; the 22nd at 00:15 belongs to day 21.
+        #expect(!result.contains { day($0) == PlanDay(year: 2026, month: 11, day: 21) })
+        let onThe22nd = result.first { day($0) == PlanDay(year: 2026, month: 11, day: 22) }
+        #expect(onThe22nd?.hour == 0 && onThe22nd?.minute == 15)
+        #expect(onThe22nd?.id == RoutineSchedule.eveningIdentifier(item: point.id, day: PlanDay(year: 2026, month: 11, day: 21)))
+        // Without the check the 21st at 00:15 is planned for routine day 20.
+        let unchecked = evening([point], bedtime: 30)
+        let onThe21st = unchecked.first { day($0) == PlanDay(year: 2026, month: 11, day: 21) }
+        #expect(onThe21st?.id == RoutineSchedule.eveningIdentifier(item: point.id, day: PlanDay(year: 2026, month: 11, day: 20)))
+    }
+
+    @Test func eveningNotifications_fourOClockBelongsToItsOwnDay() {
+        // Bedtime 04:15 minus 15 minutes is 04:00: not before the boundary, so it fires on the routine day itself.
+        let point = item("A", order: 0, offset: 15)
+        let now = instant(2026, 11, 19, 12, 0)
+        let atBoundary = evening([point], bedtime: 255, now: now)
+        #expect(atBoundary[0].id == RoutineSchedule.eveningIdentifier(item: point.id, day: PlanDay(year: 2026, month: 11, day: 20)))
+        #expect(day(atBoundary[0]) == PlanDay(year: 2026, month: 11, day: 20))
+        #expect(atBoundary[0].hour == 4 && atBoundary[0].minute == 0)
+        // 03:59 still belongs to the day before: routine day 19 fires on the 20th.
+        let sixteen = item("B", order: 0, offset: 16)
+        let before = evening([sixteen], bedtime: 255, now: now)
+        #expect(before[0].id == RoutineSchedule.eveningIdentifier(item: sixteen.id, day: PlanDay(year: 2026, month: 11, day: 19)))
+        #expect(day(before[0]) == PlanDay(year: 2026, month: 11, day: 20))
+        #expect(before[0].hour == 3 && before[0].minute == 59)
+    }
+
+    @Test func eveningNotifications_atOneAM_startWithYesterday() {
+        // At 01:00 on the 21st the routine day is the 20th; its 01:30 reminder is still ahead.
+        let point = item("A", order: 0, offset: 0)
+        let now = instant(2026, 11, 21, 1, 0)
+        let result = evening([point], bedtime: 90, now: now)
+        #expect(result.count == 3)
+        #expect(result[0].id == RoutineSchedule.eveningIdentifier(item: point.id, day: PlanDay(year: 2026, month: 11, day: 20)))
+        #expect(day(result[0]) == PlanDay(year: 2026, month: 11, day: 21) && result[0].hour == 1 && result[0].minute == 30)
+        // Checked on the routine day 20, it stays away although the calendar day is the 21st.
+        let checked = evening([point], bedtime: 90, checked: [PlanDay(year: 2026, month: 11, day: 20): [point.id]], now: now)
+        #expect(checked.count == 2)
+    }
+
+    @Test func eveningNotifications_disabled_isEmpty() {
+        #expect(evening([item("A", order: 0, offset: 60)], enabled: false).isEmpty)
+        #expect(evening([]).isEmpty)
+        #expect(evening([item("Ohne", order: 0, offset: nil)]).isEmpty)
+    }
+
+    @Test func eveningNotifications_atMostFourItemsPerDay() {
+        let items = (0..<6).map { item("P\($0)", order: $0, offset: 30 + $0 * 5) }
+        let result = evening(items)
+        #expect(result.count == RoutineSchedule.maximumEveningNotifications)
+        #expect(RoutineSchedule.maximumEveningNotifications == 12)
+        for offsetDay in 20...22 {
+            #expect(result.filter { day($0).day == offsetDay }.count == 4)
+        }
+        #expect(!result.contains { $0.title == "P4" || $0.title == "P5" })
+    }
+
+    @Test func eveningNotifications_idsAreUniqueAndStable() {
+        let items = (0..<4).map { item("P\($0)", order: $0, offset: 30 + $0 * 5) }
+        let first = evening(items), second = evening(items)
+        #expect(first.map(\.id) == second.map(\.id))
+        #expect(Set(first.map(\.id)).count == first.count)
+        #expect(first.allSatisfy { $0.id.hasPrefix(PlannedNotification.routineIdentifierPrefix + "evening.") })
+    }
+
+    @Test func eveningNotifications_areSortedByMoment() {
+        let late = item("Late", order: 0, offset: 0), early = item("Early", order: 1, offset: 60)
+        let result = evening([late, early])
+        #expect(result.prefix(2).map(\.title) == ["Early", "Late"])
+    }
+
+    @Test func eveningNotifications_summerTimeDay_keepsClockTime() {
+        for (now, expectedDays) in [(instant(2026, 3, 28, 10), [28, 29, 30]), (instant(2026, 10, 24, 10), [24, 25, 26])] {
+            let result = evening([item("A", order: 0, offset: 60)], now: now)
+            #expect(result.map { $0.day } == expectedDays)
+            #expect(result.allSatisfy { $0.hour == 22 && $0.minute == 0 })
+        }
     }
 
     @Test func routineIdentifierPrefix_isUnderTheTagwerkPrefix() {

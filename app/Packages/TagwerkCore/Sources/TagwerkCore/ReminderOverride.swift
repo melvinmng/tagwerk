@@ -71,3 +71,30 @@ public enum ReminderOverrideResolution {
                                  isCustom: true)
     }
 }
+
+/// What a task row says about reminders (plan g1, ER4b): nothing while the default applies, because a symbol only carries
+/// information when it marks the exception.
+public enum ReminderMark: Equatable, Sendable {
+    /// An own list: a bell with the number of reminders.
+    case custom(count: Int)
+    /// An own, empty list: a crossed-out bell.
+    case none
+
+    /// The mark of `task`; `nil` for a task without a due date (nothing counts from it) and for one that follows the default.
+    /// With `defaults` an own list that equals the default of the task's source is no deviation either.
+    public static func of(task: TaskItem, overrides: [String: [ReminderOverride]], defaults: ReminderDefaults? = nil) -> ReminderMark? {
+        guard let due = task.due else { return nil }
+        let isAllDay = !due.hasTime
+        let defaultOffsets = defaults?.offsets(for: .forTask(source: task.id.source), isAllDay: isAllDay) ?? []
+        let resolved = ReminderOverrideResolution.resolve(itemKey: ReminderOverride.key(task: task.id), due: due, isAllDay: isAllDay,
+                                                          overrides: overrides, defaults: defaultOffsets)
+        guard resolved.isCustom else { return nil }
+        if defaults != nil {
+            // Equal distances count as equal, whatever their spelling: 24 hours and 1 day.
+            let normalizedDefault = ReminderOffset.normalized(defaultOffsets, isAllDay: isAllDay)
+            if resolved.offsets.count == normalizedDefault.count,
+               zip(resolved.offsets, normalizedDefault).allSatisfy({ $0.isEquivalent(to: $1) }) { return nil }
+        }
+        return resolved.offsets.isEmpty ? ReminderMark.none : .custom(count: resolved.offsets.count)
+    }
+}

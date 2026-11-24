@@ -13,6 +13,14 @@ struct AppRouterTests {
         #expect(router.takeRequest(setupCompleted: true) == nil)
     }
 
+    @Test func router_trendsPrefill_opensTheCaptureTabOnce() {
+        let router = AppRouter()
+        router.open(.capture, prefill: .trends)
+        #expect(router.takeRequest(setupCompleted: true)?.route == .capture)
+        #expect(router.takeCapturePrefill() == .trends)
+        #expect(router.takeCapturePrefill() == nil)
+    }
+
     @Test func router_mealPrefill_consumedOnce() {
         let router = AppRouter()
         router.open(.captureMeal, prefill: .meal(text: "Zwei Brötchen"))
@@ -72,6 +80,19 @@ struct AppRouterTests {
         let calendar = Calendar(identifier: .gregorian)
         let moment = calendar.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: hour, minute: minute))!
         return AppRouter(now: { moment }, calendar: calendar)
+    }
+
+    @Test func bibleStudyStart_opensStartSheet() {
+        let router = router(atHour: 8)
+        #expect(router.open(URL(string: "tagwerk://bible/start")!))
+        #expect(router.bibleStudyStartRequested == false, "the request is buffered until it is shown")
+        #expect(router.takeRequest(setupCompleted: true)?.route == .bibleStudyStart)
+        #expect(router.bibleStudyStartRequested)
+        #expect(router.takeBibleStudyStartRequest())
+        #expect(!router.takeBibleStudyStartRequest(), "the sheet opens once")
+        router.open(.routineStart)
+        _ = router.takeRequest(setupCompleted: true)
+        #expect(!router.bibleStudyStartRequested)
     }
 
     @Test func routineNow_morning_opensStart() {

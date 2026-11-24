@@ -53,6 +53,12 @@ struct AppRouteTests {
         #expect(AppRoute(url: URL(string: "tagwerk://notes")!) == nil)
     }
 
+    @Test func parses_bibleStudyStart() {
+        #expect(AppRoute(url: URL(string: "tagwerk://bible/start")!) == .bibleStudyStart)
+        #expect(AppRoute.bibleStudyStart.url.absoluteString == "tagwerk://bible/start")
+        #expect(AppRoute(url: URL(string: "tagwerk://bible")!) == nil)
+    }
+
     @Test func parses_routineNow() {
         #expect(AppRoute(url: URL(string: "tagwerk://routine/now")!) == .routineNow)
         #expect(AppRoute.routineNow.url.absoluteString == "tagwerk://routine/now")

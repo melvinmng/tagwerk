@@ -58,9 +58,21 @@ extension AIPlanner {
     /// (mockup VA1): only the suggestions the answer names change, those the user moved stay unless they
     /// are the one commented on, and changes that do not fit are named instead of applied.
     func revise(_ suggestion: PlanSuggestion, comment: String) async {
+        guard let batch = batch(containing: suggestion.id) else { return }
+        await revise(batch: batch, about: suggestion, comment: comment)
+    }
+
+    /// Sends `comment` about all open suggestions of a planning (plan ki-vorschlaege-anpassen, task E2, AN13a): the same request
+    /// and the same checks as for one suggestion, without a highlighted one. The suggestions the user moved stay; "Rückgängig"
+    /// (`undoRevision`) brings back the state before the answer.
+    func revise(batch: SuggestionBatch, comment: String) async {
+        await revise(batch: batch, about: nil, comment: comment)
+    }
+
+    private func revise(batch: SuggestionBatch, about suggestion: PlanSuggestion?, comment: String) async {
         let comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard revisingID == nil, !comment.isEmpty, let batch = batch(containing: suggestion.id) else { return }
-        revisingID = suggestion.id
+        guard revisingID == nil, !comment.isEmpty else { return }
+        revisingID = suggestion?.id ?? batch.id
         revisionError = nil
         defer { revisingID = nil }
         let refs = Self.refs(for: batch)
@@ -116,17 +128,17 @@ extension AIPlanner {
         let changes: [Change]
     }
 
-    private func apply(_ answer: RevisionAnswer, to batch: SuggestionBatch, about suggestion: PlanSuggestion, comment: String,
+    private func apply(_ answer: RevisionAnswer, to batch: SuggestionBatch, about suggestion: PlanSuggestion?, comment: String,
                        refs: [String: UUID]) async {
         // The batch may have changed while waiting (accepted, dismissed, moved): work on the fresh one.
-        guard var batch = self.batch(containing: suggestion.id) ?? store.batches().first(where: { $0.id == batch.id }) else { return }
+        guard var batch = suggestion.flatMap({ self.batch(containing: $0.id) }) ?? store.batches().first(where: { $0.id == batch.id }) else { return }
         var revised = batch.suggestions.map { var copy = $0; copy.previousPosition = nil; return copy }
         var changed: [UUID] = []
         var rejected: [String] = []
         for change in answer.changes {
             guard let id = refs[change.ref], let index = revised.firstIndex(where: { $0.id == id }) else { continue }
             let current = revised[index]
-            if current.isMovedByUser && id != suggestion.id {
+            if current.isMovedByUser && id != suggestion?.id {
                 rejected.append(String(localized: "\(current.title): hast du selbst verschoben, bleibt."))
                 continue
             }
@@ -155,8 +167,8 @@ extension AIPlanner {
         if !applied.isEmpty { batch.revisionUndo = batch.suggestions }
         batch.suggestions = revised
         var conversation = batch.conversation ?? []
-        conversation.append(SuggestionMessage(role: .user, text: comment, suggestionID: suggestion.id))
-        conversation.append(SuggestionMessage(role: .assistant, text: answer.reply, suggestionID: suggestion.id,
+        conversation.append(SuggestionMessage(role: .user, text: comment, suggestionID: suggestion?.id))
+        conversation.append(SuggestionMessage(role: .assistant, text: answer.reply, suggestionID: suggestion?.id,
                                               changes: lines, rejected: rejected))
         batch.conversation = conversation
         save(batch)
@@ -299,7 +311,7 @@ extension AIPlanner {
         return refs
     }
 
-    private func revisionRequest(batch: SuggestionBatch, about: PlanSuggestion, comment: String, refs: [String: UUID]) async throws -> String {
+    private func revisionRequest(batch: SuggestionBatch, about: PlanSuggestion?, comment: String, refs: [String: UUID]) async throws -> String {
         let refByID = Dictionary(refs.map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
         let suggestions: [[String: Any]] = batch.suggestions.compactMap { suggestion in
             guard let ref = refByID[suggestion.id] else { return nil }
@@ -324,7 +336,7 @@ extension AIPlanner {
         let conversation = (batch.conversation ?? []).suffix(20).map { ["role": $0.role.rawValue, "text": $0.text] }
         let body: [String: Any] = [
             "comment": comment,
-            "about": refByID[about.id] ?? "",
+            "about": about.flatMap { refByID[$0.id] } ?? "",
             "conversation": conversation,
             "suggestions": suggestions,
             "allowedDays": (batch.days + later.map(\.day)).map(Self.dayString),
@@ -336,7 +348,8 @@ extension AIPlanner {
 
     static func revisionInstructions(language: VoiceLanguage) -> String {
         """
-        Jetzt besprichst du die offenen Vorschläge einer Planung. Die Person kommentiert den Vorschlag about. \
+        Jetzt besprichst du die offenen Vorschläge einer Planung. Die Person kommentiert den Vorschlag about; ist about leer, \
+        betrifft der Kommentar alle Vorschläge. \
         Antworte im Format suggestion_revision: reply (ein bis zwei Sätze in der Sprache des Kommentars, sonst auf \(language.promptName), was du geändert hast und warum) \
         und changes (nur die Vorschläge, die sich ändern, mit ref, day, start, minutes). Ändere nur, was der Kommentar \
         verlangt; andere Vorschläge nur, wenn es dafür nötig ist (zum Beispiel ein Tausch). Vorschläge mit status \

@@ -15,6 +15,8 @@ final class VoiceInputModel {
     @ObservationIgnored var readDraft: () -> String = { "" }
     @ObservationIgnored var writeDraft: (String) -> Void = { _ in }
     @ObservationIgnored var onSend: (String) -> Void = { _ in }
+    /// Called after `switchLanguage()` changed the language, with the new language; the factory remembers it for the place.
+    @ObservationIgnored var onLanguageSwitched: ((VoiceLanguage) -> Void)?
     /// Called when a recording starts, e.g. to stop reading aloud.
     @ObservationIgnored var onRecordingStarts: () -> Void = {}
 
@@ -25,9 +27,13 @@ final class VoiceInputModel {
     @ObservationIgnored private let sleep: (Duration) async -> Void
     @ObservationIgnored private var ticking: Task<Void, Never>?
 
-    init(language: VoiceLanguage, makeRecognizer: @escaping () -> SpeechRecognizing, isExplained: @escaping () -> Bool,
+    /// The field this dictation belongs to; the language the user switches to is remembered per place.
+    let place: DictationPlace
+
+    init(language: VoiceLanguage, place: DictationPlace = .notes, makeRecognizer: @escaping () -> SpeechRecognizing, isExplained: @escaping () -> Bool,
          markExplained: @escaping () -> Void, now: @escaping () -> Date = Date.init,
          sleep: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) }) {
+        self.place = place
         machine = DictationMachine(language: language)
         session = RecognitionSession(makeRecognizer: makeRecognizer, now: now)
         self.isExplained = isExplained
@@ -56,7 +62,11 @@ final class VoiceInputModel {
     func finish() { apply(machine.finish()) }
     func send() { apply(machine.send()) }
     func cancel() { apply(machine.cancel()) }
-    func switchLanguage() { apply(machine.switchLanguage(now: now())) }
+    func switchLanguage() {
+        let before = machine.language
+        apply(machine.switchLanguage(now: now()))
+        if machine.language != before { onLanguageSwitched?(machine.language) }
+    }
     func setLanguage(_ language: VoiceLanguage) { machine.setLanguage(language) }
 
     /// The field was sent or cleared by hand: the next text is typed until a new recording fills it.

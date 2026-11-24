@@ -66,6 +66,28 @@ final class AppSettings {
     var workoutGoalMigrated: Bool = false
     var proteinGoalEnabled: Bool = false
     var goalProteinGrams: Int = 120
+    /// The one-time takeover of the single goals as the first goal plan ran (`GoalStore.migrateIfNeeded()`).
+    var goalPlansMigrated: Bool = false
+    /// Share of the active energy that raises the daily budget, in percent: 0, 50, 75 or 100. Half is the default because
+    /// wrist devices estimate the active energy rather coarsely (decision BU1b).
+    var activityCreditPercent: Int = 50
+    /// Counts the nutrition entries of other apps from Health as eaten ("Einträge anderer Apps mitzählen"); off by default
+    /// (decision NU5b).
+    var countsForeignNutrition: Bool = false
+    /// The consent for the online search in Open Food Facts (decision LM1d): the search words, or a barcode, go to a third party. Off by
+    /// default; only counts together with a valid `foodLookupContact` (see `isFoodLookupEnabled`).
+    var foodLookupConsent: Bool = false
+    /// The contact address the user typed for the operator of Open Food Facts, who asks every client to name one in each request. It
+    /// is never filled in by the app: not from the device, not from an account. `nil` until the user types one.
+    var foodLookupContact: String? = nil
+    /// Further nutrients that can be switched on in the meal sheet, the nutrient card and the Health mirror (decision NU1b: fibre and
+    /// sugar are always there, saturated fat and salt are optional).
+    var saturatedFatEnabled: Bool = false
+    var saltEnabled: Bool = false
+    /// The second field of the weight sheet and the second line of the weight chart (decision KG4b); off by default.
+    var bodyFatEnabled: Bool = false
+    /// The weight row of the morning start (decision KG1c); it replaces a notification, so it is on by default.
+    var morningWeightEnabled: Bool = true
     /// The three quick-button portions of the tab ("Trinkportionen"), see `DrinkPresets`. Read and set through `drinkPresets`.
     var drinkPreset1Milliliters: Int = 250
     var drinkPreset2Milliliters: Int = 330
@@ -79,12 +101,19 @@ final class AppSettings {
     var shoppingSuggestionDismissed: Bool = false
     /// The built-in shopping categories were created once; deleting them later does not bring them back.
     var shoppingCategoriesSeeded: Bool = false
-    /// The one-time consent for "Mit ChatGPT sortieren"; the settings switch binds to it.
+    /// The one-time consent for "Mit ChatGPT sortieren" and "Artikel übersetzen"; the settings switch binds to it. It only counts
+    /// together with `shoppingSortConsentVersion`.
     var shoppingSortConsent: Bool = false
+    /// The version of the text the consent was given for: 0 is the text that named sorting only, so a consent given before
+    /// translating existed counts again only after the user agreed to the new text.
+    var shoppingSortConsentVersion: Int = 0
     /// The one-time consent for "Rezept hinzufügen" (reading a recipe with ChatGPT); the settings switch binds to it.
     var shoppingRecipeConsent: Bool = false
     /// The one-time consent for "Mit ChatGPT zusammenfassen" on a shared mail (#166); the settings switch binds to it.
     var mailSummaryConsent: Bool = false
+    /// The assistant may find non-private notes (title and excerpt), read them in full and, in the notes chat, change them
+    /// (issue #173, decision D5). One switch for the whole scope; off by default. Journal, Bible Study and Dream Log never count.
+    var noteAssistantConsent: Bool = false
     /// The Health card in the tab was dismissed with "Nicht jetzt".
     var healthCardDismissed: Bool = false
     /// Phase 4: the calories/water line in the head of "Planen" (today's day view, from the first entry).
@@ -103,6 +132,27 @@ final class AppSettings {
     var weekPlanningReminderEnabled: Bool = false
     var weekPlanningReminderWeekday: Int = 1
     var weekPlanningReminderMinutes: Int = 1080
+    /// The day (`PlanDay.dayKey`) on which the card "Wochenplanung" in "Planen" was hidden or the planning was finished; the card
+    /// stays away for the rest of that day (RO15b). Not part of the backup.
+    var weekPlanningCardDismissedDayKey: String? = nil
+    /// Where "Bible Study starten" is offered (`BibleStudyOffer` raw value): the evening wrap-up, as before the choice existed.
+    var bibleStudyOfferRaw: String = "evening"
+    /// The reminder to read the Bible (BS6): off by default. The times with their weekdays are a JSON list of
+    /// `BibleStudyReminderTime`.
+    var bibleStudyReminderEnabled: Bool = false
+    var bibleStudyReminderTimesData: Data? = nil
+    /// The notification names the book and the next verse ("Weiter in Römer ab 3,27"); off, it only says "Zeit für Bible Study.".
+    var bibleStudyReminderShowsPassage: Bool = true
+    /// The day (`PlanDay.dayKey`) on which "Heute nicht" dropped the reminder. Not part of the backup: it only concerns today.
+    var bibleStudySkippedDayKey: String? = nil
+    /// "Nicht jetzt" on the suggested reminder time (BS8): no suggestion before this moment. Not part of the backup.
+    var bibleStudySuggestionSnoozedUntil: Date? = nil
+    /// The suggestions (`BibleStudyHabitTime.Suggestion.key`, comma separated) whose card was already shown after a completed
+    /// session: the card comes once per new suggestion; the settings page keeps showing it. Not part of the backup.
+    var bibleStudySuggestionShownKeys: String? = nil
+    /// The one-time upgrade of "Helle Lichter ausmachen" (offset 60) in an untouched five-point list was done. Not part of the
+    /// backup: it only keeps a list that the user changed afterwards from being upgraded again.
+    var lightsOffsetUpgradeDone: Bool = false
     /// The routine card and the evening line in "Planen".
     var showsRoutinesInPlan: Bool = true
     /// "Notizen an ChatGPT senden": a thought note may be sent, only on a tap on "Vorschläge holen".
@@ -110,6 +160,22 @@ final class AppSettings {
 
     /// Order of the note lists (`NoteSortOrder` raw value); one setting for all folders.
     var noteSortOrderRaw: String = "modified"
+    /// Turns the order of the note lists around ("Älteste zuerst"; for the title order "Z bis A"). One setting for all folders.
+    var noteSortAscending: Bool = false
+    /// Date groups ("Heute", "Letzte 7 Tage", months) in the note lists; has no effect on the title order.
+    var noteGroupsByDate: Bool = true
+
+    /// The lock of the notes (NL1a). "Mit Face ID schützen": locked notes (and, with the next switch, private folders) stay
+    /// hidden until the device owner is checked. These three values belong to this device and are not part of a backup.
+    var noteLockEnabled: Bool = false
+    /// "Private Ordner sperren": journal, Bible Study and Dream Log are protected like locked notes.
+    var noteLockPrivateFolders: Bool = false
+    /// The explanation before the first lock was shown (`NoteLockIntroSheet`).
+    var noteLockExplained: Bool = false
+
+    /// The habit "Bewegung" was switched once from "Training erfasst" to the combined source (GW1c). Device state, not part of a
+    /// backup: it only keeps a habit that the user changed afterwards from being switched again.
+    var movementSourceMigrated: Bool = false
 
     /// Data backup (#158). "Tagebuch und Bible Study einschließen" applies to "Jetzt sichern" and the automatic backup.
     var backupIncludesPrivateNotes: Bool = true
@@ -119,6 +185,11 @@ final class AppSettings {
     var lastAutoBackupAt: Date? = nil
     /// Why the last automatic backup failed; shown in the settings, blocks nothing.
     var lastBackupError: String? = nil
+    /// Backups are encrypted with the password of this device (DS6b). The key is in the Keychain of this iPhone; neither the switch
+    /// nor the key is part of a backup, so a restore never turns encryption on or off.
+    var backupEncryptionEnabled: Bool = false
+    /// The one-time question "Passwort festlegen?" when the automatic backup is switched on without a password was shown.
+    var backupPlainHintShown: Bool = false
 
     /// Quiet hours (plan quiet-hours, #169): task and deadline notifications that fall into the window move to its end.
     var quietHoursEnabled: Bool = false
@@ -129,11 +200,13 @@ final class AppSettings {
 
     /// JSON of `ReminderDefaults` (plan P4); `nil` means the defaults that behave like the former lead time.
     var reminderDefaultsData: Data? = nil
-    /// Focus filter "Mitteilungen ruhen lassen" (runtime state, not a preference): set while a Focus with the filter is
+    /// Focus filter "Mitteilungen zurückhalten" (runtime state, not a preference): set while a Focus with the filter is
     /// active, and the start kept after it ended until the notifications that came due meanwhile were caught up.
     var focusQuietSince: Date? = nil
     var focusQuietCatchUpFrom: Date? = nil
     var focusQuietCatchUpAt: Date? = nil
+    /// Upper bound of the catch-up window, see `FocusQuiet.State.catchUpUntil`.
+    var focusQuietCatchUpUntil: Date? = nil
 
     /// Focus timer (plan P3, #161): durations of the phases, the number of rounds and whether breaks are used at all.
     var focusWorkMinutes: Int = 25
@@ -141,6 +214,10 @@ final class AppSettings {
     var focusLongBreakMinutes: Int = 15
     var focusRounds: Int = 4
     var focusUsesPomodoro: Bool = true
+    /// "Dauer beim Start fragen": the start sheet (FO7b) is shown before a session starts.
+    var focusAsksDurationAtStart: Bool = true
+    /// Minutes of the last choice in the start sheet; `nil` before the first one.
+    var focusLastStartMinutes: Int? = nil
     /// "Erfahrungswerte in der Planung nutzen" (#162): the AI planning gets an expected effort per task.
     var effortHistoryInPlanning: Bool = true
 
@@ -152,6 +229,8 @@ final class AppSettings {
     var homeLongitude: Double? = nil
     /// `TravelTransport` raw value.
     var travelTransportRaw: String = "automobile"
+    /// "Rückweg anzeigen" (PL15c): the way home after the last event and before a long gap; off by default.
+    var travelShowsReturn: Bool = false
 
     /// Voice: microphone in conversations (plan voice-chat, SP7a).
     var voiceInputEnabled: Bool = true
@@ -161,6 +240,20 @@ final class AppSettings {
     var voiceRecognitionLanguage: String = "auto"
     /// The language recipes are created in (#216): "auto" follows the app language, otherwise a `VoiceLanguage` raw value.
     var recipeLanguage: String = "auto"
+    /// The language the voice chat answers in (Einstellungen › Sprachen): "spoken" answers in the language the user speaks,
+    /// otherwise a `VoiceLanguage` raw value. `nil` until `migrateVoiceAnswerLanguageIfNeeded()` derived it from the former
+    /// shared value `voiceRecognitionLanguage`, which is now the dictation language only.
+    var voiceAnswerLanguage: String? = nil
+    /// The language of new shopping items: "recipes" follows the recipe language, "auto" the app language, otherwise a
+    /// `VoiceLanguage` raw value.
+    var shoppingLanguage: String = "recipes"
+    /// JSON of `[String: String]`: the language last chosen on the dictation switch per place (`DictationPlace`). Stays on
+    /// this device and is not part of the backup.
+    var dictationPlaceLanguagesData: Data? = nil
+    /// The raw value of the language the open shopping items were last translated into, or kept in with "So lassen" (L6). `nil`
+    /// before the first run. Stays on this device and is not part of the backup: after a restore the list adopts its current
+    /// language and shows no card.
+    var shoppingItemsLanguage: String? = nil
     /// `ReadAloudPolicy` raw value; "never" by default (SP3).
     var voiceReadAloud: String = "never"
     /// Chosen system voices per language; nil picks the best installed voice.
@@ -175,6 +268,11 @@ final class AppSettings {
     var voiceModeSendDelay: Double = 2
     var voiceModeSilenceLimit: Double = 30
     var voiceModeExplained: Bool = false
+
+    /// The Siri tip above the shopping list / the drink buttons was closed or its shortcut ran once (#188 SI3). Hint state of the
+    /// device; not part of the backup.
+    var siriTipShoppingDone: Bool = false
+    var siriTipWaterDone: Bool = false
 
     /// The focus timer durations as the rules want them (clamped).
     var focusTimerSettings: FocusTimerSettings {
@@ -203,6 +301,17 @@ final class AppSettings {
         }
     }
 
+    /// The reminder times of Bible Study; an unreadable or missing list is empty.
+    var bibleStudyReminderTimes: [BibleStudyReminderTime] {
+        get { bibleStudyReminderTimesData.flatMap { try? JSONDecoder().decode([BibleStudyReminderTime].self, from: $0) } ?? [] }
+        set { bibleStudyReminderTimesData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue) }
+    }
+
+    var bibleStudyOffer: BibleStudyOffer {
+        get { BibleStudyOffer(rawValue: bibleStudyOfferRaw) ?? .evening }
+        set { bibleStudyOfferRaw = newValue.rawValue }
+    }
+
     var noteSortOrder: NoteSortOrder {
         get { NoteSortOrder(rawValue: noteSortOrderRaw) ?? .modified }
         set { noteSortOrderRaw = newValue.rawValue }
@@ -218,6 +327,55 @@ final class AppSettings {
     var weekSchedule: WeekSchedule {
         get { weekScheduleData.flatMap { try? JSONDecoder().decode(WeekSchedule.self, from: $0) } ?? .standard }
         set { weekScheduleData = try? JSONEncoder().encode(newValue) }
+    }
+
+    // MARK: Goal planning (strand G of the nutrition plan; all new fields of that strand stay together here)
+
+    /// Body values for the cross-check of goals, typed by the user as the fallback for Health. Height in whole centimetres,
+    /// birth year only (never the date of birth), `FormulaSex` raw value.
+    var bodyHeightCm: Int? = nil
+    var birthYear: Int? = nil
+    var formulaSexRaw: String? = nil
+    /// What Health delivered at the last reading of the group `bodyProfile`, in the same shape. A later silent answer keeps these.
+    var healthBodyHeightCm: Int? = nil
+    var healthBirthYear: Int? = nil
+    var healthFormulaSexRaw: String? = nil
+    /// When Health last delivered at least one body value; device state, not part of the backup.
+    var healthBodyProfileReadAt: Date? = nil
+    /// The consent "Ziele mit ChatGPT planen" (decision PV1b): only the chat "Ziele planen" and only the data package the user selects
+    /// before each conversation. Off by default; a backup without the field restores it as off.
+    var goalPlanningConsent: Bool = false
+    /// The groups of the data package the user switched off at the last conversation, as comma-separated `GoalDataGroup` raw values.
+    /// A device preference, not part of the backup.
+    var goalDataOffGroupsRaw: String? = nil
+
+    /// The groups that start switched off in the data sheet.
+    var goalDataOffGroups: Set<GoalDataGroup> {
+        get { Set((goalDataOffGroupsRaw ?? "").split(separator: ",").compactMap { GoalDataGroup(rawValue: String($0)) }) }
+        set { goalDataOffGroupsRaw = newValue.isEmpty ? nil : newValue.map(\.rawValue).sorted().joined(separator: ",") }
+    }
+
+    /// The body values the user typed.
+    var typedBodyValues: BodyProfileValues {
+        get { BodyProfileValues(heightCm: bodyHeightCm, birthYear: birthYear, sex: formulaSexRaw.flatMap(FormulaSex.init(rawValue:))) }
+        set {
+            bodyHeightCm = newValue.heightCm
+            birthYear = newValue.birthYear
+            formulaSexRaw = newValue.sex?.rawValue
+        }
+    }
+
+    /// The body values Health delivered at the last reading.
+    var healthBodyValues: BodyProfileValues {
+        get {
+            BodyProfileValues(heightCm: healthBodyHeightCm, birthYear: healthBirthYear,
+                              sex: healthFormulaSexRaw.flatMap(FormulaSex.init(rawValue:)))
+        }
+        set {
+            healthBodyHeightCm = newValue.heightCm
+            healthBirthYear = newValue.birthYear
+            healthFormulaSexRaw = newValue.sex?.rawValue
+        }
     }
 
     init() {}
@@ -244,6 +402,54 @@ extension AppSettings {
         workoutGoalMigrated = true
     }
 
+    /// The stored language settings as the rules read them.
+    var contentLanguages: ContentLanguages {
+        ContentLanguages(dictation: voiceRecognitionLanguage, answer: voiceAnswerLanguage, recipe: recipeLanguage,
+                         shopping: shoppingLanguage, places: ContentLanguages.decodePlaces(dictationPlaceLanguagesData))
+    }
+
+    /// The dictation language at `place`: the language remembered there, else the dictation setting (shopping: its own language).
+    func dictationLanguage(at place: DictationPlace) -> VoiceLanguage {
+        contentLanguages.dictationLanguage(at: place)
+    }
+
+    /// Remembers the language the user switched to while dictating at `place` (SP4b). The switch applies at this place only and
+    /// goes away again when it is switched back to the dictation setting. The shopping list has no entry of its own: its switch
+    /// is the shopping language (SP5b).
+    func rememberDictationLanguage(_ language: VoiceLanguage, at place: DictationPlace) {
+        if place == .shopping {
+            shoppingLanguage = language.rawValue
+        } else {
+            dictationPlaceLanguagesData = ContentLanguages.encodePlaces(contentLanguages.places(switching: place, to: language))
+        }
+    }
+
+    /// The text of the consent for sorting and translating shopping items that is current now (version 1 names translating too).
+    static let currentShoppingSortConsentVersion = 1
+
+    /// Whether the user agreed to the current text of the consent; a consent given for an earlier text asks again once.
+    var hasShoppingSortConsent: Bool {
+        get { shoppingSortConsent && shoppingSortConsentVersion >= Self.currentShoppingSortConsentVersion }
+        set {
+            shoppingSortConsent = newValue
+            shoppingSortConsentVersion = newValue ? Self.currentShoppingSortConsentVersion : 0
+        }
+    }
+
+    /// The tap on the language mark of the shopping list (SP5b): the other language, stored as a fixed value. From "Wie Rezepte"
+    /// or "Wie die App" it also becomes fixed, so a later change of the recipe or app language does not switch the list silently.
+    func toggleShoppingLanguage() {
+        shoppingLanguage = (contentLanguages.shoppingLanguage() == .german ? VoiceLanguage.english : .german).rawValue
+    }
+
+    /// One-time takeover when the voice chat answer language became its own setting: it starts from the former shared value
+    /// `voiceRecognitionLanguage`, so the app behaves as before the update. Writes only while the answer language has never
+    /// been set, so a later change of the dictation language leaves the answer language alone.
+    func migrateVoiceAnswerLanguageIfNeeded() {
+        guard voiceAnswerLanguage == nil else { return }
+        voiceAnswerLanguage = ContentLanguages.migratedAnswer(fromDictation: voiceRecognitionLanguage)
+    }
+
     /// The quiet hours the settings describe; `nil` when switched off or empty.
     var quietHours: QuietHours? {
         QuietHours.resolved(enabled: quietHoursEnabled, startsAtBedtime: quietHoursStartsAtBedtime, bedtimeMinutes: bedtimeMinutes,
@@ -259,11 +465,15 @@ extension AppSettings {
 
     /// The Focus filter state, see `FocusQuiet`.
     var focusQuietState: FocusQuiet.State {
-        get { FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt) }
+        get {
+            FocusQuiet.State(since: focusQuietSince, catchUpFrom: focusQuietCatchUpFrom, catchUpAt: focusQuietCatchUpAt,
+                             catchUpUntil: focusQuietCatchUpUntil)
+        }
         set {
             focusQuietSince = newValue.since
             focusQuietCatchUpFrom = newValue.catchUpFrom
             focusQuietCatchUpAt = newValue.catchUpAt
+            focusQuietCatchUpUntil = newValue.catchUpUntil
         }
     }
 
@@ -274,5 +484,45 @@ extension AppSettings {
         if reminderTaskNotifications { sources.insert(.reminders) }
         if localTaskNotifications { sources.insert(.local) }
         return sources
+    }
+}
+
+extension AppSettings {
+    /// The online search may send a request: the user agreed and gave a valid contact address. Without both, nothing goes out.
+    var isFoodLookupEnabled: Bool { foodLookupConsent && ProductSearchRules.validContact(foodLookupContact) != nil }
+
+    /// Takes over what the user typed into the contact field. A valid address is stored; an empty field removes it and switches the online
+    /// search off (it can not run without an address); anything else changes nothing. Returns what happened, for the message.
+    @discardableResult
+    func commitFoodLookupContact(_ entered: String) -> ProductSearchRules.ContactChange {
+        let change = ProductSearchRules.contactChange(entered: entered)
+        switch change {
+        case .cleared:
+            foodLookupContact = nil
+            foodLookupConsent = false
+        case .accepted(let address):
+            foodLookupContact = address
+        case .invalid:
+            break
+        }
+        return change
+    }
+
+    /// The user agreed to the online search with this address. Does nothing for an address that is not valid.
+    func agreeToFoodLookup(contact entered: String) {
+        guard case .accepted(let address) = ProductSearchRules.contactChange(entered: entered) else { return }
+        foodLookupContact = address
+        foodLookupConsent = true
+    }
+
+    /// The further nutrients the screens show: fiber and sugar always, saturated fat and salt when switched on (decision NU1b).
+    var visibleNutrients: [Nutrient] {
+        Nutrient.allCases.filter { nutrient in
+            switch nutrient {
+            case .fiber, .sugar: true
+            case .saturatedFat: saturatedFatEnabled
+            case .salt: saltEnabled
+            }
+        }
     }
 }

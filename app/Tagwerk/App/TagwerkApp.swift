@@ -40,6 +40,7 @@ struct TagwerkApp: App {
             }
             // Set before launch ends, so a tap that launched the app is not lost.
             UNUserNotificationCenter.current().delegate = environment.notificationDelegate
+            if !isTestHost { SystemNotificationCenter.registerCategories() }
         } catch {
             // A broken store makes the app unusable; fail loudly instead of losing data silently.
             fatalError("Failed to open the SwiftData store: \(error)")
@@ -54,8 +55,13 @@ struct TagwerkApp: App {
                 .task {
                     // A focus session that survived the app being closed or killed; first, before the slow network calls.
                     await environment.focus.restore()
+                    // UI test mode: the observation runs before the seeding, so the EventKit echo of the demo data is handled
+                    // (and waited for by `DemoData`) instead of arriving later, while a test already runs.
+                    if UITestMode.isActive { environment.startObservingChanges() }
                     #if DEBUG && targetEnvironment(simulator)
-                    await DemoData.seedIfRequested(environment)
+                    let demoDataCreated = await DemoData.seedIfRequested(environment)
+                    #else
+                    let demoDataCreated = false
                     #endif
                     // Reads the keychain only; nothing is sent to OpenAI at start (§8.4).
                     await environment.ai.refreshAccount()
@@ -75,10 +81,17 @@ struct TagwerkApp: App {
                     environment.startFocusUpdates()
                     environment.startHabitSourceUpdates()
                     environment.startSnapshotUpdates()
+                    // Last statements of the start: the UI tests wait for the marker this sets, so nothing of the start
+                    // may change the screen afterwards. A screen asked for with `-TagwerkUITestScreen` opens in the same update.
+                    #if DEBUG && targetEnvironment(simulator)
+                    if demoDataCreated { environment.openUITestScreen() }
+                    #endif
+                    if demoDataCreated { environment.isDemoDataReady = true }
                 }
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
                     case .active:
+                        environment.noteLock.refresh()
                         // Items shared from other apps; the root view opens their sheets once nothing else is open.
                         environment.shareInbox.appBecameActive()
                         Task {
@@ -97,6 +110,8 @@ struct TagwerkApp: App {
                             await environment.capture.syncPending()
                         }
                     case .background:
+                        // Everything protected is closed again, before anything else runs.
+                        environment.noteLock.appDidEnterBackground()
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
                         // The snapshot reads the store directly, so it is written first, before any await.
                         environment.writeSnapshot()

@@ -19,6 +19,8 @@ struct DayView: View {
     @State private var unmarking: CalendarEvent?
     @State private var blockFor: TaskItem?
     @State private var sheetEntry: DayEntry?
+    /// The event whose travel time is edited from the travel menu (PL11b).
+    @State private var editingTravel: CalendarEvent?
     @State private var showsGrid = true
     /// A block or task is being dragged in the grid; the page container ignores sideways drags meanwhile.
     @State private var gridLocked = false
@@ -34,7 +36,8 @@ struct DayView: View {
                 PagedContainer(canGoBack: true, canGoForward: true, isLocked: gridLocked,
                                contentID: { model.days.first?.day },
                                onPage: { model.step($0.step) },
-                               onDragBegan: { previewOffset = offsetBox.y }, onBlockedEdge: {}) { slot in
+                               onDragBegan: { previewOffset = offsetBox.y },
+                               onPrevailingPage: { model.titlePreviewStep = $0?.step }, onBlockedEdge: {}) { slot in
                     switch slot {
                     case .current: pageContent(plan)
                     case .previous: preview(of: plan.day.adding(days: -1, calendar: model.calendar))
@@ -48,6 +51,14 @@ struct DayView: View {
             }
         }
         .onAppear { showsGrid = model.showsHourGrid }
+        .environment(\.editTravel) { editingTravel = $0 }
+        // The page "Fahrzeit" of the event with its own navigation stack (a sheet over the day, not over another sheet).
+        .sheet(item: $editingTravel) { event in
+            NavigationStack {
+                TravelOverrideView(event: event, model: model)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { TravelSheetCloseButton() } }
+            }
+        }
         .sheet(item: $sheetEntry) { entry in EntrySheet(entry: entry, model: model, onShowTask: onShowTask) }
         .sheet(item: $linkingToDeadline) { event in DeadlinePickerSheet(event: event, model: model) }
         .seriesMarkQuestion(isPresented: Binding(get: { markingSeries != nil }, set: { if !$0 { markingSeries = nil } }),
@@ -107,13 +118,14 @@ struct DayView: View {
         PlanIntakeLine(model: model, day: plan.day)
         // The one new element of phase 7: the morning card or today's focus, in the day view of today only.
         if model.scope == .day, plan.day == model.today { RoutineCard(model: environment.routines, plan: plan) }
+        if model.scope == .day, plan.day == model.today { WeekPlanningCard(model: environment.routines) }
         DeadlineCard(model: model, actions: deadlineActions)
         DeadlineSuggestionCard(model: model)
         CapacityCard(model: model, plan: plan) { editingHours = true }
         if !model.allDayEvents(for: plan).isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    Text("Ganztägig").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text("Ganztägig").font(.caption.weight(.semibold)).foregroundStyle(.secondaryText)
                     ForEach(model.allDayEvents(for: plan)) { event in
                         Button { sheetEntry = .event(event, plan.links[event.id]) } label: {
                             Text(event.title).font(.subheadline).lineLimit(1)
@@ -164,6 +176,7 @@ struct DayView: View {
 
     private func listContent(_ plan: DayPlan, extras: DayPageExtras? = nil, isPreview: Bool = false) -> some View {
         let marks = extras ?? model.currentExtras
+        let rows = model.timelineWithGaps(for: plan)
         return List {
             Section {
                 summary(plan)
@@ -172,9 +185,8 @@ struct DayView: View {
                     .listRowSeparator(.hidden)
             }
             Section {
-                let rows = model.timelineWithGaps(for: plan)
                 let nowIndex = nowTick >= 0 ? model.nowRowIndex(in: rows, on: plan.day) : nil
-                if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondary) }
+                if rows.isEmpty { Text("Keine Termine").foregroundStyle(.secondaryText) }
                 ForEach(rows.prefix(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
                 NowRowSlot(model: model, day: plan.day, isShown: nowIndex != nil)
                 ForEach(rows.dropFirst(nowIndex ?? rows.count)) { row in timelineRow(row, plan: plan, marks: marks) }
@@ -189,38 +201,33 @@ struct DayView: View {
             TaskSections(model: model, plan: plan, onOpenTask: onOpenTask, onEditRecurring: onEditRecurring,
                          menuActions: plannedActions)
         }
-        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview))
+        .modifier(NowListBehavior(model: model, day: plan.day, tick: $nowTick, isEnabled: !isPreview,
+                                  openingRowID: rows.first.map { AnyHashable($0.id) }))
     }
 
     @ViewBuilder
     private func timelineRow(_ row: TimelineRow, plan: DayPlan, marks: DayPageExtras) -> some View {
         switch row {
         case .event(let event):
-            let isDeadline = marks.deadlineEventIDs.contains(event.id)
-            Button { sheetEntry = .event(event, nil) } label: {
-                TimelineLine(time: event.start, title: (isDeadline ? "⚑ " : "") + event.title, detail: eventDetail(event, marks: marks),
-                             color: isDeadline ? .red : (event.isBusy ? .blue : .gray))
-            }
-            .foregroundStyle(.primary)
-            .contextMenu { eventMenu(event, taskID: nil) }
+            EventEntryRow(model: model, day: plan.day, event: event, marks: marks) { sheetEntry = .event(event, nil) }
+                .contextMenu { eventMenu(event, taskID: nil) }
         case .block(let event, let taskID):
-            Button { sheetEntry = .event(event, taskID) } label: {
-                TimelineLine(time: event.start,
-                             title: (plan.day == model.today && model.focusTaskIDs.contains(taskID) ? "★ " : "") + event.title,
-                             detail: CapacityText.duration(Int(event.end.timeIntervalSince(event.start) / 60)) + " · "
-                                 + (model.canEditAsBlock(event) ? String(localized: "Zeitblock") : String(localized: "verknüpft")),
-                             color: .green)
+            BlockEntryRow(model: model, plan: plan, event: event, taskID: taskID, marks: marks) {
+                sheetEntry = .event(event, taskID)
             }
-            .foregroundStyle(.primary)
         case .lunch(let start, let minutes):
+            let remaining = model.runningRemaining(range: start..<(start + minutes), on: plan.day)
             Button { sheetEntry = .lunch(day: plan.day, range: start..<(start + minutes)) } label: {
                 TimelineLine(time: plan.day.startDate(in: model.calendar).addingTimeInterval(TimeInterval(start * 60)),
-                             title: String(localized: "Mittagspause"), detail: CapacityText.duration(minutes), color: .gray)
+                             title: String(localized: "Mittagspause"),
+                             detail: remaining.map { NowText.runningDetail(remainingMinutes: $0) } ?? CapacityText.duration(minutes),
+                             color: .gray, isRunning: remaining != nil)
             }
             .foregroundStyle(.primary)
         case .travel(let segment):
-            TravelRow(segment: segment, transport: model.settings.travelTransport,
-                      time: clock(segment.range.lowerBound, on: plan.day))
+            TravelRow(segment: segment, transport: segment.transport ?? model.settings.travelTransport,
+                      time: clock(segment.range.lowerBound, on: plan.day),
+                      event: (plan.events + plan.blocks).first { $0.id == segment.eventID }, model: model)
         case .gap(let range):
             GapLine(text: String(localized: "frei \(clock(range.lowerBound, on: plan.day))–\(clock(range.upperBound, on: plan.day))"))
                 .dropDestination(for: String.self) { keys, _ in
@@ -236,20 +243,6 @@ struct DayView: View {
         EventDeadlineMenu(event: event, model: model, onOpen: { sheetEntry = .event(event, taskID) },
                           onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
                           onConfirmUnmark: { unmarking = event })
-    }
-
-    private func eventDetail(_ event: CalendarEvent, marks: DayPageExtras) -> String {
-        var parts = [String(localized: "bis \(event.end.formatted(date: .omitted, time: .shortened))")]
-        if !event.isBusy { parts.append(String(localized: "Frei")) }
-        if !event.mergedCalendarIDs.isEmpty { parts.append(String(localized: "\(event.mergedCalendarIDs.count + 1) Kalender")) }
-        let text = DeadlineText(calendar: model.calendar)
-        if marks.deadlineEventIDs.contains(event.id) {
-            parts.append(text.timelineMark(isMarked: !model.isInDeadlineCalendar(event)))
-        }
-        if let target = marks.preparationTargets[event.id] {
-            parts.append(text.preparationMark(target, today: model.today))
-        }
-        return parts.joined(separator: " · ")
     }
 
     private func clock(_ minutes: Int, on day: PlanDay) -> String {
@@ -275,9 +268,9 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
-            if plan.day == model.today, !model.leftFromToday.isEmpty {
+            if plan.day == model.today, model.showsLeftoverLine(overbooked: plan.capacity.isOverbooked) {
                 Divider()
-                LeftoverLine(count: model.leftFromToday.count) { environment.routines.openLeftover() }
+                LeftoverLine(count: model.openFromToday.count) { environment.routines.openLeftover() }
             }
             if plan.day == model.today, environment.routines.eveningLine != nil {
                 Divider()
@@ -288,7 +281,7 @@ struct CapacityCard: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
     }
 
-    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Fertig"
+    /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Abschließen"
     /// with a checkmark. Opens the sheet; nothing is written by looking at it.
     private var wrapUpLine: some View {
         let routines = environment.routines
@@ -301,10 +294,10 @@ struct CapacityCard: View {
                     .foregroundStyle(isDone ? Color.green : Color.accentColor)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Tagesabschluss").font(.subheadline.weight(.semibold))
-                    Text(routines.captureEveningDetail(routines.eveningDay)).font(.caption).foregroundStyle(.secondary)
+                    Text(routines.captureEveningDetail(routines.eveningDay)).font(.caption).foregroundStyle(.secondaryText)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             .contentShape(Rectangle())
         }
@@ -316,7 +309,7 @@ struct CapacityCard: View {
     /// nothing is sent.
     private func eveningLine(_ entry: PlanningModel.EveningEntry) -> some View {
         Button {
-            model.anchor = entry.day
+            model.jump(to: entry.day)
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "moon.stars").foregroundStyle(Color.accentColor)
@@ -325,10 +318,10 @@ struct CapacityCard: View {
                         .font(.subheadline.weight(.semibold))
                     Text(DayPanelText.eveningDetail(day: entry.day, freeMinutes: entry.freeMinutes, leftCount: entry.leftCount,
                                                     calendar: model.calendar))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
             }
             .contentShape(Rectangle())
         }
@@ -344,15 +337,18 @@ struct CapacityCard: View {
                 HStack {
                     Text(plan.isPast ? String(localized: "Vergangen") : CapacityText.remaining(plan.capacity)).font(.headline)
                     Spacer()
-                    Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
+                    Image(systemName: "slider.horizontal.3").foregroundStyle(.secondaryText)
                 }
                 if plan.capacity.remainingMinutes != nil, let hours = model.workHours(on: plan.day) {
-                    Text(remainingDetail(hours)).font(.caption).foregroundStyle(.secondary)
+                    Text(remainingDetail(hours)).font(.caption).foregroundStyle(.secondaryText)
                 }
                 CapacityBar(capacity: plan.capacity)
+                if !plan.isPast, let explanation = CapacityText.explanation(plan.capacity, hours: model.workHours(on: plan.day), clock: clock) {
+                    Text(explanation).font(.caption).foregroundStyle(.secondaryText)
+                }
                 if plan.capacity.estimatedCount > 0 {
                     Text("\(plan.capacity.estimatedCount) Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 if suggestedMinutes > 0 {
                     let suggested = CapacityText.duration(suggestedMinutes)
@@ -360,7 +356,7 @@ struct CapacityCard: View {
                         free: plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes, suggestions: plan.suggestions,
                         counted: plan.planInput?.countedTaskMinutes ?? [:]))
                     Label(String(localized: "\(suggested) vorgeschlagen · nach dem Übernehmen \(freeAfter) frei"), systemImage: "sparkles")
-                        .font(.caption).foregroundStyle(.purple)
+                        .font(.caption).foregroundStyle(.purpleText)
                 }
             }
             .contentShape(Rectangle())
@@ -402,7 +398,7 @@ struct TaskSections: View {
             Section("Geplant ohne Uhrzeit") {
                 if plan.assigned.isEmpty {
                     Text(DayPanelText.emptyPlannedHint(day: plan.day, today: today, calendar: model.calendar))
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                 }
                 ForEach(plan.assigned) { task in taskRow(task, isPastDue: plan.isPastDue.contains(task.id)) }
             }
@@ -463,13 +459,13 @@ struct TaskSections: View {
                         Text(EstimateHours.text(minutes: task.estimateMinutes))
                     }
                     if overdue, let due = task.due {
-                        Text("fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))").foregroundStyle(.red)
+                        Text("fällig \(DueText.text(due, now: model.now(), calendar: model.calendar))").foregroundStyle(.redText)
                     } else if overdue, let planned = model.planStore.assignment(for: task.id) {
                         Text("geplant \(planned.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day().month()))")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.orangeText)
                     }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             Button(DayPanelText.commitTitle(day: plan.day, today: model.today, calendar: model.calendar)) {
@@ -494,32 +490,12 @@ private struct GapLine: View {
         HStack(spacing: 10) {
             Color.clear.frame(width: 48)
             RoundedRectangle(cornerRadius: 2).strokeBorder(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3])).frame(width: 4)
-            Text(text).font(.caption).foregroundStyle(.secondary)
+            Text(text).font(.caption).foregroundStyle(.secondaryText)
             Spacer()
             Image(systemName: "plus.circle").font(.caption).foregroundStyle(.tertiary)
         }
         .frame(minHeight: 24)
         .accessibilityLabel(String(localized: "\(text), Aufgabe hier ablegen"))
-    }
-}
-
-private struct TimelineLine: View {
-    let time: Date
-    let title: String
-    let detail: String
-    let color: Color
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(time.formatted(date: .omitted, time: .shortened))
-                .font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 48, alignment: .leading)
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                Text(detail).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -536,9 +512,9 @@ struct PlannedTaskRow: View {
                 Text((isFocus ? "★ " : "") + task.title).lineLimit(2)
                 HStack(spacing: 6) {
                     Text(EstimateHours.text(minutes: task.estimateMinutes))
-                    if isPastDue { Label("nach Fälligkeit", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
+                    if isPastDue { Label("nach Fälligkeit", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orangeText) }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             if let priority = task.priority {

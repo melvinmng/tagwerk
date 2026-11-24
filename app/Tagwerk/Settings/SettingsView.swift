@@ -15,7 +15,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var settings = environment.settings
-        NavigationStack {
+        NavigationStack(path: Bindable(environment).settingsPath) {
             Form {
                 PlanningSettingsSection()
 
@@ -94,7 +94,21 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
-                    NavigationLink("Fokus-Timer") { FocusSettingsView() }
+                    NavigationLink {
+                        FocusSettingsView()
+                    } label: {
+                        LabeledContent("Fokus-Timer", value: FocusTimerText.settingsSummary(settings.focusTimerSettings))
+                    }
+                    NavigationLink {
+                        SiriShortcutsSettingsView()
+                    } label: {
+                        LabeledContent("Siri & Kurzbefehle", value: String(localized: "\(SiriPhraseCatalog.shortcutCount) Kurzbefehle"))
+                    }
+                    NavigationLink {
+                        LanguageSettingsView()
+                    } label: {
+                        LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
+                    }
                 }
 
                 Section {
@@ -103,7 +117,7 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Standard-Erinnerungen",
                                        value: ReminderText.summary(settings.reminderDefaults.offsets(for: .localTask, isAllDay: false),
-                                                                   locale: .current, calendar: .tagwerk))
+                                                                   subject: .task, locale: .current, calendar: .tagwerk))
                     }
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
@@ -145,6 +159,16 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
+            .navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .languages: LanguageSettingsView()
+                case .ai: AISettingsView()
+                case .aiVoice: VoiceSettingsView()
+                case .capture: CaptureSettingsView()
+                case .shopping: ShoppingSettingsView()
+                case .siri: SiriShortcutsSettingsView()
+                }
+            }
             .assistantToolbarButton { .settings }
             .task {
                 loadSources()
@@ -195,7 +219,7 @@ struct SettingsView: View {
             Spacer()
             switch healthAccess {
             case .unavailable:
-                Text("nicht verfügbar").foregroundStyle(.secondary)
+                Text("nicht verfügbar").foregroundStyle(.secondaryText)
             case .notDetermined:
                 Button("Verbinden") {
                     Task {
@@ -205,7 +229,7 @@ struct SettingsView: View {
                     }
                 }
             case .authorized:
-                Text("verbunden").foregroundStyle(.secondary)
+                Text("verbunden").foregroundStyle(.secondaryText)
             case .partial:
                 Button("teilweise · Health öffnen") { openHealth() }
             case .denied:
@@ -267,7 +291,7 @@ struct SettingsView: View {
             Spacer()
             switch state {
             case .fullAccess:
-                Text("erlaubt").foregroundStyle(.secondary)
+                Text("erlaubt").foregroundStyle(.secondaryText)
             case .notDetermined:
                 Button("Erlauben") {
                     Task {

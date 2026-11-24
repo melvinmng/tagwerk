@@ -16,6 +16,12 @@ final class AssistantModel {
         case capture
         /// "Über diese Aufgabe sprechen": its own chat per task (design §8.3).
         case task(TaskID)
+        /// "Notizen mit ChatGPT" from the notes overview or a folder (`nil` is the overview); #233.
+        case notes(folderID: UUID?)
+        /// The chat about one note.
+        case note(UUID)
+        /// "Ziele planen": the chat that proposes nutrition and activity goals (plan nutrition, strand G).
+        case goals
     }
 
     private(set) var conversation: Conversation?
@@ -34,6 +40,10 @@ final class AssistantModel {
     /// The language chosen for the voice chat (Einstellungen › Sprache › "Sprache im Sprachchat"); `nil` follows the user.
     /// It decides the answer language of the voice mode and the language that is read when the text gives no clear hint.
     @ObservationIgnored var fixedVoiceLanguage: () -> VoiceLanguage? = { nil }
+
+    /// The language of new shopping items (Einstellungen › Sprachen › "Einkaufsliste"): the assistant writes the names of the
+    /// items it adds in this language, whatever language the conversation uses.
+    @ObservationIgnored var shoppingLanguage: () -> VoiceLanguage = { .app }
 
     /// The language spoken text falls back to when it is too short to tell: the chosen voice chat language, else the app's.
     private var speechFallback: VoiceLanguage { fixedVoiceLanguage() ?? .app }
@@ -58,9 +68,29 @@ final class AssistantModel {
     @ObservationIgnored private let planning: PlanningModel
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var key = ChatStore.assistantKey
+    /// The consent was withdrawn while a turn was running; the history is reduced as soon as the turn ends.
+    @ObservationIgnored private var pendingNoteSessionEnd = false
+    /// The consent "Notizen mit ChatGPT" as the settings hold it; `nil` until `watchNoteConsent` is called.
+    @ObservationIgnored private var noteConsent: (() -> Bool)?
+    /// The consent as last seen, to notice the change to `false` (and nothing else).
+    @ObservationIgnored private var noteConsentWasGiven = false
     /// GitHub access and issue lookup for chats about one task.
     @ObservationIgnored var reader: RepositoryReading?
     @ObservationIgnored var issueReference: (TaskID) -> IssueReference? = { _ in nil }
+    /// The tools of the notes chat (#233); `nil` where the app has no notes. The chat offers the note tools only while
+    /// the consent "Notizen mit ChatGPT" is on.
+    @ObservationIgnored var noteTools: NoteChatTools?
+    /// Whether the consent "Notizen mit ChatGPT" is on; the entries ask before they open the notes chat.
+    @ObservationIgnored var hasNoteConsent: () -> Bool = { false }
+    /// The consent as the settings hold it, followed by `watchGoalConsent`, and as last seen.
+    @ObservationIgnored private var goalConsent: (() -> Bool)?
+    @ObservationIgnored private var goalConsentWasGiven = false
+    /// The tools of the chat "Ziele planen"; `nil` where the app has no goals. Only this chat has them.
+    @ObservationIgnored var goalTools: GoalChatTools?
+    /// Whether the consent "Ziele mit ChatGPT planen" is on.
+    @ObservationIgnored var hasGoalConsent: () -> Bool = { false }
+    /// The first message of the next goals chat ("Fortschritt besprechen"); the chat view takes it into the input field and sends nothing.
+    var goalsPrefill: String?
     /// GitHub catalog and login for the issue card and the instructions; `nil` while GitHub is not signed in.
     @ObservationIgnored var gitHubDirectory: () -> (any GitHubDirectory)? = { nil }
     /// Name of an open shopping item by its id, for the card of `update_shopping`.
@@ -83,6 +113,7 @@ final class AssistantModel {
     func open(context: Context) {
         // The voice mode keeps its conversation until it ends (stage 2 review 4).
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.assistantKey) else { isPresented = true; return }
         self.context = context
         switchThread(to: ChatStore.assistantKey, tools: tools)
         task = nil
@@ -92,6 +123,7 @@ final class AssistantModel {
     /// "Über diese Aufgabe sprechen": the task's own chat, with the repository functions for GitHub issues.
     func open(task: TaskItem) {
         guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat("task:\(task.id.key)") else { isPresented = true; return }
         context = .task(task.id)
         let reference = task.id.source == .github ? issueReference(task.id) : nil
         let handler = TaskChatTools(base: tools, reader: reader ?? NoRepositoryReader(), reference: reader == nil ? nil : reference)
@@ -101,9 +133,76 @@ final class AssistantModel {
         isPresented = true
     }
 
+    /// The chat about all notes (`folderID` `nil`) or about the notes of one folder. Does nothing without the consent
+    /// "Notizen mit ChatGPT" and without note tools: the entries in the notes ask for the consent first.
+    func open(notes folderID: UUID?) {
+        openNotesChat(context: .notes(folderID: folderID), scope: nil, defaultFolderID: folderID)
+    }
+
+    /// The chat about one note: `update_note` and `delete_note` take only this note.
+    func open(note id: UUID) {
+        openNotesChat(context: .note(id), scope: id, defaultFolderID: nil)
+    }
+
+    /// The chat "Ziele planen" with the data package the user selected. Does nothing without the consent and without goal tools: the
+    /// entries ask for the consent and show the data sheet first. The package is frozen here; the chat sees exactly this value.
+    func openGoals(session: GoalPlanningSession, prefill: String? = nil) {
+        guard hasGoalConsent(), let goalTools else { return }
+        guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.goalsKey) else { isPresented = true; return }
+        // The goals chat is still loaded (the sheet was only closed): the package of the earlier session must not stay in the history,
+        // the user chose the groups anew. A running turn belongs to the earlier session, so the chat is only shown then.
+        if key == ChatStore.goalsKey, let conversation {
+            guard !conversation.isBusy else { isPresented = true; return }
+            conversation.reduceToStoredForm()
+        }
+        goalTools.begin(session)
+        goalsPrefill = prefill
+        context = .goals
+        task = nil
+        taskContext = nil
+        switchThread(to: ChatStore.goalsKey, tools: goalTools)
+        isPresented = true
+    }
+
+    /// The voice mode is not offered in the goal planning chat, and it cannot be started there (decision: the cards need the screen).
+    var allowsVoiceMode: Bool { context != .goals }
+
+    /// The prefilled first message, once; the user sends it with a tap.
+    func takeGoalsPrefill() -> String? {
+        defer { goalsPrefill = nil }
+        return goalsPrefill
+    }
+
+    private func openNotesChat(context newContext: Context, scope: UUID?, defaultFolderID: UUID?) {
+        guard hasNoteConsent(), let noteTools else { return }
+        guard onTurnFinished == nil else { isPresented = true; return }
+        guard !isHoldingOtherChat(ChatStore.notesKey) else { isPresented = true; return }
+        noteTools.scope = scope
+        noteTools.defaultFolderID = defaultFolderID
+        context = newContext
+        task = nil
+        taskContext = nil
+        switchThread(to: ChatStore.notesKey, tools: noteTools)
+        isPresented = true
+    }
+
+    /// True while a turn runs in a chat other than `newKey`. Such a switch waits: the turn belongs to the running
+    /// conversation, and replacing it would let the turn read notes into the session of the new chat and save its result
+    /// under the wrong key. The chat that is shown stays until the turn ends (the same rule as the voice mode).
+    private func isHoldingOtherChat(_ newKey: String) -> Bool {
+        conversation?.isBusy == true && key != newKey
+    }
+
     private func switchThread(to newKey: String, tools handler: ToolHandler) {
         guard conversation == nil || key != newKey else { return }
-        if conversation != nil { persist() }
+        if conversation != nil {
+            persist()
+            // Leaving a chat ends the note session: the next chat starts from its stored form.
+            tools.noteSession.reset()
+            // Leaving the goals chat ends its data package too; the next chat (or this one, opened again) starts from the stored form.
+            if key == ChatStore.goalsKey, newKey != ChatStore.goalsKey { goalTools?.end() }
+        }
         key = newKey
         actionTimes = store.actionTimes(for: newKey)
         spokenMarks = store.spokenMarks(for: newKey)
@@ -112,12 +211,17 @@ final class AssistantModel {
                                     history: store.history(for: newKey))
     }
 
+    /// The next message revises all open cards (the chip "Zu allen … Vorschlägen" is set); reset by `send`.
+    var composesRevision = false
+
     func send(_ text: String, spoken: Bool = false) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let conversation, !conversation.isBusy else {
             onTurnFinished?(.rejected)
             return
         }
+        syncNoteConsent()
+        syncGoalConsent()
         if let task, taskContext == nil {
             // GitHub is asked only now, when the user starts the conversation.
             let reference = task.id.source == .github ? issueReference(task.id) : nil
@@ -126,7 +230,16 @@ final class AssistantModel {
             if Task.isCancelled { return }
         }
         let start = conversation.history.count
-        await conversation.send(trimmed)
+        // "Alle anpassen …" (the chip over the input) and a message spoken in the voice mode while cards are open send the
+        // open cards back with their state instead of rejecting them (plan ki-vorschlaege-anpassen, task B5). Typing
+        // without the chip stays what it was: the open cards count as declined.
+        let revises = (composesRevision || (spoken && onTurnFinished != nil)) && !conversation.pendingActions.isEmpty
+        composesRevision = false
+        if revises {
+            await conversation.revise(comment: trimmed)
+        } else {
+            await conversation.send(trimmed)
+        }
         // `send` may first close open calls; the user message is the first `.user` item from `start` on.
         let index = conversation.history.indices.dropFirst(start).first { conversation.history[$0] == .user(trimmed) } ?? start
         if spoken {
@@ -177,8 +290,45 @@ final class AssistantModel {
     var openCards: OpenCards {
         let pending = conversation?.pendingActions ?? []
         let me = gitHubDirectory()?.login
-        return OpenCards(ids: pending.map(\.id), deletes: pending.filter { $0.name == "delete_event" }.count,
-                         guarded: pending.filter { Self.assignsBeyondMe($0, me: me) }.count)
+        // Note cards are not "guarded": the voice mode answers them with its own sentence.
+        return OpenCards(ids: pending.map(\.id),
+                         deletes: pending.filter { $0.name == "delete_event" || $0.name == "delete_note" }.count,
+                         guarded: pending.filter { Self.needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) }.count,
+                         notes: pending.filter { $0.name == "create_note" || $0.name == "update_note" }.count)
+    }
+
+    /// Tools whose cards are always confirmed alone, never with "Alle bestätigen" and never together with other
+    /// cards by voice. The note tools of the notes chat are added here.
+    static let singleConfirmationTools: Set<String> = Set(["assign_task"]).union(NoteChatTools.noteWriteTools)
+        .union(GoalChatTools.proposalTools)
+
+    /// True for a card that must be confirmed alone: a tool of `singleConfirmationTools`, or creating a task that is
+    /// assigned beyond the user (`assignsBeyondMe`).
+    static func needsSingleConfirmation(_ call: ToolCall, me: String?) -> Bool {
+        singleConfirmationTools.contains(call.name) || assignsBeyondMe(call, me: me)
+    }
+
+    /// The open cards that "Alle bestätigen" may confirm: every pending call except the guarded ones.
+    var batchConfirmable: [ToolCall] {
+        let me = gitHubDirectory()?.login
+        return (conversation?.pendingActions ?? []).filter { !Self.needsSingleConfirmation($0, me: me) }
+    }
+
+    /// The line below "Alle bestätigen" that names what is confirmed alone; `nil` without guarded cards.
+    static func singleConfirmationNotice(for calls: [ToolCall], me: String? = nil) -> String? {
+        let hasNotes = calls.contains { NoteChatTools.noteWriteTools.contains($0.name) }
+        let hasGoals = calls.contains { GoalChatTools.proposalTools.contains($0.name) }
+        let hasAssignments = calls.contains {
+            needsSingleConfirmation($0, me: me) && !NoteChatTools.noteWriteTools.contains($0.name) && !GoalChatTools.proposalTools.contains($0.name)
+        }
+        if hasGoals { return hasAssignments || hasNotes ? String(localized: "Ziele und weitere Vorschläge bestätigst du einzeln.")
+                                                        : String(localized: "Ziele bestätigst du einzeln.") }
+        switch (hasAssignments, hasNotes) {
+        case (true, true): return String(localized: "Zuweisungen und Notiz-Änderungen bestätigst du einzeln.")
+        case (true, false): return String(localized: "Zuweisungen bestätigst du einzeln.")
+        case (false, true): return String(localized: "Notiz-Änderungen bestätigst du einzeln.")
+        case (false, false): return nil
+        }
     }
 
     /// True for a `create_task` call that assigns an issue to other people or to no one. Such a card is
@@ -198,12 +348,13 @@ final class AssistantModel {
         // Exactly the cards the user answered to; deletions only one at a time ("Ja, löschen"), and so
         // are issues assigned to other people or to no one.
         let me = gitHubDirectory()?.login
-        guard !calls.isEmpty, calls.count == ids.count,
-              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.assignsBeyondMe($0, me: me) }) else {
+        guard !calls.isEmpty, calls.count == ids.count, !calls.contains(where: { GoalCards.isGoalCall($0.name) }),
+              calls.count == 1 || !calls.contains(where: { $0.name == "delete_event" || Self.needsSingleConfirmation($0, me: me) }) else {
             onTurnFinished?(.rejected)
             return
         }
         if calls.count == 1 { return await confirm(calls[0]) }
+        syncNoteConsent()
         let index = conversation.history.count
         for call in calls {
             actionTimes[call.id] = now()
@@ -268,11 +419,21 @@ final class AssistantModel {
         return isSpoken(last)
     }
 
-    func confirm(_ call: ToolCall) async {
+    /// - Parameter acknowledgedWarning: the user confirmed a goal card a second time after its warning. A goal card that is blocked never
+    ///   runs, and one with a warning runs only with this flag; the interface asks for it, and the model enforces it.
+    func confirm(_ call: ToolCall, acknowledgedWarning: Bool = false) async {
         guard let conversation else { return }
+        // The card may come from the stored form of the history (no note text in its arguments); the call that runs is the open one.
+        let call = conversation.pendingActions.first { $0.id == call.id } ?? call
+        if GoalCards.isGoalCall(call.name) {
+            guard let content = goalCardContent(for: call), !content.isBlocked, content.warning == nil || acknowledgedWarning else { return }
+        }
+        syncNoteConsent()
+        syncGoalConsent()
         actionTimes[call.id] = now()
         let index = conversation.history.count
         await conversation.confirm(call)
+        await declineStaleNoteCards(after: call)
         persist()
         if onTurnFinished != nil {
             let executed: Bool
@@ -281,6 +442,22 @@ final class AssistantModel {
         } else {
             readAfterConfirmation(from: index, call: call)
         }
+    }
+
+    /// After `update_note` or `delete_note` ran, other open cards for the same note are declined: they rest on the text from
+    /// before. The check "unchanged since read" does not catch them, because the session holds the new text after the write.
+    private func declineStaleNoteCards(after call: ToolCall) async {
+        guard let conversation, call.name == "update_note" || call.name == "delete_note",
+              case .done(let output) = status(of: call), ActionCardView.error(in: output) == nil,
+              let noteID = Self.noteID(of: call) else { return }
+        for other in conversation.pendingActions where other.id != call.id && Self.noteID(of: other) == noteID
+            && (other.name == "update_note" || other.name == "delete_note") {
+            await conversation.decline(other)
+        }
+    }
+
+    private static func noteID(of call: ToolCall) -> String? {
+        (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any])?["note_id"] as? String
     }
 
     /// "Ausgeführt." and whatever the model says next, when answers are being read (SP4a).
@@ -309,8 +486,11 @@ final class AssistantModel {
     /// "Alle bestätigen (N)" (mockup e).
     func confirmAll() async {
         guard let conversation else { return }
+        syncNoteConsent()
+        syncGoalConsent()
         let index = conversation.history.count
-        let calls = conversation.pendingActions
+        // Guarded cards stay open: they are confirmed one by one.
+        let calls = batchConfirmable
         for call in calls {
             actionTimes[call.id] = now()
             await conversation.confirm(call)
@@ -328,6 +508,8 @@ final class AssistantModel {
     }
 
     func decline(_ call: ToolCall) async {
+        let call = conversation?.pendingActions.first { $0.id == call.id } ?? call
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.decline(call)
         persist()
@@ -335,6 +517,7 @@ final class AssistantModel {
     }
 
     func retry() async {
+        syncNoteConsent()
         let index = conversation?.history.count ?? 0
         await conversation?.retry()
         persist()
@@ -345,15 +528,154 @@ final class AssistantModel {
     func clear() {
         guard conversation?.isBusy != true else { return }
         conversation?.clear()
+        tools.noteSession.reset()
+        if key == ChatStore.goalsKey { goalTools?.end() }
         actionTimes = [:]
         spokenMarks = []
         taskContext = nil
         store.delete(key)
     }
 
+    /// Ends the note session (`watchNoteConsent` calls it when the consent "Notizen mit ChatGPT" was withdrawn). The history
+    /// in memory is reduced to its stored form (the model no longer sees note texts it read earlier), the saved chat is updated.
+    /// While a turn is running the reduction follows when the turn ends (`persist()` runs after every turn).
+    func endNoteSession() {
+        pendingNoteSessionEnd = true
+        tools.noteSession.reset()
+        applyNoteSessionEnd()
+        persist()
+    }
+
+    /// Starts following the consent "Notizen mit ChatGPT" (`AppEnvironment` passes the setting): every change to `false`
+    /// ends the note session, wherever it comes from (settings screen, backup restore, any later code path). The
+    /// observation hands over on the next main actor turn; `syncNoteConsent()` closes that gap at the start of a turn.
+    func watchNoteConsent(_ consent: @escaping () -> Bool) {
+        noteConsent = consent
+        noteConsentWasGiven = consent()
+        observeNoteConsent()
+    }
+
+    private func observeNoteConsent() {
+        guard let noteConsent else { return }
+        withObservationTracking {
+            _ = noteConsent()
+        } onChange: { [weak self] in
+            // `onChange` runs before the new value is set; read it one turn later and register again.
+            Task { @MainActor [weak self] in
+                self?.syncNoteConsent()
+                self?.observeNoteConsent()
+            }
+        }
+    }
+
+    /// Compares the consent with the last value seen and ends the session when it was withdrawn. Cheap and safe to call
+    /// at any time; the turn entry points call it so no request is built from a history that still holds note text.
+    private func syncNoteConsent() {
+        guard let noteConsent else { return }
+        let allowed = noteConsent()
+        defer { noteConsentWasGiven = allowed }
+        if noteConsentWasGiven && !allowed { endNoteSession() }
+    }
+
+    /// Ends the goal session: the package is dropped and, while the goals chat is shown, the history in memory is reduced to its stored
+    /// form (the model no longer sees the values it read). While a turn runs the reduction follows when the turn ends; the note session
+    /// shares that mechanism (`pendingNoteSessionEnd`).
+    func endGoalSession() {
+        goalTools?.end()
+        guard key == ChatStore.goalsKey else { return }
+        pendingNoteSessionEnd = true
+        applyNoteSessionEnd()
+        persist()
+    }
+
+    /// Starts following the consent "Ziele mit ChatGPT planen": every change to `false` ends the goal session, wherever it comes from.
+    func watchGoalConsent(_ consent: @escaping () -> Bool) {
+        goalConsent = consent
+        goalConsentWasGiven = consent()
+        observeGoalConsent()
+    }
+
+    private func observeGoalConsent() {
+        guard let goalConsent else { return }
+        withObservationTracking {
+            _ = goalConsent()
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.syncGoalConsent()
+                self?.observeGoalConsent()
+            }
+        }
+    }
+
+    /// Compares the consent with the last value seen and ends the session when it was withdrawn; the turn entry points call it.
+    private func syncGoalConsent() {
+        guard let goalConsent else { return }
+        let allowed = goalConsent()
+        defer { goalConsentWasGiven = allowed }
+        if goalConsentWasGiven && !allowed { endGoalSession() }
+    }
+
+    /// Names of the folders that never leave the device, for the context line of the notes chat.
+    var privateFolderNames: [String] { noteTools?.access.privateFolderNames() ?? [] }
+
+    /// Name of a visible folder, for the context line; `nil` for private and unknown folders.
+    func noteFolderName(_ id: UUID) -> String? {
+        noteTools?.access.visibleFolders().first { $0.id == id }?.name
+    }
+
+    /// Title of a visible note, for the context line; `nil` for private, trashed and unknown notes.
+    func noteTitle(_ id: UUID) -> String? {
+        noteTools?.access.visibleNote(key: NoteToolAccess.key(for: id)).map(NoteToolAccess.displayTitle)
+    }
+
+    /// "Gelesen: „A“, „B“" for a `read_note` call; built from the output, so it works with the full and with the stored
+    /// form. `nil` while there is no output, for an error and for other calls.
+    func activityText(_ call: ToolCall, output: String?) -> String? {
+        guard let output else { return nil }
+        switch call.name {
+        case "read_note":
+            let titles = AppTools.readNoteTitles(in: output)
+            guard !titles.isEmpty else { return nil }
+            let quoted = titles.map { String(localized: "„\($0)“") }.joined(separator: ", ")
+            return String(localized: "Gelesen: \(quoted)")
+        case "list_notes":
+            // "Gelesen: 42 Titel", with the folder when the call named one; built from the output and the call, so it
+            // works with the stored form as well. The folder name is looked up now, a renamed folder shows its new name.
+            guard let count = NoteChatTools.listedCount(in: output) else { return nil }
+            let arguments = (try? JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]) ?? [:]
+            if let key = arguments["folder_id"] as? String, let folder = noteTools?.access.visibleFolder(key: key) {
+                return String(localized: "Gelesen: \(count) Titel aus „\(folder.name)“")
+            }
+            return String(localized: "Gelesen: \(count) Titel")
+        case "get_goal_data":
+            return Self.goalActivityText(output)
+        default:
+            return nil
+        }
+    }
+
+    /// "Gelesen: Gewicht und Ernährung der letzten 28 Tage (Durchschnitte)", built from the stored form of the result, so the line
+    /// reads the same for the full and for the stored output; `nil` for an error.
+    static func goalActivityText(_ output: String) -> String? {
+        let stored = GoalChatTools.storedPackageOutput(output)
+        guard let object = (try? JSONSerialization.jsonObject(with: Data(stored.utf8))) as? [String: Any], object["ok"] as? Bool == true,
+              let keys = object["groups"] as? [String], let days = object["days"] as? Int else { return nil }
+        let names = keys.compactMap(GoalDataGroup.init(rawValue:)).map(\.activityName)
+        guard !names.isEmpty else { return nil }
+        return String(localized: "Gelesen: \(names.formatted(.list(type: .and))) der letzten \(days) Tage (Durchschnitte)")
+    }
+
+    private func applyNoteSessionEnd() {
+        guard pendingNoteSessionEnd, let conversation, !conversation.isBusy else { return }
+        conversation.reduceToStoredForm()
+        pendingNoteSessionEnd = false
+    }
+
     private func persist() {
         guard let conversation else { return }
-        store.save(conversation.history, actionTimes: actionTimes, for: key, now: now())
+        applyNoteSessionEnd()
+        // Only the stored form: note text read in this session must not survive in the saved chat.
+        store.save(conversation.storableHistory, actionTimes: actionTimes, for: key, now: now())
         store.saveSpokenMarks(spokenMarks, for: key)
     }
 
@@ -377,6 +699,7 @@ final class AssistantModel {
     @ObservationIgnored var language: () -> VoiceLanguage = { .app }
 
     func instructions() -> String {
+        if context == .goals { return goalInstructions() }
         let current = now()
         let today = planning.today
         let time = AIPlanner.time(planning.calendar.component(.hour, from: current) * 60 + planning.calendar.component(.minute, from: current))
@@ -387,18 +710,81 @@ final class AssistantModel {
         Heute ist \(AIPlanner.dayString(today)), es ist \(time) Uhr (Zeitzone \(planning.calendar.timeZone.identifier)).
         Nutze die Funktionen: lesende darfst du jederzeit aufrufen, um nachzusehen. Ändernde Funktionen rufst du \
         direkt auf, ohne vorher im Text um Erlaubnis zu fragen; die App zeigt sie als Karte und führt sie erst nach \
-        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren.
+        Bestätigung aus. Danach erhältst du das Ergebnis oder den Fehler und kannst reagieren. \
+        Hat der Nutzer offene Vorschläge überarbeiten lassen, ist das Ergebnis dieser Vorschläge „revision_requested“: \
+        „current“ ist ihr Stand, „adjusted_by_user“ sagt, ob der Nutzer Werte selbst geändert hat, und seine nächste \
+        Nachricht sagt, was anders sein soll. Lege die offenen Vorschläge mit denselben Funktionen neu vor. Werte, die der \
+        Nutzer geändert hat, behältst du bei, außer die Nachricht betrifft sie; Vorschläge, die die Nachricht nicht \
+        betrifft, wiederholst du unverändert.
         Aufgaben-IDs haben die Form quelle:kennung (z. B. github:… oder local:…); verwende sie genau so.
         Termine kannst du anlegen, ändern und löschen (create_event, update_event, delete_event), in jedem \
         beschreibbaren Kalender; ohne Nennung eines Kalenders im Standardkalender. Nennt der Nutzer keine Dauer, \
         dauert ein neuer Termin eine Stunde.
         Fragt der Nutzer nach einem bestimmten Termin oder einer bestimmten Aufgabe, nutze search, statt mit list_events \
         Zeiträume zu raten.
+        search findet auch Notizen und Einkaufsartikel. Von Notizen siehst du Titel und einen kurzen Ausschnitt. Gib \
+        Notiztext nicht wörtlich wieder, sondern nenne Titel und Datum, außer der Nutzer bittet ausdrücklich um den \
+        Wortlaut. Meldet search notesLocked, sag dem Nutzer, dass er „Notizen mit ChatGPT“ unter Einstellungen › KI \
+        einschalten kann. github_online setzt du nur, wenn es um Issues geht, die nicht in den Aufgaben stehen, oder \
+        wenn die lokale Suche nichts ergibt.
+        \(noteInstructions())
+        \(notesChatInstructions())
         Einkaufsartikel stehen nicht in list_tasks: Die Einkaufsliste liest du mit list_shopping und änderst sie mit \
-        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an.
+        update_shopping (hinzufügen, abhaken). Lege Einkaufsartikel nie über create_task an. \
+        \(Self.shoppingLanguageInstruction(shoppingLanguage()))
         \(gitHubInstructions())
         \(onTurnFinished == nil ? "" : voiceModeText())
         \(contextText())
+        """
+    }
+
+    /// The order to write new shopping items in the language of the shopping list setting (plan G3, task L5).
+    static func shoppingLanguageInstruction(_ language: VoiceLanguage) -> String {
+        switch language {
+        case .german: "Schreibe neue Einkaufsartikel auf Deutsch."
+        case .english: "Schreibe neue Einkaufsartikel auf Englisch."
+        }
+    }
+
+    /// How to read notes; only while the consent is on and the context has notes.
+    private func noteInstructions() -> String {
+        guard tools.offersNotes else { return "" }
+        return """
+        Reicht der Ausschnitt eines Notiztreffers nicht, lies die Notiz mit read_note. Lies nur Notizen, die für die \
+        Bitte nötig sind.
+        """
+    }
+
+    /// The sentence the assistant answers with when the user asks for the private folders; it names the folders as the user
+    /// sees them (a renamed folder keeps its new name). `language` is the language of the answer.
+    static func privateNotesSentence(folderNames: [String], language: VoiceLanguage) -> String {
+        let names = NoteToolAccess.listText(folderNames, locale: formatLocale(language))
+        return Localized.string("Darauf habe ich keinen Zugriff. \(names) bleiben auf deinem iPhone und werden nie an ChatGPT gesendet.",
+                                in: language, bundle: .main)
+    }
+
+    /// The view text of a notes context while the assistant may not see notes (no consent, or the note is not visible).
+    private static let notesWithoutConsentText = "Ansicht: Notizen. Notizen stehen dir nicht zur Verfügung."
+
+    /// What the notes chat may do and how; only in the notes contexts and while the consent is on. It holds no note text.
+    private func notesChatInstructions() -> String {
+        switch context {
+        case .notes, .note: break
+        default: return ""
+        }
+        guard tools.offersNotes, let noteTools else { return "" }
+        let names = noteTools.access.privateFolderNames()
+        let german = Self.privateNotesSentence(folderNames: names, language: .german)
+        let english = Self.privateNotesSentence(folderNames: names, language: .english)
+        return """
+        In diesem Gespräch arbeitest du mit den Notizen des Nutzers. Rufe zuerst list_notes auf und lies mit read_note nur \
+        die Notizen, die für die Bitte nötig sind. Jede Änderung (create_note, update_note, delete_note) ist ein eigener \
+        Funktionsaufruf: nie mehrere Notizen in einem Aufruf und höchstens eine Änderung je Notiz und Antwort; bitte nicht im \
+        Text um Bestätigung. update_note braucht den vollständigen neuen Text; die erste Zeile ist der Titel; schreibe \
+        Markdown und übernimm Verweise der Form (attachment:…) unverändert. delete_note legt die Notiz in „Zuletzt gelöscht“. \
+        Papierkorb leeren, Verschieben, Anheften und Anhänge stehen dir nicht zur Verfügung.
+        Fragt der Nutzer nach Tagebuch mit Gott, Bible Study oder Dream Log, antworte mit genau diesem Satz, in der Sprache \
+        deiner Antwort: Deutsch „\(german)“, Englisch „\(english)“
         """
     }
 
@@ -408,10 +794,14 @@ final class AssistantModel {
         guard gitHubDirectory() != nil else { return "" }
         var text = """
         Für ein GitHub-Issue rufst du zuerst list_github_targets auf und übergibst repository und project_ids \
-        ausdrücklich. Will der Nutzer das Issue ohne Project anlegen, übergibst du project_ids als leere Liste []; es \
+        ausdrücklich. Will der Nutzer das Issue ohne Projekt anlegen, übergibst du project_ids als leere Liste []; es \
         erscheint dann nicht in seinen Aufgaben, und du sagst ihm das mit Nummer und Link. list_assignees rufst du nur \
         auf, wenn der Nutzer das Issue jemandem zuweisen will. Passt ein genannter Name zu keinem oder zu mehreren \
-        Logins, frag nach, statt zu raten.
+        Logins, frag nach, statt zu raten. Um die Zuständigkeit eines bestehenden Issues zu ändern, nutze assign_task. \
+        Lies vorher mit get_task, wer zugewiesen ist, und mit list_assignees, wer zuweisbar ist. Entfernst du den \
+        Nutzer selbst, gibt er das Issue ab; sag ihm danach Nummer und Link. Auch ein offenes Issue, das search mit \
+        github_online gefunden hat und das nicht in den Aufgaben steht, kannst du mit assign_task zuweisen, etwa wenn \
+        der Nutzer es übernehmen will; die id aus dem Suchergebnis gilt dafür bis zur nächsten GitHub-Suche.
         """
         if case .task(let id) = context, id.source == .github, let reference = issueReference(id) {
             text += " Naheliegendes Ziel für neue Issues: \(reference.repository)."
@@ -419,8 +809,37 @@ final class AssistantModel {
         return text
     }
 
+    /// The instructions of the chat "Ziele planen": an own block instead of the app functions. They state the rules once more; the limits
+    /// themselves are enforced in code.
+    func goalInstructions() -> String {
+        let current = now()
+        let today = planning.today
+        return """
+        Du bist der Assistent für die Zielplanung in der App Tagwerk. Antworte knapp in der Sprache der letzten Nachricht des Nutzers \
+        (Deutsch oder Englisch); gibt es noch keine Nachricht oder ist die Sprache unklar, antworte auf \(language().promptName).
+        Heute ist \(AIPlanner.dayString(today)).
+        Rufe vor jedem Vorschlag get_goal_data auf und frage nicht nach Werten, die dort stehen. Eine Gruppe, die dort fehlt, hat der \
+        Nutzer nicht freigegeben; frag dann kurz nach, wenn du sie brauchst. Die Werte sind Durchschnitte über Tage mit Einträgen und \
+        Schätzungen.
+        Vorschläge machst du nur über propose_nutrition_goals (Ernährung) und propose_activity_goals (Aktivität) als Karte; schreib die \
+        Zahlen nicht nur in den Text. Aktivitätsziele sind freiwillig: schlage sie nur vor, wenn der Nutzer sie will. Die Karte bestätigt der \
+        Nutzer einzeln; bitte nicht im Text um Bestätigung. Werte, die gleich bleiben sollen, gibst du als null an.
+        Das Kalorienziel (kcal) ist das Grundziel für einen Tag ohne angerechnete Aktivität, nicht der Gesamtbedarf; die Aktivität des Tages \
+        kommt in der App dazu. Ein Grundziel unter \(IntakeFormat.grouped(GoalGuardConstants.hardMinimumKcal, locale: Locale(identifier: "de_DE"))) kcal lässt sich nicht übernehmen. Tagwerk rechnet jeden Vorschlag selbst gegen und \
+        warnt auf der Karte; nenne keine eigenen Werte für Ruheumsatz oder Bedarf.
+        Du stellst keine Diagnosen und gibst keine medizinische Beratung. Nennt der Nutzer eine Erkrankung, Schwangerschaft oder eine Essstörung, \
+        rate zu ärztlichem Rat und mache keinen Vorschlag zur Gewichtsabnahme.
+        Ist das Ergebnis eines Vorschlags „revision_requested“ oder hat der Nutzer die Karte angepasst („adjusted_by_user“), arbeite mit dem \
+        genannten Stand weiter und lege den Vorschlag bei Bedarf neu vor.
+        \(onTurnFinished == nil ? "" : voiceModeText())
+        """
+    }
+
     private func contextText() -> String {
         switch context {
+        case .goals:
+            return "Ansicht: Ziele planen."
+
         case .task:
             return taskContext ?? task.map { "Das Gespräch betrifft die Aufgabe „\($0.title)“ (id \($0.id.key))." } ?? ""
         case .settings:
@@ -428,6 +847,18 @@ final class AssistantModel {
         case .capture:
             // Meals, water and workouts never go to the assistant (main design §7).
             return "Ansicht: Erfassen (Essen, Trinken, Training). Diese Daten stehen dir nicht zur Verfügung."
+        case .notes(let folderID):
+            // No note text and no titles: the assistant asks for them with list_notes.
+            guard tools.offersNotes, let access = noteTools?.access else { return Self.notesWithoutConsentText }
+            if let folderID, let folder = access.visibleFolders().first(where: { $0.id == folderID }) {
+                let count = access.entries(folderID: folderID, query: nil).count
+                return "Ansicht: Notizen im Ordner „\(folder.name)“ (id \(NoteToolAccess.folderKey(for: folderID)); \(count) sichtbare Notizen; Einzelheiten über list_notes)."
+            }
+            return "Ansicht: Notizen (\(access.entries(folderID: nil, query: nil).count) sichtbare Notizen; Einzelheiten über list_notes)."
+        case .note(let id):
+            let key = NoteToolAccess.key(for: id)
+            guard tools.offersNotes, let note = noteTools?.access.visibleNote(key: key) else { return Self.notesWithoutConsentText }
+            return "Das Gespräch betrifft die Notiz „\(NoteToolAccess.displayTitle(note))“ (id \(key)). Lies sie mit read_note."
         case .tasks:
             let open = planning.taskList.items.filter { !$0.isCompleted }.count
             return "Ansicht: Aufgaben (\(open) offene Aufgaben; Einzelheiten über list_tasks)."
@@ -449,7 +880,34 @@ final class AssistantModel {
     struct ActionCard: Equatable {
         let title: String
         /// "Vorher → Nachher" or what will happen.
-        let change: String
+        var change: String
+        /// Shown in red below `change`: what the action costs (a hand-over deletes blocks).
+        var warning: String? = nil
+        /// Replaces "Bestätigen" on the button ("Abgeben").
+        var confirmTitle: String? = nil
+        /// A red confirm button, for an action that cannot be undone by the user.
+        var isDestructive = false
+        /// The proposal of a note card, as raw values; `nil` for other cards and for cards that are no longer open.
+        var detail: NoteCardDetail? = nil
+        /// Shown after the card was carried out, behind the time ("In „Zuletzt gelöscht“").
+        var doneNote: String? = nil
+        /// Who last changed the open card; `nil` for a card as the model proposed it.
+        var mark: ProposalMark? = nil
+        /// What the model proposed, for a card the user adjusted: `change` of the original call (shown next to the new one).
+        var proposedChange: String? = nil
+        /// True for an open card with an editor: the card then offers "Anpassen" (AN1a).
+        var canAdjust = false
+        /// The card cannot be confirmed as it stands (a goal card below the hard limit or with a value out of range).
+        var blocksConfirmation = false
+        /// The card has a warning: "Übernehmen" asks a second time before it runs (goal cards).
+        var asksTwice = false
+    }
+
+    /// What a note card proposes, for the sheet "Änderung ansehen": the values only, the sentences are in `ActionCard`.
+    enum NoteCardDetail: Equatable {
+        case update(title: String, before: String, after: String)
+        case create(text: String)
+        case delete(text: String)
     }
 
     /// Text of an action card (mockup e): what the change is about and how it changes it. `language` is the app
@@ -462,9 +920,136 @@ final class AssistantModel {
 
     /// `spoken`: the card is read aloud; texts then avoid symbols that speech drops (the screen keeps them).
     /// The texts come from `ActionCardDescriber`, which the thoughts note's suggestions use as well.
-    func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false) -> ActionCard {
-        ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName)
-            .describe(call, language: language, spoken: spoken)
+    /// `isOpen`: the card still waits for an answer; only then it carries the proposal of a note card (`detail`).
+    func describe(_ call: ToolCall, language: VoiceLanguage = .app, spoken: Bool = false, isOpen: Bool = true) -> ActionCard {
+        var describer = ActionCardDescriber(planning: planning, gitHubDirectory: gitHubDirectory, shoppingItemName: shoppingItemName,
+                                            foundIssue: { [tools] in tools.foundIssues[$0] })
+        describer.noteAccess = noteTools?.access ?? tools.noteAccess
+        describer.noteDefaultFolderID = { [weak self] in self?.noteTools?.defaultFolderID }
+        describer.isOpen = isOpen
+        describer.goalCard = { [weak self] call in self?.goalCardContent(for: call) }
+        var card = describer.describe(call, language: language, spoken: spoken)
+        guard isOpen else { return card }
+        card.canAdjust = canAdjust(call)
+        if let original = conversation?.originalArguments(of: call) {
+            card.mark = adjustmentMarks[call.id] ?? .byUser
+            let proposed = describer.describe(ToolCall(id: call.id, name: call.name, arguments: original), language: language, spoken: spoken)
+            card.proposedChange = proposed.change
+            // A card the user changed on screen and then confirms by voice says so.
+            if spoken, let mark = card.mark { card.change += ". " + mark.label(in: language) }
+        }
+        return card
+    }
+
+    /// The content of a goal card: old and new values, the cross-check and its warning. `nil` for any other call.
+    func goalCardContent(for call: ToolCall) -> GoalCardContent? {
+        guard GoalCards.isGoalCall(call.name) else { return nil }
+        let plan = goalTools?.plan() ?? GoalPlan(validFrom: planning.today, kcal: 2000, waterMilliliters: 2000, stepsPerDay: 8000,
+                                                  workoutMinutesPerWeek: 150)
+        return GoalCards.content(for: call, plan: plan, input: goalTools?.session?.guardInput)
+    }
+
+    // MARK: Adjusting cards (plan ki-vorschlaege-anpassen, AN1a, AN2a, AN11a)
+
+    /// The functions whose cards have an editor and so offer "Anpassen". A function without one (complete, delete,
+    /// link, mark free) keeps two buttons. The set follows the registry of the editors (`ProposalEditors`), so a function
+    /// has "Anpassen" exactly when an editor exists for it.
+    static var adjustableToolNames: Set<String> { ProposalEditors.toolNames }
+
+    /// Replaceable so the tests and the strands can name the functions that have an editor.
+    var adjustableTools = AssistantModel.adjustableToolNames
+
+    /// True for an open card of a function with an editor that can open for this call (an `assign_task` for an issue the
+    /// app does not know any more has none).
+    func canAdjust(_ call: ToolCall) -> Bool {
+        // The voice mode has no sheet with fields: whoever speaks says the change (AN12a).
+        guard onTurnFinished == nil, adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return false }
+        return makeEditor(for: current) != nil
+    }
+
+    /// The editor for an open card; `nil` for a function without one and for a call that is no longer open. The editor
+    /// starts from the current call, so an adjusted card opens with the user's values.
+    func proposalEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        guard adjustableTools.contains(call.name),
+              let current = conversation?.pendingActions.first(where: { $0.id == call.id }) else { return nil }
+        return makeEditor(for: current)
+    }
+
+    /// An editor that starts from other arguments than the call holds, e.g. the answer of ChatGPT to a follow-up.
+    func proposalEditor(for call: ToolCall, arguments: Data) -> (any ProposalEditor)? {
+        guard let current = conversation?.pendingActions.first(where: { $0.id == call.id }), adjustableTools.contains(current.name) else { return nil }
+        return makeEditor(for: ToolCall(id: current.id, name: current.name, arguments: arguments))
+    }
+
+    private func makeEditor(for call: ToolCall) -> (any ProposalEditor)? {
+        ProposalEditors.make(for: call, context: proposalEditorContext())
+    }
+
+    /// What the editors need from the app; the suggestions of a thoughts note use the same one.
+    func proposalEditorContext() -> ProposalEditorContext {
+        let tools = tools
+        let planning = planning
+        return ProposalEditorContext(
+            calendar: planning.calendar, now: now, gitHubDirectory: gitHubDirectory,
+            writableCalendars: { planning.writableCalendars }, shoppingItemName: shoppingItemName,
+            currentGoalPlan: { [weak self] in self?.goalTools?.plan() },
+            goalGuardInput: { [weak self] in self?.goalTools?.session?.guardInput },
+            assignment: { key in
+                if let task = planning.taskList.items.first(where: { $0.id.key == key }), task.id.source == .github {
+                    return ProposalAssignment(repository: task.container.id, current: task.assignees ?? [])
+                }
+                return tools.foundIssues[key].map { ProposalAssignment(repository: $0.repository, current: $0.assignees) }
+            })
+    }
+
+    /// True while the open call differs from what the model proposed.
+    func isAdjusted(_ call: ToolCall) -> Bool { conversation?.isAdjusted(call) == true }
+
+    // MARK: Follow-up about one card (plan ki-vorschlaege-anpassen, task B4)
+
+    /// The consent a follow-up about a card needs: in a notes chat (the card may stem from note text) the consent
+    /// "Notizen mit ChatGPT"; elsewhere the sign-in is the only condition, like for the chat itself.
+    var cardFollowUpHasConsent: Bool {
+        switch context {
+        case .notes, .note: hasNoteConsent()
+        case .goals: hasGoalConsent()
+        default: true
+        }
+    }
+
+    @ObservationIgnored private lazy var cardReviser = CardReviser(
+        responder: responder, model: model, hasConsent: { [weak self] in self?.cardFollowUpHasConsent ?? false },
+        definitions: { AppTools.allDefinitions + AppTools.gitHubDefinitions + GoalChatTools.allDefinitions },
+        language: { [weak self] in self?.language() ?? .app }, now: now, calendar: planning.calendar)
+
+    /// One request about one open card: the answer fills the fields of the sheet. The chat history, the other cards and
+    /// the stored conversation stay as they are; nothing is stored. `current` are the arguments as the sheet shows them.
+    func reviseCard(_ call: ToolCall, current: Data, comment: String) async throws -> CardReviser.Answer {
+        guard let pending = conversation?.pendingActions.first(where: { $0.id == call.id }) else { throw CardReviser.Failure.unknownFunction }
+        return try await cardReviser.revise(name: pending.name, current: current,
+                                            proposed: conversation?.originalArguments(of: pending) ?? pending.arguments, comment: comment)
+    }
+
+    /// Who last changed each adjusted card; a card without an entry that is adjusted counts as changed by the user.
+    private(set) var adjustmentMarks: [String: ProposalMark] = [:]
+
+    /// Writes the values into the open card, by the user (`.byUser`) or taken from an answer of ChatGPT (`.byAssistant`).
+    /// Nothing is sent, run or saved: the card stays a proposal and is carried out by "Bestätigen" only. The guards
+    /// (`needsSingleConfirmation`) and the texts follow the new values.
+    @discardableResult
+    func adjust(_ call: ToolCall, arguments: Data, mark: ProposalMark = .byUser) -> ToolCall? {
+        guard canAdjust(call), let adjusted = conversation?.adjust(call, arguments: arguments) else { return nil }
+        // Back to what the model proposed is no adjustment, so no mark either.
+        adjustmentMarks[call.id] = conversation?.isAdjusted(adjusted) == true ? mark : nil
+        return adjusted
+    }
+
+    /// Puts the proposal of the model back; `nil` when the card was not adjusted.
+    @discardableResult
+    func resetAdjustment(_ call: ToolCall) -> ToolCall? {
+        adjustmentMarks[call.id] = nil
+        return conversation?.resetAdjustment(call)
     }
 }
 

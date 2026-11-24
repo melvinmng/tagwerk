@@ -15,6 +15,8 @@ final class InMemoryReminderStore: ReminderStore {
     var now: () -> Date
     /// Deleting one of these fails with `TaskWriteError.failed`.
     var failingDeleteIDs: Set<String> = []
+    /// Saving one of these fails with `TaskWriteError.failed`.
+    var failingSaveIDs: Set<String> = []
     private(set) var createCount = 0
     private(set) var saveCount = 0
     /// How often `openReminders` was asked, i.e. how many full reloads a model started.
@@ -66,6 +68,7 @@ final class InMemoryReminderStore: ReminderStore {
 
     func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord {
         guard let previous = records[record.id] else { throw TaskWriteError.notFound }
+        if failingSaveIDs.contains(record.id) { throw TaskWriteError.failed("save failed") }
         saveCount += 1
         var stored = record
         stored.recurrence = previous.recurrence

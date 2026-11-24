@@ -49,17 +49,21 @@ struct PageTitleLabel: View {
     var titleFont: Font = .title3.bold()
     /// `false` keeps the title at full size; the plan header picks a shorter text instead of shrinking it.
     var titleScales = true
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // The caption ("SA. 21. NOV. · KW 47") is wider than the space next to the arrows at the accessibility
+            // sizes, so it wraps there instead of being cut off; at the other sizes it stays on one line.
             Text(caption)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .foregroundStyle(isCurrent ? Color.accentColor : Color.secondaryText)
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.8)
+                .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(title).font(titleFont).lineLimit(1).minimumScaleFactor(titleScales ? 0.8 : 1)
-                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondaryText)
             }
         }
     }

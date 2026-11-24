@@ -76,7 +76,7 @@ struct TaskListView: View {
                         if !model.loadingSources.isDisjoint(with: model.filter.sources) {
                             ProgressView("Aufgaben werden geladen …")
                         } else if model.filter == .github {
-                            ContentUnavailableView("Keine zugewiesenen Issues in offenen Projects", systemImage: "checkmark.circle")
+                            ContentUnavailableView("Keine zugewiesenen Issues in offenen Projekten", systemImage: "checkmark.circle")
                         } else {
                             ContentUnavailableView("Keine Aufgaben", systemImage: "checkmark.circle")
                         }
@@ -122,6 +122,7 @@ struct TaskListView: View {
                 case .notes: NotesFoldersView(store: environment.notes)
                 case .notesFolder(let scope): NotesListView(store: environment.notes, scope: scope)
                 case .note(let id): NoteEditorView(noteID: id, store: environment.notes)
+                case .morningDay(let day): MorningDayView(day: day)
                 }
             }
             .toolbar {
@@ -218,7 +219,8 @@ struct TaskListView: View {
 
     private func row(_ item: TaskItem, section: TaskSection) -> some View {
         TaskRow(item: item, section: section, now: model.now(), calendar: model.calendar, isReadOnly: !isWritable(item),
-                isRecurring: item.recurrence != nil || environment.planning.recurringTaskIDs.contains(item.id)) {
+                isRecurring: item.recurrence != nil || environment.planning.recurringTaskIDs.contains(item.id),
+                reminderMark: model.reminderMarks[item.id.key]) {
             if isWritable(item) { Task { await model.complete(item.id) } } else { showsOfflineInfo = true }
         }
         .tag(item.id)
@@ -285,7 +287,7 @@ struct TaskListView: View {
                 Text("\(selection.count) ausgewählt · \(CapacityText.duration(minutes))").font(.subheadline.weight(.semibold))
                 if let remaining {
                     Text("heute noch \(CapacityText.duration(max(0, remaining))) frei")
-                        .font(.caption).foregroundStyle(minutes > remaining ? .red : .secondary)
+                        .font(.caption).foregroundStyle(minutes > remaining ? Color.redText : Color.secondaryText)
                 }
             }
             Spacer()
@@ -407,7 +409,7 @@ struct TaskListView: View {
                         Text(reason).font(.subheadline)
                     }
                     Text("GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                     Button("Erneut versuchen") {
                         showsOfflineInfo = false
                         Task { await model.reload(only: [.github]) }
@@ -517,24 +519,24 @@ private struct SourceProblemRow: View {
                 if canRequest {
                     Text("Erlaube den Zugriff, damit Tagwerk sie anzeigen kann.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Button("Zugriff erlauben", action: requestAccess)
                 } else {
                     Text("Erlaube den Vollzugriff in den Einstellungen, damit Tagwerk sie anzeigen kann.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Button("Einstellungen öffnen", action: openSettings)
                 }
             }
         case .failed(let message):
             Label("\(name): \(message)", systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.orange)
+                .foregroundStyle(.orangeText)
         case .signedOut:
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(name): Anmeldung abgelaufen").font(.headline)
                 Text("Melde dich neu an, damit Tagwerk deine Issues wieder anzeigt.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Button("Mit GitHub anmelden", action: signIn)
             }
         case .offline, .loaded, nil:

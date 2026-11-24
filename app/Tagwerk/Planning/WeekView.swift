@@ -1,13 +1,20 @@
 import SwiftUI
 import TagwerkCore
 
-/// Week view (mockup b-A): days as rows with capacity, deadlines and planned tasks; drop targets.
+/// Week view (mockup b-A, #259): the days as sections with capacity, then everything the day list shows in the same rows:
+/// all-day events on top, the timed events and time blocks in order, planned tasks without a time and deadlines; drop targets.
 struct WeekView: View {
     @Bindable var model: PlanningModel
     let onOpenTask: (TaskID) -> Void
+    let onShowTask: (TaskID) -> Void
     let menuActions: (TaskItem) -> TaskMenuActions
     let deadlineActions: DeadlineActions
     @State private var targetedDay: PlanDay?
+    /// The sheet of an event or block, opened as in the day view, and the event menu's questions (series, deadline, removal).
+    @State private var sheetEntry: DayEntry?
+    @State private var markingSeries: CalendarEvent?
+    @State private var linkingToDeadline: CalendarEvent?
+    @State private var unmarking: CalendarEvent?
 
     private func incomingMoves(to day: PlanDay) -> [PlanSuggestion] {
         model.suggestionBatches.flatMap(\.suggestions).filter { $0.kind == .move && $0.day == day && $0.fromDay != day }
@@ -15,7 +22,8 @@ struct WeekView: View {
 
     var body: some View {
         PagedContainer(canGoBack: true, canGoForward: true, isLocked: false, contentID: { model.days.first?.day },
-                       onPage: { model.step($0.step) }, onBlockedEdge: {}) { slot in
+                       onPage: { model.step($0.step) }, onPrevailingPage: { model.titlePreviewStep = $0?.step },
+                       onBlockedEdge: {}) { slot in
             switch slot {
             case .current: weekList
             case .previous: weekPreview(offset: -7)
@@ -23,6 +31,11 @@ struct WeekView: View {
             case .arrived: weekPreview(offset: 0)
             }
         }
+        .sheet(item: $sheetEntry) { entry in EntrySheet(entry: entry, model: model, onShowTask: onShowTask) }
+        .sheet(item: $linkingToDeadline) { event in DeadlinePickerSheet(event: event, model: model) }
+        .seriesMarkQuestion(isPresented: Binding(get: { markingSeries != nil }, set: { if !$0 { markingSeries = nil } }),
+                            event: markingSeries, model: model)
+        .unmarkConfirmation(event: $unmarking, model: model)
     }
 
     /// The neighbouring week while the page is dragged; `offset` counts days from the shown week.
@@ -44,8 +57,12 @@ struct WeekView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
             }
+            let marks = model.currentExtras
             ForEach(model.days) { plan in
+                let content = model.weekContent(for: plan)
                 Section {
+                    ForEach(content.allDay) { event in allDayRow(event, plan: plan) }
+                    ForEach(content.timed) { entry in entryRow(entry, plan: plan, marks: marks) }
                     ForEach(plan.suggestions.filter { $0.kind != .move }) { suggestion in
                         SuggestionRow(suggestion: suggestion)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -71,12 +88,13 @@ struct WeekView: View {
                             .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
                         }
                     }
-                    ForEach(plan.deadlines) { deadline in
+                    ForEach(content.deadlines) { deadline in
                         DeadlineLine(deadline: deadline)
                             .deadlineInteractions(deadline, model: model, actions: deadlineActions)
                     }
-                    if plan.assigned.isEmpty && plan.deadlines.isEmpty && plan.suggestions.isEmpty {
-                        Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondary).font(.caption)
+                    if !content.hasEntries && plan.assigned.isEmpty && content.deadlines.isEmpty && plan.suggestions.isEmpty
+                        && incomingMoves(to: plan.day).isEmpty {
+                        Text(targetedDay == plan.day ? "Hier ablegen" : "–").foregroundStyle(.secondaryText).font(.caption)
                     }
                 } header: {
                     VStack(alignment: .leading, spacing: 4) {
@@ -87,7 +105,7 @@ struct WeekView: View {
                             Spacer()
                             Text(CapacityText.summary(plan.capacity))
                                 .font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? .red : .secondary)
+                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
                     }
@@ -106,6 +124,47 @@ struct WeekView: View {
         .overlay(alignment: .bottom) { UnplannedDrawer(model: model) }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
+
+    // MARK: Rows
+
+    /// An all-day event: the row of the day list without a time, "Ganztägig" as its detail.
+    private func allDayRow(_ event: CalendarEvent, plan: DayPlan) -> some View {
+        Button { sheetEntry = .event(event, plan.links[event.id]) } label: {
+            TimelineLine(time: "", title: event.title,
+                         detail: (event.isBusy ? [String(localized: "Ganztägig")] : [String(localized: "Ganztägig"), String(localized: "Frei")])
+                             .joined(separator: " · "),
+                         color: event.isBusy ? .blue : .gray) { EmptyView() }
+        }
+        .foregroundStyle(.primary)
+        .contextMenu { eventMenu(event, taskID: plan.links[event.id], deadline: nil) }
+    }
+
+    /// An event or a time block with its trips: the rows of the day list, one row per entry.
+    @ViewBuilder
+    private func entryRow(_ entry: WeekEntry, plan: DayPlan, marks: DayPageExtras) -> some View {
+        if let taskID = entry.taskID {
+            BlockEntryRow(model: model, plan: plan, event: entry.event, taskID: taskID, marks: marks, trips: entry.trips) {
+                sheetEntry = .event(entry.event, taskID)
+            }
+        } else {
+            EventEntryRow(model: model, day: plan.day, event: entry.event, marks: marks, trips: entry.trips) {
+                sheetEntry = .event(entry.event, nil)
+            }
+            .contextMenu { eventMenu(entry.event, taskID: nil, deadline: entry.deadline) }
+        }
+    }
+
+    /// The menu of the day list's event rows; an event that is a deadline keeps the entry of its deadline line.
+    @ViewBuilder
+    private func eventMenu(_ event: CalendarEvent, taskID: TaskID?, deadline: ImportantDeadline?) -> some View {
+        EventDeadlineMenu(event: event, model: model, onOpen: { sheetEntry = .event(event, taskID) },
+                          onMarkSeries: { markingSeries = event }, onLinkToDeadline: { linkingToDeadline = event },
+                          onConfirmUnmark: { unmarking = event })
+        if let deadline {
+            Button("Zum Tag springen", systemImage: "arrow.right") { deadlineActions.showDay(deadline.day) }
+            Button("Termin zuordnen …", systemImage: "link") { deadlineActions.prepare(deadline) }
+        }
+    }
 }
 
 /// A deadline in the week and the month: flag, title and the mark "markiert" (DL2).
@@ -115,7 +174,7 @@ struct DeadlineLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Label(deadline.title, systemImage: deadline.kind == .epic ? "diamond.fill" : "flag.fill")
-                .foregroundStyle(.red).font(.subheadline)
+                .foregroundStyle(.redText).font(.subheadline)
             if deadline.kind == .markedEvent { DeadlineBadge(text: String(localized: "markiert")) }
             Spacer(minLength: 0)
         }

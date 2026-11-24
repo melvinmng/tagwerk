@@ -20,13 +20,22 @@ final class FocusTimerModel {
         var state: FocusTimerState
     }
 
+    /// A request to start a session; the start sheet is shown for it (FO7b).
+    struct StartRequest: Identifiable, Equatable {
+        let id = UUID()
+        let task: TaskItem?
+        let block: CalendarEvent?
+    }
+
     /// A session older than this is treated as lost when the app starts again.
     static let staleAge: TimeInterval = 12 * 3600
 
     private(set) var session: Session?
     /// The focus sheet is shown.
     var isPresented = false
-    /// The piece the last ended session left, for the line "Stück gewachsen"; `nil` when none.
+    /// The start sheet is shown for this request.
+    var pendingStart: StartRequest?
+    /// The piece the last ended session left; `nil` when none.
     private(set) var lastPiece: FocusRewardPiece?
     /// Completes a task of the list (`TaskID.key`); set by the app environment.
     @ObservationIgnored var completeTask: ((String) async -> Void)?
@@ -35,6 +44,8 @@ final class FocusTimerModel {
 
     @ObservationIgnored private let store: FocusStore
     @ObservationIgnored private let settings: () -> FocusTimerSettings
+    /// Whether "Dauer beim Start fragen" is on.
+    @ObservationIgnored private let asksDurationAtStart: () -> Bool
     @ObservationIgnored let now: () -> Date
     @ObservationIgnored private let activity: FocusActivityControlling
     @ObservationIgnored private let notifications: FocusNotificationScheduling
@@ -49,9 +60,11 @@ final class FocusTimerModel {
 
     init(store: FocusStore, settings: @escaping () -> FocusTimerSettings, activity: FocusActivityControlling,
          notifications: FocusNotificationScheduling, now: @escaping () -> Date = Date.init, wakesAtPhaseEnd: Bool = true,
-         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil) {
+         controlState: ControlState? = nil, controlReloader: ControlReloading? = nil,
+         asksDurationAtStart: @escaping () -> Bool = { true }) {
         self.store = store
         self.settings = settings
+        self.asksDurationAtStart = asksDurationAtStart
         self.activity = activity
         self.notifications = notifications
         self.now = now
@@ -67,25 +80,39 @@ final class FocusTimerModel {
         session.map { FocusTimerRules.snapshot(of: $0.state, at: date) }
     }
 
+    /// Whether the running session belongs to this time block (the event ID).
+    func isRunning(forBlockID id: String) -> Bool { session?.blockEventID == id }
+
     /// Whether the running session belongs to this task (`TaskID.key`).
     func isRunning(forTaskKey key: String) -> Bool { session?.taskKey == key }
 
     // MARK: Start and control
 
-    /// Starts a session. While one runs, it is shown instead. A block without Pomodoro sets the work time to what is left
-    /// of the block (at least 5 minutes).
-    func start(task: TaskItem?, block: CalendarEvent?) async {
+    /// Shows the start sheet, or starts at once with the settings when "Dauer beim Start fragen" is off. While a session
+    /// runs, that session is opened instead. Siri, the control and shortcuts call `start` and never show the sheet.
+    func requestStart(task: TaskItem?, block: CalendarEvent?) async {
         guard session == nil else {
             isPresented = true
             return
         }
-        let moment = now()
-        var timerSettings = settings()
-        if let block, !timerSettings.isPomodoro {
-            let remaining = block.end.timeIntervalSince(max(moment, block.start))
-            timerSettings.workMinutes = max(FocusTimerSettings.workRange.lowerBound, Int((remaining / 60).rounded(.up)))
-            timerSettings = timerSettings.clamped
+        if asksDurationAtStart() {
+            pendingStart = StartRequest(task: task, block: block)
+        } else {
+            await start(task: task, block: block)
         }
+    }
+
+    /// Starts a session. While one runs, it is shown instead. Without a `choice` the settings apply, and a block without
+    /// Pomodoro sets the work time to what is left of the block (at least 5 minutes).
+    func start(task: TaskItem?, block: CalendarEvent?, choice: FocusStartChoice? = nil) async {
+        guard session == nil else {
+            isPresented = true
+            return
+        }
+        pendingStart = nil
+        let moment = now()
+        let remaining = block.map { FocusStart.remainingMinutes(blockStart: $0.start, blockEnd: $0.end, now: moment) }
+        let timerSettings = FocusStart.settings(base: settings(), choice: choice, blockRemainingMinutes: remaining)
         let state = FocusTimerState(start: moment, settings: timerSettings)
         let new = FocusSessionRecord(taskKey: task?.id.key, blockEventID: block?.id, title: task?.title ?? block?.title ?? "", state: state)
         store.insert(new)
@@ -122,14 +149,16 @@ final class FocusTimerModel {
         await syncOutputs()
     }
 
-    /// The user gives up. Within the first minute nothing is left of the session; later its piece wilts.
+    /// The user ends the session before its phase is over. Within the first minute nothing is left of it; later it
+    /// stays as an early-ended piece (`aborted`) in the stage reached (FO9b).
     func stop() async {
         guard let snap = snapshot(at: now()) else { return }
         await end(snap.phase == .finished ? .completed : FocusReward.outcomeOfStop(focusedSeconds: snap.focusedSeconds))
     }
 
-    /// The choices at the end of a phase or of the whole session. The session is ended and saved before the task is
-    /// changed, so the effort of the completion sees this session's focus time.
+    /// The choices during a phase and at its end. "Erledigt" (`.complete`) ends the session as completed in every
+    /// phase, with the stage reached so far (FO1b, FO9b). The session is ended and saved before the task is changed,
+    /// so the effort of the completion sees this session's focus time.
     func finish(_ action: FocusEndAction) async {
         guard let current = session, let snap = snapshot(at: now()) else { return }
         switch action {
@@ -218,7 +247,7 @@ final class FocusTimerModel {
 
     private func currentContent() -> FocusActivityContent? {
         guard let session, let snap = snapshot(at: now()) else { return nil }
-        return FocusActivityContent(title: session.title, state: session.state, snapshot: snap)
+        return FocusActivityContent(title: session.title, state: session.state, snapshot: snap, hasTask: session.taskKey != nil)
     }
 
     /// Tells the focus control whether a session runs and when it ends, and reloads the control when that changed. A

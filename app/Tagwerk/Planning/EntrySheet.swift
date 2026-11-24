@@ -75,15 +75,15 @@ struct EntrySheet: View {
         Section {
             Text((deadline != nil ? "⚑ " : "") + event.title).font(.headline)
             Text(timeText(event) + (deadline.map { " · " + DeadlineText(calendar: model.calendar).relative($0.day, today: model.today) } ?? ""))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             if let calendar = model.calendarTitle(event.calendarID) {
                 LabeledContent("Kalender", value: calendar + (event.isEditable ? "" : " 🔒"))
             }
-            if event.isRecurring { Label("Wiederholt sich", systemImage: "arrow.trianglehead.2.clockwise").foregroundStyle(.secondary) }
+            if event.isRecurring { Label("Wiederholt sich", systemImage: "arrow.trianglehead.2.clockwise").foregroundStyle(.secondaryText) }
             if let location = event.location, !location.isEmpty { LabeledContent("Ort", value: location) }
             TravelInfoRow(event: event, model: model)
             if let notes = event.notes, !notes.isEmpty, !CalendarBlockRules.isBlockNote(notes) {
-                Text(notes).font(.subheadline).foregroundStyle(.secondary)
+                Text(notes).font(.subheadline).foregroundStyle(.secondaryText)
             }
         }
 
@@ -132,7 +132,7 @@ struct EntrySheet: View {
                 if let progress = model.sessionProgress[task.id] {
                     // Mockup FS1: planned time against the effort.
                     Text("\(CapacityText.duration(progress.blocked)) von \(CapacityText.duration(progress.estimate)) eingeplant")
-                        .font(.footnote).foregroundStyle(progress.remaining > 0 ? .orange : .secondary)
+                        .font(.footnote).foregroundStyle(progress.remaining > 0 ? Color.orangeText : Color.secondaryText)
                 }
                 Button("Aufgabe zeigen") {
                     dismiss()
@@ -188,7 +188,7 @@ struct EntrySheet: View {
                     EventEditSheet(model: model, existing: event, day: PlanDay(date: event.start, calendar: model.calendar))
                 }
                 .sheet(isPresented: $movingDay) { BlockDaySheet(block: event, model: model) { dismiss() } }
-                .sheet(isPresented: $editingReminders) { DeadlineReminderSheet(event: event, calendar: model.calendar) }
+                .sheet(isPresented: $editingReminders) { DeadlineReminderSheet(event: event, calendar: model.calendar, planning: model) }
                 .confirmationDialog(event.isRecurring ? "Dieser Termin wiederholt sich" : "Löschen?", isPresented: $askingDelete,
                                     titleVisibility: .visible) {
                     if event.isRecurring {
@@ -216,7 +216,7 @@ struct EntrySheet: View {
         let calendarName = model.calendarTitle(event.calendarID) ?? String(localized: "Kalender")
         Section {
             if model.isInDeadlineCalendar(event) {
-                Label(String(localized: "Deadline · aus Kalender \(calendarName)"), systemImage: "flag.fill").foregroundStyle(.red)
+                Label(String(localized: "Deadline · aus Kalender \(calendarName)"), systemImage: "flag.fill").foregroundStyle(.redText)
             } else {
                 Toggle("Als Deadline markieren", isOn: Binding(get: { model.isMarkedDeadline(event) }, set: { mark in
                     setMarked(event, mark)
@@ -241,7 +241,7 @@ struct EntrySheet: View {
         return Button { editingReminders = true } label: {
             LabeledContent("Erinnerungen") {
                 HStack(spacing: 4) {
-                    Text(ReminderText.summary(offsets, locale: .current, calendar: model.calendar))
+                    Text(ReminderText.summary(offsets, subject: .deadline, isAllDay: event.isAllDay, locale: .current, calendar: model.calendar))
                     Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
                 }
             }
@@ -336,7 +336,7 @@ struct EntrySheet: View {
         Section {
             Text("Mittagspause").font(.headline)
             Text(model.hasOwnLunch(on: day) ? "Nur an diesem Tag geändert" : "Standard aus den Einstellungen")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
         Section {
             DatePicker("Beginn", selection: lunchStart(range, on: day), displayedComponents: .hourAndMinute)
@@ -414,7 +414,7 @@ struct EntrySheet: View {
             }
         } else {
             LabeledContent("Duplizieren", value: String(localized: "kein freier Platz mehr"))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 

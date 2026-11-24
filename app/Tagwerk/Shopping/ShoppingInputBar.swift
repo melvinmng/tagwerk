@@ -26,6 +26,12 @@ enum ShoppingInput {
         return parts.joined(separator: " · ")
     }
 
+    /// VoiceOver text of the language mark: the language of the list and the one a tap switches to.
+    static func chipLabel(_ language: VoiceLanguage) -> LocalizedStringKey {
+        language == .german ? "Sprache der Einkaufsliste Deutsch, auf Englisch wechseln"
+                            : "Sprache der Einkaufsliste Englisch, auf Deutsch wechseln"
+    }
+
     static func chipTitle(_ item: ParsedItem) -> String {
         "＋ " + [item.quantity, item.name].compactMap { $0 }.joined(separator: " ")
     }
@@ -55,12 +61,13 @@ struct ShoppingInputBar: View {
 
     private var parsed: ShoppingInputParser.ParseResult { ShoppingInputParser.parseAll(text) }
     private var items: [ParsedItem] { parsed.items.filter { !removed.contains($0) } }
+    private var shoppingLanguage: VoiceLanguage { environment.settings.contentLanguages.shoppingLanguage() }
     private var showsChips: Bool { ShoppingInput.needsPreview(items: parsed.items, wasDictated: wasDictated) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let notice {
-                Text(notice).font(.footnote).foregroundStyle(.secondary)
+                Text(notice).font(.footnote).foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityAddTraits(.updatesFrequently)
             }
@@ -112,9 +119,14 @@ struct ShoppingInputBar: View {
                 .focused($isFocused)
                 .submitLabel(.done)
                 .onSubmit(submit)
+            // The language of the list is also the language of new items from recipes and the assistant, so the mark stays when
+            // the microphone is off.
+            LanguageChip(language: shoppingLanguage, style: .short, label: ShoppingInput.chipLabel(shoppingLanguage)) {
+                environment.settings.toggleShoppingLanguage()
+            }
             if environment.settings.voiceInputEnabled, let voice {
                 VoiceMicrophoneButton(voice: voice, isEnabled: !isAdding,
-                                      language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                      language: environment.settings.dictationLanguage(at: .shopping))
             }
             if !items.isEmpty {
                 Button(action: submit) {
@@ -132,7 +144,7 @@ struct ShoppingInputBar: View {
 
     private func prepareVoice() {
         guard voice == nil else { return }
-        let model = VoiceInputFactory.make(environment)
+        let model = VoiceInputFactory.make(environment, place: .shopping)
         model.readDraft = { text }
         model.writeDraft = { spoken in
             text = spoken

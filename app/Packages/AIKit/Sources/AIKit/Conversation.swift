@@ -36,6 +36,20 @@ public protocol ToolHandler: AnyObject {
     var definitions: [ToolDefinition] { get }
     func kind(of name: String) -> ToolKind
     func run(_ call: ToolCall) async -> String
+    /// What a stored chat keeps of one call: its arguments and its output (`nil` while the call is still open).
+    /// The default keeps both unchanged. A tool whose output must not outlive the session (note text) shortens it here.
+    func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?)
+    /// Whether a read call is shown as a line in the chat (for example "Gelesen: …"). The default is `false`:
+    /// read calls are invisible.
+    func showsActivity(_ name: String) -> Bool
+}
+
+extension ToolHandler {
+    public func storedForm(of call: ToolCall, output: String?) -> (arguments: String, output: String?) {
+        (String(decoding: call.arguments, as: UTF8.self), output)
+    }
+
+    public func showsActivity(_ name: String) -> Bool { false }
 }
 
 /// One entry of the visible chat.
@@ -45,6 +59,8 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
         case running
         case done(String)
         case declined
+        /// The user asked to revise the open cards (`Conversation.revise`); the model proposes a new set.
+        case revised
     }
 
     public enum Content: Equatable, Sendable {
@@ -52,6 +68,8 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
         case assistant(String)
         /// A write function as an action card.
         case action(ToolCall, ActionStatus)
+        /// A read function the tool handler shows as a line (`ToolHandler.showsActivity`); `output` is `nil` while it runs.
+        case activity(ToolCall, output: String?)
     }
 
     public let id: Int
@@ -78,6 +96,8 @@ public final class Conversation {
     public static let maxInputItems = 40
     public static let maxOutputBytes = 16_384
     public static let declinedOutput = #"{"status":"declined","message":"Vom Nutzer abgelehnt."}"#
+    /// `status` of the output that closes an open card when the user asks to revise all open cards.
+    public static let revisionStatus = "revision_requested"
     public static let roundLimitOutput = #"{"status":"not_run","message":"Nicht ausgeführt: Grenze an Funktionsaufrufen erreicht."}"#
     public static let interruptedOutput = #"{"status":"not_run","message":"Nicht ausgeführt: Das Gespräch wurde unterbrochen."}"#
     public static let clippedNotice = "\n[gekürzt: Die Ausgabe war länger als 16 KB.]"
@@ -98,6 +118,8 @@ public final class Conversation {
     @ObservationIgnored private let instructions: @MainActor () -> String
     @ObservationIgnored private var rounds = 0
     @ObservationIgnored private var runningCallID: String?
+    /// The arguments the model proposed for each pending call the user has adjusted; kept in memory only.
+    @ObservationIgnored private var proposedArguments: [String: Data] = [:]
 
     /// Restores a conversation. Calls without an output (the app ended while a card was open)
     /// are closed with a fixed output, so the history is always valid input.
@@ -126,20 +148,118 @@ public final class Conversation {
         await runRound()
     }
 
+    /// Like `send`, but the open cards are not rejected: each gets the output "revision_requested" with its current
+    /// arguments (in the stored form of the tool, so no note text leaves the stored history twice) and whether the user
+    /// changed them, and the model answers the message with a new set (plan ki-vorschlaege-anpassen, task B5, AN5a).
+    /// The old cards stay in the chat as "revised". Nothing runs.
+    public func revise(comment text: String) async {
+        guard !isBusy else { return }
+        for call in pendingActions {
+            history.append(.functionOutput(callID: call.id, output: revisionOutput(for: call)))
+        }
+        // Anything else still open (cards the list does not know) is closed like for `send`.
+        closeOpenCalls(output: Self.declinedOutput)
+        history.append(.user(text))
+        rounds = 0
+        roundLimitReached = false
+        await runRound()
+    }
+
+    /// `{"adjusted_by_user":…,"current":{…},"status":"revision_requested"}`. `current` holds the full arguments, so the model
+    /// proposes the set anew from the real values (a note text shortened for storage would be written back as it is);
+    /// `storableHistory` reduces it to the stored form of the call.
+    private func revisionOutput(for call: ToolCall) -> String {
+        let current = (try? JSONSerialization.jsonObject(with: call.arguments)) ?? String(decoding: call.arguments, as: UTF8.self)
+        return Self.clipped(Self.revisionOutput(current: current, adjusted: isAdjusted(call)))
+    }
+
+    private static func revisionOutput(current: Any, adjusted: Bool) -> String {
+        let object: [String: Any] = ["status": revisionStatus, "current": current, "adjusted_by_user": adjusted]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// The same output with `current` in the stored form of the call; other outputs stay as they are.
+    private func storedRevisionOutput(_ output: String, for call: ToolCall) -> String {
+        guard Self.isRevisionOutput(output),
+              let object = (try? JSONSerialization.jsonObject(with: Data(output.utf8))) as? [String: Any] else { return output }
+        let stored = tools.storedForm(of: call, output: nil).arguments
+        let current = (try? JSONSerialization.jsonObject(with: Data(stored.utf8))) ?? stored
+        return Self.revisionOutput(current: current, adjusted: object["adjusted_by_user"] as? Bool ?? false)
+    }
+
+    /// Runs the pending call with the given ID. A view may still hold the call as the model proposed it, so the call
+    /// that runs is always the current one, with the user's adjustments.
     public func confirm(_ call: ToolCall) async {
-        guard pendingActions.contains(call), runningCallID == nil else { return }
-        runningCallID = call.id
+        guard let current = pendingActions.first(where: { $0.id == call.id }), runningCallID == nil else { return }
+        runningCallID = current.id
         state = .runningAction
-        let output = Self.clipped(await tools.run(call))
+        var output = await tools.run(current)
+        if let proposed = originalArguments(of: current) {
+            output = Self.annotated(output, proposedArguments: proposed)
+        }
+        output = Self.clipped(output)
         runningCallID = nil
-        resolve(call, output: output)
+        resolve(current, output: output)
         await continueIfResolved()
     }
 
     public func decline(_ call: ToolCall) async {
-        guard pendingActions.contains(call), runningCallID != call.id else { return }
-        resolve(call, output: Self.declinedOutput)
+        guard let current = pendingActions.first(where: { $0.id == call.id }), runningCallID != current.id else { return }
+        resolve(current, output: Self.declinedOutput)
         await continueIfResolved()
+    }
+
+    // MARK: Adjusting pending calls
+
+    /// Replaces the arguments of a pending call by the user's values, in the pending list and in the history, so the
+    /// card, the stored form and the confirmation all see the same call. The arguments the model proposed are kept
+    /// in memory for `resetAdjustment` and for the output of `confirm`. Returns the new call, or `nil` when the call is
+    /// not pending, is running, or the arguments are not a JSON object. Nothing is sent and nothing runs.
+    @discardableResult
+    public func adjust(_ call: ToolCall, arguments: Data) -> ToolCall? {
+        guard runningCallID != call.id,
+              let index = pendingActions.firstIndex(where: { $0.id == call.id }),
+              (try? JSONSerialization.jsonObject(with: arguments)) is [String: Any] else { return nil }
+        let current = pendingActions[index]
+        let original = proposedArguments[current.id] ?? current.arguments
+        let adjusted = ToolCall(id: current.id, name: current.name, arguments: arguments)
+        guard replaceArguments(of: adjusted) else { return nil }
+        pendingActions[index] = adjusted
+        // Adjusting back to the proposal is no adjustment.
+        proposedArguments[current.id] = Self.sameJSON(original, arguments) ? nil : original
+        return adjusted
+    }
+
+    /// Puts the arguments of the model back. `nil` when the call was not adjusted.
+    @discardableResult
+    public func resetAdjustment(_ call: ToolCall) -> ToolCall? {
+        guard runningCallID != call.id, let original = proposedArguments[call.id],
+              let index = pendingActions.firstIndex(where: { $0.id == call.id }) else { return nil }
+        let restored = ToolCall(id: call.id, name: call.name, arguments: original)
+        guard replaceArguments(of: restored) else { return nil }
+        pendingActions[index] = restored
+        proposedArguments[call.id] = nil
+        return restored
+    }
+
+    /// The arguments of the model for a pending call the user adjusted; `nil` for a call that is not adjusted.
+    public func originalArguments(of call: ToolCall) -> Data? {
+        proposedArguments[call.id]
+    }
+
+    /// True while the pending call differs from what the model proposed.
+    public func isAdjusted(_ call: ToolCall) -> Bool {
+        proposedArguments[call.id] != nil
+    }
+
+    /// Swaps the arguments of the open call in the history.
+    private func replaceArguments(of call: ToolCall) -> Bool {
+        guard let index = history.lastIndex(where: {
+            if case .functionCall(let id, _, _) = $0 { id == call.id } else { false }
+        }) else { return false }
+        history[index] = .functionCall(callID: call.id, name: call.name, arguments: String(decoding: call.arguments, as: UTF8.self))
+        return true
     }
 
     /// Repeats the failed call with the same history.
@@ -154,11 +274,49 @@ public final class Conversation {
         guard !isBusy else { return }
         history = []
         pendingActions = []
+        proposedArguments = [:]
         streamingText = ""
         truncatedNotice = false
         roundLimitReached = false
         rounds = 0
         state = .idle
+    }
+
+    // MARK: Stored form
+
+    /// The history with every function call and output reduced by `ToolHandler.storedForm`; this is what gets saved.
+    /// Order, items and call IDs stay, so indices into the history remain valid. `history` itself is not changed:
+    /// during the session the model keeps seeing the full results.
+    public var storableHistory: [InputItem] {
+        var calls: [String: ToolCall] = [:]
+        var outputs: [String: String] = [:]
+        for item in history {
+            switch item {
+            case .functionCall(let id, let name, let arguments): calls[id] = ToolCall(id: id, name: name, arguments: Data(arguments.utf8))
+            case .functionOutput(let id, let output): outputs[id] = output
+            default: break
+            }
+        }
+        return history.map { item in
+            switch item {
+            case .functionCall(let id, let name, _):
+                guard let call = calls[id] else { return item }
+                return .functionCall(callID: id, name: name, arguments: tools.storedForm(of: call, output: outputs[id]).arguments)
+            case .functionOutput(let id, let output):
+                guard let call = calls[id] else { return item }
+                let reduced = tools.storedForm(of: call, output: output).output ?? output
+                return .functionOutput(callID: id, output: storedRevisionOutput(reduced, for: call))
+            default:
+                return item
+            }
+        }
+    }
+
+    /// Replaces the history in memory by `storableHistory`: the chat goes on, what the model read earlier is gone
+    /// (it ends a note session without ending the chat). Does nothing while a turn is running.
+    public func reduceToStoredForm() {
+        guard !isBusy else { return }
+        history = storableHistory
     }
 
     // MARK: Visible messages
@@ -174,9 +332,12 @@ public final class Conversation {
             case .assistant(let text):
                 result.append(ChatMessage(id: index, content: .assistant(text)))
             case .functionCall(let id, let name, let arguments):
-                guard tools.kind(of: name) == .write else { continue }
                 let call = ToolCall(id: id, name: name, arguments: Data(arguments.utf8))
-                result.append(ChatMessage(id: index, content: .action(call, status(of: id, output: outputs[id]))))
+                if tools.kind(of: name) == .write {
+                    result.append(ChatMessage(id: index, content: .action(call, status(of: id, output: outputs[id]))))
+                } else if tools.showsActivity(name) {
+                    result.append(ChatMessage(id: index, content: .activity(call, output: outputs[id])))
+                }
             case .functionOutput:
                 continue
             }
@@ -187,7 +348,8 @@ public final class Conversation {
     private func status(of id: String, output: String?) -> ChatMessage.ActionStatus {
         if runningCallID == id { return .running }
         guard let output else { return .pending }
-        return output == Self.declinedOutput ? .declined : .done(output)
+        if output == Self.declinedOutput { return .declined }
+        return Self.isRevisionOutput(output) ? .revised : .done(output)
     }
 
     // MARK: Rounds
@@ -244,7 +406,8 @@ public final class Conversation {
 
     private func resolve(_ call: ToolCall, output: String) {
         history.append(.functionOutput(callID: call.id, output: output))
-        pendingActions.removeAll { $0 == call }
+        pendingActions.removeAll { $0.id == call.id }
+        proposedArguments[call.id] = nil
     }
 
     private func continueIfResolved() async {
@@ -262,6 +425,7 @@ public final class Conversation {
             history.append(.functionOutput(callID: id, output: output))
         }
         pendingActions = []
+        proposedArguments = [:]
     }
 
     // MARK: Helpers
@@ -290,6 +454,36 @@ public final class Conversation {
             return Array(history[lastUser...])
         }
         return Array(history.suffix(maxInputItems))
+    }
+
+    /// Tells the model that the user changed the call: a JSON object output gets `adjusted_by_user` and `proposed`
+    /// (the arguments of the model) next to its own fields, so errors stay readable on the top level; any other output
+    /// gets a sentence.
+    static func annotated(_ output: String, proposedArguments: Data) -> String {
+        if let object = (try? JSONSerialization.jsonObject(with: Data(output.utf8))) as? [String: Any],
+           let proposed = try? JSONSerialization.jsonObject(with: proposedArguments) {
+            var annotated = object
+            annotated["adjusted_by_user"] = true
+            annotated["proposed"] = proposed
+            if let data = try? JSONSerialization.data(withJSONObject: annotated, options: [.sortedKeys, .withoutEscapingSlashes]) {
+                return String(decoding: data, as: UTF8.self)
+            }
+        }
+        return output + "\nDer Nutzer hat die Werte geändert. Vorgeschlagen war: "
+            + String(decoding: proposedArguments, as: UTF8.self)
+    }
+
+    /// True for the output that closes a card for `revise`.
+    static func isRevisionOutput(_ output: String) -> Bool {
+        guard output.contains(revisionStatus),
+              let object = (try? JSONSerialization.jsonObject(with: Data(output.utf8))) as? [String: Any] else { return false }
+        return object["status"] as? String == revisionStatus
+    }
+
+    /// Equal as JSON values, whatever the key order.
+    static func sameJSON(_ a: Data, _ b: Data) -> Bool {
+        guard let first = try? JSONSerialization.jsonObject(with: a), let second = try? JSONSerialization.jsonObject(with: b) else { return a == b }
+        return (first as? NSObject) == (second as? NSObject)
     }
 
     /// Keeps a tool output within 16 KB (UTF-8), cut at a character boundary.

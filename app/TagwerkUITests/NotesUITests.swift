@@ -19,4 +19,80 @@ final class NotesUITests: UITestCase {
         let hit = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Notiz, UI-Test Notiz")).firstMatch
         XCTAssertTrue(hit.waitForExistence(timeout: 20), "The search did not find the note")
     }
+
+    /// NO3b: the plus button in the row "Brain Dump" opens an empty note for writing; leaving it without text creates no note.
+    func testBrainDumpPlusOpensEmptyNoteForWriting() {
+        openNotes()
+        let plus = app.buttons["Neue Notiz in Brain Dump"].firstMatch
+        XCTAssertTrue(plus.waitForExistence(timeout: Self.timeout), "The row Brain Dump has no plus button")
+        XCTAssertTrue(app.buttons["Brain Dump, 0"].exists, "The demo data already has a Brain Dump note")
+        plus.tap()
+        XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: Self.timeout), "The empty note did not open for writing")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["Brain Dump, 0"].waitForExistence(timeout: Self.timeout), "The empty note was kept")
+    }
+
+    /// TB4b: the empty journal folder offers "Aus Notion importieren"; the sheet opens on step 1 with the target already chosen
+    /// (no choice between journal and Bible Study) and closes with "Schließen".
+    func testEmptyJournalFolderOffersImport() {
+        openNotes()
+        let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tagebuch mit Gott")).firstMatch
+        // The journal sits in the last named section ("Persönlich"), below the first screen of the folder list.
+        scrollTo(folder)
+        XCTAssertTrue(folder.exists, "The folder of the journal is missing")
+        folder.tap()
+        XCTAssertFalse(app.buttons["Aus Notion importieren"].exists, "A folder with an entry offers the import")
+        // The demo data has one entry; the trash empties the folder.
+        let entry = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ruhig und dankbar")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The demo entry of the journal is missing")
+        entry.swipeLeft()
+        tapButton("Löschen")
+        let importRow = app.buttons["Aus Notion importieren"].firstMatch
+        XCTAssertTrue(importRow.waitForExistence(timeout: Self.timeout), "The empty journal folder has no import row")
+        importRow.tap()
+        XCTAssertTrue(app.staticTexts["1 · Export wählen"].waitForExistence(timeout: Self.timeout), "The sheet did not open on step 1")
+        XCTAssertTrue(app.buttons["Ordner wählen"].exists, "The folder choice is missing")
+        XCTAssertEqual(app.segmentedControls.count, 0, "The target choice is shown although the target is fixed")
+        tapButton("Schließen")
+        XCTAssertTrue(app.buttons["Aus Notion importieren"].firstMatch.waitForExistence(timeout: Self.timeout), "The sheet did not close")
+        XCTAssertFalse(app.staticTexts["1 · Export wählen"].exists, "The sheet is still open")
+    }
+
+    func testShowNoteInFolderFromSearchHit() {
+        openNotes()
+        let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Brain Dump")).firstMatch
+        XCTAssertTrue(folder.waitForExistence(timeout: Self.timeout))
+        folder.tap()
+        typeIn("Neue Notiz", text: "Ordner-Sprung Notiz")
+        tapButton("Notiz sichern")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ordner-Sprung Notiz")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The note is not in the folder")
+        app.navigationBars.buttons.firstMatch.tap()
+        tab("Planen")
+        openSearch(typing: "Ordner-Sprung Notiz")
+        let hit = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Notiz, Ordner-Sprung Notiz")).firstMatch
+        XCTAssertTrue(hit.waitForExistence(timeout: 20), "The search did not find the note")
+        hit.press(forDuration: 1.0)
+        let show = app.buttons["Im Ordner zeigen"].firstMatch
+        XCTAssertTrue(show.waitForExistence(timeout: Self.timeout), "The menu has no entry \"Im Ordner zeigen\"")
+        show.tap()
+        // The search closes and "Aufgaben" shows the list of the folder with the note.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Ordner-Sprung Notiz")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The folder list with the note did not open")
+        XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
+    }
+
+    /// The assistant button of the notes: without the consent it shows the sheet first, "Einverstanden" opens the chat with its
+    /// context line (#233; the chat runs on the demo transport, nothing is sent).
+    func testNotesAssistantConsentThenChat() {
+        openNotes()
+        let assistant = app.buttons["Assistent"].firstMatch
+        XCTAssertTrue(assistant.waitForExistence(timeout: Self.timeout), "The notes overview has no assistant button")
+        assistant.tap()
+        XCTAssertTrue(app.staticTexts["Notizen mit ChatGPT"].waitForExistence(timeout: Self.timeout), "The consent sheet did not show")
+        tapButton("Einverstanden")
+        let context = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Notizen · ohne")).firstMatch
+        XCTAssertTrue(context.waitForExistence(timeout: Self.timeout), "The notes chat did not open with its context line")
+        XCTAssertTrue(context.label.contains("Tagebuch mit Gott"), "The context line does not name the private folders: \(context.label)")
+    }
 }

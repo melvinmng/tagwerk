@@ -16,14 +16,14 @@ struct FocusCaptureSection: View {
                             Spacer()
                             if let snapshot = focus.snapshot(at: context.date) {
                                 Text(snapshot.phase == .finished ? FocusTimerText.phaseName(.finished) : FocusTimerText.clock(snapshot.remainingSeconds))
-                                    .monospacedDigit().foregroundStyle(.secondary)
+                                    .monospacedDigit().foregroundStyle(.secondaryText)
                             }
                         }
                     }
                 }
                 .foregroundStyle(.primary)
             } else {
-                Button { Task { await focus.start(task: nil, block: nil) } } label: {
+                Button { Task { await focus.requestStart(task: nil, block: nil) } } label: {
                     Label("Frei starten", systemImage: "timer")
                 }
             }

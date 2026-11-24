@@ -34,4 +34,40 @@ public enum NowMarker {
         let nowY = canvasTop + inset + Double(nowMinutes - shown.lowerBound) / 60 * hourHeight
         return max(0, nowY - viewportHeight / 3)
     }
+
+    /// Whether an entry is running: `nowMinutes` lies in its range (start inclusive, end exclusive). `nil` is another day.
+    public static func isRunning(range: Range<Int>, nowMinutes: Int?) -> Bool {
+        guard let nowMinutes else { return false }
+        return range.contains(nowMinutes)
+    }
+
+    /// Minutes left of a running entry, rounded up to at least 1.
+    public static func remainingMinutes(range: Range<Int>, nowMinutes: Int) -> Int {
+        max(1, range.upperBound - nowMinutes)
+    }
+
+    /// How long the day view of today has to be out of sight before returning aligns it to "now" again.
+    public static let realignAfter: TimeInterval = 30 * 60
+
+    /// Returning to the day view of today aligns to "now" again when it was not visible for at least `realignAfter`.
+    public static func realignsOnReturn(hiddenSince: Date?, now: Date) -> Bool {
+        guard let hiddenSince else { return false }
+        return now.timeIntervalSince(hiddenSince) >= realignAfter
+    }
+
+    /// Where a day that is not today starts when it is opened by a jump: the first entry, else the work start.
+    public static func openingMinutes(firstEntryStart: Int?, workStart: Int?) -> Int? {
+        firstEntryStart ?? workStart
+    }
+
+    /// The block that carries the focus button today: the running one (of several, the one that started first), else the
+    /// next that starts after now; nil on another day (`nowMinutes` nil) and when no block is left. Returns the index in
+    /// `blockRanges`, whatever the order of the list is.
+    public static func focusBlockIndex(blockRanges: [Range<Int>], nowMinutes: Int?) -> Int? {
+        guard let nowMinutes else { return nil }
+        let running = blockRanges.indices.filter { blockRanges[$0].contains(nowMinutes) }
+        if let first = running.min(by: { (blockRanges[$0].lowerBound, $0) < (blockRanges[$1].lowerBound, $1) }) { return first }
+        let upcoming = blockRanges.indices.filter { blockRanges[$0].lowerBound > nowMinutes }
+        return upcoming.min { (blockRanges[$0].lowerBound, $0) < (blockRanges[$1].lowerBound, $1) }
+    }
 }

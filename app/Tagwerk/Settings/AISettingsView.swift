@@ -24,6 +24,11 @@ struct AISettingsView: View {
                 Text("Aus einer geteilten Mail macht Tagwerk auf dein Tippen einen Aufgabenvorschlag. Gesendet werden nur Betreff, Absendername und Text.")
             }
             Section {
+                Toggle("Notizen mit ChatGPT", isOn: Bindable(environment.settings).noteAssistantConsent)
+            } footer: {
+                Text("Der Assistent findet Notizen über seine Suche (Titel und ein kurzer Ausschnitt), liest bei Bedarf die ganze Notiz und kann Notizen ändern, anlegen und löschen; jede Änderung bestätigst du einzeln. Gelesene Notiztexte werden nicht im Verlauf gespeichert, die Antworten des Assistenten schon. Tagebuch mit Gott, Bible Study und Dream Log bleiben immer auf dem iPhone.")
+            }
+            Section {
                 NavigationLink("Datenschutzhinweis") { AIPrivacyView() }
             }
             #if DEBUG
@@ -48,12 +53,12 @@ struct AISettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("ChatGPT")
                     if ai.isSignedIn, let email = ai.accountEmail {
-                        Text(email).font(.footnote).foregroundStyle(.secondary)
+                        Text(email).font(.footnote).foregroundStyle(.secondaryText)
                     }
                 }
                 Spacer()
                 Text(ai.isSignedIn ? "angemeldet" : "nicht angemeldet")
-                    .foregroundStyle(ai.isSignedIn ? Color.green : Color.secondary)
+                    .foregroundStyle(ai.isSignedIn ? Color.greenText : Color.secondaryText)
             }
             if ai.isSignedIn {
                 Button("Abmelden", role: .destructive) {
@@ -64,7 +69,7 @@ struct AISettingsView: View {
                 if signIn?.isSigningIn == true {
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("Anmeldung läuft …").foregroundStyle(.secondary)
+                        Text("Anmeldung läuft …").foregroundStyle(.secondaryText)
                     }
                 } else {
                     Button("Mit ChatGPT anmelden") {
@@ -91,13 +96,13 @@ struct AISettingsView: View {
             Picker("Modell", selection: $ai.selectedModelSlug) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Automatisch")
-                    Text("Tagwerk nimmt das Standardmodell deines Abos").font(.footnote).foregroundStyle(.secondary)
+                    Text("Tagwerk nimmt das Standardmodell deines Abos").font(.footnote).foregroundStyle(.secondaryText)
                 }
                 .tag(String?.none)
                 ForEach(ai.models) { model in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(model.displayName)
-                        Text(model.slug).font(.footnote).foregroundStyle(.secondary)
+                        Text(model.slug).font(.footnote).foregroundStyle(.secondaryText)
                     }
                     .tag(String?.some(model.slug))
                 }
@@ -107,7 +112,7 @@ struct AISettingsView: View {
             if isLoadingModels && ai.models.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text("Modelle werden geladen …").foregroundStyle(.secondary)
+                    Text("Modelle werden geladen …").foregroundStyle(.secondaryText)
                 }
             }
             if let modelError {
@@ -138,7 +143,7 @@ struct AISettingsView: View {
                 Text("Nur im Notfall").tag(AIPlanner.LongerDays.emergencyOnly.rawValue)
             }
             NavigationLink { VoiceSettingsView() } label: {
-                LabeledContent("Sprache", value: VoiceAvailability.summary(inputEnabled: environment.settings.voiceInputEnabled,
+                LabeledContent("Spracheingabe und Vorlesen", value: VoiceAvailability.summary(inputEnabled: environment.settings.voiceInputEnabled,
                                                                             readAloud: environment.settings.voiceReadAloud))
             }
             NavigationLink("Diagnose") { PlanningDiagnosticsView() }
@@ -163,7 +168,7 @@ struct AISettingsView: View {
             Picker("Denkaufwand", selection: $ai.selectedReasoning) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Automatisch")
-                    Text(automatic).font(.footnote).foregroundStyle(.secondary)
+                    Text(automatic).font(.footnote).foregroundStyle(.secondaryText)
                 }
                 .tag(String?.none)
                 ForEach(model.reasoningLevels, id: \.self) { level in
@@ -226,7 +231,9 @@ struct AIPrivacyView: View {
                 Text("Tagwerk ruft die KI nur auf, wenn du sie selbst startest, zum Beispiel mit „Tag planen“ oder einer Nachricht an den Assistenten. Im Hintergrund geschieht das nie, und Tagwerk fragt nicht bei jedem Aufruf erneut nach.")
                 Text("Beim Planen geht je Aufgabe auch eine erwartete Dauer in Minuten mit, abgeleitet aus deinen bisherigen Messungen. Die Messungen selbst und die Labels bleiben auf dem iPhone. Abschalten kannst du das unter Einstellungen › Fokus-Timer.")
                 Text("Für eine geteilte Mail sendet Tagwerk nur dann Betreff, Absendername und Text (höchstens 12 000 Zeichen) an ChatGPT, wenn du in der Einstellung „Mails von ChatGPT zusammenfassen“ zugestimmt hast und auf „Mit ChatGPT zusammenfassen“ tippst. Anhänge, Adressen, Empfänger und der Link zur Mail gehören nicht zur Zusammenfassung. Fragst du später den Assistenten nach der Aufgabe, kann deren Notiz mit dem Link an ChatGPT gehen, wie bei jeder Aufgabe. Der Eingang für geteilte Inhalte liegt nur auf diesem iPhone und gehört nicht zur Datensicherung.")
-                Text("Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.")
+                Text("Für ein Rezept sendet Tagwerk auf dein Tippen den Rezepttext, das Foto oder den gelesenen Text einer Seite an ChatGPT, bei „Rezept hinzufügen“ dazu die Namen deiner Kategorien, wenn du in der Einkaufsliste zugestimmt hast. Wählst du eine Notiz ohne Zutaten und Zubereitung als Quelle, geht ihr Text an ChatGPT; eine Notiz mit beiden Abschnitten liest Tagwerk auf dem iPhone. Übersetzt du eine Rezept-Notiz, geht ihr Text zeilenweise an ChatGPT; Überschriften, Anhänge und die Quelle bleiben auf dem iPhone. Private Notizen (Tagebuch, Bible Study, Dream Log) stehen dafür nie zur Auswahl.")
+                Text("Notizen gehen nur mit dem Schalter „Notizen mit ChatGPT“ an den Assistenten: Titel und Ausschnitte der Treffer seiner Suche, bei Bedarf der ganze Text einer Notiz und, im Notiz-Chat, Änderungen daran. Mit dem Text einer Notiz gehen die Namen ihrer Anhänge mit; die Anhänge selbst und gelöschte Notizen gehen nie an ChatGPT. Gesperrte Notizen sieht der Assistent nur, solange du sie entsperrt hast, bis du Tagwerk verlässt. Ist der Schalter aus, erfährt der Assistent nur, wie viele Notizen zu einer Suche passen. Was der Assistent aus Notizen liest, gilt nur für das laufende Gespräch und geht beim Beenden der App, beim Wechsel des Chats und beim Löschen des Verlaufs verloren. Antworten des Assistenten und deine Nachrichten bleiben im Verlauf und können Notizinhalt zitieren. Tagebuch mit Gott, Bible Study und Dream Log verlassen das iPhone nie, auch nicht entsperrt.")
+                Text("Für die Zielplanung gehen Angaben über deinen Körper und deine Ernährung nur dann an ChatGPT, wenn du in den Einstellungen unter „Erfassen“ „Ziele mit ChatGPT planen“ eingeschaltet hast und im Chat „Ziele planen“ vor dem Gespräch ausgewählt hast, was mitgeht: Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine gehören nie dazu. Dieses Datenpaket gilt nur für das laufende Gespräch und wird nicht im Verlauf gespeichert; der Verlauf hält fest, welche Gruppen gelesen wurden. Deine Nachrichten und die Antworten des Assistenten bleiben im Verlauf und können Zahlen daraus nennen, etwa dein Gewicht oder Durchschnittswerte. Tagwerk gibt keine medizinische Beratung.")
                 Text("„Abmelden“ löscht die Anmeldung bei ChatGPT von diesem iPhone. Danach sind die KI-Funktionen aus, bis du dich wieder anmeldest.")
             }
         }

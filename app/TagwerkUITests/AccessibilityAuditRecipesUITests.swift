@@ -9,7 +9,29 @@ import XCTest
 /// once and walks through its screens, to keep the run short. Findings must be fixed or sit on `AuditAllowlist` with a reason.
 @MainActor
 class RecipeScreensAuditCase: UITestCase {
-    override var extraLaunchArguments: [String] { ["-TagwerkDemoAI"] + AuditAllowlist.fixedClockArguments }
+    override var extraLaunchArguments: [String] {
+        ["-TagwerkDemoAI"] + AuditAllowlist.fixedClockArguments + (settingsPage.map { ["-TagwerkUITestScreen", $0.screen] } ?? [])
+    }
+
+    /// One settings page of the settings audit: the test method (`testAuditSettings<Method>`), the screen name for
+    /// `-TagwerkUITestScreen` (see `UITestScreen`), the title of its navigation bar and the name of the screen in the report.
+    struct SettingsPage {
+        let method: String
+        let screen: String
+        let navigationTitle: String
+        let report: String
+
+        static let languages = SettingsPage(method: "Languages", screen: "settings.languages", navigationTitle: "Sprachen", report: "Einstellungen › Sprachen")
+        static let voice = SettingsPage(method: "Voice", screen: "settings.ai.voice", navigationTitle: "Spracheingabe und Vorlesen", report: "Einstellungen › KI › Sprache")
+        static let capture = SettingsPage(method: "Capture", screen: "settings.capture", navigationTitle: "Erfassen", report: "Einstellungen › Erfassen")
+        static let shopping = SettingsPage(method: "Shopping", screen: "settings.shopping", navigationTitle: "Einkaufsliste", report: "Einstellungen › Einkaufsliste")
+        static let siri = SettingsPage(method: "Siri", screen: "settings.siri", navigationTitle: "Siri & Kurzbefehle", report: "Einstellungen › Siri & Kurzbefehle")
+        static let all = [languages, voice, capture, shopping, siri]
+    }
+
+    /// The settings page that the running test audits, taken from its name: the app starts in `setUp` with the page as its
+    /// start screen, so a failure belongs to one page and a retry repeats one launch. `nil` for the other tests.
+    private var settingsPage: SettingsPage? { SettingsPage.all.first { name.contains("testAuditSettings" + $0.method) } }
 
     typealias Audit = (String) throws -> Void
 
@@ -30,14 +52,16 @@ class RecipeScreensAuditCase: UITestCase {
         }
         note.tap()
         XCTAssertTrue(app.buttons["Mehr"].firstMatch.waitForExistence(timeout: Self.timeout), "Recipe note did not open")
-        // The note view loads its content after the page opened; the audit must not run on the empty page.
+        // The note view loads its content after the page opened; the audit must not run on the empty page. On a busy machine
+        // the content took longer than the usual wait (a failed run showed it right after the 10 seconds), so this wait is longer.
         let content = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "rote Linsen", "rote Linsen")).firstMatch
-        XCTAssertTrue(content.waitForExistence(timeout: Self.timeout), "The recipe note shows no content")
+        XCTAssertTrue(content.waitForExistence(timeout: 3 * Self.timeout), "The recipe note shows no content")
         try audit("Rezept-Notiz")
 
         app.buttons["Mehr"].firstMatch.tap()
         tapButton("Zutaten auf die Einkaufsliste")
-        tapScrolling("Zutaten übernehmen")
+        // The note is the source already: the sheet shows a line naming it and the purpose buttons (EK3b).
+        tapScrolling(AccessibilityID.Shopping.recipeToList)
         XCTAssertTrue(app.navigationBars["Zutaten"].waitForExistence(timeout: Self.timeout), "Ingredient result did not open")
         try audit("Zutaten (Rezept)")
     }
@@ -53,9 +77,14 @@ class RecipeScreensAuditCase: UITestCase {
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")
         editor.tap()
         editor.typeText("Gemüsepfanne für 2: 2 Paprika, 150 g Reis, Salz")
-        if app.buttons["Fertig"].exists { app.buttons["Fertig"].tap() }
+        // The keyboard is a process of its own, and animations of the app cannot be turned off there: wait for the button above it
+        // (the symbol "Tastatur ausblenden"; it exists as soon as the keyboard is up), close it, and wait until the keyboard is really gone.
+        tapButton("Tastatur ausblenden")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: Self.timeout), "The keyboard did not close")
         tapScrolling("Rezept holen")
         waitFor("Einverstanden")
+        // The decline button is the lowest control of the sheet (below the fold in the large text size): audit only when it exists.
+        waitFor("Nicht jetzt")
         try audit("Rezept anlegen (Einwilligung)")
         tapScrolling("Einverstanden")
         XCTAssertTrue(app.navigationBars["Rezept speichern"].waitForExistence(timeout: 20), "Confirmation did not open")
@@ -74,24 +103,38 @@ class RecipeScreensAuditCase: UITestCase {
         try audit("Einkauf › Rezept hinzufügen (Notiz)")
     }
 
-    /// Einstellungen › KI › Sprache (recipe language), › Erfassen (goal water, shortcut phrases of G2) and › Einkaufsliste (consent).
-    func auditSettings(_ audit: Audit) throws {
-        tab("Einstellungen")
-        openSettingsRow("KI")
-        openSettingsRow("Sprache")
-        XCTAssertTrue(app.navigationBars["Sprache"].waitForExistence(timeout: Self.timeout), "Language settings did not open")
-        try audit("Einstellungen › KI › Sprache")
-        app.navigationBars.buttons.firstMatch.tap()
-        app.navigationBars.buttons.firstMatch.tap()
+    /// Shopping list: the card after the language of the list changed ("Mit ChatGPT übersetzen" / "So lassen") and the preview sheet
+    /// of the translation (demo answers; the consent of sorting does not cover translating yet, so its sheet comes first).
+    func auditShoppingTranslate(_ audit: Audit) throws {
+        openShoppingList()
+        let field = app.textFields["Artikel hinzufügen"]
+        field.tap()
+        field.typeText("Milch\n")
+        waitFor("Milch, nicht erledigt")
+        tapButton("Sprache der Einkaufsliste Deutsch, auf Englisch wechseln")
+        waitFor("Einkaufsliste jetzt auf Englisch")
+        // The notice above the input ("1 hinzugefügt") fades out after four seconds; audited while it is visible, it adds a finding that
+        // depends on how fast the run is. The other shopping audit waits for it in the same way (`waitUntilStaysGone`).
+        waitUntilStaysGone(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "hinzugefügt")).firstMatch)
+        try audit("Einkaufsliste › Karte „übersetzen“")
+        tapButton("Mit ChatGPT übersetzen")
+        tapScrolling("Einverstanden und übersetzen")
+        XCTAssertTrue(app.navigationBars["Übersetzung"].waitForExistence(timeout: Self.timeout), "The preview did not open")
+        try audit("Einkaufsliste › Übersetzung")
+    }
 
-        openSettingsRow("Erfassen")
-        XCTAssertTrue(app.navigationBars["Erfassen"].waitForExistence(timeout: Self.timeout))
-        try audit("Einstellungen › Erfassen")
-        app.navigationBars.buttons.firstMatch.tap()
-
-        openSettingsRow("Einkaufsliste")
-        XCTAssertTrue(app.navigationBars["Einkaufsliste"].waitForExistence(timeout: Self.timeout), "Shopping settings did not open")
-        try audit("Einstellungen › Einkaufsliste")
+    /// One settings page of G2/G3: the app opened it itself with `-TagwerkUITestScreen <name>` (see `UITestScreen`), so a launch costs
+    /// less than the scroll to the row of a page further down the list; the way through the list is covered by
+    /// `SettingsNavigationUITests`. The pages are › Sprachen (content languages), › KI › Spracheingabe und Vorlesen (voice settings),
+    /// › Erfassen (goal water), › Einkaufsliste (consent) and › Siri & Kurzbefehle (phrases, G3).
+    func auditSettingsPage(_ page: SettingsPage, _ audit: Audit) throws {
+        XCTAssertTrue(app.navigationBars[page.navigationTitle].waitForExistence(timeout: Self.timeout), "\(page.report) did not open")
+        if page.method == SettingsPage.voice.method {
+            // The rows "Sprachpaket …" show "…" until the state of the language packs is known and then a longer text (more lines in
+            // the large text size). The audit must not run in between.
+            waitUntilGone(app.staticTexts["…"].firstMatch)
+        }
+        try audit(page.report)
     }
 
     /// Taps a button that can lie below the fold in the large text size: scrolls to it first.
@@ -108,24 +151,6 @@ class RecipeScreensAuditCase: UITestCase {
         folder.tap()
         XCTAssertTrue(app.navigationBars["Rezepte"].waitForExistence(timeout: Self.timeout))
     }
-
-    /// Scrolls the settings list in small steps (a lazy list only creates the rows near the screen, and a full-page swipe can jump
-    /// over a row) to the row that starts with this title and opens it. The scroll position stays when a page is left, so
-    /// the search goes to the top first.
-    private func openSettingsRow(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
-        // Only rows of the list: the tab bar has a button "Erfassen" as well.
-        let row = app.cells.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
-        for _ in 0..<4 { app.swipeDown() }
-        var steps = 0
-        while !(row.exists && row.isHittable), steps < 20 {
-            let list = app.collectionViews.firstMatch
-            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
-                .press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)))
-            steps += 1
-        }
-        XCTAssertTrue(row.exists && row.isHittable, "Settings row \(title) is not reachable by scrolling", file: file, line: line)
-        row.tap()
-    }
 }
 
 /// The recipe screens in the default text size, all audit types.
@@ -137,7 +162,12 @@ final class AccessibilityAuditRecipesUITests: RecipeScreensAuditCase {
     func testAuditRecipeFolderAndNote() throws { try auditRecipeFolderAndNote(audit) }
     func testAuditCreateRecipe() throws { try auditCreateRecipe(audit) }
     func testAuditShoppingRecipeEntry() throws { try auditShoppingRecipeEntry(audit) }
-    func testAuditSettings() throws { try auditSettings(audit) }
+    func testAuditShoppingTranslate() throws { try auditShoppingTranslate(audit) }
+    func testAuditSettingsLanguages() throws { try auditSettingsPage(.languages, audit) }
+    func testAuditSettingsVoice() throws { try auditSettingsPage(.voice, audit) }
+    func testAuditSettingsCapture() throws { try auditSettingsPage(.capture, audit) }
+    func testAuditSettingsShopping() throws { try auditSettingsPage(.shopping, audit) }
+    func testAuditSettingsSiri() throws { try auditSettingsPage(.siri, audit) }
 }
 
 /// The recipe screens in the largest text size (AX5) and dark mode: clipped text and contrast (see
@@ -152,5 +182,10 @@ final class AccessibilityAuditRecipesLargeTextUITests: RecipeScreensAuditCase {
     func testAuditRecipeFolderAndNote() throws { try auditRecipeFolderAndNote(audit) }
     func testAuditCreateRecipe() throws { try auditCreateRecipe(audit) }
     func testAuditShoppingRecipeEntry() throws { try auditShoppingRecipeEntry(audit) }
-    func testAuditSettings() throws { try auditSettings(audit) }
+    func testAuditShoppingTranslate() throws { try auditShoppingTranslate(audit) }
+    func testAuditSettingsLanguages() throws { try auditSettingsPage(.languages, audit) }
+    func testAuditSettingsVoice() throws { try auditSettingsPage(.voice, audit) }
+    func testAuditSettingsCapture() throws { try auditSettingsPage(.capture, audit) }
+    func testAuditSettingsShopping() throws { try auditSettingsPage(.shopping, audit) }
+    func testAuditSettingsSiri() throws { try auditSettingsPage(.siri, audit) }
 }

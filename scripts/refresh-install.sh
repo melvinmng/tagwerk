@@ -1,20 +1,39 @@
 #!/bin/zsh
-# Rebuilds the Tagwerk app with a fresh free-team provisioning profile and installs it
-# on the iPhone before the 7-day profile expires. Intended to run hourly via launchd.
+# Keeps the Tagwerk app on the iPhone current. Intended to run hourly via launchd.
+# Every run installs a fresh build in one of two cases:
+#   1. Profile refresh: the free-team provisioning profile (7 days) expires within 3 days or its expiry is unknown.
+#   2. New commit: origin/main has a commit that is not on the device (see should_install for the exact rule).
+# Otherwise the run ends after a cheap "git fetch" without checkout or build.
 #
 # Usage: refresh-install.sh [--dry-run] [--force]
-#   --dry-run  only report profile expiry, due state, device reachability and signing identity
-#   --force    install now, regardless of the remaining profile lifetime
+#   --dry-run  only report profile expiry, due state, the install decision (from the last fetched origin/main,
+#              without fetching), load average, device reachability and signing identity
+#   --force    install now, regardless of the remaining profile lifetime and of the installed commit
 #   TAGWERK_FORCE=1 in the environment has the same effect as --force
 #
-# Exit codes: 0 installed or not due, 1 build failed, 2 device unreachable or install failed, 3 signing failed,
-#             4 new state failed to build or sign and the last good commit was reinstalled instead,
-#             64 configuration invalid
+# Install decision (should_install), evaluated after the fetch:
+#   - profile due (or --force)                          -> install
+#   - origin/main equals the commit on the device       -> nothing to do
+#   - origin/main equals the last failed commit         -> skip until origin/main changes (no hourly retry)
+#   - device state unknown ("dev" after scripts/install-dev.sh, or no marker)
+#       -> install only if origin/main differs from last-good-commit; a dev build therefore stays on the phone
+#          until main moves on (or the profile is due, or --force is used)
+#   - otherwise (a different commit is on the device)   -> install
+# Skips that do not install (logged, never notified): 5-minute load average above LOAD_SKIP_PER_CPU x CPU count
+# while the profile is not due; device unreachable or fetch failed while the profile is not due (logged once per
+# episode). Notifications only for a failed install of a new commit, near profile expiry, and for the fallback.
+#
+# Exit codes: 0 installed, nothing to do or skipped, 1 build failed, 2 device unreachable or install failed,
+#             3 signing failed, 4 new state failed to build or sign and the last good commit was reinstalled instead
+#             (only when the profile was due), 64 configuration invalid
 #
 # State files in $STATE_DIR (suffix: bundle ID):
 #   profile-expiry.<bundle>    earliest expiry epoch of the app and extension profiles of the installed build
 #   last-good-commit.<bundle>  commit of the last successful refresh install
 #   last-installed.<bundle>    commit currently on the device ("dev" after scripts/install-dev.sh, state unknown)
+#   last-failed-commit.<bundle> commit whose build or signing failed last; removed after the next successful install
+#   skip-note.<bundle>         reason of the last quiet skip, so a repeating reason is logged only once
+#   account-notice.<bundle>    epoch of the last "Apple ID missing" notification
 
 set -u
 
@@ -23,6 +42,7 @@ PROJECT_DIR_NAME="app"
 BRANCH="${TAGWERK_BRANCH:-main}"
 DUE_WITHIN_SECONDS=$(( 3 * 86400 ))   # refresh when less than 3 days of profile lifetime remain
 WARN_WITHIN_SECONDS=$(( 2 * 86400 ))  # notify about failures when less than 2 days remain
+LOAD_SKIP_PER_CPU=3                   # skip a run when the 5-minute load average exceeds this many times the CPU count
 
 export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -49,6 +69,45 @@ is_due() {
 should_warn() {
   [[ -z "$1" ]] && { print yes; return; }
   (( $1 - $2 < WARN_WITHIN_SECONDS )) && print yes || print no
+}
+
+# should_install <due> <remote head> <last installed> <last good> <last failed> -> yes|no
+# Decides whether this run builds and installs. <due> is the profile-refresh state (yes|no, yes with --force).
+# <last installed> is "dev" or empty when the device state is unknown (scripts/install-dev.sh, missing marker).
+should_install() {
+  local due="$1" head="$2" last_installed="$3" last_good="$4" last_failed="$5"
+  [[ "$due" == "yes" ]] && { print yes; return; }
+  [[ -n "$head" ]] || { print no; return; }
+  [[ "$head" == "$last_failed" ]] && { print no; return; }
+  [[ "$head" == "$last_installed" ]] && { print no; return; }
+  if [[ -z "$last_installed" || "$last_installed" == "dev" ]]; then
+    # Unknown device state: install origin/main unless it is the commit the last refresh install already put on the phone.
+    [[ "$head" == "$last_good" ]] && print no || print yes
+    return
+  fi
+  print yes
+}
+
+# load_average_5min <raw output of "sysctl -n vm.loadavg"> -> 5-minute load average with a dot as decimal
+# separator ("{ 1.52 1.80 1.90 }" -> 1.80), or empty output if it cannot be parsed.
+load_average_5min() {
+  local -a fields
+  local value
+  fields=(${=1})
+  value="${fields[3]:-}"
+  value="${value//,/.}"
+  [[ "$value" =~ '^[0-9]+(\.[0-9]+)?$' ]] && print -r -- "$value"
+  return 0
+}
+
+# should_skip_for_load <due> <5-minute load average> <CPU count> -> yes|no
+# A due profile refresh is never postponed; unreadable load data never blocks a run.
+should_skip_for_load() {
+  local due="$1" load="$2" cpus="$3"
+  [[ "$due" == "yes" ]] && { print no; return; }
+  [[ "$load" =~ '^[0-9]+(\.[0-9]+)?$' && "$cpus" == <-> ]] || { print no; return; }
+  (( cpus > 0 )) || { print no; return; }
+  (( load > LOAD_SKIP_PER_CPU * cpus )) && print yes || print no
 }
 
 # is_tagwerk_profile <application-identifier> <team> <bundle> -> yes|no
@@ -132,6 +191,8 @@ EXPIRY_FILE="$STATE_DIR/profile-expiry.$TAGWERK_BUNDLE_ID"
 LAST_GOOD_FILE="$STATE_DIR/last-good-commit.$TAGWERK_BUNDLE_ID"
 LAST_INSTALLED_FILE="$STATE_DIR/last-installed.$TAGWERK_BUNDLE_ID"
 ACCOUNT_NOTICE_FILE="$STATE_DIR/account-notice.$TAGWERK_BUNDLE_ID"
+LAST_FAILED_FILE="$STATE_DIR/last-failed-commit.$TAGWERK_BUNDLE_ID"
+SKIP_NOTE_FILE="$STATE_DIR/skip-note.$TAGWERK_BUNDLE_ID"
 FALLBACK_DIR="$BASE/fallback"
 FALLBACK_DERIVED="$BASE/DerivedData-fallback"
 FALLBACK_BUILD_LOG="$LOG_DIR/build-fallback.log"
@@ -155,6 +216,21 @@ notify() {
 
 now=$(/bin/date '+%s')
 expiry=$(cat "$EXPIRY_FILE" 2>/dev/null || true)
+last_good=$(cat "$LAST_GOOD_FILE" 2>/dev/null || true)
+last_installed=$(cat "$LAST_INSTALLED_FILE" 2>/dev/null || true)
+last_failed=$(cat "$LAST_FAILED_FILE" 2>/dev/null || true)
+
+# Cached profiles are only set aside (forcing fresh 7-day profiles) for a profile refresh; an install of a new
+# commit while the profile is still valid reuses the cached profile and leaves the expiry untouched.
+RENEW_PROFILES=1
+
+# note_skip <reason>: logs a quiet skip, but only if the previous run skipped for a different reason.
+note_skip() {
+  [[ "$(cat "$SKIP_NOTE_FILE" 2>/dev/null || true)" == "$1" ]] || log "skip: $1"
+  print -r -- "$1" > "$SKIP_NOTE_FILE"
+}
+
+clear_skip_note() { rm -f -- "$SKIP_NOTE_FILE"; }
 
 # fail <exit code> <log message or empty> <notification text>: every failure notifies once the profile is close to expiry.
 fail() {
@@ -251,7 +327,11 @@ attempt_build_and_install() {
     return 1
   fi
 
-  set_aside_cached_profiles
+  if (( RENEW_PROFILES == 1 )); then
+    set_aside_cached_profiles
+  else
+    restore_profiles "$PROFILES_ASIDE_DIR" "$PROFILES_DIR"
+  fi
 
   if ! xcodebuild -project "$root/$PROJECT_DIR_NAME/$SCHEME.xcodeproj" -scheme "$SCHEME" \
       -destination "id=$DEVICE_ID" -derivedDataPath "$derived" \
@@ -319,22 +399,59 @@ run_fallback() {
 due=$(is_due "$expiry" "$now")
 (( force == 1 )) && due=yes
 
+remote_head=$(git -C "$SRC" rev-parse --verify -q "origin/$BRANCH^{commit}" 2>/dev/null || true)
+
 if (( dry_run == 1 )); then
+  load_5min=$(load_average_5min "$(/usr/sbin/sysctl -n vm.loadavg 2>/dev/null)")
+  cpu_count=$(/usr/sbin/sysctl -n hw.logicalcpu 2>/dev/null || true)
   if [[ -n "$expiry" ]]; then echo "profile expires: $(format_epoch "$expiry")"; else echo "profile expires: unknown"; fi
   echo "due: $due"
+  echo "origin/$BRANCH (last fetched, no fetch in dry run): ${remote_head:-unknown}"
+  echo "installed on device: ${last_installed:-unknown}"
+  echo "last good commit: ${last_good:-unknown}"
+  echo "last failed commit: ${last_failed:-none}"
+  echo "install decision: $(should_install "$due" "$remote_head" "$last_installed" "$last_good" "$last_failed")"
+  echo "load (5 min): ${load_5min:-unknown}, CPUs: ${cpu_count:-unknown}, skip above ${LOAD_SKIP_PER_CPU} x CPUs: $(should_skip_for_load "$due" "$load_5min" "$cpu_count")"
   if device_reachable; then echo "device: reachable"; else echo "device: unreachable"; fi
   if signing_identity_present; then echo "signing identity: present"; else echo "signing identity: missing"; fi
   exit 0
 fi
 
-[[ "$due" == "yes" ]] || exit 0
-
-device_reachable || fail 2 "device: unreachable" "App läuft bald ab: iPhone ins gleiche WLAN bringen und Mac wach lassen."
-
 if [[ "${TAGWERK_REEXECED:-0}" != "1" ]]; then
-  log "refresh: starting (branch $BRANCH)"
+  # Stage 1: cheap check. Only a fetch; checkout and build happen only if this run installs.
+  if ! git -C "$SRC" fetch -q origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2>> "$LOG"; then
+    if [[ "$due" == "yes" ]]; then
+      fail 1 "build: git update failed" "Neuinstallation fehlgeschlagen (Git). Details: ~/Library/Logs/Tagwerk/refresh.log"
+    fi
+    note_skip "git fetch failed, trying again next run"
+    exit 0
+  fi
+  remote_head=$(git -C "$SRC" rev-parse --verify -q "origin/$BRANCH^{commit}" 2>/dev/null || true)
 
-  { git -C "$SRC" fetch -q origin "$BRANCH" && git -C "$SRC" checkout -q "$BRANCH" && git -C "$SRC" merge -q --ff-only "origin/$BRANCH"; } \
+  if [[ "$(should_install "$due" "$remote_head" "$last_installed" "$last_good" "$last_failed")" != "yes" ]]; then
+    clear_skip_note
+    exit 0
+  fi
+
+  if [[ "$(should_skip_for_load "$due" "$(load_average_5min "$(/usr/sbin/sysctl -n vm.loadavg 2>/dev/null)")" "$(/usr/sbin/sysctl -n hw.logicalcpu 2>/dev/null)")" == "yes" ]]; then
+    log "skip: load average above ${LOAD_SKIP_PER_CPU} x CPU count, trying again next run"
+    exit 0
+  fi
+
+  if ! device_reachable; then
+    [[ "$due" == "yes" ]] || { note_skip "device unreachable, trying again next run"; exit 0; }
+    fail 2 "device: unreachable" "App läuft bald ab: iPhone ins gleiche WLAN bringen und Mac wach lassen."
+  fi
+  clear_skip_note
+
+  if [[ "$due" == "yes" ]]; then
+    install_reason="profile refresh"
+  else
+    install_reason="new commit ${remote_head[1,12]} (on device: ${last_installed[1,12]:-unknown})"
+  fi
+  log "refresh: starting (branch $BRANCH, $install_reason)"
+
+  { git -C "$SRC" checkout -q "$BRANCH" && git -C "$SRC" merge -q --ff-only "origin/$BRANCH"; } \
     || fail 1 "build: git update failed" "Neuinstallation fehlgeschlagen (Git). Details: ~/Library/Logs/Tagwerk/refresh.log"
 
   # Continue with the freshly fetched script so that a changed version applies to this run.
@@ -347,18 +464,20 @@ if [[ "${TAGWERK_REEXECED:-0}" != "1" ]]; then
   fi
   log "refresh: updated script not usable, continuing with the current one"
 else
+  # Stage 2: the decision to install was made by stage 1 (possibly by an older script that only ran when due).
   log "refresh: restarted with the updated script"
 fi
 
+[[ "$due" == "yes" ]] || RENEW_PROFILES=0
+
 head_commit=$(git -C "$SRC" rev-parse HEAD 2>/dev/null || true)
-last_good=$(cat "$LAST_GOOD_FILE" 2>/dev/null || true)
-last_installed=$(cat "$LAST_INSTALLED_FILE" 2>/dev/null || true)
 
 attempt_install "$SRC" "$DERIVED" "$BUILD_LOG"
 attempt_status=$?
 
 # Without an account the fallback cannot renew the profile either; it would only install older code.
-# The notice comes at once instead of only near expiry, at most every 12 hours.
+# The notice comes at once instead of only near expiry, at most every 12 hours. The commit is not marked as failed:
+# the cause is the missing account, so the next hourly run retries as soon as the account is back.
 if (( attempt_account_missing == 1 )); then
   log "$attempt_message"
   last_notice=$(cat "$ACCOUNT_NOTICE_FILE" 2>/dev/null || true)
@@ -372,7 +491,11 @@ fi
 # An install the device rejects (status 2 while the device is still reachable) gets the fallback too.
 if (( attempt_status == 1 || attempt_status == 3 )) || { (( attempt_status == 2 )) && device_reachable; }; then
   log "$attempt_message"
-  fallback_target=$(fallback_commit "$last_good" "$last_installed" "$head_commit")
+  # Remember the failed commit so that the following hourly runs do not build it again until origin/main changes.
+  [[ -n "$head_commit" ]] && print -r -- "$head_commit" > "$LAST_FAILED_FILE"
+  fallback_target=""
+  # The fallback reinstalls the last good commit with a fresh profile; without a due profile it would change nothing.
+  [[ "$due" == "yes" ]] && fallback_target=$(fallback_commit "$last_good" "$last_installed" "$head_commit")
   if [[ "$fallback_target" =~ '^[0-9a-f]{7,64}$' ]]; then
     log "fallback: new state ${head_commit[1,12]} failed, reinstalling last good commit ${fallback_target[1,12]}"
     trap 'exit 130' INT
@@ -385,6 +508,8 @@ if (( attempt_status == 1 || attempt_status == 3 )) || { (( attempt_status == 2 
       exit 4
     fi
   fi
+  # A failed install of a new commit is reported once (the failed commit is not retried); near expiry fail() notifies.
+  [[ "$due" == "yes" ]] || notify "$attempt_notice"
   fail "$attempt_status" "" "$attempt_notice"
 fi
 
@@ -392,7 +517,7 @@ fi
 
 compute_installed_expiry "$attempt_app_path"
 [[ -n "$computed_expiry" ]] && print -r -- "$computed_expiry" > "$EXPIRY_FILE"
-rm -f -- "$ACCOUNT_NOTICE_FILE"
+rm -f -- "$ACCOUNT_NOTICE_FILE" "$LAST_FAILED_FILE"
 
 # Remember the installed commit; without it the fallback must stay disabled.
 if [[ -n "$head_commit" ]]; then

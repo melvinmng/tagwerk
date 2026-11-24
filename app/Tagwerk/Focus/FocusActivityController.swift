@@ -17,8 +17,16 @@ final class FocusActivityController: FocusActivityControlling {
         case .longBreak: .longBreak
         case .finished: .finished
         }
+        let nextKind: FocusActivityAttributes.ContentState.Kind? = switch content.nextKind {
+        case .work: .work
+        case .shortBreak: .shortBreak
+        case .longBreak: .longBreak
+        case .finished: .finished
+        case nil: nil
+        }
         return .init(kind: kind, phaseEnd: content.phaseEnd, pausedRemaining: content.pausedRemaining,
-                     round: content.round, rounds: content.rounds)
+                     round: content.round, rounds: content.rounds, phaseSeconds: content.phaseSeconds,
+                     nextKind: nextKind, nextPhaseMinutes: content.nextPhaseMinutes)
     }
 
     /// The activity turns stale when the phase ends, so the lock screen can offer the choices.
@@ -39,7 +47,7 @@ final class FocusActivityController: FocusActivityControlling {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         // Never two: a leftover activity ends before the new one starts.
         await Self.end(only: nil)
-        let attributes = FocusActivityAttributes(title: content.title, isPomodoro: content.isPomodoro)
+        let attributes = FocusActivityAttributes(title: content.title, isPomodoro: content.isPomodoro, hasTask: content.hasTask)
         activityID = (try? Activity.request(attributes: attributes, content: activityContent(content), pushType: nil))?.id
     }
 

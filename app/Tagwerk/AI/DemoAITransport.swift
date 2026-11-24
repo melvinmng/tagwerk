@@ -31,8 +31,16 @@ final class DemoAITransport: AIHTTPTransport {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": meal]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
+        if let revision = Self.cardRevisionAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": revision]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
         if let recipe = Self.recipeAnswer(for: request) {
             return Self.stream([Self.event(["type": "response.output_text.delta", "delta": recipe]),
+                                Self.event(["type": "response.completed", "response": [:]])], request: request)
+        }
+        if let translation = Self.shoppingTranslationAnswer(for: request) {
+            return Self.stream([Self.event(["type": "response.output_text.delta", "delta": translation]),
                                 Self.event(["type": "response.completed", "response": [:]])], request: request)
         }
         if let sort = Self.shoppingSortAnswer(for: request) {
@@ -104,7 +112,31 @@ final class DemoAITransport: AIHTTPTransport {
         if text.contains("tisch") {
             return #"{"title":"","items":[]}"#
         }
-        return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14}]}"#
+        // A follow-up (task D1): the same estimate with a third item.
+        if text.contains("message from the user:") {
+            return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":4,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":0,"sugar_g":null,"saturated_fat_g":9,"salt_g":1.2},{"name":"Butter","amount":"1 Portion","kcal_min":50,"kcal":70,"kcal_max":90,"protein_g":0,"carbs_g":0,"fat_g":8,"fiber_g":0,"sugar_g":0,"saturated_fat_g":5,"salt_g":0.1}]}"#
+        }
+        return #"{"title":"Brötchen mit Käse","items":[{"name":"Brötchen","amount":"2 Stück","kcal_min":250,"kcal":300,"kcal_max":350,"protein_g":10,"carbs_g":56,"fat_g":2,"fiber_g":3,"sugar_g":4,"saturated_fat_g":0.5,"salt_g":1.4},{"name":"Käse","amount":"2 Scheiben","kcal_min":150,"kcal":180,"kcal_max":220,"protein_g":12,"carbs_g":0,"fat_g":14,"fiber_g":0,"sugar_g":null,"saturated_fat_g":9,"salt_g":1.2}]}"#
+    }
+
+    /// Follow-up about one action card (task B4): the same arguments with "(später)" behind the title, and a sentence about it.
+    /// A request without a title in the arguments changes nothing and says so.
+    static func cardRevisionAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "card_revision" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined()
+        let prefix = "Current arguments (JSON): "
+        guard let line = text.split(separator: "\n").first(where: { $0.hasPrefix(prefix) }),
+              var arguments = (try? JSONSerialization.jsonObject(with: Data(line.dropFirst(prefix.count).utf8))) as? [String: Any] else { return nil }
+        var answer: [String: Any] = ["arguments": arguments, "message": "Dazu kann ich nichts ändern.", "changed": false]
+        if let title = arguments["title"] as? String {
+            arguments["title"] = title + " (später)"
+            answer = ["arguments": arguments, "message": "Titel ergänzt.", "changed": true]
+        }
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
     }
 
     /// Shopping demo: every item goes to the first category of the request, the first item into a new "Demo" category.
@@ -114,14 +146,39 @@ final class DemoAITransport: AIHTTPTransport {
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
               let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
               format["name"] as? String == "recipe_ingredients" else { return nil }
+        var items: [[String: Any]] = [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
+                                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
+                                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]]
+        // A follow-up (task D2): the same recipe with one more ingredient.
+        let sent = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        if sent.compactMap({ $0["text"] as? String }).joined().contains("Message from the user:") {
+            items.append(["name": "Zwiebel", "quantity": "1 Stück", "amount": 1, "unit": "Stück", "category": "Obst & Gemüse"])
+        }
         let answer: [String: Any] = [
             "title": "Demo Gemüsepfanne", "servings": 2,
             "steps": ["Gemüse schneiden.", "In der Pfanne fünf Minuten braten."],
-            "items": [["name": "Paprika", "quantity": "2 Stück", "amount": 2, "unit": "Stück", "category": "Obst & Gemüse"],
-                      ["name": "Reis", "quantity": "150 g", "amount": 150, "unit": "g", "category": "Sonstiges"],
-                      ["name": "Salz", "quantity": "nach Geschmack", "category": "Sonstiges"]],
+            "items": items,
         ]
         return String(decoding: (try? JSONSerialization.data(withJSONObject: answer)) ?? Data(), as: UTF8.self)
+    }
+
+    /// Shopping translation demo: a few known names go German ⇄ English, every other name comes back unchanged.
+    static func shoppingTranslationAnswer(for request: URLRequest) -> String? {
+        guard let body = request.httpBody,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let format = (json["text"] as? [String: Any])?["format"] as? [String: Any],
+              format["name"] as? String == "shopping_translation" else { return nil }
+        let content = ((json["input"] as? [[String: Any]])?.first?["content"] as? [[String: Any]]) ?? []
+        let text = content.compactMap { $0["text"] as? String }.joined()
+        let sent = (try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]) ?? [:]
+        let toEnglish = (sent["target"] as? String) == "English"
+        let pairs = [("Milch", "Milk"), ("Brot", "Bread"), ("Eier", "Eggs"), ("Äpfel", "Apples")]
+        let dictionary = Dictionary(uniqueKeysWithValues: pairs.map { toEnglish ? ($0.0, $0.1) : ($0.1, $0.0) })
+        let items = (sent["items"] as? [[String: Any]] ?? []).map { item -> [String: Any] in
+            let name = item["text"] as? String ?? ""
+            return ["i": item["i"] as? Int ?? 0, "text": dictionary[name] ?? name]
+        }
+        return String(decoding: (try? JSONSerialization.data(withJSONObject: ["items": items])) ?? Data(), as: UTF8.self)
     }
 
     static func shoppingSortAnswer(for request: URLRequest) -> String? {

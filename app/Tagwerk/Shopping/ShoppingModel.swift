@@ -24,6 +24,8 @@ final class ShoppingModel {
         var added: [String] = []
         var reopened: [String] = []
         var alreadyOnList: [String] = []
+        /// Names of open items whose quantity a recipe raised (EK4b); a second entry counts as added.
+        var raised: [String] = []
         /// Names that could not be written.
         var failed: [String] = []
         /// Text of the first failure.
@@ -156,10 +158,20 @@ final class ShoppingModel {
 
     // MARK: Adding
 
-    /// Adds items without creating duplicates: an open item of the same name stays (a given quantity replaces
+    /// What `add` does with an open item of the same name.
+    enum ExistingItemPolicy {
+        /// The item stays and a given quantity replaces its quantity (the input bar, Siri, the assistant).
+        case replaceQuantity
+        /// A recipe (EK4b): the quantity is raised by the given one when the two can be added; otherwise a second entry of the
+        /// same name is made. An item whose notes hold more than the quantity line is never overwritten, it gets the second
+        /// entry as well. The decimal separator of a raised quantity follows `locale`.
+        case raiseOrAppend(locale: Locale)
+    }
+
+    /// Adds items without creating duplicates: an open item of the same name stays (with `existing` deciding what happens to
     /// its quantity), a recently completed one is reopened, anything else becomes a new plain reminder.
     /// A caller that loaded the list just before passes `reloadFirst: false` to save the second read.
-    func add(_ items: [ParsedItem], reloadFirst: Bool = true) async -> AddReport {
+    func add(_ items: [ParsedItem], reloadFirst: Bool = true, existing policy: ExistingItemPolicy = .replaceQuantity) async -> AddReport {
         if reloadFirst { await reload() }
         var report = AddReport()
         guard state == .ready, let listID = settings.shoppingListID else {
@@ -177,8 +189,28 @@ final class ShoppingModel {
             guard !key.isEmpty else { continue }
             do {
                 if let existing = open[key] {
-                    open[key] = try settingQuantity(item.quantity, on: existing, reopening: false)
-                    report.alreadyOnList.append(existing.title)
+                    switch policy {
+                    case .replaceQuantity:
+                        open[key] = try settingQuantity(item.quantity, on: existing, reopening: false)
+                        report.alreadyOnList.append(existing.title)
+                    case .raiseOrAppend(let locale):
+                        let listed = ShoppingItem.quantity(fromNotes: existing.notes)
+                        switch ShoppingQuantity.merge(existing: listed.quantity, added: item.quantity, hasLongNotes: listed.hasLongNotes,
+                                                      locale: locale) {
+                        case .keep:
+                            report.alreadyOnList.append(existing.title)
+                        case .raise(let total):
+                            var raised = existing
+                            raised.notes = total
+                            open[key] = try store.save(raised, recurrence: .unchanged)
+                            report.raised.append(existing.title)
+                        case .secondEntry:
+                            // The first entry stays the one the name stands for; the new one only carries the recipe's quantity.
+                            _ = try store.create(title: item.name, notes: item.quantity, due: nil, ekPriority: 0, listID: listID,
+                                                 recurrence: nil)
+                            report.added.append(item.name)
+                        }
+                    }
                 } else if let existing = completed[key] {
                     open[key] = try settingQuantity(item.quantity, on: existing, reopening: true)
                     completed[key] = nil
@@ -258,6 +290,102 @@ final class ShoppingModel {
         }
         _ = try store.save(record, recurrence: .unchanged)
         await reload()
+    }
+
+    // MARK: Renaming
+
+    /// One item that was renamed.
+    struct Renamed: Equatable {
+        var id: String
+        var oldName: String
+        var newName: String
+    }
+
+    /// What `rename` did.
+    struct RenameReport: Equatable {
+        var renamed: [Renamed] = []
+        /// Items changed, checked off or deleted since the preview, or whose new name is on the list by now.
+        var skipped = 0
+        var failed = 0
+        /// Text of the first write error.
+        var errorMessage: String?
+    }
+
+    /// Writes the new titles of open items, as a translation proposed them. Blocked changes are ignored. The list is read first,
+    /// so duplicates are checked against its current state; then every reminder is read fresh and written on its own, and a
+    /// failure does not stop the rest. Only the title is written: notes, due date, completion and recurrence stay. An item
+    /// keeps its section: when the dictionary would file the new name elsewhere, the category of the old name is remembered for
+    /// the new one. Nothing is ever deleted or merged.
+    func rename(_ changes: [ShoppingTranslationPlan.Change]) async -> RenameReport {
+        var report = RenameReport()
+        let applicable = changes.filter { $0.blocked == nil }
+        guard !applicable.isEmpty else { return report }
+        await reload()
+        guard state == .ready else {
+            report.failed = applicable.count
+            report.errorMessage = state == .accessDenied
+                ? TaskListModel.message(for: TaskWriteError.accessDenied)
+                : String(localized: "Es ist keine Einkaufsliste eingerichtet.")
+            return report
+        }
+        // Name key of every open item, carried along from rename to rename. Items that rename to the same name go together.
+        var keyByID = Dictionary(openRecords.map { ($0.id, ShoppingName.key($0.title)) }, uniquingKeysWith: { first, _ in first })
+        let targetByID = Dictionary(applicable.map { ($0.itemID, ShoppingName.key($0.newName)) }, uniquingKeysWith: { first, _ in first })
+        for change in applicable {
+            let oldKey = ShoppingName.key(change.oldName)
+            let newKey = ShoppingName.key(change.newName)
+            do {
+                var record = try shoppingRecord(change.itemID)
+                guard !record.isCompleted, ShoppingName.key(record.title) == oldKey,
+                      !keyByID.contains(where: { $0.key != change.itemID && $0.value == newKey && targetByID[$0.key] != newKey })
+                else {
+                    report.skipped += 1
+                    continue
+                }
+                let section = categoryToKeep(oldKey: oldKey, newKey: newKey)
+                record.title = String(change.newName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .prefix(ShoppingInputParser.maxNameLength))
+                _ = try store.save(record, recurrence: .unchanged)
+                keyByID[change.itemID] = newKey
+                if let section { categories.assign(nameKey: newKey, to: section.id, manual: section.isManual) }
+                report.renamed.append(Renamed(id: change.itemID, oldName: change.oldName, newName: record.title))
+            } catch TaskWriteError.notFound {
+                report.skipped += 1
+            } catch {
+                report.failed += 1
+                if report.errorMessage == nil { report.errorMessage = TaskListModel.message(for: error) }
+            }
+        }
+        await reload()
+        return report
+    }
+
+    /// The category of `oldKey` to give `newKey`, when the new name would be filed under another one and has no assignment of
+    /// its own: a translated item stays in its section.
+    private func categoryToKeep(oldKey: String, newKey: String) -> (id: UUID?, isManual: Bool)? {
+        let assignments = categories.assignments()
+        guard assignments[newKey] == nil else { return nil }
+        let all = categories.categories()
+        let oldCategory = ShoppingClassifier.categoryID(forKey: oldKey, assignments: assignments, categories: all, dictionary: dictionary)
+        let newCategory = ShoppingClassifier.categoryID(forKey: newKey, assignments: assignments, categories: all, dictionary: dictionary)
+        guard oldCategory != newCategory else { return nil }
+        return (oldCategory, assignments[oldKey]?.isManual == true)
+    }
+
+    /// Puts the old titles back where the item still carries the translated one: it must be open and its title key must be that
+    /// of `newName`. Anything changed again since is left alone. Category assignments made by the rename stay (they do no
+    /// harm). Returns the number of items restored.
+    @discardableResult
+    func undoRename(_ renamed: [Renamed]) async -> Int {
+        var restored = 0
+        for entry in renamed {
+            guard var record = try? shoppingRecord(entry.id), !record.isCompleted,
+                  ShoppingName.key(record.title) == ShoppingName.key(entry.newName) else { continue }
+            record.title = entry.oldName
+            if (try? store.save(record, recurrence: .unchanged)) != nil { restored += 1 }
+        }
+        if !renamed.isEmpty { await reload() }
+        return restored
     }
 
     func delete(id: String) async throws {

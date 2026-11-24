@@ -76,6 +76,18 @@ public enum BibleBooks {
         return candidates.count == 1 ? candidates[0] : nil
     }
 
+    /// The books that match what is typed into the search field of the book list (BS2b): the typed text is part of the
+    /// German or English name, or the start of an abbreviation ("Offb", "1 Kor"). Spelling is folded as in `book(matching:)`.
+    /// Empty text returns every book. The result keeps the order of the canon.
+    public static func search(_ text: String) -> [BibleBook] {
+        let wanted = normalize(text)
+        guard !wanted.isEmpty else { return all }
+        return all.filter { book in
+            [book.german, book.english].contains { normalize($0).contains(wanted) }
+                || book.aliases.contains { normalize($0).hasPrefix(wanted) }
+        }
+    }
+
     private static func names(of book: BibleBook) -> Set<String> {
         Set(([book.german, book.english] + book.aliases).map(normalize))
     }
@@ -120,8 +132,29 @@ public enum BibleStudyTemplate {
     /// section starts below the last observations.
     public static func appendingSession(to text: String, dateText: String, passage: String) -> String {
         let base = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return base + "\n\n" + sessionHeading(dateText: dateText, passage: passage) + "\n\n"
+    }
+
+    /// Completes the heading of a session section (BV2b) once the end is known: the line written at the start,
+    /// "19.11.2026 · 3,21–", becomes "19.11.2026 · 3,21–26". Only a line that is still exactly the heading of the start is
+    /// replaced (the last one when two sessions of a day wrote the same heading); a heading the reader has edited leaves the
+    /// text unchanged.
+    public static func replacingSessionHeading(in text: String, dateText: String, oldPassage: String, newPassage: String) -> String {
+        let oldHeading = sessionHeading(dateText: dateText, passage: oldPassage)
+        var lines = text.components(separatedBy: "\n")
+        guard let index = lines.lastIndex(of: oldHeading) else { return text }
+        lines[index] = sessionHeading(dateText: dateText, passage: newPassage)
+        return lines.joined(separator: "\n")
+    }
+
+    /// "19.11.2026", fixed so the section titles of a note read alike whatever the language was when they were written.
+    public static func dateText(_ day: PlanDay) -> String {
+        String(format: "%02d.%02d.%04d", day.day, day.month, day.year)
+    }
+
+    /// The title line of a session section: the date, then the passage when there is one.
+    private static func sessionHeading(dateText: String, passage: String) -> String {
         let trimmedPassage = passage.trimmingCharacters(in: .whitespacesAndNewlines)
-        let title = trimmedPassage.isEmpty ? dateText : dateText + " · " + trimmedPassage
-        return base + "\n\n" + title + "\n\n"
+        return trimmedPassage.isEmpty ? dateText : dateText + " · " + trimmedPassage
     }
 }

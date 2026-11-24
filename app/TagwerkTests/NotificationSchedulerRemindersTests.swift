@@ -82,7 +82,7 @@ struct NotificationSchedulerRemindersTests {
 
     @Test func reschedule_overflow_reportsRefillDate() async {
         useThreeReminders()
-        // 30 tasks × 3 reminders, one task per hour of the 30th: the budget holds 50 of the 90.
+        // 30 tasks × 3 reminders, one task per hour of the 30th: the budget holds 44 of the 90.
         local.tasks = (0..<30).map { makeTask("T\($0)", source: .local, due: DueDate(year: 2026, month: 12, day: 1 + $0 / 12, hour: 8 + $0 % 12)) }
         let scheduler = makeScheduler(await loadedList([local]))
         await scheduler.reschedule()

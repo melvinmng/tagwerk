@@ -13,15 +13,42 @@ public final class LoopbackServer: Sendable {
     static let maxRequestBytes = 16_384
     /// How long a served connection may stay open waiting for the browser to close it first.
     static let lingerAfterResponse: TimeInterval = 2
+    /// Upper bound for each close step in `stop()`. Only a hang guard: Network.framework normally reports
+    /// `.cancelled` within milliseconds, but on a starved machine (CI runner with parallel jobs) it was seen to
+    /// take many seconds, and returning earlier leaves the port bound.
+    static let closeGuard: TimeInterval = 20
 
     private struct Waiter {
         let id: UUID
         let continuation: CheckedContinuation<URL, Error>
     }
 
+    /// What `stop()` waits for before it returns.
+    private enum Drain {
+        /// Every connection socket (until it reported `.cancelled`).
+        case sockets
+        /// The listening socket.
+        case listener
+    }
+
+    private struct DrainWaiter {
+        let id: UUID
+        let drain: Drain
+        let continuation: CheckedContinuation<Bool, Never>
+    }
+
     private struct State {
         var listener: NWListener?
+        /// Accepted connections that are not closed yet.
         var connections: [ObjectIdentifier: NWConnection] = [:]
+        /// Connections that were accepted and have not reported `.cancelled` yet, so their sockets may still be open.
+        var openSockets: Set<ObjectIdentifier> = []
+        var listenerClosed = true
+        var drainWaiters: [DrainWaiter] = []
+        /// The port the listener is bound to, known once it is ready (relevant when port 0 was requested).
+        var boundPort: UInt16?
+        var stopWasClean: Bool?
+        var onWaiterRegistered: (@Sendable () -> Void)?
         var isReady = false
         var isStopped = false
         var capturedURL: URL?
@@ -41,7 +68,18 @@ public final class LoopbackServer: Sendable {
     }
 
     public var isReady: Bool { state.withLock { $0.isReady } }
+    /// The port the listener is bound to, once it is ready. Differs from the requested port only for port 0.
+    public var listeningPort: UInt16? { state.withLock { $0.boundPort } }
     var capturedURL: URL? { state.withLock { $0.capturedURL } }
+    /// `true` when the last `stop()` saw the listener and every connection report `.cancelled`, `false` when a
+    /// hang guard ended the wait, `nil` before the first stop.
+    var stopWasClean: Bool? { state.withLock { $0.stopWasClean } }
+
+    /// Test hook: called once a `waitForCallback` call is registered and waiting.
+    var onWaiterRegistered: (@Sendable () -> Void)? {
+        get { state.withLock { $0.onWaiterRegistered } }
+        set { state.withLock { $0.onWaiterRegistered = newValue } }
+    }
 
     /// Starts listening and returns once the listener is ready.
     public func start() async throws {
@@ -55,7 +93,7 @@ public final class LoopbackServer: Sendable {
             throw Self.map(error)
         }
         listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
-        state.withLock { $0.listener = listener }
+        state.withLock { $0.listener = listener; $0.listenerClosed = false; $0.stopWasClean = nil }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             let pending = Mutex<CheckedContinuation<Void, Error>?>(continuation)
@@ -65,7 +103,10 @@ public final class LoopbackServer: Sendable {
             listener.stateUpdateHandler = { [weak self] newState in
                 switch newState {
                 case .ready:
-                    self?.state.withLock { $0.isReady = true }
+                    self?.state.withLock { state in
+                        state.isReady = true
+                        state.boundPort = listener.port?.rawValue
+                    }
                     resume(.success(()))
                 case .failed(let error), .waiting(let error):
                     let mapped = Self.map(error)
@@ -73,6 +114,7 @@ public final class LoopbackServer: Sendable {
                     self?.fail(with: mapped)
                     listener.cancel()
                 case .cancelled:
+                    self?.markListenerClosed()
                     resume(.failure(ChatGPTAuthError.cancelled))
                 default:
                     break
@@ -82,44 +124,91 @@ public final class LoopbackServer: Sendable {
         }
     }
 
-    /// Stops listening, closes open connections and fails a pending wait. Returns once the port is released.
+    /// Stops listening, closes open connections and fails a pending wait. Returns once the port is released,
+    /// which means the listening socket and every accepted socket reported `.cancelled`.
     public func stop() async {
         let (listener, connections) = state.withLock { state -> (NWListener?, [NWConnection]) in
             state.isStopped = true
             state.isReady = false
             defer { state.listener = nil; state.connections = [:] }
+            state.listenerClosed = state.listener == nil
             return (state.listener, Array(state.connections.values))
         }
         fail(with: .cancelled)
         connections.forEach { $0.cancel() }
-        guard let listener else { return }
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            let pending = Mutex<CheckedContinuation<Void, Never>?>(continuation)
-            let resume: @Sendable () -> Void = { pending.withLock { $0.take() }?.resume() }
-            listener.stateUpdateHandler = { newState in
-                if case .cancelled = newState { resume() }
+        if let listener {
+            listener.stateUpdateHandler = { [weak self] newState in
+                if case .cancelled = newState { self?.markListenerClosed() }
             }
-            if case .cancelled = listener.state { resume() }
+            if case .cancelled = listener.state { markListenerClosed() }
             listener.cancel()
-            // Safety net in case the listener never reports `.cancelled`.
-            queue.asyncAfter(deadline: .now() + 1, execute: resume)
         }
+        // Connections that `close()` already cancelled are not in the snapshot above but may still hold their socket.
+        var clean = await awaitDrained(.sockets, timeout: Self.closeGuard)
+        clean = await awaitDrained(.listener, timeout: Self.closeGuard) && clean
+        state.withLock { $0.stopWasClean = clean }
+    }
+
+    private func isDrained(_ drain: Drain, in state: State) -> Bool {
+        switch drain {
+        case .sockets: state.openSockets.isEmpty
+        case .listener: state.listenerClosed
+        }
+    }
+
+    /// Suspends until `drain` is complete. Returns `false` when `timeout` ended the wait first.
+    private func awaitDrained(_ drain: Drain, timeout: TimeInterval) async -> Bool {
+        let id = UUID()
+        return await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+            let alreadyDrained = state.withLock { state -> Bool in
+                if isDrained(drain, in: state) { return true }
+                state.drainWaiters.append(DrainWaiter(id: id, drain: drain, continuation: continuation))
+                return false
+            }
+            if alreadyDrained {
+                continuation.resume(returning: true)
+                return
+            }
+            queue.asyncAfter(deadline: .now() + timeout) { [weak self] in
+                let waiter = self?.state.withLock { state -> DrainWaiter? in
+                    guard let index = state.drainWaiters.firstIndex(where: { $0.id == id }) else { return nil }
+                    return state.drainWaiters.remove(at: index)
+                }
+                waiter?.continuation.resume(returning: false)
+            }
+        }
+    }
+
+    /// Resumes the waiters whose drain is complete. Call after every change of the sets they watch.
+    private func notifyDrained() {
+        let ready = state.withLock { state -> [DrainWaiter] in
+            let ready = state.drainWaiters.filter { isDrained($0.drain, in: state) }
+            state.drainWaiters.removeAll { waiter in ready.contains { $0.id == waiter.id } }
+            return ready
+        }
+        ready.forEach { $0.continuation.resume(returning: true) }
+    }
+
+    private func markListenerClosed() {
+        state.withLock { $0.listenerClosed = true }
+        notifyDrained()
     }
 
     /// Waits for the callback request with the expected `state`.
     public func waitForCallback(timeout: TimeInterval = 300) async throws -> URL {
         let id = UUID()
         return try await withCheckedThrowingContinuation { continuation in
-            let immediate: Result<URL, Error>? = state.withLock { state in
-                if let url = state.capturedURL { return .success(url) }
-                if let error = state.terminalError { return .failure(error) }
+            let (immediate, registered) = state.withLock { state -> (Result<URL, Error>?, (@Sendable () -> Void)?) in
+                if let url = state.capturedURL { return (.success(url), nil) }
+                if let error = state.terminalError { return (.failure(error), nil) }
                 state.waiter = Waiter(id: id, continuation: continuation)
-                return nil
+                return (nil, state.onWaiterRegistered)
             }
             if let immediate {
                 continuation.resume(with: immediate)
                 return
             }
+            registered?()
             queue.asyncAfter(deadline: .now() + timeout) { [weak self] in
                 let waiter = self?.state.withLock { state -> Waiter? in
                     guard state.waiter?.id == id else { return nil }
@@ -136,11 +225,24 @@ public final class LoopbackServer: Sendable {
         let accepted = state.withLock { state -> Bool in
             guard !state.isStopped else { return false }
             state.connections[ObjectIdentifier(connection)] = connection
+            state.openSockets.insert(ObjectIdentifier(connection))
             return true
         }
         guard accepted else {
             connection.cancel()
             return
+        }
+        let identifier = ObjectIdentifier(connection)
+        connection.stateUpdateHandler = { [weak self] newState in
+            switch newState {
+            case .failed:
+                self?.close(connection)
+            case .cancelled:
+                self?.state.withLock { _ = $0.openSockets.remove(identifier) }
+                self?.notifyDrained()
+            default:
+                break
+            }
         }
         connection.start(queue: queue)
         receive(on: connection, buffer: Data())

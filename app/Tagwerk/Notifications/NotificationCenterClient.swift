@@ -22,6 +22,8 @@ protocol NotificationCenterClient: AnyObject {
     func add(_ notification: PlannedNotification) async throws
     /// A reminder that repeats every day (or every week on `weekday`) at the same clock time (phase 7 routines).
     func addRepeating(_ notification: RoutineNotification) async throws
+    /// A routine reminder for one day: year, month, day, hour and minute without a time zone, not repeating.
+    func addDated(_ notification: DatedRoutineNotification) async throws
     func removePending(_ identifiers: [String]) async
 }
 
@@ -109,18 +111,33 @@ final class SystemNotificationCenter: NotificationCenterClient {
     }
 
     func addRepeating(_ notification: RoutineNotification) async throws {
+        // Hour and minute only, no time zone: the reminder follows the clock of the place the phone is in.
+        // With a weekday the reminder repeats weekly on that day, else daily.
+        let components = DateComponents(hour: notification.hour, minute: notification.minute, weekday: notification.weekday)
+        try await addRoutineRequest(id: notification.id, title: notification.title, body: notification.body, route: notification.route,
+                                    category: nil, trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: true))
+    }
+
+    func addDated(_ notification: DatedRoutineNotification) async throws {
+        // Date and clock time without a time zone, once: the reminder follows the clock of the place the phone is in.
+        let components = DateComponents(year: notification.year, month: notification.month, day: notification.day,
+                                        hour: notification.hour, minute: notification.minute)
+        try await addRoutineRequest(id: notification.id, title: notification.title, body: notification.body, route: notification.route,
+                                    category: notification.categoryIdentifier,
+                                    trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false))
+    }
+
+    private func addRoutineRequest(id: String, title: String, body: String, route: AppRoute, category: String?,
+                                   trigger: UNCalendarNotificationTrigger) async throws {
         let content = UNMutableNotificationContent()
-        content.title = notification.title
-        content.body = notification.body
+        if let category { content.categoryIdentifier = category }
+        content.title = title
+        content.body = body
         content.sound = .default
         content.interruptionLevel = .active
         content.threadIdentifier = "routine"
-        content.userInfo = [NotificationPayload.route: notification.route.rawValue]
-        // Hour and minute only, no time zone: the reminder follows the clock of the place the phone is in.
-        // With a weekday the reminder repeats weekly on that day, else daily.
-        let trigger = UNCalendarNotificationTrigger(
-            dateMatching: DateComponents(hour: notification.hour, minute: notification.minute, weekday: notification.weekday), repeats: true)
-        let request = UNNotificationRequest(identifier: notification.id, content: content, trigger: trigger)
+        content.userInfo = [NotificationPayload.route: route.rawValue]
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             center.add(request) { error in
                 if let error { continuation.resume(throwing: error) } else { continuation.resume() }
@@ -130,5 +147,15 @@ final class SystemNotificationCenter: NotificationCenterClient {
 
     func removePending(_ identifiers: [String]) async {
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    /// The actions of the Bible Study reminder (BS7): "Starten" opens the app, "Heute nicht" does not. Registered once at launch,
+    /// before the first reminder can be delivered; the titles follow the language of the app.
+    static func registerCategories() {
+        let start = UNNotificationAction(identifier: BibleStudyReminders.startAction, title: String(localized: "Starten"), options: [.foreground])
+        let skip = UNNotificationAction(identifier: BibleStudyReminders.skipAction, title: String(localized: "Heute nicht"), options: [])
+        let bible = UNNotificationCategory(identifier: BibleStudyReminders.categoryIdentifier, actions: [start, skip],
+                                           intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([bible])
     }
 }

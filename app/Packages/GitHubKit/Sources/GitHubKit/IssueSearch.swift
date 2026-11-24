@@ -168,7 +168,7 @@ extension GitHubTaskProvider {
                 else if !hit.hasOpenProject { .noProject }
                 else { nil }
             return OnlineIssue(id: record.issueID, number: record.number, title: record.title, repository: record.repository,
-                               url: record.url, updatedAt: record.updatedAt, marker: marker)
+                               url: record.url, updatedAt: record.updatedAt, marker: marker, assignees: record.assignees)
         }
     }
 }

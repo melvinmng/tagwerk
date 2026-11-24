@@ -29,6 +29,48 @@ struct KeyboardTapPolicyTests {
         #expect(KeyboardTapPolicy.shouldDismiss(isKeyboardVisible: true, touchIsInTextInput: false, point: point, keepZones: zones))
     }
 
+    @Test func zoneEdge_pointOnTheFarEdge_isOutsideTheZone() {
+        // CGRect.contains is half-open: a tap exactly on the bottom edge of an input bar is not a tap on the bar.
+        let zones = [CGRect(x: 0, y: 100, width: 300, height: 100)]
+        #expect(KeyboardTapPolicy.shouldDismiss(isKeyboardVisible: true, touchIsInTextInput: false, point: CGPoint(x: 100, y: 200), keepZones: zones))
+        #expect(!KeyboardTapPolicy.shouldDismiss(isKeyboardVisible: true, touchIsInTextInput: false, point: CGPoint(x: 100, y: 100), keepZones: zones))
+    }
+
+    // The keyboard closes after the touch sequence (a control in a sheet that shrinks must still receive its touch-up).
+
+    @Test func dismissal_doesNotCloseTheKeyboardSynchronously_butInTheScheduledTurn() {
+        var pending: [@MainActor () -> Void] = []
+        var closedWindows: [UIWindow] = []
+        let controller = KeyboardDismissalController(keepZones: KeyboardKeepZones(),
+                                                     schedule: { pending.append($0) },
+                                                     endEditing: { closedWindows.append($0) })
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        controller.install(on: window)
+
+        controller.dismissKeyboardAfterTouchSequence()
+
+        #expect(closedWindows.isEmpty, "The keyboard must not close while the touch is still being delivered")
+        #expect(pending.count == 1)
+        pending.forEach { $0() }
+        #expect(closedWindows == [window])
+    }
+
+    @Test func dismissal_afterTheWindowIsGone_doesNothing() {
+        var pending: [@MainActor () -> Void] = []
+        var closedWindows: [UIWindow] = []
+        let controller = KeyboardDismissalController(keepZones: KeyboardKeepZones(),
+                                                     schedule: { pending.append($0) },
+                                                     endEditing: { closedWindows.append($0) })
+        var window: UIWindow? = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        controller.install(on: window!)
+        controller.dismissKeyboardAfterTouchSequence()
+
+        window = nil
+        pending.forEach { $0() }
+
+        #expect(closedWindows.isEmpty)
+    }
+
     @Test func registry_reportsWindowFrames_andSkipsViewsOutsideAWindow() {
         let registry = KeyboardKeepZones()
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))

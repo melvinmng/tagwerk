@@ -17,7 +17,7 @@ struct HabitSheet: View {
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool { !trimmedName.isEmpty && (habit != nil || model.canAddHabit) }
-    private var sources: [HabitSource] { [.manual, .water, .workout, .steps, .eveningClosed, .journal, .bibleStudy] }
+    private var sources: [HabitSource] { [.manual, .movement, .water, .workout, .steps, .eveningClosed, .journal, .bibleStudy] }
 
     var body: some View {
         NavigationStack {
@@ -38,7 +38,7 @@ struct HabitSheet: View {
                                     .background(symbol == candidate ? Color.accentColor.opacity(0.2) : Color.clear, in: .rect(cornerRadius: 10))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel(candidate)
+                            .accessibilityLabel(HabitText.symbolName(candidate))
                             .accessibilityAddTraits(symbol == candidate ? .isSelected : [])
                         }
                     }
@@ -48,7 +48,12 @@ struct HabitSheet: View {
                     ForEach(sources, id: \.self) { candidate in
                         Button { source = candidate } label: {
                             HStack {
-                                Text(HabitText.sourceTitle(candidate))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(HabitText.sourceTitle(candidate))
+                                    if let subtitle = HabitText.sourceSubtitle(candidate) {
+                                        Text(subtitle).font(.footnote).foregroundStyle(.secondaryText)
+                                    }
+                                }
                                 Spacer()
                                 if source == candidate { Image(systemName: "checkmark") }
                             }
@@ -59,7 +64,7 @@ struct HabitSheet: View {
                 } header: {
                     Text("Erfüllt durch")
                 } footer: {
-                    Text("Automatische Quellen haken sich selbst ab, auch an Tagen ohne App-Start. Jede Quelle gilt für höchstens eine Gewohnheit. Du kannst jede Gewohnheit zusätzlich von Hand abhaken.")
+                    Text(HabitText.sourceFooter)
                 }
                 Section {
                     ValueStepper("Tage pro Woche", value: $daysPerWeek, in: 1...7) { "\($0)" }

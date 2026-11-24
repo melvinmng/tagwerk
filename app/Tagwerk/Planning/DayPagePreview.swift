@@ -12,7 +12,7 @@ struct DayPagePreview: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(PlanHeaderText.caption(scope: .day, anchor: day, today: model.today, range: range, calendar: model.calendar))
-                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondaryText)
                 Text(PlanHeaderText.title(scope: .day, anchor: day, range: range, calendar: model.calendar))
                     .font(.title3.bold())
             }
@@ -47,13 +47,10 @@ struct WeekPagePreview: View {
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             Text(CapacityText.summary(plan.capacity)).font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? .red : .secondary)
+                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
-                        ForEach(plan.assigned) { task in Text(task.title).font(.subheadline).lineLimit(1) }
-                        ForEach(plan.deadlines) { deadline in
-                            Text(deadline.title).font(.subheadline).foregroundStyle(.red).lineLimit(1)
-                        }
+                        weekRows(of: plan)
                     }
                 }
             }
@@ -64,5 +61,30 @@ struct WeekPagePreview: View {
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .background(Color(.systemBackground))
+    }
+
+    /// The rows the shown week has for this day, in the same order and rows, without interaction.
+    @ViewBuilder
+    private func weekRows(of plan: DayPlan) -> some View {
+        let content = model.weekContent(for: plan)
+        let marks = DayPageExtras(deadlineEventIDs: Set(content.timed.compactMap { $0.deadline?.eventID }))
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(content.allDay) { event in
+                TimelineLine(time: "", title: event.title, detail: String(localized: "Ganztägig"), color: event.isBusy ? .blue : .gray) {
+                    EmptyView()
+                }
+            }
+            ForEach(content.timed) { entry in
+                if let taskID = entry.taskID {
+                    BlockEntryRow(model: model, plan: plan, event: entry.event, taskID: taskID, marks: marks, trips: entry.trips) {}
+                } else {
+                    EventEntryRow(model: model, day: plan.day, event: entry.event, marks: marks, trips: entry.trips) {}
+                }
+            }
+            ForEach(plan.assigned) { task in Text(task.title).font(.subheadline).lineLimit(1) }
+            ForEach(content.deadlines) { deadline in
+                Text(deadline.title).font(.subheadline).foregroundStyle(.redText).lineLimit(1)
+            }
+        }
     }
 }

@@ -342,6 +342,9 @@ struct EventTravelOverrideBackup: BackupEntity {
     var seriesFrom: Date?
     var modeName: String
     var minutes: Int
+    /// Transport and start per event (V1); absent in files written before, which read as "not chosen".
+    var transportRaw: String?
+    var startRaw: String?
 
     init(_ record: EventTravelOverride) {
         key = record.key
@@ -349,6 +352,8 @@ struct EventTravelOverrideBackup: BackupEntity {
         seriesFrom = record.seriesFrom
         modeName = record.modeName
         minutes = record.minutes
+        transportRaw = record.transportRaw
+        startRaw = record.startRaw
     }
 
     func makeRecord() -> EventTravelOverride {
@@ -357,6 +362,8 @@ struct EventTravelOverrideBackup: BackupEntity {
         record.key = key
         record.modeName = modeName
         record.minutes = minutes
+        record.transportRaw = transportRaw
+        record.startRaw = startRaw
         return record
     }
 }
@@ -556,6 +563,32 @@ struct DrinkBackup: BackupEntity {
     }
 }
 
+struct WeightBackup: BackupEntity {
+    static let modelName = "WeightRecord"
+    var id: UUID
+    var date: Date
+    var kilograms: Double
+    var bodyFatPercent: Double?
+    var healthVersion: Int
+    var healthSynced: Bool
+
+    init(_ record: WeightRecord) {
+        id = record.id
+        date = record.date
+        kilograms = record.kilograms
+        bodyFatPercent = record.bodyFatPercent
+        healthVersion = record.healthVersion
+        healthSynced = record.healthSynced
+    }
+
+    func makeRecord() -> WeightRecord {
+        let record = WeightRecord(WeightValue(id: id, date: date, kilograms: kilograms, bodyFatPercent: bodyFatPercent))
+        record.healthVersion = healthVersion
+        record.healthSynced = healthSynced
+        return record
+    }
+}
+
 struct WorkoutBackup: BackupEntity {
     static let modelName = "WorkoutRecord"
     var id: UUID
@@ -565,6 +598,8 @@ struct WorkoutBackup: BackupEntity {
     var kilocalories: Double?
     var healthVersion: Int
     var healthSynced: Bool
+    /// Optional, so a backup written before it still decodes; `nil` lets the current permission decide.
+    var energyInHealth: Bool?
 
     init(_ record: WorkoutRecord) {
         id = record.id
@@ -574,6 +609,7 @@ struct WorkoutBackup: BackupEntity {
         kilocalories = record.kilocalories
         healthVersion = record.healthVersion
         healthSynced = record.healthSynced
+        energyInHealth = record.energyInHealth
     }
 
     func makeRecord() -> WorkoutRecord {
@@ -585,6 +621,7 @@ struct WorkoutBackup: BackupEntity {
         record.kilocalories = kilocalories
         record.healthVersion = healthVersion
         record.healthSynced = healthSynced
+        record.energyInHealth = energyInHealth
         return record
     }
 }
@@ -656,6 +693,8 @@ struct NoteBackup: BackupEntity {
     var deletedAt: Date?
     var importSourceID: String?
     var bookKey: String?
+    /// Optional, so files from before the lock stay readable; `nil` reads as not locked.
+    var isLocked: Bool?
 
     init(_ record: NoteRecord) {
         id = record.id
@@ -672,6 +711,7 @@ struct NoteBackup: BackupEntity {
         deletedAt = record.deletedAt
         importSourceID = record.importSourceID
         bookKey = record.bookKey
+        isLocked = record.isLocked
     }
 
     func makeRecord() -> NoteRecord {
@@ -690,6 +730,7 @@ struct NoteBackup: BackupEntity {
         record.deletedAt = deletedAt
         record.importSourceID = importSourceID
         record.bookKey = bookKey
+        record.isLocked = isLocked ?? false
         return record
     }
 }
@@ -734,6 +775,11 @@ struct NoteAttachmentBackup: BackupEntity {
     var typeIdentifier: String
     var createdAt: Date
     var data: Data
+    /// Scans, drawings and their stroke data (NX); files written by an older version do not carry them and restore as plain.
+    var roleRaw: String?
+    var companionOfID: UUID?
+    var recognizedText: String?
+    var pageCount: Int?
 
     init(_ record: NoteAttachmentRecord) {
         self.init(record, data: Data())
@@ -746,11 +792,16 @@ struct NoteAttachmentBackup: BackupEntity {
         typeIdentifier = record.typeIdentifier
         createdAt = record.createdAt
         self.data = data
+        roleRaw = record.roleRaw.isEmpty ? nil : record.roleRaw
+        companionOfID = record.companionOfID
+        recognizedText = record.recognizedText
+        pageCount = record.pageCount == 0 ? nil : record.pageCount
     }
 
     /// The record without its file; `BackupEntities.restore` writes the bytes through `NoteAttachmentStore`.
     func makeRecord() -> NoteAttachmentRecord {
-        NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count, createdAt: createdAt)
+        NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count, createdAt: createdAt,
+                             roleRaw: roleRaw ?? "", companionOfID: companionOfID, recognizedText: recognizedText, pageCount: pageCount ?? 0)
     }
 }
 
@@ -763,6 +814,11 @@ struct BibleStudySessionBackup: BackupEntity {
     var noteID: UUID
     var startedAt: Date
     var completedAt: Date?
+    /// The passage as numbers (BS2). Optional so backups written before still read; missing means unknown (0).
+    var startChapter: Int?
+    var startVerse: Int?
+    var endChapter: Int?
+    var endVerse: Int?
 
     init(_ record: BibleStudySessionRecord) {
         id = record.id
@@ -772,6 +828,10 @@ struct BibleStudySessionBackup: BackupEntity {
         noteID = record.noteID
         startedAt = record.startedAt
         completedAt = record.completedAt
+        startChapter = record.startChapter
+        startVerse = record.startVerse
+        endChapter = record.endChapter
+        endVerse = record.endVerse
     }
 
     func makeRecord() -> BibleStudySessionRecord {
@@ -783,6 +843,10 @@ struct BibleStudySessionBackup: BackupEntity {
         record.noteID = noteID
         record.startedAt = startedAt
         record.completedAt = completedAt
+        record.startChapter = startChapter ?? 0
+        record.startVerse = startVerse ?? 0
+        record.endChapter = endChapter ?? 0
+        record.endVerse = endVerse ?? 0
         return record
     }
 }
@@ -1138,6 +1202,181 @@ struct ReminderOverrideBackup: BackupEntity {
 
 /// The settings that travel with a backup. Left out: the model list from ChatGPT (a cache) and everything that names a place on
 /// this device (the backup folder and its state). Secrets are not in the database at all; they live in the Keychain.
+/// One goal plan ("Zielstand"): the goals that hold from `validFromKey` on.
+struct GoalPlanBackup: BackupEntity {
+    static let modelName = "GoalPlanRecord"
+    var id: UUID
+    var validFromKey: String
+    var kcal: Int
+    var proteinGrams: Int?
+    var carbsGrams: Int?
+    var fatGrams: Int?
+    var fiberGrams: Int?
+    var sugarLimitGrams: Int?
+    var waterMilliliters: Int
+    var stepsPerDay: Int
+    var workoutMinutesPerWeek: Int
+    var activeKcalPerDay: Int
+    var targetWeightKg: Double?
+    var paceKgPerWeek: Double?
+    var originRaw: String
+    var note: String
+
+    init(_ record: GoalPlanRecord) {
+        id = record.id
+        validFromKey = record.validFromKey
+        kcal = record.kcal
+        proteinGrams = record.proteinGrams
+        carbsGrams = record.carbsGrams
+        fatGrams = record.fatGrams
+        fiberGrams = record.fiberGrams
+        sugarLimitGrams = record.sugarLimitGrams
+        waterMilliliters = record.waterMilliliters
+        stepsPerDay = record.stepsPerDay
+        workoutMinutesPerWeek = record.workoutMinutesPerWeek
+        activeKcalPerDay = record.activeKcalPerDay
+        targetWeightKg = record.targetWeightKg
+        paceKgPerWeek = record.paceKgPerWeek
+        originRaw = record.originRaw
+        note = record.note
+    }
+
+    func makeRecord() -> GoalPlanRecord {
+        let record = GoalPlanRecord(GoalPlan(id: id, validFrom: PlanDay(dayKey: validFromKey) ?? PlanDay(year: 1970, month: 1, day: 1),
+                                             kcal: kcal, waterMilliliters: waterMilliliters, stepsPerDay: stepsPerDay,
+                                             workoutMinutesPerWeek: workoutMinutesPerWeek))
+        record.id = id
+        record.validFromKey = validFromKey
+        record.kcal = kcal
+        record.proteinGrams = proteinGrams
+        record.carbsGrams = carbsGrams
+        record.fatGrams = fatGrams
+        record.fiberGrams = fiberGrams
+        record.sugarLimitGrams = sugarLimitGrams
+        record.waterMilliliters = waterMilliliters
+        record.stepsPerDay = stepsPerDay
+        record.workoutMinutesPerWeek = workoutMinutesPerWeek
+        record.activeKcalPerDay = activeKcalPerDay
+        record.targetWeightKg = targetWeightKg
+        record.paceKgPerWeek = paceKgPerWeek
+        record.originRaw = originRaw
+        record.note = note
+        return record
+    }
+}
+
+/// The Health values Tagwerk keeps of one day (active energy, other apps' nutrition), so past days stay stable.
+struct DayHealthBackup: BackupEntity {
+    static let modelName = "DayHealthRecord"
+    var dayKey: String
+    var activeKcal: Double?
+    var creditPercent: Int
+    var foreignKcal: Double?
+    var foreignProtein: Double?
+    var foreignCarbs: Double?
+    var foreignFat: Double?
+    var foreignFiber: Double?
+    var foreignSugar: Double?
+    var foreignSaturatedFat: Double?
+    var foreignSalt: Double?
+    var foreignWaterMilliliters: Double?
+    var foreignSources: [String]
+    var updatedAt: Date
+
+    init(_ record: DayHealthRecord) {
+        dayKey = record.dayKey
+        activeKcal = record.activeKcal
+        creditPercent = record.creditPercent
+        foreignKcal = record.foreignKcal
+        foreignProtein = record.foreignProtein
+        foreignCarbs = record.foreignCarbs
+        foreignFat = record.foreignFat
+        foreignFiber = record.foreignFiber
+        foreignSugar = record.foreignSugar
+        foreignSaturatedFat = record.foreignSaturatedFat
+        foreignSalt = record.foreignSalt
+        foreignWaterMilliliters = record.foreignWaterMilliliters
+        foreignSources = record.foreignSources
+        updatedAt = record.updatedAt
+    }
+
+    func makeRecord() -> DayHealthRecord {
+        let record = DayHealthRecord(DayHealth(day: PlanDay(dayKey: dayKey) ?? PlanDay(year: 1970, month: 1, day: 1), activeKcal: activeKcal,
+                                               creditPercent: creditPercent), updatedAt: updatedAt)
+        record.dayKey = dayKey
+        record.activeKcal = activeKcal
+        record.creditPercent = creditPercent
+        record.foreignKcal = foreignKcal
+        record.foreignProtein = foreignProtein
+        record.foreignCarbs = foreignCarbs
+        record.foreignFat = foreignFat
+        record.foreignFiber = foreignFiber
+        record.foreignSugar = foreignSugar
+        record.foreignSaturatedFat = foreignSaturatedFat
+        record.foreignSalt = foreignSalt
+        record.foreignWaterMilliliters = foreignWaterMilliliters
+        record.foreignSources = foreignSources
+        record.updatedAt = updatedAt
+        return record
+    }
+}
+
+/// One food of "Meine Lebensmittel".
+struct FoodBackup: BackupEntity {
+    static let modelName = "FoodRecord"
+    var id: UUID
+    var name: String
+    var referenceRaw: String
+    var pieceGrams: Double?
+    var kcal: Double
+    var protein: Double?
+    var carbs: Double?
+    var fat: Double?
+    var fiber: Double?
+    var sugar: Double?
+    var saturatedFat: Double?
+    var salt: Double?
+    var originRaw: String
+    var barcode: String?
+    var sourceNote: String?
+    var createdAt: Date
+
+    init(_ record: FoodRecord) {
+        id = record.id
+        name = record.name
+        referenceRaw = record.referenceRaw
+        pieceGrams = record.pieceGrams
+        kcal = record.kcal
+        protein = record.protein
+        carbs = record.carbs
+        fat = record.fat
+        fiber = record.fiber
+        sugar = record.sugar
+        saturatedFat = record.saturatedFat
+        salt = record.salt
+        originRaw = record.originRaw
+        barcode = record.barcode
+        sourceNote = record.sourceNote
+        createdAt = record.createdAt
+    }
+
+    func makeRecord() -> FoodRecord {
+        let record = FoodRecord(FoodValue(id: id, name: name, reference: FoodReference(storageKind: referenceRaw, pieceGrams: pieceGrams),
+                                          kcal: kcal), createdAt: createdAt)
+        record.protein = protein
+        record.carbs = carbs
+        record.fat = fat
+        record.fiber = fiber
+        record.sugar = sugar
+        record.saturatedFat = saturatedFat
+        record.salt = salt
+        record.originRaw = originRaw
+        record.barcode = barcode
+        record.sourceNote = sourceNote
+        return record
+    }
+}
+
 struct AppSettingsBackup: Codable, Equatable {
     var workdayStartMinutes: Int
     var workdayEndMinutes: Int
@@ -1173,15 +1412,31 @@ struct AppSettingsBackup: Codable, Equatable {
     var workoutGoalMigrated: Bool
     var proteinGoalEnabled: Bool
     var goalProteinGrams: Int
+    /// Optional, so a backup written before the goal plans still decodes; a missing value keeps the device's value.
+    var goalPlansMigrated: Bool?
+    var activityCreditPercent: Int?
+    var countsForeignNutrition: Bool?
+    /// Optional, so a file written before the online search still opens; a missing value keeps the device's value.
+    var foodLookupConsent: Bool?
+    var foodLookupContact: String?
+    var saturatedFatEnabled: Bool?
+    var saltEnabled: Bool?
+    var bodyFatEnabled: Bool?
+    var morningWeightEnabled: Bool?
     var mealEstimationConsent: Bool
     var shoppingListID: String?
     var shoppingSuggestionDismissed: Bool
     var shoppingCategoriesSeeded: Bool
     var shoppingSortConsent: Bool
+    /// Optional, so a backup written before the consent was versioned still decodes; it then counts as the old text (0) and the
+    /// user is asked once more.
+    var shoppingSortConsentVersion: Int?
     /// Added with "Rezept hinzufügen"; files without it read as `nil`, which leaves the setting as it is.
     var shoppingRecipeConsent: Bool?
     /// Added with the mail summary (#166); files without it read as `nil`, which leaves the setting as it is.
     var mailSummaryConsent: Bool?
+    /// Added with the assistant's access to notes (#173); files without it read as `nil`, which leaves the setting as it is.
+    var noteAssistantConsent: Bool?
     var healthCardDismissed: Bool
     var showsIntakeInPlan: Bool
     var widgetShowsNutrition: Bool
@@ -1193,20 +1448,45 @@ struct AppSettingsBackup: Codable, Equatable {
     var weekPlanningReminderEnabled: Bool?
     var weekPlanningReminderWeekday: Int?
     var weekPlanningReminderMinutes: Int?
+    /// Optional, so a backup written before the choice of the place of Bible Study still decodes; a missing value keeps the default.
+    var bibleStudyOfferRaw: String?
+    /// Optional, so a backup written before the reminder of Bible Study still decodes; a missing value keeps the default. The day
+    /// of "Heute nicht" and the snooze of the suggestion are left out on purpose.
+    var bibleStudyReminderEnabled: Bool?
+    var bibleStudyReminderTimesData: Data?
+    var bibleStudyReminderShowsPassage: Bool?
     /// Optional, so a backup written before the focus timer settings were part of it still decodes; a missing value keeps the default.
     var focusWorkMinutes: Int?
     var focusShortBreakMinutes: Int?
     var focusLongBreakMinutes: Int?
     var focusRounds: Int?
     var focusUsesPomodoro: Bool?
+    /// Optional, so a backup written before the start sheet still decodes; a missing value keeps the default.
+    var focusAsksDurationAtStart: Bool?
+    var focusLastStartMinutes: Int?
     var effortHistoryInPlanning: Bool?
     /// Optional, so a backup written before the recipe language existed still decodes; a missing value keeps "auto".
     var recipeLanguage: String?
+    /// Optional, so a backup written before the separate answer and shopping languages still decodes. A missing answer language
+    /// is derived again from the restored dictation language; a missing shopping language keeps the device's value.
+    var voiceAnswerLanguage: String?
+    var shoppingLanguage: String?
     /// Optional, so a backup written before the adjustable drink portions still decodes; a missing value keeps the device's portions.
     var drinkPresets: [Int]?
+    /// Optional, so a backup written before the goal planning still decodes. The body values the user typed (height, birth year,
+    /// sex of the formula) are part of it; what Health delivered is not, it is read again.
+    var bodyHeightCm: Int?
+    var birthYear: Int?
+    var formulaSexRaw: String?
+    /// Optional, so a backup written before the goal planning still decodes; a missing value restores the consent as off.
+    var goalPlanningConsent: Bool?
     var showsRoutinesInPlan: Bool
     var noteSuggestionConsent: Bool
     var noteSortOrderRaw: String
+    /// Optional, so a backup written before the sort direction and the date groups existed still decodes; a missing value keeps
+    /// the device's value.
+    var noteSortAscending: Bool?
+    var noteGroupsByDate: Bool?
     var backupIncludesPrivateNotes: Bool
     var voiceInputEnabled: Bool
     var voiceExplained: Bool
@@ -1258,13 +1538,24 @@ struct AppSettingsBackup: Codable, Equatable {
         workoutGoalMigrated = record.workoutGoalMigrated
         proteinGoalEnabled = record.proteinGoalEnabled
         goalProteinGrams = record.goalProteinGrams
+        goalPlansMigrated = record.goalPlansMigrated
+        activityCreditPercent = record.activityCreditPercent
+        countsForeignNutrition = record.countsForeignNutrition
+        foodLookupConsent = record.foodLookupConsent
+        foodLookupContact = record.foodLookupContact
+        saturatedFatEnabled = record.saturatedFatEnabled
+        saltEnabled = record.saltEnabled
+        bodyFatEnabled = record.bodyFatEnabled
+        morningWeightEnabled = record.morningWeightEnabled
         mealEstimationConsent = record.mealEstimationConsent
         shoppingListID = record.shoppingListID
         shoppingSuggestionDismissed = record.shoppingSuggestionDismissed
         shoppingCategoriesSeeded = record.shoppingCategoriesSeeded
         shoppingSortConsent = record.shoppingSortConsent
+        shoppingSortConsentVersion = record.shoppingSortConsentVersion
         shoppingRecipeConsent = record.shoppingRecipeConsent
         mailSummaryConsent = record.mailSummaryConsent
+        noteAssistantConsent = record.noteAssistantConsent
         healthCardDismissed = record.healthCardDismissed
         showsIntakeInPlan = record.showsIntakeInPlan
         widgetShowsNutrition = record.widgetShowsNutrition
@@ -1275,17 +1566,31 @@ struct AppSettingsBackup: Codable, Equatable {
         weekPlanningReminderEnabled = record.weekPlanningReminderEnabled
         weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
         weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
+        bibleStudyOfferRaw = record.bibleStudyOfferRaw
+        bibleStudyReminderEnabled = record.bibleStudyReminderEnabled
+        bibleStudyReminderTimesData = record.bibleStudyReminderTimesData
+        bibleStudyReminderShowsPassage = record.bibleStudyReminderShowsPassage
         focusWorkMinutes = record.focusWorkMinutes
         focusShortBreakMinutes = record.focusShortBreakMinutes
         focusLongBreakMinutes = record.focusLongBreakMinutes
         focusRounds = record.focusRounds
         focusUsesPomodoro = record.focusUsesPomodoro
+        focusAsksDurationAtStart = record.focusAsksDurationAtStart
+        focusLastStartMinutes = record.focusLastStartMinutes
         effortHistoryInPlanning = record.effortHistoryInPlanning
         recipeLanguage = record.recipeLanguage
+        voiceAnswerLanguage = record.voiceAnswerLanguage
+        shoppingLanguage = record.shoppingLanguage
         drinkPresets = record.drinkPresets
+        bodyHeightCm = record.bodyHeightCm
+        birthYear = record.birthYear
+        formulaSexRaw = record.formulaSexRaw
+        goalPlanningConsent = record.goalPlanningConsent
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
         noteSortOrderRaw = record.noteSortOrderRaw
+        noteSortAscending = record.noteSortAscending
+        noteGroupsByDate = record.noteGroupsByDate
         backupIncludesPrivateNotes = record.backupIncludesPrivateNotes
         voiceInputEnabled = record.voiceInputEnabled
         voiceExplained = record.voiceExplained
@@ -1337,13 +1642,24 @@ struct AppSettingsBackup: Codable, Equatable {
         record.workoutGoalMigrated = workoutGoalMigrated
         record.proteinGoalEnabled = proteinGoalEnabled
         record.goalProteinGrams = goalProteinGrams
+        if let goalPlansMigrated { record.goalPlansMigrated = goalPlansMigrated }
+        if let activityCreditPercent { record.activityCreditPercent = activityCreditPercent }
+        if let countsForeignNutrition { record.countsForeignNutrition = countsForeignNutrition }
+        if let foodLookupConsent { record.foodLookupConsent = foodLookupConsent }
+        if let foodLookupContact { record.foodLookupContact = foodLookupContact }
+        if let saturatedFatEnabled { record.saturatedFatEnabled = saturatedFatEnabled }
+        if let saltEnabled { record.saltEnabled = saltEnabled }
+        if let bodyFatEnabled { record.bodyFatEnabled = bodyFatEnabled }
+        if let morningWeightEnabled { record.morningWeightEnabled = morningWeightEnabled }
         record.mealEstimationConsent = mealEstimationConsent
         record.shoppingListID = shoppingListID
         record.shoppingSuggestionDismissed = shoppingSuggestionDismissed
         record.shoppingCategoriesSeeded = shoppingCategoriesSeeded
         record.shoppingSortConsent = shoppingSortConsent
+        record.shoppingSortConsentVersion = shoppingSortConsentVersion ?? 0
         if let shoppingRecipeConsent { record.shoppingRecipeConsent = shoppingRecipeConsent }
         if let mailSummaryConsent { record.mailSummaryConsent = mailSummaryConsent }
+        if let noteAssistantConsent { record.noteAssistantConsent = noteAssistantConsent }
         record.healthCardDismissed = healthCardDismissed
         record.showsIntakeInPlan = showsIntakeInPlan
         record.widgetShowsNutrition = widgetShowsNutrition
@@ -1354,21 +1670,41 @@ struct AppSettingsBackup: Codable, Equatable {
         if let weekPlanningReminderEnabled { record.weekPlanningReminderEnabled = weekPlanningReminderEnabled }
         if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
         if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
+        if let bibleStudyOfferRaw { record.bibleStudyOfferRaw = bibleStudyOfferRaw }
+        if let bibleStudyReminderEnabled { record.bibleStudyReminderEnabled = bibleStudyReminderEnabled }
+        if let bibleStudyReminderTimesData { record.bibleStudyReminderTimesData = bibleStudyReminderTimesData }
+        if let bibleStudyReminderShowsPassage { record.bibleStudyReminderShowsPassage = bibleStudyReminderShowsPassage }
         if let focusWorkMinutes { record.focusWorkMinutes = focusWorkMinutes }
         if let focusShortBreakMinutes { record.focusShortBreakMinutes = focusShortBreakMinutes }
         if let focusLongBreakMinutes { record.focusLongBreakMinutes = focusLongBreakMinutes }
         if let focusRounds { record.focusRounds = focusRounds }
         if let focusUsesPomodoro { record.focusUsesPomodoro = focusUsesPomodoro }
+        if let focusAsksDurationAtStart { record.focusAsksDurationAtStart = focusAsksDurationAtStart }
+        if let focusLastStartMinutes { record.focusLastStartMinutes = focusLastStartMinutes }
         if let effortHistoryInPlanning { record.effortHistoryInPlanning = effortHistoryInPlanning }
         if let recipeLanguage { record.recipeLanguage = recipeLanguage }
+        if let shoppingLanguage { record.shoppingLanguage = shoppingLanguage }
         if let drinkPresets { record.drinkPresets = drinkPresets }
+        // An older file has no typed body values; the device keeps its own. Health values are device state and read again.
+        if let bodyHeightCm { record.bodyHeightCm = bodyHeightCm }
+        if let birthYear { record.birthYear = birthYear }
+        if let formulaSexRaw { record.formulaSexRaw = formulaSexRaw }
+        // A file from before the goal planning never held this consent: it must not stay on from the device that is restored over.
+        record.goalPlanningConsent = goalPlanningConsent ?? false
         record.showsRoutinesInPlan = showsRoutinesInPlan
         record.noteSuggestionConsent = noteSuggestionConsent
         record.noteSortOrderRaw = noteSortOrderRaw
+        if let noteSortAscending { record.noteSortAscending = noteSortAscending }
+        if let noteGroupsByDate { record.noteGroupsByDate = noteGroupsByDate }
         record.backupIncludesPrivateNotes = backupIncludesPrivateNotes
         record.voiceInputEnabled = voiceInputEnabled
         record.voiceExplained = voiceExplained
         record.voiceRecognitionLanguage = voiceRecognitionLanguage
+        // Device state, not part of the backup: the restored list adopts its language again instead of offering a translation.
+        record.shoppingItemsLanguage = nil
+        // The answer language of an older backup is derived from the restored dictation language, once.
+        record.voiceAnswerLanguage = voiceAnswerLanguage
+        record.migrateVoiceAnswerLanguageIfNeeded()
         record.voiceReadAloud = voiceReadAloud
         record.voiceGermanVoiceID = voiceGermanVoiceID
         record.voiceEnglishVoiceID = voiceEnglishVoiceID
@@ -1405,6 +1741,9 @@ struct BackupEntities: Codable, Equatable {
     var meals: [MealBackup] = []
     var drinks: [DrinkBackup] = []
     var workouts: [WorkoutBackup] = []
+    /// Optional on purpose: a file written before the body weights has no list. `nil` means "the file says nothing about it", and a
+    /// restore then leaves the weights of this device alone.
+    var weights: [WeightBackup]?
     var shoppingCategories: [ShoppingCategoryBackup] = []
     var shoppingAssignments: [ShoppingAssignmentBackup] = []
     var notes: [NoteBackup] = []
@@ -1421,6 +1760,14 @@ struct BackupEntities: Codable, Equatable {
     var focusSessions: [FocusSessionBackup]?
     var effortSamples: [EffortSampleBackup]?
     var weekReflections: [WeekReflectionBackup] = []
+    /// Optional on purpose, like the focus data: a file written before the goal plans has no list. A restore then rebuilds the
+    /// first plan from the restored single goals of the settings instead of keeping plans that do not match them.
+    var goalPlans: [GoalPlanBackup]?
+    /// Optional like the focus data: a file without the list leaves the stored Health values of this device alone.
+    var dayHealth: [DayHealthBackup]?
+    /// Optional like the focus data: a file written before "Meine Lebensmittel" has no list, and a restore then leaves the foods of this
+    /// device alone instead of wiping them.
+    var foods: [FoodBackup]?
 
     init() {}
 
@@ -1447,6 +1794,7 @@ struct BackupEntities: Codable, Equatable {
         meals = try container.decodeIfPresent([MealBackup].self, forKey: .meals) ?? []
         drinks = try container.decodeIfPresent([DrinkBackup].self, forKey: .drinks) ?? []
         workouts = try container.decodeIfPresent([WorkoutBackup].self, forKey: .workouts) ?? []
+        weights = try container.decodeIfPresent([WeightBackup].self, forKey: .weights)
         shoppingCategories = try container.decodeIfPresent([ShoppingCategoryBackup].self, forKey: .shoppingCategories) ?? []
         shoppingAssignments = try container.decodeIfPresent([ShoppingAssignmentBackup].self, forKey: .shoppingAssignments) ?? []
         notes = try container.decodeIfPresent([NoteBackup].self, forKey: .notes) ?? []
@@ -1461,10 +1809,13 @@ struct BackupEntities: Codable, Equatable {
         focusSessions = try container.decodeIfPresent([FocusSessionBackup].self, forKey: .focusSessions)
         effortSamples = try container.decodeIfPresent([EffortSampleBackup].self, forKey: .effortSamples)
         weekReflections = try container.decodeIfPresent([WeekReflectionBackup].self, forKey: .weekReflections) ?? []
+        goalPlans = try container.decodeIfPresent([GoalPlanBackup].self, forKey: .goalPlans)
+        dayHealth = try container.decodeIfPresent([DayHealthBackup].self, forKey: .dayHealth)
+        foods = try container.decodeIfPresent([FoodBackup].self, forKey: .foods)
     }
 
     /// Model names of everything the file holds, for the completeness check against the schema.
-    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName]
+    static let modelNames: Set<String> = ["AppSettings", LocalTaskBackup.modelName, LocalOccurrenceCompletionBackup.modelName, DayAssignmentBackup.modelName, DayOverrideBackup.modelName, ReminderEstimateBackup.modelName, EventTaskLinkBackup.modelName, RecurringEffortValueBackup.modelName, RecurringEffortOverrideBackup.modelName, RecurringOccurrenceDoneBackup.modelName, DayLunchBackup.modelName, EventAvailabilityMarkBackup.modelName, EventMergeDecisionBackup.modelName, EventTravelOverrideBackup.modelName, ReminderOverrideBackup.modelName, EventDeadlineMarkBackup.modelName, DeadlineEventLinkBackup.modelName, DeadlineSuggestionDismissalBackup.modelName, MealBackup.modelName, DrinkBackup.modelName, WorkoutBackup.modelName, WeightBackup.modelName, ShoppingCategoryBackup.modelName, ShoppingAssignmentBackup.modelName, NoteBackup.modelName, NoteFolderBackup.modelName, NoteAttachmentBackup.modelName, BibleStudySessionBackup.modelName, HabitBackup.modelName, HabitCheckBackup.modelName, RoutineDayBackup.modelName, EveningChecklistItemBackup.modelName, FocusMarkBackup.modelName, FocusSessionBackup.modelName, EffortSampleBackup.modelName, WeekReflectionBackup.modelName, GoalPlanBackup.modelName, DayHealthBackup.modelName, FoodBackup.modelName]
 }
 
 extension BackupEntities {
@@ -1495,6 +1846,7 @@ extension BackupEntities {
         meals = Self.fetch(MealRecord.self, in: context).map(MealBackup.init)
         drinks = Self.fetch(DrinkRecord.self, in: context).map(DrinkBackup.init)
         workouts = Self.fetch(WorkoutRecord.self, in: context).map(WorkoutBackup.init)
+        weights = Self.fetch(WeightRecord.self, in: context).map(WeightBackup.init)
         shoppingCategories = Self.fetch(ShoppingCategory.self, in: context).map(ShoppingCategoryBackup.init)
         shoppingAssignments = Self.fetch(ShoppingAssignment.self, in: context).map(ShoppingAssignmentBackup.init)
         notes = Self.fetch(NoteRecord.self, in: context).filter { includePrivate || $0.kind.isInDefaultBackup }.map(NoteBackup.init)
@@ -1514,6 +1866,9 @@ extension BackupEntities {
         focusSessions = Self.fetch(FocusSessionRecord.self, in: context).filter { $0.outcomeRaw != nil }.map(FocusSessionBackup.init)
         effortSamples = Self.fetch(EffortSampleRecord.self, in: context).map(EffortSampleBackup.init)
         weekReflections = Self.fetch(WeekReflectionRecord.self, in: context).map(WeekReflectionBackup.init)
+        goalPlans = Self.fetch(GoalPlanRecord.self, in: context).map(GoalPlanBackup.init)
+        dayHealth = Self.fetch(DayHealthRecord.self, in: context).map(DayHealthBackup.init)
+        foods = Self.fetch(FoodRecord.self, in: context).map(FoodBackup.init)
     }
 
     /// Replaces the data of every model in the file with the content of the file. The settings record is updated in place. When
@@ -1548,6 +1903,8 @@ extension BackupEntities {
         Self.delete(MealRecord.self, in: context) { _ in true }
         Self.delete(DrinkRecord.self, in: context) { _ in true }
         Self.delete(WorkoutRecord.self, in: context) { _ in true }
+        // Files from before the body weights leave those of this device untouched.
+        if weights != nil { Self.delete(WeightRecord.self, in: context) { _ in true } }
         Self.delete(ShoppingCategory.self, in: context) { _ in true }
         Self.delete(ShoppingAssignment.self, in: context) { _ in true }
         Self.delete(NoteRecord.self, in: context) { replacePrivate || $0.kind.isInDefaultBackup }
@@ -1563,6 +1920,14 @@ extension BackupEntities {
         if focusSessions != nil { Self.delete(FocusSessionRecord.self, in: context) { $0.outcomeRaw != nil } }
         if effortSamples != nil { Self.delete(EffortSampleRecord.self, in: context) { _ in true } }
         Self.delete(WeekReflectionRecord.self, in: context) { _ in true }
+        Self.delete(GoalPlanRecord.self, in: context) { _ in true }
+        // A file without goal plans: the plans of this device would not match the restored single goals, so the first plan is
+        // rebuilt from them below.
+        if goalPlans == nil { settings.goalPlansMigrated = false }
+        // Files from before the stored Health values leave those of this device untouched.
+        if dayHealth != nil { Self.delete(DayHealthRecord.self, in: context) { _ in true } }
+        // Files from before "Meine Lebensmittel" leave the foods of this device untouched.
+        if foods != nil { Self.delete(FoodRecord.self, in: context) { _ in true } }
         // Unique keys of the old records must be gone before records with the same keys come in.
         try context.save()
         for item in localTasks { context.insert(item.makeRecord()) }
@@ -1585,6 +1950,7 @@ extension BackupEntities {
         for item in meals { context.insert(item.makeRecord()) }
         for item in drinks { context.insert(item.makeRecord()) }
         for item in workouts { context.insert(item.makeRecord()) }
+        for item in weights ?? [] { context.insert(item.makeRecord()) }
         for item in shoppingCategories { context.insert(item.makeRecord()) }
         for item in shoppingAssignments { context.insert(item.makeRecord()) }
         for item in notes where replacePrivate || (NoteKind(rawValue: item.kindRaw) ?? .free).isInDefaultBackup { context.insert(item.makeRecord()) }
@@ -1592,7 +1958,8 @@ extension BackupEntities {
         if let attachments {
             for item in noteAttachments {
                 try attachments.restore(id: item.id, noteID: item.noteID, fileName: item.fileName, typeIdentifier: item.typeIdentifier,
-                                        createdAt: item.createdAt, data: item.data)
+                                        createdAt: item.createdAt, data: item.data, roleRaw: item.roleRaw ?? "",
+                                        companionOfID: item.companionOfID, recognizedText: item.recognizedText, pageCount: item.pageCount ?? 0)
             }
         }
         if replacePrivate { for item in bibleStudySessions { context.insert(item.makeRecord()) } }
@@ -1605,7 +1972,11 @@ extension BackupEntities {
         for item in focusSessions ?? [] where item.outcomeRaw != nil && !keptSessionIDs.contains(item.id) { context.insert(item.makeRecord()) }
         for item in effortSamples ?? [] { context.insert(item.makeRecord()) }
         for item in weekReflections { context.insert(item.makeRecord()) }
+        for item in goalPlans ?? [] { context.insert(item.makeRecord()) }
+        for item in dayHealth ?? [] { context.insert(item.makeRecord()) }
+        for item in foods ?? [] { context.insert(item.makeRecord()) }
         try context.save()
+        if goalPlans == nil { GoalStore(context: context, settings: settings).migrateIfNeeded() }
     }
 
     /// Whether a note folder is part of a backup written without the switch "Tagebuch und Bible Study einschließen": the

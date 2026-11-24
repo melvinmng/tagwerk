@@ -65,14 +65,78 @@ public enum MarkdownText {
         }
     }
 
+    /// The text with the attachment IDs in `mapping` replaced by their new IDs, for a copy of a note whose attachments were
+    /// copied too. Only references the attachment pattern matches change; an ID without an entry stays as it is.
+    public static func replacingAttachmentIDs(in markdown: String, with mapping: [UUID: UUID]) -> String {
+        guard !mapping.isEmpty else { return markdown }
+        var result = markdown
+        let matches = attachmentReference.matches(in: markdown, range: NSRange(markdown.startIndex..., in: markdown))
+        // Back to front, so the ranges of the earlier matches stay valid.
+        for match in matches.reversed() {
+            guard let idRange = Range(match.range(at: 1), in: markdown), let id = UUID(uuidString: String(markdown[idRange])),
+                  let replacement = mapping[id], let target = Range(match.range(at: 1), in: result) else { continue }
+            result.replaceSubrange(target, with: replacement.uuidString)
+        }
+        return result
+    }
+
     /// The Markdown reference to an attachment: `![name](attachment:ID)` for an image, `[name](attachment:ID)` for a file.
     /// Brackets, parentheses and backslashes in the name are escaped.
     public static func reference(for id: UUID, name: String, isImage: Bool) -> String {
-        let escaped = name.reduce(into: "") { result, character in
+        "\(isImage ? "!" : "")[\(escapedLabel(name))](\(attachmentScheme):\(id.uuidString))"
+    }
+
+    private static func escapedLabel(_ name: String) -> String {
+        name.reduce(into: "") { result, character in
             if "\\[]()".contains(character) { result.append("\\") }
             result.append(character)
         }
-        return "\(isImage ? "!" : "")[\(escaped)](\(attachmentScheme):\(id.uuidString))"
+    }
+
+    /// The text without the references to the attachment `id` (a deleted drawing). A line that held nothing else goes with them;
+    /// other text of the line stays.
+    public static func removingReference(to id: UUID, in markdown: String) -> String {
+        let pattern = #"!?\[(?:\\.|[^\]\\\n])*\]\(attachment:"# + id.uuidString + #"\)"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return markdown }
+        var lines: [String] = []
+        for line in markdown.split(separator: "\n", omittingEmptySubsequences: false).map(String.init) {
+            let range = NSRange(line.startIndex..., in: line)
+            guard expression.firstMatch(in: line, range: range) != nil else { lines.append(line); continue }
+            let remaining = expression.stringByReplacingMatches(in: line, range: range, withTemplate: "")
+            if !remaining.trimmingCharacters(in: .whitespaces).isEmpty { lines.append(remaining) }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    /// The text with `paragraph` inserted as its own paragraph below the line that holds the reference to the attachment `id`
+    /// (the recognised text of a scan). A blank line separates it from the reference and from what follows. Text without that
+    /// reference, or an empty paragraph, stays as it is.
+    public static func insertingParagraph(_ paragraph: String, belowReferenceTo id: UUID, in markdown: String) -> String {
+        let body = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !body.isEmpty,
+              let expression = try? NSRegularExpression(pattern: #"attachment:"# + id.uuidString, options: [.caseInsensitive]),
+              let match = expression.firstMatch(in: markdown, range: NSRange(markdown.startIndex..., in: markdown)),
+              let matched = Range(match.range, in: markdown) else { return markdown }
+        let lineEnd = markdown[matched.upperBound...].firstIndex(of: "\n") ?? markdown.endIndex
+        let rest = markdown[lineEnd...]
+        // What follows starts with a line break: one more makes the blank line, unless it is there already.
+        let closing = rest.hasPrefix("\n\n") || rest.isEmpty ? "" : "\n"
+        return String(markdown[..<lineEnd]) + "\n\n" + body + closing + String(rest)
+    }
+
+    /// The text with the label of every reference to the attachment `id` replaced by `name` (a renamed scan); the rest of the
+    /// text, other attachments and the kind of reference (picture or link) stay as they are.
+    public static func renamingReference(of id: UUID, to name: String, in markdown: String) -> String {
+        let pattern = #"(\[)((?:\\.|[^\]\\\n])*)(\]\(attachment:"# + id.uuidString + #"\))"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return markdown }
+        var result = markdown
+        let matches = expression.matches(in: markdown, range: NSRange(markdown.startIndex..., in: markdown))
+        // Back to front, so the ranges of the earlier matches stay valid.
+        for match in matches.reversed() {
+            guard let target = Range(match.range(at: 2), in: result) else { continue }
+            result.replaceSubrange(target, with: escapedLabel(name))
+        }
+        return result
     }
 
     // MARK: Checkboxes
@@ -99,6 +163,75 @@ public enum MarkdownText {
             position += 1
         }
         return markdown
+    }
+
+    /// The mark behind a checkbox line of a Bible Study note whose text became a task (BS5b). "→ Task" is read as well, so a line
+    /// stays marked when the note was written in the other language.
+    public static let taskMarker = "→ Aufgabe"
+    private static let taskMarkers = ["→ Aufgabe", "→ Task"]
+
+    /// The text of the checkbox line at `index` (position among all checkboxes, as in `togglingCheckbox`) without the box and
+    /// without the task marker; `nil` for a position that does not exist.
+    public static func checkboxTitle(at index: Int, in markdown: String) -> String? {
+        guard let line = checkboxLine(at: index, in: markdown) else { return nil }
+        let withoutBox = line.text.replacingOccurrences(of: #"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+"#, with: "", options: .regularExpression)
+        return withoutTaskMarker(withoutBox).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Appends the task marker to the checkbox line at `index`. A line that already has it, and a position that does not exist,
+    /// leave the text unchanged; no other line changes.
+    public static func markingCheckboxAsTask(at index: Int, in markdown: String) -> String {
+        guard let line = checkboxLine(at: index, in: markdown), !hasTaskMarker(line.text) else { return markdown }
+        var lines = markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
+        let withoutTrailingSpace = line.text.replacingOccurrences(of: #"\s+$"#, with: "", options: .regularExpression)
+        lines[line.offset] = withoutTrailingSpace + " " + taskMarker
+        return lines.joined(separator: lineBreak(of: markdown))
+    }
+
+    /// Whether the line ends with the task marker.
+    public static func hasTaskMarker(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return taskMarkers.contains { trimmed.hasSuffix($0) }
+    }
+
+    /// Whether the checkbox at `index` is ticked; `nil` for a position that does not exist.
+    public static func isCheckboxChecked(at index: Int, in markdown: String) -> Bool? {
+        guard let line = checkboxLine(at: index, in: markdown),
+              let match = checkbox.firstMatch(in: line.text, range: NSRange(line.text.startIndex..., in: line.text)),
+              let markRange = Range(match.range(at: 1), in: line.text) else { return nil }
+        return line.text[markRange] != " "
+    }
+
+    /// The position among all checkboxes of the checkbox on the 1-based source `line`; `nil` when that line is no checkbox.
+    public static func checkboxIndex(atLine line: Int, in markdown: String) -> Int? {
+        var inFence = false
+        var position = 0
+        for (offset, text) in markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init).enumerated() {
+            if isFence(text) { inFence.toggle(); continue }
+            guard !inFence, matches(checkbox, text) else { continue }
+            if offset + 1 == line { return position }
+            position += 1
+        }
+        return nil
+    }
+
+    private static func checkboxLine(at index: Int, in markdown: String) -> (offset: Int, text: String)? {
+        guard index >= 0 else { return nil }
+        var inFence = false
+        var position = 0
+        for (offset, text) in markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init).enumerated() {
+            if isFence(text) { inFence.toggle(); continue }
+            guard !inFence, matches(checkbox, text) else { continue }
+            if position == index { return (offset, text) }
+            position += 1
+        }
+        return nil
+    }
+
+    private static func withoutTaskMarker(_ line: String) -> String {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard let marker = taskMarkers.first(where: { trimmed.hasSuffix($0) }) else { return trimmed }
+        return String(trimmed.dropLast(marker.count))
     }
 
     /// The number of checkboxes in the text (same rules as `togglingCheckbox`).

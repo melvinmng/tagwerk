@@ -19,6 +19,32 @@ struct TaskListModelTests {
         return task
     }
 
+    @Test func reminderMarks_refreshAfterSaving() async {
+        let due = DueDate(year: 2026, month: 11, day: 27, hour: 12)
+        let task = makeTask("Bericht", source: .local, due: due)
+        let provider = FakeTaskProvider(source: .local, tasks: [task, makeTask("Ohne Datum", source: .local)])
+        let model = TaskListModel(providers: [provider], now: testNow, calendar: testCalendar())
+        var stored: [String: [ReminderOverride]] = [:]
+        model.reminderMarkInputs = { (stored, ReminderDefaults.legacy(leadTimeMinutes: 120)) }
+        await model.reload()
+        #expect(model.reminderMarks.isEmpty)
+        // The editor saved an own list: the mark appears without another reload.
+        let key = ReminderOverride.key(task: task.id)
+        stored[key] = [ReminderOverride(itemKey: key, scope: .always, offsets: [.before(amount: 1, unit: .days), .before(amount: 1, unit: .weeks)])]
+        model.refreshReminderMarks()
+        #expect(model.reminderMarks == [task.id.key: .custom(count: 2)])
+        // Back to the default: the mark goes.
+        stored = [:]
+        model.refreshReminderMarks()
+        #expect(model.reminderMarks.isEmpty)
+    }
+
+    @Test func reminderMarks_withoutInputs_stayEmpty() async {
+        let model = makeModel()
+        await model.reload()
+        #expect(model.reminderMarks.isEmpty)
+    }
+
     @Test func reopen_insertsTaskAndReportsCompletionChange() async {
         let done = completedTask("Fahrrad-Pumpe", source: .local)
         local.tasks.append(done)                                       // the provider holds it completed, items do not
@@ -704,7 +730,7 @@ struct TaskListAssigneeTests {
 
     @Test func handedOverNotice_readsNumberFromURL() {
         var item = makeTask("Ohne", source: .github)
-        #expect(HandedOverNotice(item: item).number == nil)
+        #expect(HandedOverNotice(item: item, reason: .handedOver).number == nil)
         item.url = URL(string: "https://github.com/beispiel/app/issues/9")
         #expect(item.issueNumber == 9)
     }
@@ -784,9 +810,9 @@ struct TaskListStatusTests {
 
     @Test func setStatus_failure_showsErrorAndLeavesTheList() async {
         await model.reload()
-        github.applyError = .failed("Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        github.applyError = .failed("Den Status „Blocked“ gibt es im Projekt „App“ nicht.")
         await model.setStatus(issueID, subContainerID: "PVT_1", to: "Blocked")
-        #expect(model.lastError == "Den Status „Blocked“ gibt es im Project „App“ nicht.")
+        #expect(model.lastError == "Den Status „Blocked“ gibt es im Projekt „App“ nicht.")
         #expect(model.items.first?.statuses.first?.current == "Ready")
     }
 
@@ -799,9 +825,9 @@ struct TaskListStatusTests {
         #expect(created != nil)
         #expect(model.items.count == 1)   // only the existing issue
         #expect(!model.items.contains { $0.title == "Export" })
-        #expect(model.lastHandedOver?.reason == .noProject)
+        #expect(model.lastHandedOver?.reason == .noProject(others: []))
         #expect(model.lastHandedOver?.number == 151)
-        #expect(model.lastHandedOver?.title == "#151 angelegt · ohne Project")
+        #expect(model.lastHandedOver?.title == "#151 ohne Projekt")
         #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/151"))
         #expect(model.lastError == nil)
     }
@@ -821,10 +847,83 @@ struct TaskListStatusTests {
         #expect(model.lastHandedOver?.title == "#151 an lea-m")
     }
 
+    @Test func create_withoutProjectForOthers_namesThemInTheCapsule() async {
+        let draft = TaskDraft(title: "Export", containerID: "beispiel/app", subContainerIDs: [], assignees: ["lea-m"])
+        await model.create(draft, in: .github)
+        #expect(model.lastHandedOver?.reason == .noProject(others: ["lea-m"]))
+        #expect(model.lastHandedOver?.title == "#151 an lea-m · ohne Projekt")
+    }
+
     @Test func noProjectNotice_texts() {
-        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 angelegt · ohne Project")
-        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue angelegt · ohne Project")
-        #expect(AssigneeSelection.noProjectAnnouncement(number: 7) == "Angelegt: #7 angelegt · ohne Project. Auf GitHub öffnen verfügbar.")
+        #expect(AssigneeSelection.noProjectTitle(number: 7) == "#7 ohne Projekt")
+        #expect(AssigneeSelection.noProjectTitle(number: nil) == "Issue ohne Projekt")
+        #expect(AssigneeSelection.noProjectAnnouncement(number: 7)
+            == "Angelegt, nicht in Aufgaben: #7 ohne Projekt. Auf GitHub öffnen verfügbar.")
+    }
+
+    // MARK: Done in the selected project only (GH7b)
+
+    @Test func setStatus_doneInOnlySelectedProject_removesItemAndShowsNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.isEmpty)
+        #expect(model.lastCompleted == nil)
+        #expect(model.lastHandedOver?.reason == .doneInSelection(doneIn: ["App"], openIn: ["Studium"]))
+        #expect(model.lastHandedOver?.title == "#42 noch offen in „Studium“")
+        #expect(model.lastHandedOver?.url == URL(string: "https://github.com/beispiel/app/issues/42"))
+        #expect(handedOver == [issueID])
+    }
+
+    @Test func setStatus_doneInAllProjects_showsUndoCapsule() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "In progress")
+        await model.setStatus(issueID, subContainerID: "PVT_2", to: "Done")
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.isEmpty)
+        #expect(model.lastCompleted?.id == issueID)
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func setStatus_openInASelectedProject_staysListedWithoutNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1", "PVT_2"]
+        await model.reload()
+        await model.setStatus(issueID, subContainerID: "PVT_1", to: "Done")
+        #expect(model.items.count == 1)
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func editorSave_doneInSelection_showsNotice() async {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var saved = github.tasks[0]
+        saved.statuses[0].current = "Done"
+
+        model.didSave(saved)
+        await waitUntil { !handedOver.isEmpty }
+
+        #expect(model.items.isEmpty)
+        #expect(model.lastHandedOver?.reason == .doneInSelection(doneIn: ["App"], openIn: ["Studium"]))
+    }
+
+    @Test func assistantWrite_doneInSelection_showsNoCapsule() async throws {
+        github.selectedSubContainerIDs = ["PVT_1"]
+        await model.reload()
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        var edit = TaskEdit()
+        edit.statusChanges = ["PVT_1": "Done"]
+
+        _ = try await model.applyReturning(edit, to: issueID)
+
+        #expect(model.items.isEmpty)
+        #expect(handedOver == [issueID])
+        #expect(model.lastHandedOver == nil)
     }
 }
 
@@ -854,4 +953,62 @@ struct TaskContextMenuStatusTests {
                          editableFields: [.status], statuses: [row("A")])
         #expect(TaskContextMenu.statusRows(of: local).isEmpty)
     }
+
+    // MARK: assignUnlisted (the assistant takes over an issue found by the GitHub search)
+
+    private func unlistedIssue(assignees: [String]) -> (FakeTaskProvider, TaskItem) {
+        let github = FakeTaskProvider(source: .github)
+        github.viewerLogin = "octo"
+        let item = TaskItem(id: TaskID(source: .github, rawValue: "ISSUE_151"), title: "Export prüfen", notes: nil, due: nil,
+                            priority: nil, estimateMinutes: nil, isCompleted: false,
+                            container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                            url: URL(string: "https://github.com/beispiel/app/issues/151"), version: "1",
+                            editableFields: [.title, .assignees], assignees: assignees)
+        return (github, item)
+    }
+
+    @Test func assignUnlisted_takeOver_joinsListWithoutVersionCheck() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]   // the provider holds the issue, the loaded list does not
+        #expect(model.items.isEmpty)
+        let updated = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        #expect(updated.assignees == ["octo"])
+        #expect(model.items.map(\.id) == [item.id])
+        #expect(github.appliedEdits.last?.expectedVersion == nil)
+    }
+
+    @Test func assignUnlisted_assignOther_staysOutOfTheList() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["lea-m"]), to: item.id)
+        #expect(model.items.isEmpty)
+    }
+
+    @Test func assignUnlisted_handOverHookNotCalled() async throws {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [github], now: testNow, calendar: testCalendar())
+        await model.reload()
+        github.tasks = [item]
+        var handedOver: [TaskID] = []
+        model.onHandedOver = { handedOver.append($0) }
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["lea-m"]), to: item.id)
+        _ = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        #expect(handedOver.isEmpty)
+        // No capsule either: nothing left the lists.
+        #expect(model.lastHandedOver == nil)
+    }
+
+    @Test func assignUnlisted_unknownSource_throws() async {
+        let (github, item) = unlistedIssue(assignees: [])
+        let model = TaskListModel(providers: [FakeTaskProvider(source: .local)], now: testNow, calendar: testCalendar())
+        _ = github
+        await #expect(throws: TaskWriteError.self) {
+            _ = try await model.assignUnlisted(AssigneeChange(add: ["octo"]), to: item.id)
+        }
+    }
 }
+

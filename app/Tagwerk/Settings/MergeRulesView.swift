@@ -9,12 +9,12 @@ struct MergeRulesView: View {
     var body: some View {
         List {
             Section {
-                if rules.isEmpty { Text("Keine Regeln").foregroundStyle(.secondary) }
+                if rules.isEmpty { Text("Keine Regeln").foregroundStyle(.secondaryText) }
                 ForEach(rules, id: \.key) { rule in
                     VStack(alignment: .leading, spacing: 2) {
                         Text("„\(rule.title)“ aus „\(rule.calendar)“")
                         Text(rule.merges ? "wird immer zusammengefasst" : "bleibt immer getrennt")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(.secondaryText)
                     }
                     .swipeActions {
                         Button("Löschen", role: .destructive) { delete(rule.key) }

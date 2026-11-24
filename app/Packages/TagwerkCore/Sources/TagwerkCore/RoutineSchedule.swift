@@ -44,9 +44,9 @@ public struct RoutineDayValue: Sendable, Hashable {
 }
 
 /// A reminder of the routines that repeats every day, or every week on one weekday, at the same time (phase 7 design
-/// §8.1). The texts are static.
+/// §8.1): the morning start and the weekly planning. The texts are static. The evening reminders are dated instead.
 public struct RoutineNotification: Sendable, Hashable, Identifiable {
-    /// "tagwerk.routine.evening.<UUID>" or "tagwerk.routine.morning".
+    /// "tagwerk.routine.morning" or "tagwerk.routine.week".
     public var id: String
     public var hour: Int
     public var minute: Int
@@ -68,6 +68,39 @@ public struct RoutineNotification: Sendable, Hashable, Identifiable {
     }
 }
 
+/// A routine reminder for one day; fires once at the clock time of the place the phone is in (no time zone), so a
+/// trip moves it with the clock. Planned a few days ahead and left out for a point that is already checked (#173).
+public struct DatedRoutineNotification: Sendable, Hashable, Identifiable {
+    /// "tagwerk.routine.evening.<item UUID>.<routine day YYYY-MM-DD>".
+    public var id: String
+    /// The calendar day and clock time it fires; before 04:00 this is the day after the routine day (rule 10).
+    public var year: Int
+    public var month: Int
+    public var day: Int
+    public var hour: Int
+    public var minute: Int
+    public var title: String
+    public var body: String
+    /// What a tap opens; carried in the notification as the link path.
+    public var route: AppRoute
+    /// The notification category whose actions the reminder offers ("Starten", "Heute nicht" of Bible Study); `nil` for none.
+    public var categoryIdentifier: String?
+
+    public init(id: String, year: Int, month: Int, day: Int, hour: Int, minute: Int, title: String, body: String, route: AppRoute,
+                categoryIdentifier: String? = nil) {
+        self.id = id
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+        self.minute = minute
+        self.title = title
+        self.body = body
+        self.route = route
+        self.categoryIdentifier = categoryIdentifier
+    }
+}
+
 /// Pure rules of the daily routines (phase 7 design §6, rules 9–11, and §11).
 public enum RoutineSchedule {
     /// Before 04:00 the evening wrap-up still belongs to the day before (rule 10).
@@ -78,18 +111,27 @@ public enum RoutineSchedule {
     public static let fallbackEveningLeadMinutes = 90
     public static let maximumItems = 8
     public static let maximumReminders = 4
-    /// Routine reminders hold at most this many places: four evening points, the morning start and the weekly planning.
-    public static let maximumRoutineNotifications = 6
+    /// The evening reminders are planned for this many routine days, beginning with the one of `now` (#173, decision D9).
+    public static let eveningHorizonDays = 3
+    /// Most evening reminders pending at once: four points on each planned day.
+    public static let maximumEveningNotifications = maximumReminders * eveningHorizonDays
+    /// Routine reminders hold at most this many places: the evening reminders of the next days, the morning start and
+    /// the weekly planning.
+    public static let maximumRoutineNotifications = maximumEveningNotifications + 2 + bibleStudyHorizonDays
+    /// The Bible Study reminder is planned for this many days, today included: one place a day (BS7).
+    public static let bibleStudyHorizonDays = 3
     public static let offsetRange = 0...240
     public static let offsetStep = 5
     public static let titleLimit = 60
 
     /// The checklist offered for an empty list: the order of the original evening template. The offsets apply to the
-    /// default bedtime of 23:00; "from 22:00" is left out of the first title because the bedtime is adjustable. Three
-    /// points remind (90, 60 and 30 minutes before bedtime), below the limit of four. Read at the time of adoption, so
-    /// the titles follow the app language of that moment.
+    /// default bedtime of 23:00; "from 22:00" is left out of the first title because the bedtime is adjustable. Four
+    /// points remind, the limit (RO6b, RO7b): the lights 60 minutes before bedtime (22:00 at the default bedtime, as in
+    /// the original template, but moving with the bedtime), then 90, 60 and 30 minutes before. Two points therefore
+    /// remind at the same minute, which the planner allows. Read at the time of adoption, so the titles follow the app
+    /// language of that moment.
     public static var suggestedItems: [(title: String, offsetMinutes: Int?)] {
-        [(String(localized: "Helle Lichter ausmachen", bundle: .module), nil),
+        [(String(localized: "Helle Lichter ausmachen", bundle: .module), 60),
          (String(localized: "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", bundle: .module), 90),
          (String(localized: "Eine Stunde vorm Schlafen fertig machen", bundle: .module), 60),
          (String(localized: "Zähne putzen, umziehen, Haus/Wohnung aufräumen", bundle: .module), nil),
@@ -103,6 +145,29 @@ public enum RoutineSchedule {
         ["Open evening wrap-up", "Put the phone away", "Go to bed"],
     ]
     private static let legacySuggestionOffsets = [90, 60, 30]
+
+    /// The titles of the five-point suggestion in which "Helle Lichter ausmachen" had no time, German and English, as fixed
+    /// strings for the same reason as above.
+    public static let fivePointSuggestionTitles: [[String]] = [
+        ["Helle Lichter ausmachen", "Alle Aufgaben bis eine Stunde vorm Schlafen erledigen", "Eine Stunde vorm Schlafen fertig machen",
+         "Zähne putzen, umziehen, Haus/Wohnung aufräumen", "Eine halbe Stunde vorm Schlafen ins Bett legen"],
+        ["Turn off bright lights", "Finish all tasks one hour before sleep", "Get ready one hour before sleep",
+         "Brush teeth, change, tidy up the home", "Go to bed half an hour before sleep"],
+    ]
+
+    /// The former five-point suggestion in which "Helle Lichter ausmachen" had no time. An untouched list of exactly these
+    /// points (titles, order and the offsets nil, 90, 60, nil, 30) gets the offset 60 for the first point (RO6b); any list
+    /// the user changed gives `nil`, and so does a list that already has the offset, so the call is safe to repeat. The
+    /// caller runs it once per installation, because a user who clears the time of the lights again would otherwise get
+    /// it back at every start.
+    public static func upgradedLightsOffset(_ items: [ChecklistItem]) -> [ChecklistItem]? {
+        let sorted = items.sorted { $0.order < $1.order }
+        guard sorted.map(\.offsetMinutes) == [nil, 90, 60, nil, 30],
+              fivePointSuggestionTitles.contains(where: { $0 == sorted.map(\.title) }) else { return nil }
+        var upgraded = sorted
+        upgraded[0].offsetMinutes = 60
+        return upgraded
+    }
 
     /// Whether `items` are exactly the former suggestion, untouched: same titles in the same order (by `order`) with
     /// the offsets 90, 60 and 30. Any other list (renamed, reordered, other offset, more or fewer points) is the user's.
@@ -157,22 +222,47 @@ public enum RoutineSchedule {
         Array(items.sorted { $0.order < $1.order }.filter { $0.offsetMinutes != nil }.prefix(maximumReminders))
     }
 
-    /// One daily reminder per checklist point with an offset, at most four (design §8.1). Title is the name of the point,
-    /// the text counts down to the bedtime. Texts and clock follow `locale`; nothing here depends on today's data.
-    public static func eveningNotifications(items: [ChecklistItem], bedtimeMinutes: Int, enabled: Bool, locale: Locale,
-                                            calendar: Calendar = Calendar(identifier: .gregorian)) -> [RoutineNotification] {
-        guard enabled else { return [] }
+    /// The identifier of one evening reminder: the point and the routine day it is planned for.
+    public static func eveningIdentifier(item: UUID, day: PlanDay) -> String {
+        "\(PlannedNotification.routineIdentifierPrefix)evening.\(item.uuidString).\(day.dayKey)"
+    }
+
+    /// One reminder per checklist point with an offset (at most four, design §8.1) and per routine day, beginning with the
+    /// routine day of `now` and covering `days` routine days, sorted by the moment they fire. Title is the name of the
+    /// point, the text counts down to the bedtime. Left out: points that are checked on that routine day (`checked`) and
+    /// moments that are not after `now`. An anchor before 04:00 lies on the calendar day after its routine day (rule 10),
+    /// so a point checked in the evening is also quiet after midnight. Whether the wrap-up was completed does not matter:
+    /// open points keep reminding (decision D11). Texts and clock follow `locale`; evening reminders are exempt from the
+    /// quiet hours (decision D10).
+    public static func eveningNotifications(items: [ChecklistItem], bedtimeMinutes: Int, enabled: Bool,
+                                            checked: (PlanDay) -> Set<UUID>, now: Date, calendar: Calendar,
+                                            locale: Locale, days: Int = eveningHorizonDays) -> [DatedRoutineNotification] {
+        guard enabled, days > 0 else { return [] }
+        let points = reminderItems(items)
+        guard !points.isEmpty else { return [] }
         let language = VoiceLanguage.from(locale: locale)
         let bedtime = DateText.time(minutes: bedtimeMinutes, calendar: calendar, locale: locale)
-        return reminderItems(items).compactMap { item in
-            guard let offset = item.offsetMinutes else { return nil }
-            let anchor = anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: offset)
-            let body = offset == 0
-                ? Localized.string("Schlafzeit (\(bedtime))", in: language, bundle: .module)
-                : Localized.string("Noch \(offset) min bis zur Schlafzeit (\(bedtime))", in: language, bundle: .module)
-            return RoutineNotification(id: "\(PlannedNotification.routineIdentifierPrefix)evening.\(item.id.uuidString)",
-                                       hour: anchor / 60, minute: anchor % 60, title: item.title, body: body, route: .routineEvening)
+        let firstDay = routineDay(at: now, calendar: calendar)
+        var planned: [(moment: Date, order: Int, notification: DatedRoutineNotification)] = []
+        for offsetDay in 0..<days {
+            let routineDay = firstDay.adding(days: offsetDay, calendar: calendar)
+            let checkedToday = checked(routineDay)
+            for (order, item) in points.enumerated() {
+                guard let offset = item.offsetMinutes, !checkedToday.contains(item.id) else { continue }
+                let anchor = anchorMinutes(bedtimeMinutes: bedtimeMinutes, offsetMinutes: offset)
+                let calendarDay = anchor < eveningBoundaryMinutes ? routineDay.adding(days: 1, calendar: calendar) : routineDay
+                let moment = calendar.date(from: DateComponents(year: calendarDay.year, month: calendarDay.month, day: calendarDay.day,
+                                                                hour: anchor / 60, minute: anchor % 60))
+                guard let moment, moment > now else { continue }
+                let body = offset == 0
+                    ? Localized.string("Schlafzeit (\(bedtime))", in: language, bundle: .module)
+                    : Localized.string("Noch \(offset) min bis zur Schlafzeit (\(bedtime))", in: language, bundle: .module)
+                planned.append((moment, order, DatedRoutineNotification(
+                    id: eveningIdentifier(item: item.id, day: routineDay), year: calendarDay.year, month: calendarDay.month,
+                    day: calendarDay.day, hour: anchor / 60, minute: anchor % 60, title: item.title, body: body, route: .routineEvening)))
+            }
         }
+        return planned.sorted { ($0.moment, $0.order) < ($1.moment, $1.order) }.map(\.notification)
     }
 
     /// The optional reminder to start the day; `nil` while switched off (design §8.1).

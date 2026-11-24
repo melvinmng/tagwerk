@@ -13,8 +13,9 @@ struct NoteConsentSheet: View {
                     point("paperplane", "**Gesendet wird** der Text dieser einen Notiz, dazu deine offenen Aufgaben und Termine der nächsten 7 Tage (Titel, Fälligkeit, Zeit).")
                     point("heart.slash", "**Nicht gesendet werden** Dankbarkeit, Gewohnheiten, Wochenreflexion, Daten aus Health und frühere Notizen.")
                     point("hand.tap", "**Nur auf dein Tippen:** Ohne „Vorschläge holen“ verlässt keine Notiz das iPhone.")
+                    ConsentFollowUpPoint()
                     Text("Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                     VStack(spacing: 10) {
                         Button(action: onAgree) {
                             Text("Einverstanden und Vorschläge holen").fontWeight(.semibold).frame(maxWidth: .infinity)
@@ -25,7 +26,7 @@ struct NoteConsentSheet: View {
                     }
                     .padding(.top, 4)
                     Text("Du kannst das in den Einstellungen unter „Routinen“ widerrufen.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity)
                 }
                 .padding()

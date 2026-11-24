@@ -1,8 +1,9 @@
 import SwiftUI
 import TagwerkCore
 
-/// "Standard-Erinnerungen" (plan P4): when Tagwerk reminds by default, separately for calendar events, Apple reminders,
-/// GitHub issues, local tasks and deadlines, each for entries with and without a time of day. Opening the page writes nothing; only a change is stored.
+/// "Standard-Erinnerungen" (plan P4, ER7b): when Tagwerk reminds by default. The page is the overview with one row per kind
+/// (calendar events, Apple reminders, GitHub issues, local tasks, deadlines) and the short form of its list with a time of day;
+/// a kind opens a page with its two lists, each opening the selection page. Opening the pages writes nothing; only a change is stored.
 struct ReminderDefaultsView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var model: ReminderDefaultsModel?
@@ -10,14 +11,17 @@ struct ReminderDefaultsView: View {
     var body: some View {
         Form {
             if let model {
-                ForEach(ReminderDefaultsModel.slots) { slot in
-                    Section {
-                        ReminderListEditor(model: model.list(slot), defaultSwitchTitle: nil, calendar: .tagwerk)
-                    } header: {
-                        Text(Self.header(for: slot))
-                    } footer: {
-                        if let footer = Self.footer(for: slot) { Text(footer) }
+                Section {
+                    ForEach(ReminderKind.allCases, id: \.self) { kind in
+                        NavigationLink {
+                            ReminderDefaultsKindPage(model: model, kind: kind)
+                        } label: {
+                            LabeledContent(ReminderDefaultsModel.kindTitle(kind),
+                                           value: model.rowSummary(for: .init(kind: kind, isAllDay: false)))
+                        }
                     }
+                } footer: {
+                    Text("Gilt für alles ohne eigene Erinnerungen. Für Kalendertermine nur beim Anlegen in Tagwerk.")
                 }
             }
         }
@@ -31,31 +35,39 @@ struct ReminderDefaultsView: View {
             if old != nil, let defaults { environment.settings.reminderDefaults = defaults }
         }
     }
+}
 
-    private static func header(for slot: ReminderDefaultsModel.Slot) -> LocalizedStringKey {
-        switch (slot.kind, slot.isAllDay) {
-        case (.event, false): "Kalendertermine mit Uhrzeit"
-        case (.event, true): "Kalendertermine ganztägig"
-        case (.appleReminder, false): "Apple Erinnerungen mit Uhrzeit"
-        case (.appleReminder, true): "Apple Erinnerungen ohne Uhrzeit"
-        case (.githubIssue, false): "GitHub-Issues mit Uhrzeit"
-        case (.githubIssue, true): "GitHub-Issues ohne Uhrzeit"
-        case (.localTask, false): "Lokale Aufgaben mit Uhrzeit"
-        case (.localTask, true): "Lokale Aufgaben ohne Uhrzeit"
-        case (.deadline, false): "Deadline-Termine mit Uhrzeit"
-        case (.deadline, true): "Deadline-Termine ganztägig"
+/// The two lists of one kind: with and without a time of day (all-day for events and deadlines).
+struct ReminderDefaultsKindPage: View {
+    let model: ReminderDefaultsModel
+    let kind: ReminderKind
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach([false, true], id: \.self) { isAllDay in
+                    let slot = ReminderDefaultsModel.Slot(kind: kind, isAllDay: isAllDay)
+                    NavigationLink {
+                        ReminderSelectionPage(model: model.list(slot), subject: kind.subject, defaultSwitchTitle: nil, calendar: .tagwerk)
+                    } label: {
+                        LabeledContent(ReminderDefaultsModel.slotTitle(slot), value: model.rowSummary(for: slot))
+                    }
+                }
+            } footer: {
+                Text(Self.footer(for: kind))
+            }
         }
+        .navigationTitle(ReminderDefaultsModel.kindTitle(kind))
+        .navigationBarTitleDisplayMode(.inline)
     }
 
-    /// The explanation sits under the second list of each kind.
-    private static func footer(for slot: ReminderDefaultsModel.Slot) -> LocalizedStringKey? {
-        guard slot.isAllDay else { return nil }
-        switch slot.kind {
-        case .event: return "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert."
-        case .appleReminder: return "Gilt für alle Apple Erinnerungen ohne eigene Erinnerungen."
-        case .githubIssue: return "Gilt für alle GitHub-Issues ohne eigene Erinnerungen."
-        case .localTask: return "Gilt für alle lokalen Aufgaben ohne eigene Erinnerungen."
-        case .deadline: return "Gilt für alle Deadline-Termine ohne eigene Erinnerungen."
+    private static func footer(for kind: ReminderKind) -> LocalizedStringKey {
+        switch kind {
+        case .event: "Wird beim Anlegen eines Termins in Tagwerk übernommen. Bestehende Termine bleiben unverändert."
+        case .appleReminder: "Gilt für alle Apple Erinnerungen ohne eigene Erinnerungen."
+        case .githubIssue: "Gilt für alle GitHub-Issues ohne eigene Erinnerungen."
+        case .localTask: "Gilt für alle lokalen Aufgaben ohne eigene Erinnerungen."
+        case .deadline: "Gilt für alle Deadline-Termine ohne eigene Erinnerungen."
         }
     }
 }

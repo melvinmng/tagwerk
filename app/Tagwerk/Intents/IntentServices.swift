@@ -23,6 +23,7 @@ final class IntentServices {
         await capture.addWater(amount, at: .now, offersUndo: false)
         await capture.waitForHealth()
         environment.writeSnapshot()
+        markTipDone(\.siriTipWaterDone)
         // Plain digits (no grouping), as before: "2000 ml".
         let amountText = String(amount)
         return "\(amountText) ml Wasser erfasst."
@@ -45,12 +46,13 @@ final class IntentServices {
         environment.router.open(.notesDictate)
     }
 
-    /// The Focus filter "Mitteilungen ruhen lassen" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
+    /// The Focus filter "Mitteilungen zurückhalten" (plan quiet-hours, decision 5): iOS runs it when a Focus with the
     /// filter starts (`active`) and, with the default value, when it ends. Remembers the state and plans the
     /// notifications again; the plan holds them back while active and lets those that came due fire after the end.
     func setFocusQuiet(active: Bool, now: Date = .now) async {
         let settings = environment.settings
-        settings.focusQuietState = FocusQuiet.applying(active: active, now: now, to: settings.focusQuietState)
+        settings.focusQuietState = FocusQuiet.applying(active: active, now: now, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: environment.planning.calendar)
         try? environment.modelContainer.mainContext.save()
         // A cold start in the background has loaded nothing; sources that are not loaded keep their old requests.
         if settings.setupCompleted { await environment.loadTasksInBackground() }
@@ -120,7 +122,16 @@ final class IntentServices {
     /// "Füge Milch zur Einkaufsliste hinzu": adds the chosen article through the same path as the text shortcut.
     /// A free-typed name may still hold a quantity or several items; it is split like spoken text.
     func addToShopping(article: ShoppingArticleEntity) async -> LocalizedStringResource {
-        await addToShopping(text: article.name)
+        markTipDone(\.siriTipShoppingDone)
+        return await addToShopping(text: article.name)
+    }
+
+    /// The shortcut ran once, so its tip card (#188 SI3) is not shown again.
+    private func markTipDone(_ flag: ReferenceWritableKeyPath<AppSettings, Bool>) {
+        let settings = environment.settings
+        guard !settings[keyPath: flag] else { return }
+        settings[keyPath: flag] = true
+        try? environment.modelContainer.mainContext.save()
     }
 
     /// The article names Siri can speak, see `ShoppingSuggestions`: own names (open and completed) first,

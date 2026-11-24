@@ -8,6 +8,7 @@ struct NewTaskSheet: View {
     /// Called after the task was created (the thoughts note counts it as derived).
     let onCreated: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) private var environment
 
     @State private var target: TaskSource
 
@@ -53,6 +54,10 @@ struct NewTaskSheet: View {
     @State private var assigneesChosen = false
     @State private var assigneeLoad: AssigneeLoad = .idle
     @State private var recurrence: Recurrence?
+    /// The reminders of the new task; created when the sheet appears, because the defaults come from the settings.
+    @State private var reminders: NewTaskReminders?
+    /// Set when the task was created but its reminders could not be written: the sheet then only offers to close.
+    @State private var remindersError: String?
 
     private var gitHub: GitHubTaskProvider? { model.provider(for: .github) as? GitHubTaskProvider }
 
@@ -93,6 +98,13 @@ struct NewTaskSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let remindersError {
+                    Section {
+                        Label(remindersError, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
+                    } footer: {
+                        Text("Die Aufgabe ist angelegt. Die Erinnerungen kannst du im Editor setzen.")
+                    }
+                }
                 if targets.count > 1 {
                     Picker("Anlegen als", selection: $target) {
                         ForEach(targets, id: \.self) { source in
@@ -163,6 +175,7 @@ struct NewTaskSheet: View {
                             .environment(\.calendar, model.calendar)
                             .environment(\.timeZone, model.calendar.timeZone)
                     }
+                    if hasDue, let reminders { remindersRow(reminders) }
                     recurrenceRow
                     PriorityPicker(priority: $priority, choices: TaskEditorModel.priorityChoices(for: target))
                 } footer: {
@@ -185,8 +198,12 @@ struct NewTaskSheet: View {
                     Button("Abbrechen") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Hinzufügen") { Task { await save() } }
-                        .disabled(!canSave)
+                    if remindersError != nil {
+                        Button("Fertig") { dismiss() }
+                    } else {
+                        Button("Hinzufügen") { Task { await save() } }
+                            .disabled(!canSave)
+                    }
                 }
                 if let onDiscard {
                     ToolbarItem(placement: .bottomBar) {
@@ -198,7 +215,14 @@ struct NewTaskSheet: View {
                 }
             }
             .task { reminderLists = await model.containers(for: .reminders) }
+            .task {
+                if reminders == nil {
+                    reminders = NewTaskReminders(defaults: environment.settings.reminderDefaults, source: target, hasTime: hasTime && target != .github)
+                }
+            }
+            .onChange(of: hasTime) { _, _ in configureReminders() }
             .onChange(of: target) { _, newTarget in
+                configureReminders(source: newTarget)
                 // Keep the picker selection valid for the target's priority levels.
                 if !TaskEditorModel.priorityChoices(for: newTarget).contains(priority) {
                     priority = newTarget == .reminders ? .p4 : nil
@@ -223,8 +247,46 @@ struct NewTaskSheet: View {
             assignees: target == .github ? AssigneeSelection.draftAssignees(selected: selectedAssignees, chosen: assigneesChosen) : nil,
             startStatus: target == .github && !projectIDs.isEmpty ? startStatus : nil
         )
-        if await model.create(draft, in: target) != nil { onCreated?() }
-        dismiss()
+        guard let created = await model.create(draft, in: target) else {
+            dismiss()
+            return
+        }
+        onCreated?()
+        do {
+            try reminders?.save(for: created, overrides: environment.reminderOverrides, reminderStore: environment.reminderStore)
+            if reminders?.ownList != nil && created.due != nil {
+                environment.notifications.scheduleSoon()
+                environment.taskList.refreshReminderMarks()
+            }
+            dismiss()
+        } catch {
+            remindersError = TaskListModel.message(for: error)
+        }
+    }
+
+    /// The reminders follow the source and the time of day of the new task.
+    private func configureReminders(source: TaskSource? = nil) {
+        let source = source ?? target
+        reminders?.configure(source: source, hasTime: hasTime && source != .github)
+    }
+
+    /// What the hint "kommt 07:00" needs. An own list for the Reminders app becomes alarms there, which quiet hours do not hold back.
+    private func quietContext(_ reminders: NewTaskReminders) -> (anchor: Date, quietHours: QuietHours?)? {
+        if target == .reminders, !reminders.list.isUsingDefault { return nil }
+        let due = DueDate(date: dueDate, includeTime: hasTime && target != .github, calendar: model.calendar)
+        return (due.startDate(in: model.calendar), environment.settings.quietHours)
+    }
+
+    /// "Erinnerungen" in the section of the due date, shown once a due date is set: "Standard" until the user picks an own list.
+    private func remindersRow(_ reminders: NewTaskReminders) -> some View {
+        NavigationLink {
+            ReminderSelectionPage(model: reminders.list, subject: .task, calendar: model.calendar,
+                                  footer: target == .reminders
+                                      ? String(localized: "Eigene Erinnerungen werden in der Erinnerungen-App gespeichert. Ruhezeiten gelten dafür nicht.") : nil,
+                                  quietContext: quietContext(reminders))
+        } label: {
+            LabeledContent("Erinnerungen", value: reminders.list.rowSummary(subject: .task, calendar: model.calendar))
+        }
     }
 }
 
@@ -260,7 +322,7 @@ extension NewTaskSheet {
             } label: {
                 Label("Wiederholen", systemImage: "repeat")
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .accessibilityHint(reason)
         }
     }
@@ -276,12 +338,12 @@ extension NewTaskSheet {
     /// Stands for the signed-in user in the footer while nothing was chosen (the login may not be known yet).
     private static let defaultAssigneeMarker = "me"
 
-    /// Says before saving who gets the issue; without a project it first says where the issue will not appear.
+    /// Says before saving who gets the issue; before that it says what the project choice means (no project, no shared stage).
     private var gitHubFooter: String {
         let assignment = assigneesChosen ? AssigneeSelection.footer(selected: selectedAssignees, me: gitHub?.login)
             : AssigneeSelection.footer(selected: [Self.defaultAssigneeMarker], me: Self.defaultAssigneeMarker)
-        guard repository != nil, projectIDs.isEmpty else { return assignment }
-        return String(localized: "Ohne Project erscheint das Issue nicht in deinen Aufgaben.") + " " + assignment
+        return ProjectSelection.footer(repositoryChosen: repository != nil, hasProject: !projectIDs.isEmpty,
+                                       optionLists: selectedProjects.map(GitHubMapping.statusOptions(in:)), assignment: assignment)
     }
 
     /// Loads the assignable people of the chosen repository. Every repository change resets the choice to

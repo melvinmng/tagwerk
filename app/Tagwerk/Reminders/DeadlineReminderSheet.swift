@@ -7,6 +7,7 @@ import TagwerkCore
 struct DeadlineReminderSheet: View {
     let event: CalendarEvent
     let calendar: Calendar
+    let planning: PlanningModel
     @Environment(\.dismiss) private var dismiss
     @Environment(AppEnvironment.self) private var environment
     @State private var model: DeadlineReminderModel?
@@ -18,14 +19,49 @@ struct DeadlineReminderSheet: View {
             Form {
                 if let model {
                     if let errorMessage {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                        Label(errorMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.redText)
+                    }
+                    let quietContext: (anchor: Date, quietHours: QuietHours?) = (event.start, environment.settings.quietHours)
+                    Section {
+                        ReminderSelectionRows(model: model.list, subject: .deadline, calendar: calendar, quietContext: quietContext)
+                    } header: {
+                        Label("Tagwerk-Mitteilungen", systemImage: "bell")
+                    } footer: {
+                        let base = String(localized: "Kommen als Mitteilung von Tagwerk. Ruhezeiten und Fokus-Filter gelten.")
+                        if let note = ReminderSelectionRows.quietNote(model: model.list, quietContext: quietContext, calendar: calendar) {
+                            Text(base + " " + note)
+                        } else {
+                            Text(base)
+                        }
                     }
                     Section {
-                        ReminderListEditor(model: model.list, calendar: calendar)
+                        if model.canEditCalendarAlarms {
+                            ReminderSelectionRows(model: model.calendarAlarms, subject: .deadline, defaultSwitchTitle: nil,
+                                                  customTitle: "Hinweis hinzufügen", calendar: calendar)
+                        } else {
+                            ForEach(model.calendarAlarms.offsets, id: \.self) { offset in
+                                Text(ReminderText.describe(offset, subject: .deadline, isAllDay: event.isAllDay, locale: .current,
+                                                           calendar: calendar))
+                            }
+                            if model.calendarAlarms.offsets.isEmpty { Text("Keine").foregroundStyle(.secondaryText) }
+                        }
                     } header: {
-                        Text("Erinnerungen")
+                        Label("Hinweise im Kalender (Apple)", systemImage: "alarm")
                     } footer: {
-                        Text("Tagwerk erinnert mit Mitteilungen. Ruhezeiten und Fokus-Filter gelten dafür.")
+                        if let reason = model.calendarAlarmsReadOnlyReason {
+                            Text(reason)
+                        } else {
+                            Text("Gehören zum Kalendertermin und erscheinen auf allen Geräten. Ruhezeiten gelten dafür nicht.")
+                        }
+                    }
+                    if !model.duplicates.isEmpty {
+                        Section {
+                            ForEach(Array(model.duplicates.enumerated()), id: \.offset) { _, duplicate in
+                                Label(ReminderDuplicates.notice(duplicate, subject: .deadline, isAllDay: event.isAllDay, locale: .current,
+                                                                calendar: calendar), systemImage: "exclamationmark.triangle")
+                            }
+                            .listRowBackground(Color.yellow.opacity(0.25))
+                        }
                     }
                 }
             }
@@ -41,26 +77,34 @@ struct DeadlineReminderSheet: View {
                     .disabled(model?.hasChanges != true)
                 }
             }
-            .confirmationDialog("Diese Deadline wiederholt sich", isPresented: $asksReach, titleVisibility: .visible) {
-                Button("Nur diese Deadline") { save(.onlyThis) }
-                Button("Diese und alle folgenden") { save(.allFollowing) }
+            .confirmationDialog(ReminderReachText.title(.deadline), isPresented: $asksReach, titleVisibility: .visible) {
+                let day = PlanDay(date: event.start, calendar: calendar)
+                Button(ReminderReachText.onlyThis(day, calendar: calendar)) { save(.onlyThis) }
+                Button(ReminderReachText.fromThis(day, calendar: calendar)) { save(.allFollowing) }
             }
             .task {
                 guard model == nil else { return }
                 model = DeadlineReminderModel(event: event, overrides: environment.reminderOverrides,
-                                              defaults: environment.settings.reminderDefaults, calendar: calendar)
+                                              defaults: environment.settings.reminderDefaults, calendar: calendar,
+                                              calendarAlarms: planning.alarms(ofEvent: event.id))
             }
         }
     }
 
     private func save(_ reach: DeadlineReminderModel.Reach) {
         guard let model else { return }
-        do {
-            try model.save(reach: reach)
-            environment.notifications.scheduleSoon()
-            dismiss()
-        } catch {
-            errorMessage = TaskListModel.message(for: error)
+        Task {
+            do {
+                try await model.saveAll(reach: reach) { alarms, span in
+                    var draft = EventDraft(event)
+                    draft.alarms = alarms
+                    _ = try await planning.updateEventReportingErrors(event, with: draft, span: span)
+                }
+                environment.notifications.scheduleSoon()
+                dismiss()
+            } catch {
+                errorMessage = TaskListModel.message(for: error)
+            }
         }
     }
 }

@@ -124,4 +124,19 @@ import Testing
         let title = "Straße"
         #expect(SearchText.ranges(of: "stras", in: title).map { String(title[$0]) } == ["Straß"])
     }
+
+    @Test func search_findsWordOnlyInScan_marksFieldScan() {
+        let note = SearchDocument(noteText: "Mietvertrag\nUnterschrieben am 12.11.", kindLabel: "Notiz",
+                                  scanText: "§ 3 Miete. Die Kündigungsfrist beträgt drei Monate zum Monatsende.")
+        let match = SearchQuery("kündigungsfrist")!.match(note)
+        #expect(match?.matchedFields == [.scan])
+        #expect(match?.snippet?.field == .scan)
+        #expect(match?.snippet?.text.contains("Kündigungsfrist") == true)
+        // The word is not in the note itself.
+        #expect(SearchQuery("kündigungsfrist")!.match(SearchDocument(noteText: "Mietvertrag\nUnterschrieben", kindLabel: "Notiz")) == nil)
+        // A word in the note supplies the snippet before the scan does.
+        let both = SearchDocument(noteText: "Mietvertrag\nKündigungsfrist prüfen", kindLabel: "Notiz", scanText: "Kündigungsfrist drei Monate")
+        #expect(SearchQuery("kündigungsfrist")!.match(both)?.snippet?.field == .notes)
+        #expect(SearchQuery("kündigungsfrist")!.match(both)?.matchedFields == [.notes, .scan])
+    }
 }

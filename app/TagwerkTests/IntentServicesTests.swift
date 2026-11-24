@@ -45,6 +45,14 @@ struct IntentServicesTests {
         #expect(environment.capture.undo == nil)  // no "Widerrufen" bar from Siri
     }
 
+    @Test func logWater_marksTheTipAsDone() async throws {
+        let (services, environment) = try make()
+        #expect(!environment.settings.siriTipWaterDone)
+        _ = await services.logWater(milliliters: 250)
+        #expect(environment.settings.siriTipWaterDone)
+        #expect(!environment.settings.siriTipShoppingDone, "running one shortcut must not close the other tip")
+    }
+
     @Test func logWater_withoutFileAndSources_writesNoPlan() async throws {
         let (services, environment) = try make()
         _ = await services.logWater(milliliters: 250)
@@ -146,6 +154,31 @@ struct IntentServicesTests {
         environment.openDictatedNote()
         #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder.id))])
         #expect(environment.router.dictationRequested)
+    }
+
+    @Test func openNewBrainDumpNote_pushesNotesAndNote() throws {
+        let (_, environment) = try make()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        environment.tasksPath = [.shopping]
+        environment.openNewBrainDumpNote()
+        let note = try #require(environment.notes.notes(.folder(folder.id)).first)
+        #expect(environment.tasksPath == [.notes, .notesFolder(.folder(folder.id)), .note(note.id)])
+        #expect(environment.requestedTab == 1)
+        #expect(note.text.isEmpty && note.kind == .free)
+        // Nothing starts a recording.
+        #expect(!environment.router.dictationRequested)
+    }
+
+    @Test func openNewBrainDumpNote_withoutFolder_createsItFirst() throws {
+        let (_, environment) = try make()
+        for folder in environment.notes.folders() where folder.role == .brainDump {
+            environment.notes.context.delete(folder)
+        }
+        #expect(environment.notes.folder(role: .brainDump) == nil)
+        environment.openNewBrainDumpNote()
+        let folder = try #require(environment.notes.folder(role: .brainDump))
+        #expect(environment.tasksPath.count == 3 && environment.tasksPath.first == .notes)
+        #expect(environment.notes.notes(.folder(folder.id)).count == 1)
     }
 
     // MARK: Habits (phase 7)

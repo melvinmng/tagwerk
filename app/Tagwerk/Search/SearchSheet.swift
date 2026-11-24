@@ -10,6 +10,10 @@ struct SearchSheet: View {
     let onShowDay: (PlanDay) -> Void
     /// Shows a task in "Aufgaben"; the sheet closes first.
     let onShowTask: (TaskID) -> Void
+    /// Shows the folder list of a note in "Aufgaben" (`nil`: "Alle Notizen"); the sheet closes first.
+    let onShowNoteFolder: (NotesScope) -> Void
+    /// A hit for a day that only has gratitude: closes the search and shows the page of that day.
+    let onShowMorningDay: (PlanDay) -> Void
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -20,13 +24,19 @@ struct SearchSheet: View {
     @State private var openEvent: CalendarEvent?
     @State private var openNote: NoteTarget?
     @State private var showsShopping = false
+    /// The task whose planned day is picked in a date sheet ("Anderer Tag …").
+    @State private var planningDateFor: TaskItem?
     /// Short hint, e.g. "Der Termin wurde geändert."; shown as an alert together with errors of the task list.
     @State private var notice: String?
 
-    init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void) {
+    init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void,
+         onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in },
+         onShowMorningDay: @escaping (PlanDay) -> Void = { _ in }) {
         self.model = model
         self.onShowDay = onShowDay
         self.onShowTask = onShowTask
+        self.onShowNoteFolder = onShowNoteFolder
+        self.onShowMorningDay = onShowMorningDay
     }
 
     private var calendar: Calendar { environment.planning.calendar }
@@ -74,6 +84,19 @@ struct SearchSheet: View {
         .sheet(isPresented: $showsShopping, onDismiss: refreshAfterSheet) {
             ShoppingListSheet()
         }
+        .sheet(item: $planningDateFor) { item in
+            RescheduleDateSheet(item: item, calendar: calendar, now: now) { day in
+                plan(item) { await environment.planning.assign(item.id, to: PlanDay(day)) }
+            }
+        }
+        // A task with future time blocks asks before it moves; the dialog of "Planen" lies beneath this sheet.
+        .confirmationDialog("Zeitblöcke mitverschieben?", isPresented: hasPendingBlockDecision, titleVisibility: .visible) {
+            Button("Mitverschieben") { resolveBlocks(move: true) }
+            Button("Blöcke löschen", role: .destructive) { resolveBlocks(move: false) }
+            Button("Abbrechen", role: .cancel) { environment.planning.cancelBlockDecision() }
+        } message: {
+            Text("Für diese Aufgabe gibt es geplante Zeitblöcke im Kalender.")
+        }
         .alert("Hinweis", isPresented: hasAlert) {
             Button("OK") { notice = nil; environment.taskList.clearError() }
         } message: {
@@ -84,6 +107,11 @@ struct SearchSheet: View {
     private var hasAlert: Binding<Bool> {
         Binding(get: { notice != nil || environment.taskList.lastError != nil },
                 set: { if !$0 { notice = nil; environment.taskList.clearError() } })
+    }
+
+    private var hasPendingBlockDecision: Binding<Bool> {
+        Binding(get: { environment.planning.pendingBlockDecision != nil },
+                set: { if !$0 { environment.planning.cancelBlockDecision() } })
     }
 
     /// After a sheet over the search closed, the hits may have changed (title, completion, date).
@@ -146,6 +174,58 @@ struct SearchSheet: View {
         }
     }
 
+    /// Sets the planned day from a hit; the sheet stays open and VoiceOver says what happened.
+    private func plan(_ item: TaskItem, _ assign: @escaping () async -> Void) {
+        Task {
+            await assign()
+            // A task with future time blocks waits for the answer of the dialog; it announces afterwards.
+            guard environment.planning.pendingBlockDecision == nil else { return }
+            announcePlanned(item.id)
+            await model.refresh()
+        }
+    }
+
+    private func resolveBlocks(move: Bool) {
+        let id = environment.planning.pendingBlockDecision?.taskID
+        Task {
+            await environment.planning.resolveBlocks(move: move)
+            if let id { announcePlanned(id) }
+            await model.refresh()
+        }
+    }
+
+    private func announcePlanned(_ id: TaskID) {
+        let planning = environment.planning
+        guard let day = planning.plannedInfo(for: id).day else { return }
+        AccessibilityNotification.Announcement(
+            SearchTaskMenu.plannedAnnouncement(day: day, today: planning.today, calendar: calendar)).post()
+    }
+
+    /// "Fokus starten" from a VoiceOver action: closes the sheet, then asks for the start like the menu button does
+    /// (start sheet, or an immediate start when "Dauer beim Start fragen" is off).
+    private func startFocus(_ item: TaskItem) {
+        dismiss()
+        Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            await environment.focus.requestStart(task: item, block: nil)
+        }
+    }
+
+    /// "Im Ordner zeigen": the list of the note in "Aufgaben"; a note without a folder lies in "Notizen".
+    private func showNoteFolder(_ note: NoteSearchItem) {
+        // A day that only has gratitude lies in "Tagesstart".
+        if note.routineDay != nil, let folder = environment.notes.folder(role: .morningRoutine) {
+            onShowNoteFolder(.folder(folder.id))
+            return
+        }
+        onShowNoteFolder(environment.notesScope(ofNote: note.id))
+    }
+
+    /// A note opens in its own sheet; a day that only has gratitude has no note, its page opens in "Aufgaben".
+    private func open(_ note: NoteSearchItem) {
+        if let day = note.routineDay { onShowMorningDay(day) } else { openNote = NoteTarget(id: note.id) }
+    }
+
     private func reopen(_ task: TaskItem) {
         Task {
             await environment.taskList.reopen(task)
@@ -172,7 +252,7 @@ struct SearchSheet: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondaryText).accessibilityHidden(true)
                     TextField("Suchen", text: $model.text)
                         .focused($fieldFocused)
                         .autocorrectionDisabled()
@@ -181,7 +261,7 @@ struct SearchSheet: View {
                         .onSubmit { fieldFocused = false }
                     if !model.text.isEmpty {
                         Button { model.text = "" } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondaryText)
                                 .frame(minWidth: 44, minHeight: 44)
                         }
                         .buttonStyle(.plain)
@@ -245,10 +325,10 @@ struct SearchSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Durchsucht Termine, Aufgaben, Notizen und die Einkaufsliste.")
                 Text(SearchTexts.footer(windowStart: model.windowStart, isExtended: false, calendar: calendar))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondaryText)
                 if environment.gateway.calendarAccessState != .fullAccess {
                     Text("Kein Zugriff auf Kalender – Termine werden nicht durchsucht.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                 }
             }
             .listRowBackground(Color.clear)
@@ -261,7 +341,7 @@ struct SearchSheet: View {
                 Text("Keine Treffer für „\(model.query?.text ?? "")“.")
                 if model.eventState == .noAccess {
                     Text("Kein Zugriff auf Kalender – Termine werden nicht durchsucht.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondaryText)
                 }
                 if model.filter != .events, !model.includeCompleted {
                     Button("Erledigte einbeziehen") { model.includeCompleted = true }
@@ -305,6 +385,15 @@ struct SearchSheet: View {
         model.filter != .tasks && model.eventState == .loaded && model.canExtendWindow
     }
 
+    /// At least one note is hidden by the lock right now.
+    private var hasConcealedNotes: Bool {
+        let store = environment.notes
+        let lock = environment.noteLock
+        guard lock.protection.isActive, !lock.isUnlocked else { return false }
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
+        return store.notes(.all).contains { lock.isConcealed($0, privateFolderIDs: privateFolderIDs) }
+    }
+
     @ViewBuilder private func sectionView(_ kind: SearchSectionKind) -> some View {
         let section = model.results.sections.first { $0.kind == kind }
         let rows = section.map { model.visibleRows(in: $0) } ?? []
@@ -317,14 +406,18 @@ struct SearchSheet: View {
                     Text("Weitere \(min(SearchModel.pageSize, model.hiddenCount(in: section))) zeigen")
                 }
             }
+            // Hidden notes are found by their title only; the sheet says so under the note hits (NL4a).
+            if kind == .notes, section != nil, hasConcealedNotes {
+                Text("Gesperrte Notizen werden nur über den Titel gefunden.").font(.footnote).foregroundStyle(.secondaryText)
+            }
             if kind == .online, model.onlineState == .loaded, section == nil {
-                Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondary)
+                Text("Keine weiteren Treffer auf GitHub.").foregroundStyle(.secondaryText)
             }
             if kind == .openTasks {
                 if model.onlineState == .loading {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("GitHub wird durchsucht …").foregroundStyle(.secondary)
+                        Text("GitHub wird durchsucht …").foregroundStyle(.secondaryText)
                     }
                     .accessibilityElement(children: .combine)
                 } else if model.showsOnlineSearchRow {
@@ -358,7 +451,7 @@ struct SearchSheet: View {
         case .completedTasks:
             Text("Geschlossene Issues findet nur die GitHub-Suche.")
         case .online:
-            Text("Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Project liegen.")
+            Text("Online-Treffer öffnen sich auf GitHub. Zum Bearbeiten in Tagwerk muss ein Issue dir zugewiesen sein und in einem Projekt liegen.")
         default:
             EmptyView()
         }
@@ -381,14 +474,15 @@ struct SearchSheet: View {
                 .accessibilityAction(named: Text("Im Plan zeigen")) { showInPlan(event) }
         case .task(let item, let match):
             SearchTaskRow(item: item, match: match, now: now, calendar: calendar,
-                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true) { complete(item) }
+                          isReadOnly: environment.taskList.sourceStates[item.id.source]?.isOffline == true,
+                          reminderMark: environment.taskList.reminderMarks[item.id.key]) { complete(item) }
                 .onTapGesture { open(item) }
                 .contextMenu { taskMenu(item) }
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction(named: Text("Öffnen")) { open(item) }
-                .accessibilityAction(named: Text(environment.planning.plannedInfo(for: item.id).day != nil
-                                                 ? "Im Plan zeigen" : "In Aufgaben zeigen")) { showTask(item) }
-                .accessibilityAction(named: Text("Erledigt")) { complete(item) }
+                .modifier(SearchTaskAccessibilityActions(entries: taskMenuEntries(item),
+                                                         isPlanned: environment.planning.plannedInfo(for: item.id).day != nil,
+                                                         isFocusRunning: environment.focus.isRunning,
+                                                         actions: taskMenuActions(item)))
         case .completed(let group, let match):
             let item = group.latest.item
             SearchCompletedRow(group: group, match: match, now: now, calendar: calendar)
@@ -412,10 +506,14 @@ struct SearchSheet: View {
                 .accessibilityAction(named: Text("Link kopieren")) { UIPasteboard.general.url = issue.url }
         case .note(let note, let match):
             SearchNoteRow(note: note, match: match, calendar: calendar)
-                .onTapGesture { openNote = NoteTarget(id: note.id) }
-                .contextMenu { Button("Öffnen", systemImage: "chevron.right") { openNote = NoteTarget(id: note.id) } }
+                .onTapGesture { open(note) }
+                .contextMenu {
+                    Button("Öffnen", systemImage: "chevron.right") { open(note) }
+                    Button("Im Ordner zeigen", systemImage: "folder") { showNoteFolder(note) }
+                }
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction(named: Text("Öffnen")) { openNote = NoteTarget(id: note.id) }
+                .accessibilityAction(named: Text("Öffnen")) { open(note) }
+                .accessibilityAction(named: Text("Im Ordner zeigen")) { showNoteFolder(note) }
         case .shopping(let item, let match):
             SearchShoppingRow(item: item, match: match, onCheckOff: { Task { await model.checkOff(item) } })
                 .onTapGesture { showsShopping = true }
@@ -444,15 +542,23 @@ struct SearchSheet: View {
         }
     }
 
+    private func taskMenuEntries(_ item: TaskItem) -> [SearchTaskMenu.Entry] {
+        SearchTaskMenu.entries(for: item, isPlanned: environment.planning.plannedInfo(for: item.id).day != nil,
+                               isOffline: environment.taskList.sourceStates[item.id.source]?.isOffline == true)
+    }
+
+    private func taskMenuActions(_ item: TaskItem) -> SearchTaskMenuActions {
+        SearchTaskMenuActions(
+            open: { open(item) },
+            show: { showTask(item) },
+            plan: { option in plan(item) { await environment.planning.plan(item.id, option: option) } },
+            planOnDate: { planningDateFor = item },
+            startFocus: { startFocus(item) },
+            openOnGitHub: { if let url = item.url { openURL(url) } },
+            complete: { complete(item) })
+    }
+
     @ViewBuilder private func taskMenu(_ item: TaskItem) -> some View {
-        Button("Öffnen", systemImage: "chevron.right") { open(item) }
-        if environment.planning.plannedInfo(for: item.id).day != nil {
-            Button("Im Plan zeigen", systemImage: "calendar") { showTask(item) }
-        } else {
-            Button("In Aufgaben zeigen", systemImage: "checklist") { showTask(item) }
-        }
-        if environment.taskList.sourceStates[item.id.source]?.isOffline != true {
-            Button("Erledigt", systemImage: "checkmark.circle") { complete(item) }
-        }
+        SearchTaskMenuContent(item: item, entries: taskMenuEntries(item), actions: taskMenuActions(item))
     }
 }

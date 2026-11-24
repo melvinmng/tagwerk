@@ -5,14 +5,22 @@
 # Packages: the keys come from the .stringsdata of the package targets in the same build.
 # Hand-maintained catalogs (InfoPlist, AppShortcuts) are not touched.
 #
+# The format of each catalog stays as it is: xcstringstool rewrites a whole file in its own style, so it only ever
+# writes into a copy, and scripts/catalog_format.py takes over the content in the style of the checked-in file. A tree
+# without changes gives no diff, one new text gives one new line.
+#
 # Usage: scripts/sync-strings.sh [--check] [--derived-data PATH] [--no-build]
-#   --check        sync into a temporary copy and fail when it differs from the checked-in catalogs
+#        scripts/sync-strings.sh [--check] --sync-one CATALOG STRINGSDATA...
+#   --check        fail when the synced content differs from the checked-in catalogs; nothing is written
 #   --no-build     reuse the .stringsdata of an earlier build in the derived data folder
+#   --sync-one     test entry point (scripts/tests/sync-strings-format.zsh): syncs only this catalog with the given
+#                  .stringsdata files, without a build and without a search in the derived data folder
 # Exit codes: 0 in sync (or synced), 1 catalogs differ (--check), 2 build or tool failure
 
 set -euo pipefail
 
-export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+# TAGWERK_DEVELOPER_DIR selects another Xcode (used by the CI workflow); unset keeps the default.
+export DEVELOPER_DIR="${TAGWERK_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
 REPO_ROOT="${0:A:h:h}"
 APP_DIR="$REPO_ROOT/app"
@@ -20,21 +28,26 @@ source "$REPO_ROOT/scripts/test-env.sh"
 DERIVED="$TAGWERK_TEST_DERIVED"
 CHECK=0
 BUILD=1
+SYNC_ONE=()
 
 while (( $# > 0 )); do
   case "$1" in
     --check) CHECK=1 ;;
     --no-build) BUILD=0 ;;
     --derived-data) shift; DERIVED="$1" ;;
+    --sync-one) shift; SYNC_ONE=("$@"); break ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 
 WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+# The build below takes a slot of the simulator pool; tagwerk_cleanup_run gives it back (it holds no other lock here).
+trap 'rm -rf "$WORK"; tagwerk_cleanup_run' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
 
-if (( BUILD )); then
+if (( BUILD && ${#SYNC_ONE} == 0 )); then
   DESTINATION=$(tagwerk_test_destination) || exit 2
   if ! xcodebuild build-for-testing -project "$APP_DIR/Tagwerk.xcodeproj" -scheme Tagwerk -destination "$DESTINATION" \
       -derivedDataPath "$DERIVED" > "$WORK/build.log" 2>&1; then
@@ -43,17 +56,15 @@ if (( BUILD )); then
   fi
 fi
 
-# Syncs one catalog with the given .stringsdata files; in check mode into a copy that is compared afterwards.
+# Syncs one catalog with the given .stringsdata files. xcstringstool writes into a copy; the checked-in catalog is only
+# touched in write mode, and only when the content changes (scripts/catalog_format.py keeps the format of the file).
 sync_catalog() {
   local catalog="$1"; shift
-  local target="$catalog"
-  if (( CHECK )); then
-    # The file name is the table name, so the copy keeps it.
-    local folder="$WORK/check/${${catalog:h}//\//_}"
-    mkdir -p "$folder"
-    target="$folder/${catalog:t}"
-    cp "$catalog" "$target"
-  fi
+  # The file name is the table name, so the copy keeps it.
+  local folder="$WORK/sync/${${catalog:h}//\//_}"
+  mkdir -p "$folder"
+  local target="$folder/${catalog:t}"
+  cp "$catalog" "$target"
   local arguments=()
   for file in "$@"; do
     # Incremental builds keep .stringsdata of deleted sources; they would hide keys that are no longer used.
@@ -70,12 +81,19 @@ sync_catalog() {
     echo "xcstringstool sync failed for ${catalog#$REPO_ROOT/}" >&2
     exit 2
   fi
-  if (( CHECK )) && ! /usr/bin/python3 "$REPO_ROOT/scripts/check-strings.py" --same "$catalog" "$target"; then
-    DIFFERENT=1
+  if (( CHECK )); then
+    /usr/bin/python3 "$REPO_ROOT/scripts/check-strings.py" --same "$catalog" "$target" || DIFFERENT=1
+  else
+    /usr/bin/python3 "$REPO_ROOT/scripts/catalog_format.py" adopt "$catalog" "$target" || exit 2
   fi
 }
 
 DIFFERENT=0
+if (( ${#SYNC_ONE} > 0 )); then
+  sync_catalog "${SYNC_ONE[@]}"
+  (( CHECK && DIFFERENT )) && exit 1
+  exit 0
+fi
 INTERMEDIATES="$DERIVED/Build/Intermediates.noindex/Tagwerk.build"
 
 for target in Tagwerk TagwerkWidget TagwerkShare; do

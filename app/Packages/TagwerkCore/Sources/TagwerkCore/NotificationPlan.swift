@@ -101,7 +101,7 @@ public struct NotificationRules: Sendable, Hashable {
     /// is active, and finally moved out of the quiet hours. Unchanged when none of the three applies.
     func deliveryDate(for fire: Date, calendar: Calendar) -> Date {
         var delivery = fire
-        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.at { delivery = catchUp.at }
+        if let catchUp = focusCatchUp, delivery >= catchUp.from, delivery < catchUp.windowEnd { delivery = catchUp.at }
         if let hold = focusHold, delivery >= hold.from, delivery < hold.until { delivery = hold.until }
         if let quietHours { delivery = quietHours.shifted(delivery, calendar: calendar) }
         return delivery
@@ -213,18 +213,26 @@ private struct NotificationTexts {
         return PlanDay(date: fire, calendar: calendar) > day
     }
 
+    /// "Fällig heute um 14:00 · Privat"; a notification that comes after its due moment says how long it has been due:
+    /// "Seit gestern, 23:30 fällig · Privat".
     func taskBody(dueDay: PlanDay, time: Date?, fire: Date, container: String, overdue: Bool = false) -> String {
-        let moment = moment(day: dueDay, time: time, fire: fire)
-        return overdue ? text("War fällig \(moment) · \(container)") : text("Fällig \(moment) · \(container)")
+        guard overdue else { return text("Fällig \(moment(day: dueDay, time: time, fire: fire)) · \(container)") }
+        let since = sinceDayText(dueDay, fire: fire)
+        guard let time else { return text("Seit \(since) fällig · \(container)") }
+        let clock = DateText.time(time, calendar: calendar, locale: locale)
+        return text("Seit \(since), \(clock) fällig · \(container)")
     }
 
+    /// "Deadline heute um 08:30"; after the deadline moment: "Deadline seit gestern, 23:30 abgelaufen".
     func eventBody(day: PlanDay, time: Date?, fire: Date, overdue: Bool = false) -> String {
-        if time == nil {
-            let dayPart = dayText(day, fire: fire)
-            return overdue ? text("Deadline war \(dayPart), ganztägig") : text("Deadline \(dayPart), ganztägig")
+        if overdue {
+            let since = sinceDayText(day, fire: fire)
+            guard let time else { return text("Deadline seit \(since) abgelaufen") }
+            let clock = DateText.time(time, calendar: calendar, locale: locale)
+            return text("Deadline seit \(since), \(clock) abgelaufen")
         }
-        let moment = moment(day: day, time: time, fire: fire)
-        return overdue ? text("Deadline war \(moment)") : text("Deadline \(moment)")
+        if time == nil { return text("Deadline \(dayText(day, fire: fire)), ganztägig") }
+        return text("Deadline \(moment(day: day, time: time, fire: fire))")
     }
 
     private func moment(day: PlanDay, time: Date?, fire: Date) -> String {
@@ -234,13 +242,30 @@ private struct NotificationTexts {
         return text("\(dayPart) um \(clock)")
     }
 
-    private func dayText(_ day: PlanDay, fire: Date) -> String {
+    /// "heute", "morgen", "gestern" relative to the day the notification fires; nil for any other day.
+    private func relativeDayText(_ day: PlanDay, fire: Date) -> String? {
         let fireDay = PlanDay(date: fire, calendar: calendar)
         if day == fireDay { return text("heute") }
         if day == fireDay.adding(days: 1, calendar: calendar) { return text("morgen") }
         if day == fireDay.adding(days: -1, calendar: calendar) { return text("gestern") }
+        return nil
+    }
+
+    /// The weekday and date of another day: "Mi., 18.11.".
+    private func dateText(_ day: PlanDay) -> String {
+        let weekday = DateText.shortWeekday(day, calendar: calendar, locale: locale)
+        return "\(weekday), \(DateText.numericDay(day, calendar: calendar, locale: locale))"
+    }
+
+    private func dayText(_ day: PlanDay, fire: Date) -> String {
+        if let relative = relativeDayText(day, fire: fire) { return relative }
         let weekday = DateText.shortWeekday(day, calendar: calendar, locale: locale)
         let date = DateText.numericDay(day, calendar: calendar, locale: locale)
         return text("am \(weekday), \(date)")
+    }
+
+    /// The day after "seit": the relative form, otherwise the date without "am" ("Seit Mi., 18.11. fällig").
+    private func sinceDayText(_ day: PlanDay, fire: Date) -> String {
+        relativeDayText(day, fire: fire) ?? dateText(day)
     }
 }

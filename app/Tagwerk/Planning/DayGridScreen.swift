@@ -53,6 +53,11 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @State private var nowAlignedDay: PlanDay?
     @State private var nowAlignmentEnds = Date.distantPast
     @State private var userScrolled = false
+    /// The last `nowAlignmentToken` this screen acted on ("Heute", return after a longer absence).
+    @State private var seenNowToken = 0
+    /// A day opened by a jump: scrolls to its first entry (else the work start) within `openingEnds`, like "now".
+    @State private var openingDay: PlanDay?
+    @State private var openingEnds = Date.distantPast
 
     var body: some View {
         ScrollView {
@@ -97,7 +102,8 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             .padding(.horizontal)
             .padding(.bottom, 8)
         }
-        .task(id: OpenKey(day: plan.day, canvasTop: Int(canvasTopInContent.rounded()), isMeasured: canvasFrame.height > 0 && scrollFrame.height > 0)) {
+        .task(id: OpenKey(day: plan.day, canvasTop: Int(canvasTopInContent.rounded()), isMeasured: canvasFrame.height > 0 && scrollFrame.height > 0,
+                          viewport: Int(scrollFrame.height.rounded()), nowToken: model.nowAlignmentToken, opening: model.pendingOpeningDay)) {
             scrollToNowOnOpening()
         }
         .task(id: edgeScroll) {
@@ -132,12 +138,22 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         /// Grid top in the scroll content, rounded: changes when the content above it grows.
         let canvasTop: Int
         let isMeasured: Bool
+        /// Height of the visible grid, rounded: the target is a third of it, so a change of it while aligning aligns again.
+        /// Without it "Heute" aligned to a stale height when the bar re-laid out after the title width was measured (PL16b).
+        let viewport: Int
+        /// "Heute" or a return after a longer absence: aligns to "now" again.
+        let nowToken: Int
+        /// A jump to a day that is not today: the day to open.
+        let opening: PlanDay?
     }
 
     /// Opening today puts the current time at a third of the visible height. It repeats while the content above
     /// the grid is still loading (a few seconds at most) and stops at the first scroll by the user.
     private func scrollToNowOnOpening() {
-        guard !isPreview, canvasFrame.height > 0, scrollFrame.height > 0 else { return }
+        guard !isPreview else { return }
+        takeOverAlignmentRequests()
+        guard canvasFrame.height > 0, scrollFrame.height > 0 else { return }
+        if scrollToOpeningPosition() { return }
         if openedDay == nil { openedDay = plan.day }
         guard NowMarker.alignsOnOpening(openedDay: openedDay, shownDay: plan.day, today: model.today),
               let minutes = NowMarker.minutes(now: model.now(), day: plan.day, calendar: model.calendar) else { return }
@@ -153,6 +169,50 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                                             inset: Double(TimelineCanvas.lineInset), canvasTop: Double(canvasTopInContent),
                                             viewportHeight: Double(scrollFrame.height))
         scrollPosition.scrollTo(y: CGFloat(target))
+    }
+
+    /// "Heute" and the return after a longer absence align to "now" as when the day was opened (PL4b); a jump to
+    /// another day is taken over from the model, which hands it out once.
+    private func takeOverAlignmentRequests() {
+        if seenNowToken != model.nowAlignmentToken {
+            seenNowToken = model.nowAlignmentToken
+            if model.anchor == model.today {
+                openedDay = model.anchor
+                nowAlignedDay = nil
+                userScrolled = false
+            }
+        }
+        if let day = model.pendingOpeningDay {
+            model.openingHandled()
+            openingDay = day
+            openingEnds = Date.now.addingTimeInterval(3)
+            userScrolled = false
+        }
+        // Paging away from the opened day ends the request.
+        if let openingDay, openingDay != model.anchor { self.openingDay = nil }
+    }
+
+    /// The day opened by a jump starts at its first entry, else at the start of work. Returns whether the request is
+    /// still open (the plan of that day may not have arrived yet); the scroll repeats while the content above grows.
+    private func scrollToOpeningPosition() -> Bool {
+        guard let openingDay else { return false }
+        guard Date.now < openingEnds, !userScrolled else {
+            self.openingDay = nil
+            return false
+        }
+        guard plan.day == openingDay else { return true }
+        let dayStart = plan.day.startDate(in: model.calendar)
+        let firstStart = (plan.events.filter { !$0.isAllDay } + plan.blocks)
+            .map { max(0, Int($0.start.timeIntervalSince(dayStart) / 60)) }.min()
+        guard let minutes = NowMarker.openingMinutes(firstEntryStart: firstStart,
+                                                     workStart: model.workHours(on: plan.day)?.startMinutes) else { return true }
+        let shown = canvas.shownRange
+        guard NowMarker.position(nowMinutes: minutes, shown: shown) != nil else { return true }
+        let target = NowMarker.scrollTarget(nowMinutes: minutes, shown: shown, hourHeight: Double(TimelineCanvas.hourHeight),
+                                            inset: Double(TimelineCanvas.lineInset), canvasTop: Double(canvasTopInContent),
+                                            viewportHeight: Double(scrollFrame.height))
+        scrollPosition.scrollTo(y: CGFloat(target))
+        return true
     }
 
     // MARK: Canvas
@@ -256,22 +316,22 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 6))) {
                 if !toSchedule.isEmpty {
                     let rest = toSchedule.compactMap { model.sessionProgress[$0.id]?.remaining }.reduce(0, +)
-                    Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.green)
+                    Text("Rest \(CapacityText.duration(rest))").font(.subheadline.weight(.semibold)).foregroundStyle(.greenText)
                 }
                 Text("Ohne Uhrzeit").font(.subheadline.weight(.semibold))
                 Text(toSchedule.isEmpty ? "\(planned.count) · \(CapacityText.duration(minutes))" : "\(planned.count)")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
                 if !openToday.isEmpty {
-                    Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondary)
+                    Text(toSchedule.isEmpty ? "+\(openToday.count) offen" : "+\(openToday.count)").font(.caption).foregroundStyle(.secondaryText)
                 }
                 if !leftovers.isEmpty {
                     Text("\(leftovers.count) von heute").font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
                 }
                 if !overdueToday.isEmpty {
-                    Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    Text("\(overdueToday.count) überfällig").font(.caption.weight(.semibold)).foregroundStyle(.orangeText)
                 }
                 if !stacked { Spacer() }
-                Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondary)
+                Image(systemName: panelExpanded ? "chevron.down" : "chevron.up").foregroundStyle(.secondaryText)
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 52)
@@ -287,7 +347,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @ViewBuilder
     private func panelSection(_ title: String, _ tasks: [TaskItem], commit: Commit?, isOverdue: Bool = false) -> some View {
         if !tasks.isEmpty {
-            Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? .orange : .secondary)
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(isOverdue ? Color.orangeText : Color.secondaryText)
                 .padding(.top, 8).padding(.bottom, 2)
             ForEach(tasks) { task in panelRow(task, commit: commit, isOverdue: isOverdue) }
         }
@@ -330,11 +390,11 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title).font(.subheadline).lineLimit(2)
-                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
             }
             Spacer(minLength: 4)
             if let progress = model.sessionProgress[task.id], toScheduleIDs.contains(task.id) {
-                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.greenText)
             }
             if let priority = task.priority {
                 Text(priority.label).font(.caption2.weight(.semibold))
@@ -385,7 +445,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     /// Drags at once (no hold), so the list itself keeps scrolling; the preview starts after 8 pt.
     private func grip(_ task: TaskItem) -> some View {
         Image(systemName: "line.3.horizontal")
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
             .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("screen"))
@@ -457,7 +517,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         let events = selectedEvents
         return VStack(alignment: .leading, spacing: 8) {
             Text(events.isEmpty ? "Termine antippen, um sie auszuwählen"
-                 : "\(events.count) ausgewählt · „Frei“ gibt \(CapacityText.duration(model.busyMinutes(of: events))) frei")
+                 : "\(events.count) ausgewählt · „Frei“ gibt \(CapacityText.duration(model.freedMinutes(of: events, in: plan))) frei")
                 .font(.subheadline)
             HStack {
                 Button("Alle Termine") { selection = Set(plan.events.filter { !$0.isAllDay }.map(\.id)) }
@@ -525,7 +585,7 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         return VStack(alignment: .leading, spacing: 8) {
             Label("Derselbe Termin?", systemImage: "rectangle.on.rectangle").font(.subheadline.weight(.semibold))
             Text("„\(suggestion.placeholderTitle)“ aus „\(calendarName)“ liegt zur selben Zeit wie „\(kept?.title ?? "")“.")
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
             Toggle("Künftig immer bei „\(suggestion.placeholderTitle)“ aus „\(calendarName)“",
                    isOn: Binding(get: { alwaysMerge.contains(suggestion.id) },
                                  set: { on in if on { alwaysMerge.insert(suggestion.id) } else { alwaysMerge.remove(suggestion.id) } }))

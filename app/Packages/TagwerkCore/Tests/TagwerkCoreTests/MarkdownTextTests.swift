@@ -124,4 +124,129 @@ struct MarkdownTextTests {
     @Test func togglingCheckbox_keepsWindowsLineEndings() {
         #expect(MarkdownText.togglingCheckbox(at: 0, in: "- [ ] a\r\n- [ ] b") == "- [x] a\r\n- [ ] b")
     }
+
+    // MARK: Replacing attachment IDs
+
+    @Test func replacingAttachmentIDs_imageAndFileReference() {
+        let oldImage = UUID(), oldFile = UUID(), newImage = UUID(), newFile = UUID()
+        let text = "Foto\n![Dish](attachment:\(oldImage.uuidString))\nSiehe [Rechnung.pdf](attachment:\(oldFile.uuidString.lowercased())) und noch einmal ![Dish](attachment:\(oldImage.uuidString))"
+        let result = MarkdownText.replacingAttachmentIDs(in: text, with: [oldImage: newImage, oldFile: newFile])
+        #expect(result == "Foto\n![Dish](attachment:\(newImage.uuidString))\nSiehe [Rechnung.pdf](attachment:\(newFile.uuidString)) und noch einmal ![Dish](attachment:\(newImage.uuidString))")
+        #expect(MarkdownText.attachmentIDs(in: result) == [newImage, newFile])
+    }
+
+    @Test func replacingAttachmentIDs_unknownIDStays() {
+        let known = UUID(), unknown = UUID(), replacement = UUID()
+        let text = "[a](attachment:\(known.uuidString)) [b](attachment:\(unknown.uuidString)) https://example.com/attachment:\(known.uuidString)"
+        let result = MarkdownText.replacingAttachmentIDs(in: text, with: [known: replacement])
+        #expect(result == "[a](attachment:\(replacement.uuidString)) [b](attachment:\(unknown.uuidString)) https://example.com/attachment:\(known.uuidString)")
+        #expect(MarkdownText.replacingAttachmentIDs(in: text, with: [:]) == text)
+    }
+
+    @Test func renamingReference_replacesTheLabelOfOneAttachment() {
+        let scan = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let other = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!
+        let text = "Vor\n[Scan 20.11.2026](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)\n"
+            + "Nochmal [Scan 20.11.2026](ATTACHMENT:3f2504e0-4f89-41d3-9a0c-0305e82c3301) und [Link](https://example.com)"
+        let renamed = MarkdownText.renamingReference(of: scan, to: "Mietvertrag [neu]", in: text)
+        #expect(renamed == "Vor\n[Mietvertrag \\[neu\\]](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)\n![Bild](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3302)\n"
+            + "Nochmal [Mietvertrag \\[neu\\]](ATTACHMENT:3f2504e0-4f89-41d3-9a0c-0305e82c3301) und [Link](https://example.com)")
+        #expect(MarkdownText.attachmentIDs(in: renamed) == [scan, other])
+        // Nothing to rename: the text stays as it is.
+        #expect(MarkdownText.renamingReference(of: UUID(), to: "X", in: text) == text)
+    }
+
+    @Test func renamingReference_keepsPictureReferencesAndEscapedLabels() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let original = MarkdownText.reference(for: id, name: "Plan [v2] (neu).pdf", isImage: false)
+        let renamed = MarkdownText.renamingReference(of: id, to: "Anlage", in: "a " + original + " b")
+        #expect(renamed == "a [Anlage](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301) b")
+        let picture = MarkdownText.reference(for: id, name: "Zeichnung", isImage: true)
+        #expect(MarkdownText.renamingReference(of: id, to: "Skizze", in: picture) == "![Skizze](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)")
+    }
+
+    @Test func insertRecognizedText_putsParagraphBelowReference() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let reference = "[Scan](attachment:3F2504E0-4F89-41D3-9A0C-0305E82C3301)"
+        // Between two lines: the paragraph gets blank lines on both sides.
+        #expect(MarkdownText.insertingParagraph("Erkannt\nin zwei Zeilen", belowReferenceTo: id, in: "Vor\n\(reference)\nNach")
+            == "Vor\n\(reference)\n\nErkannt\nin zwei Zeilen\n\nNach")
+        // At the end of the text.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: id, in: reference) == "\(reference)\n\nErkannt")
+        // With a blank line below the reference already.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: id, in: "\(reference)\n\nNach") == "\(reference)\n\nErkannt\n\nNach")
+        // Surrounding whitespace of the paragraph goes.
+        #expect(MarkdownText.insertingParagraph("  Erkannt \n\n", belowReferenceTo: id, in: reference) == "\(reference)\n\nErkannt")
+        // No reference, another attachment or no text: nothing changes.
+        #expect(MarkdownText.insertingParagraph("Erkannt", belowReferenceTo: UUID(), in: reference) == reference)
+        #expect(MarkdownText.insertingParagraph("  ", belowReferenceTo: id, in: reference) == reference)
+    }
+
+    @Test func removingReference_dropsTheLineOfAPictureReference() {
+        let id = UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3301")!
+        let reference = MarkdownText.reference(for: id, name: "Zeichnung", isImage: true)
+        #expect(MarkdownText.removingReference(to: id, in: "Vor\n\(reference)\nNach") == "Vor\nNach")
+        #expect(MarkdownText.removingReference(to: id, in: reference) == "")
+        #expect(MarkdownText.removingReference(to: id, in: "Vor\n\(reference)") == "Vor")
+        // Text in the same line stays; other attachments and links stay.
+        let other = MarkdownText.reference(for: UUID(uuidString: "3F2504E0-4F89-41D3-9A0C-0305E82C3302")!, name: "Foto", isImage: true)
+        #expect(MarkdownText.removingReference(to: id, in: "Skizze: \(reference) fertig\n\(other)") == "Skizze:  fertig\n\(other)")
+        #expect(MarkdownText.removingReference(to: UUID(), in: "Vor\n\(reference)") == "Vor\n\(reference)")
+    }
+
+    // MARK: Task marker (BS5b)
+
+    private let checklist = """
+    Notizen
+
+    - [ ] Römer 3 nochmal lesen
+    - [x] Mit Lea sprechen → Aufgabe
+    - normaler Punkt
+    ```
+    - [ ] im Code
+    ```
+    1. [ ] Gebet notieren   
+    """
+
+    @Test func checkboxTitle_stripsBoxAndMarker() {
+        #expect(MarkdownText.checkboxTitle(at: 0, in: checklist) == "Römer 3 nochmal lesen")
+        #expect(MarkdownText.checkboxTitle(at: 1, in: checklist) == "Mit Lea sprechen")
+        #expect(MarkdownText.checkboxTitle(at: 2, in: checklist) == "Gebet notieren")
+        #expect(MarkdownText.checkboxTitle(at: 3, in: checklist) == nil)
+        #expect(MarkdownText.checkboxTitle(at: -1, in: checklist) == nil)
+        #expect(MarkdownText.checkboxTitle(at: 0, in: "- [ ] Task erledigen → Task") == "Task erledigen")
+    }
+
+    @Test func markingCheckboxAsTask_appendsOnce() {
+        let marked = MarkdownText.markingCheckboxAsTask(at: 0, in: checklist)
+        #expect(marked.contains("- [ ] Römer 3 nochmal lesen → Aufgabe\n"))
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: marked) == marked)
+        // A line that already has the marker, also the English one, stays as it is.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 1, in: checklist) == checklist)
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: "- [ ] A → Task") == "- [ ] A → Task")
+        // Trailing spaces make no double space; a missing position changes nothing.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 2, in: checklist).hasSuffix("1. [ ] Gebet notieren → Aufgabe"))
+        #expect(MarkdownText.markingCheckboxAsTask(at: 9, in: checklist) == checklist)
+    }
+
+    @Test func markingCheckboxAsTask_keepsOtherLines() {
+        let marked = MarkdownText.markingCheckboxAsTask(at: 0, in: checklist)
+        let before = checklist.split(separator: "\n", omittingEmptySubsequences: false)
+        let after = marked.split(separator: "\n", omittingEmptySubsequences: false)
+        #expect(before.count == after.count)
+        for (index, line) in before.enumerated() where index != 2 { #expect(after[index] == line) }
+        #expect(MarkdownText.checkboxCount(in: marked) == MarkdownText.checkboxCount(in: checklist))
+        // The line endings of the text stay.
+        #expect(MarkdownText.markingCheckboxAsTask(at: 0, in: "- [ ] A\r\n- [ ] B") == "- [ ] A → Aufgabe\r\n- [ ] B")
+    }
+
+    @Test func checkboxIndex_atLine_findsOnlyCheckboxes() {
+        #expect(MarkdownText.checkboxIndex(atLine: 3, in: checklist) == 0)
+        #expect(MarkdownText.checkboxIndex(atLine: 4, in: checklist) == 1)
+        #expect(MarkdownText.checkboxIndex(atLine: 5, in: checklist) == nil)
+        #expect(MarkdownText.checkboxIndex(atLine: 7, in: checklist) == nil, "inside a fence")
+        #expect(MarkdownText.checkboxIndex(atLine: 9, in: checklist) == 2)
+        #expect(MarkdownText.isCheckboxChecked(at: 0, in: checklist) == false && MarkdownText.isCheckboxChecked(at: 1, in: checklist) == true)
+        #expect(MarkdownText.isCheckboxChecked(at: 5, in: checklist) == nil)
+    }
 }

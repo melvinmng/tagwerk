@@ -5,9 +5,12 @@ import UIKit
 //
 // Building blocks for every screen with text input:
 // - A window-wide tap recognizer (installed once through `KeyboardDismissalInstaller`) closes the keyboard on a tap
-//   outside of any text input. Sheets live in the same window, so they are covered without extra work.
+//   outside of any text input. Sheets live in the same window, so they are covered without extra work. The keyboard closes one
+//   run loop turn after the tap, so a control that the tap hit (button, segment, row) performs its action first.
 // - `.keepsKeyboardOnTap()` marks an input bar at the screen edge: a tap on it (for example "send") keeps the keyboard open.
-// - `.keyboardDoneButton()` adds a "Fertig" button above the keyboard for fields without a Return key.
+// - `.keyboardDoneButton()` adds a keyboard symbol button ("Tastatur ausblenden") above the keyboard for fields without a
+//   closing Return key (multi-line fields, number pads). Single-line fields close with the Return key, which reads "Fertig"
+//   because the root view sets `.submitLabel(.done)` (#188 TA1a, TA2a).
 // - Scrolling closes the keyboard through `.scrollDismissesKeyboard(.interactively)` on each Form, List and ScrollView
 //   that contains inputs or sits above an input bar.
 
@@ -57,9 +60,16 @@ final class KeyboardDismissalController: NSObject, UIGestureRecognizerDelegate {
     private var isKeyboardVisible = false
     private weak var installedWindow: UIWindow?
     private var observers: [any NSObjectProtocol] = []
+    /// Runs the closing of the keyboard after the current touch sequence; replaced in tests.
+    private let schedule: (@escaping @MainActor () -> Void) -> Void
+    private let endEditing: (UIWindow) -> Void
 
-    init(keepZones: KeyboardKeepZones = .shared) {
+    init(keepZones: KeyboardKeepZones = .shared,
+         schedule: @escaping (@escaping @MainActor () -> Void) -> Void = { work in DispatchQueue.main.async(execute: work) },
+         endEditing: @escaping (UIWindow) -> Void = { $0.endEditing(true) }) {
         self.keepZones = keepZones
+        self.schedule = schedule
+        self.endEditing = endEditing
         super.init()
         recognizer.addTarget(self, action: #selector(handleTap(_:)))
         recognizer.cancelsTouchesInView = false
@@ -86,7 +96,18 @@ final class KeyboardDismissalController: NSObject, UIGestureRecognizerDelegate {
 
     @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
         guard recognizer.state == .ended else { return }
-        installedWindow?.endEditing(true)
+        dismissKeyboardAfterTouchSequence()
+    }
+
+    /// Closes the keyboard one run loop turn after the tap, not synchronously. The recognizer ends before the touched control gets
+    /// its touch-up. Closing the keyboard right there re-lays out the sheet (it shrinks to a smaller detent and the content moves),
+    /// so the control has left the touch location when the touch-up arrives and does not act: the first tap only closed the keyboard
+    /// (Bible Study book search, meal sheet segment). One turn later the touch sequence is complete and the control has acted.
+    func dismissKeyboardAfterTouchSequence() {
+        schedule { [weak self] in
+            guard let window = self?.installedWindow else { return }
+            self?.endEditing(window)
+        }
     }
 
     // MARK: UIGestureRecognizerDelegate
@@ -134,8 +155,9 @@ extension View {
     /// Marks an input bar (chat composer, shopping bar, quick capture): a tap on it keeps the keyboard open.
     func keepsKeyboardOnTap() -> some View { modifier(KeepsKeyboardOnTap()) }
 
-    /// Shows a "Fertig" button above the keyboard while this field has focus. For fields without a Return key
-    /// (multi-line fields, number pads). Apply it directly to the field; the focus state is kept internally.
+    /// Shows a keyboard symbol button above the keyboard while this field has focus. For fields without a closing Return key
+    /// (multi-line fields, number pads). Apply it directly to the field; the focus state is kept internally. The Return key of
+    /// the field inserts a line, so it keeps the label "return" instead of the app-wide "Fertig".
     func keyboardDoneButton() -> some View { modifier(OwnFocusDoneButton()) }
 
     /// Same as `keyboardDoneButton()` for a field that already tracks its focus.
@@ -178,7 +200,9 @@ private struct KeyboardDoneButton: ViewModifier {
             if focus.wrappedValue {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Fertig") { focus.wrappedValue = false }
+                    Button { focus.wrappedValue = false } label: { Image(systemName: "keyboard.chevron.compact.down") }
+                        .accessibilityLabel("Tastatur ausblenden")
+                        .accessibilityIdentifier(AccessibilityID.Common.hideKeyboard)
                 }
             }
         }
@@ -191,6 +215,7 @@ private struct OwnFocusDoneButton: ViewModifier {
     func body(content: Content) -> some View {
         content
             .focused($isFocused)
+            .submitLabel(.return)
             .modifier(KeyboardDoneButton(focus: $isFocused))
     }
 }

@@ -8,6 +8,8 @@ struct AIPlanBar: View {
     @Environment(AppEnvironment.self) private var environment
     let scope: PlanScope
     @State private var showsResult = false
+    /// The planning whose suggestions are talked about at once (task E2).
+    @State private var discussedBatch: UUID?
     /// Set in the preview of a neighbour page: the open suggestions of that day.
     @Environment(\.dayPageExtras) private var pageExtras
 
@@ -31,6 +33,9 @@ struct AIPlanBar: View {
             }
             .font(.subheadline)
             .sheet(isPresented: $showsResult) { PlanResultSheet(scope: scope) }
+            .sheet(item: Binding(get: { discussedBatch.map(DiscussedBatch.init) }, set: { discussedBatch = $0?.id })) { batch in
+                PlanBatchConversationSheet(batchID: batch.id)
+            }
         }
     }
 
@@ -39,21 +44,21 @@ struct AIPlanBar: View {
         if !environment.ai.isSignedIn {
             HStack(spacing: 6) {
                 Image(systemName: "sparkles")
-                Text("Mit ChatGPT planen: in Einstellungen › KI anmelden").foregroundStyle(.secondary)
+                Text("Mit ChatGPT planen: in Einstellungen › KI anmelden").foregroundStyle(.secondaryText)
             }
         } else if planner.isPlanning {
             HStack(spacing: 8) {
                 ProgressView()
-                Text(Self.progressText(scope)).foregroundStyle(.secondary)
+                Text(Self.progressText(scope)).foregroundStyle(.secondaryText)
                 Spacer()
                 Button("Abbrechen") { planner.cancel() }
             }
         } else {
             if case .failed(let message) = planner.state {
-                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orangeText)
             }
             if let notice = planner.notice {
-                Text(notice).foregroundStyle(.secondary)
+                Text(notice).foregroundStyle(.secondaryText)
             }
             if suggestions.isEmpty && unscheduledCount == 0 && riskCount == 0 {
                 actions(retry: isFailed)
@@ -88,32 +93,32 @@ struct AIPlanBar: View {
                         .map { $0.estimateMinutes ?? planning.defaultTaskMinutes }
                 }.reduce(0, +)
                 Label("\(moves.count) verschieben · \(CapacityText.duration(relieved)) entlastet", systemImage: "arrow.uturn.right")
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.purpleText)
             }
         }
         HStack {
             if suggestions.isEmpty {
-                Label("Keine Vorschläge", systemImage: "sparkles").foregroundStyle(.secondary)
+                Label("Keine Vorschläge", systemImage: "sparkles").foregroundStyle(.secondaryText)
             } else {
                 Label {
                     Text(suggestionText)
                 } icon: {
                     Image(systemName: "sparkles")
                 }
-                .foregroundStyle(.purple)
+                .foregroundStyle(.purpleText)
             }
             Spacer()
             Button("Verwerfen") { Task { await planner.dismissAll(scope: scope) } }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
         if unscheduledCount + riskCount > 0 {
             Button {
                 showsResult = true
             } label: {
                 HStack {
-                    Label(leftOutText, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                    Label(leftOutText, systemImage: "exclamationmark.triangle").foregroundStyle(.orangeText)
                     Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
                 }
             }
             .buttonStyle(.plain)
@@ -123,7 +128,7 @@ struct AIPlanBar: View {
     @ViewBuilder
     private func actions(retry: Bool) -> some View {
         if suggestions.contains(where: { $0.kind == .dayChange }) {
-            Text("„Alle übernehmen“ übernimmt zuerst die längere Arbeitszeit.").font(.caption).foregroundStyle(.secondary)
+            Text("„Alle übernehmen“ übernimmt zuerst die längere Arbeitszeit.").font(.caption).foregroundStyle(.secondaryText)
         }
         HStack(spacing: 10) {
             if !suggestions.isEmpty {
@@ -136,6 +141,10 @@ struct AIPlanBar: View {
                 .tint(.purple)
                 Button("Neu planen") { start() }
                     .buttonStyle(.bordered)
+                if let batch = batches.max(by: { $0.createdAt < $1.createdAt }) {
+                    Button("Alle Vorschläge besprechen") { discussedBatch = batch.id }
+                        .buttonStyle(.bordered)
+                }
             } else if retry {
                 Button("Erneut versuchen") { Task { await planner.retry() } }
                     .buttonStyle(.borderedProminent)
@@ -237,7 +246,7 @@ struct PlanResultSheet: View {
                 if !risks.isEmpty {
                     Section("Risiken") {
                         ForEach(risks, id: \.self) { risk in
-                            Label(risk, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                            Label(risk, systemImage: "exclamationmark.triangle").foregroundStyle(.orangeText)
                         }
                     }
                 }
@@ -274,9 +283,9 @@ struct UnscheduledRow: View {
                     if let priority = facts.priority { PriorityMark(mark: priority) }
                 }
                 SuggestionCapsules(facts: facts)
-                Text(entry.reason).font(.caption).foregroundStyle(.secondary)
+                Text(entry.reason).font(.caption).foregroundStyle(.secondaryText)
             }
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondaryText)
         }
         .contentShape(Rectangle())
     }
@@ -377,4 +386,9 @@ enum SuggestionText {
         if let minutes = suggestion.minutes { parts.append(CapacityText.duration(minutes)) }
         return parts.joined(separator: " · ")
     }
+}
+
+/// Identifies the planning of the sheet "Alle Vorschläge besprechen".
+private struct DiscussedBatch: Identifiable {
+    let id: UUID
 }

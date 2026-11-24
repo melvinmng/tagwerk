@@ -139,4 +139,86 @@ struct DeadlineReminderTests {
         event.isAllDay = true
         #expect(offsets(event) == [.at(daysBefore: 1, hour: 18, minute: 0)])
     }
+
+    // MARK: Calendar alarms next to the Tagwerk notifications (plan g1, ER5b)
+
+    private func alarmModel(_ event: CalendarEvent, alarms: [ReminderOffset] = []) -> DeadlineReminderModel {
+        DeadlineReminderModel(event: event, overrides: overrides, defaults: defaults, calendar: calendar, calendarAlarms: alarms)
+    }
+
+    @Test func save_writesBothLists() async throws {
+        let event = series()[0]
+        var event1 = event
+        event1.isRecurring = false
+        let reminders = alarmModel(event1, alarms: [.before(amount: 1, unit: .days)])
+        reminders.list.customize()
+        reminders.list.add(.before(amount: 1, unit: .weeks))
+        reminders.calendarAlarms.toggle(.before(amount: 15, unit: .minutes))
+        var written: [([ReminderOffset], EventSpan)] = []
+        try await reminders.saveAll(reach: .allFollowing) { alarms, span in written.append((alarms, span)) }
+        #expect(written.count == 1)
+        #expect(written.first?.0 == [.before(amount: 1, unit: .days), .before(amount: 15, unit: .minutes)])
+        #expect(written.first?.1 == .thisEvent)
+        #expect(offsets(event1) == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+    }
+
+    @Test func save_series_usesTheReachForTheAlarms() async throws {
+        let events = series()
+        for (reach, span) in [(DeadlineReminderModel.Reach.onlyThis, EventSpan.thisEvent), (.allFollowing, .futureEvents)] {
+            let reminders = alarmModel(events[1])
+            reminders.calendarAlarms.toggle(.before(amount: 1, unit: .days))
+            #expect(reminders.asksReach)
+            var spans: [EventSpan] = []
+            try await reminders.saveAll(reach: reach) { _, span in spans.append(span) }
+            #expect(spans == [span])
+        }
+    }
+
+    @Test func save_readOnlyEvent_writesOnlyTagwerk() async throws {
+        var event = series()[0]
+        event.isRecurring = false
+        event.isEditable = false
+        let reminders = alarmModel(event, alarms: [.before(amount: 1, unit: .days)])
+        #expect(!reminders.canEditCalendarAlarms)
+        #expect(reminders.calendarAlarmsReadOnlyReason != nil)
+        reminders.calendarAlarms.toggle(.before(amount: 15, unit: .minutes))
+        #expect(!reminders.hasChanges)
+        reminders.list.customize()
+        reminders.list.add(.before(amount: 1, unit: .weeks))
+        var writes = 0
+        try await reminders.saveAll(reach: .allFollowing) { _, _ in writes += 1 }
+        #expect(writes == 0)
+        #expect(offsets(event) == [.before(amount: 1, unit: .weeks), .before(amount: 2, unit: .hours)])
+    }
+
+    @Test func save_invitation_isReadOnly() {
+        var event = series()[0]
+        event.isInvitation = true
+        #expect(!alarmModel(event).canEditCalendarAlarms)
+    }
+
+    @Test func save_alarmFailure_leavesTheNotificationsAsTheyWere() async {
+        var event = series()[0]
+        event.isRecurring = false
+        let reminders = alarmModel(event)
+        reminders.list.customize()
+        reminders.list.add(.before(amount: 1, unit: .weeks))
+        reminders.calendarAlarms.toggle(.before(amount: 1, unit: .days))
+        struct Refused: Error {}
+        await #expect(throws: Refused.self) {
+            try await reminders.saveAll(reach: .allFollowing) { _, _ in throw Refused() }
+        }
+        #expect(offsets(event) == defaultList)
+    }
+
+    @Test func duplicates_areReported() {
+        var event = series()[0]
+        event.isRecurring = false
+        let reminders = alarmModel(event, alarms: [.before(amount: 3, unit: .days)])
+        #expect(reminders.duplicates.isEmpty)
+        reminders.list.customize()
+        reminders.list.add(.before(amount: 72, unit: .hours))
+        #expect(reminders.duplicates.count == 1)
+        #expect(reminders.duplicates.first?.offset == .before(amount: 72, unit: .hours))
+    }
 }

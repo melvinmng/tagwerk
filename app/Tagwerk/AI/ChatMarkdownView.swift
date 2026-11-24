@@ -53,7 +53,7 @@ private struct ChatBlockView: View {
         case .quote(let blocks):
             HStack(alignment: .top, spacing: 8) {
                 RoundedRectangle(cornerRadius: 1.5).fill(.secondary.opacity(0.5)).frame(width: 3)
-                ChatBlocksView(blocks: blocks, spokenSentence: spokenSentence, spacing: 6).foregroundStyle(.secondary)
+                ChatBlocksView(blocks: blocks, spokenSentence: spokenSentence, spacing: 6).foregroundStyle(.secondaryText)
             }
             .fixedSize(horizontal: false, vertical: true)
         case .list(let list):

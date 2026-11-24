@@ -16,11 +16,13 @@ struct WeekPlanningSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(Self.stepText(number: model.stepNumber, count: model.stepCount))
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                        ProgressView(value: Double(model.stepNumber), total: Double(model.stepCount))
+                        StepBar(number: model.stepNumber, count: model.stepCount)
+                        Text(model.stepTitle).font(.title2.weight(.bold))
+                        Text(Self.stepSubtitle(number: model.stepNumber, count: model.stepCount, next: model.nextStepTitle))
+                            .font(.subheadline).foregroundStyle(.secondaryText)
                     }
                     .accessibilityElement(children: .combine)
+                    .accessibilityValue(Self.stepText(number: model.stepNumber, count: model.stepCount))
                 }
                 switch model.step {
                 case .review: reviewSteps
@@ -50,8 +52,10 @@ struct WeekPlanningSheet: View {
             }
             Spacer()
             if model.isLastStep {
-                Button("Fertig") { close() }.buttonStyle(.borderedProminent)
+                Button("Fertig") { finish() }.buttonStyle(.borderedProminent)
             } else {
+                // Every step is optional: skipping goes on without saving what the step asked for.
+                Button("Überspringen") { model.skip() }.buttonStyle(.bordered)
                 Button("Weiter") { model.next() }.buttonStyle(.borderedProminent)
             }
         }
@@ -64,6 +68,12 @@ struct WeekPlanningSheet: View {
         environment.routines.closeSheet()
     }
 
+    /// "Fertig": the planning is done, so the card "Wochenplanung" in "Planen" stays away for today (RO15b).
+    private func finish() {
+        environment.routines.hideWeekPlanningCardToday()
+        close()
+    }
+
     // MARK: 1 Review
 
     @ViewBuilder
@@ -71,7 +81,7 @@ struct WeekPlanningSheet: View {
         let review = model.weekReview
         Section {
             if let result = review.review {
-                if result.isEmpty { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondary) }
+                if result.isEmpty { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondaryText) }
                 Text("\(result.completedTasks) Aufgaben")
                 Text(IntakeFormat.weekTraining(minutes: result.workoutMinutes, count: result.workoutCount,
                                                goal: result.goals.workoutMinutesPerWeek))
@@ -83,7 +93,7 @@ struct WeekPlanningSheet: View {
                 HStack {
                     Label(summary.habit.name, systemImage: summary.habit.symbol)
                     Spacer()
-                    Text(WeekReflectionSections.countText(summary)).monospacedDigit().foregroundStyle(.secondary)
+                    Text(WeekReflectionSections.countText(summary)).monospacedDigit().foregroundStyle(.secondaryText)
                 }
             }
         } header: {
@@ -112,14 +122,14 @@ struct WeekPlanningSheet: View {
     private var deadlineSteps: some View {
         Section {
             if model.deadlineTasks.isEmpty && model.deadlineEvents.isEmpty {
-                Text("Keine Fälligkeiten in der neuen Woche.").foregroundStyle(.secondary)
+                Text("Keine Fälligkeiten in der neuen Woche.").foregroundStyle(.secondaryText)
             }
             ForEach(model.deadlineTasks) { task in
                 HStack {
                     Text(task.title).lineLimit(2)
                     Spacer()
                     if let due = task.due {
-                        Text(Self.dayText(PlanDay(due), calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
+                        Text(Self.dayText(PlanDay(due), calendar: model.calendar)).font(.caption).foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -127,7 +137,7 @@ struct WeekPlanningSheet: View {
                 HStack {
                     Label(event.title, systemImage: "flag.fill").lineLimit(2)
                     Spacer()
-                    Text(Self.dayText(event.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondary)
+                    Text(Self.dayText(event.day, calendar: model.calendar)).font(.caption).foregroundStyle(.secondaryText)
                 }
             }
         } header: {
@@ -185,7 +195,7 @@ struct WeekPlanningSheet: View {
         }
         let habits = environment.habits.habits.filter { $0.pausedSince == nil }
         Section {
-            if habits.isEmpty { Text("Keine aktive Gewohnheit.").foregroundStyle(.secondary) }
+            if habits.isEmpty { Text("Keine aktive Gewohnheit.").foregroundStyle(.secondaryText) }
             ForEach(habits) { habit in Label(habit.name, systemImage: habit.symbol) }
             NavigationLink("Gewohnheiten bearbeiten") { HabitListView(model: environment.habits) }
         } header: {
@@ -200,8 +210,29 @@ struct WeekPlanningSheet: View {
         String(localized: "Schritt \(number) von \(count)")
     }
 
+    /// "Schritt 2 von 5 · danach: Fälligkeiten der neuen Woche"; on the last step only "Schritt 5 von 5".
+    static func stepSubtitle(number: Int, count: Int, next: String?) -> String {
+        guard let next else { return stepText(number: number, count: count) }
+        return String(localized: "Schritt \(number) von \(count) · danach: \(next)")
+    }
+
     /// "Mo. 23.11."
     static func dayText(_ day: PlanDay, calendar: Calendar) -> String {
         DateText.shortWeekday(day, calendar: calendar) + " " + DateText.numericDay(day, calendar: calendar)
+    }
+}
+
+/// Five segments, one per step: the steps up to the current one are filled (RO12b). Decoration; the value is on the heading.
+private struct StepBar: View {
+    let number: Int
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(1...max(1, count), id: \.self) { index in
+                Capsule().fill(index <= number ? Color.accentColor : Color(.systemFill)).frame(height: 6)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

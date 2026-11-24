@@ -1,4 +1,5 @@
 import SwiftUI
+import GitHubKit
 import TagwerkCore
 
 /// One task in the list: completion circle, title, due date, container and priority.
@@ -10,6 +11,8 @@ struct TaskRow: View {
     var isReadOnly = false
     /// Repeating task (reminder or local): marked with ↻ (design §13.8).
     var isRecurring = false
+    /// Own reminders, only while they differ from the default (plan g1, ER4b).
+    var reminderMark: ReminderMark?
     /// Title with highlighted passages (search); replaces the plain title, the issue number stays in front.
     var titleText: AttributedString?
     let onComplete: () -> Void
@@ -19,7 +22,7 @@ struct TaskRow: View {
             Button(action: onComplete) {
                 Image(systemName: isReadOnly ? "circle.dashed" : "circle")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .opacity(isReadOnly ? 0.45 : 1)
             }
             .buttonStyle(.plain)
@@ -40,9 +43,23 @@ struct TaskRow: View {
                         .fill(Color(hex: item.container.colorHex) ?? .accentColor)
                         .frame(width: 7, height: 7)
                     Text(item.container.name)
+                    if let progress {
+                        Text("·")
+                        Image(systemName: "circle.lefthalf.filled").imageScale(.small)
+                        Text(TaskRowText.statusText(progress))
+                    }
+                    if let reminderMark {
+                        Text("·")
+                        switch reminderMark {
+                        case .custom(let count):
+                            Label("\(count)", systemImage: "bell.fill").labelStyle(.titleAndIcon).imageScale(.small)
+                        case .none:
+                            Image(systemName: "bell.slash").imageScale(.small)
+                        }
+                    }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 4)
@@ -59,7 +76,8 @@ struct TaskRow: View {
         // One element per row (screen reader, Voice Control, audit): the circle, due date, priority and list were
         // separate elements. The circle stays a button for touch; "Erledigt" is an action of the row.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(TaskRowText.accessibilityLabel(item: item, isRecurring: isRecurring, now: now, calendar: calendar))
+        .accessibilityLabel(TaskRowText.accessibilityLabel(item: item, isRecurring: isRecurring, now: now, calendar: calendar,
+                                                           reminderMark: reminderMark))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: Text(isReadOnly ? "Nur lesbar, GitHub offline" : "Erledigt"), onComplete)
         .accessibilityIdentifier(AccessibilityID.Tasks.row(item.title))
@@ -82,19 +100,24 @@ struct TaskRow: View {
         return "#\(number) \(item.title)"
     }
 
+    /// GitHub issues in work show the stage of their project (GH4c).
+    private var progress: GitHubMapping.ProgressStatus? {
+        item.id.source == .github ? GitHubMapping.progressStatus(of: item.statuses) : nil
+    }
+
     private var dueColor: Color {
         switch section {
-        case .overdue: .red
-        case .today: .orange
-        default: .secondary
+        case .overdue: .redText
+        case .today: .orangeText
+        default: .secondaryText
         }
     }
 }
 
-/// The spoken text of a task row: title, due date, repeat, priority and list, in this order.
+/// The spoken text of a task row: title, due date, repeat, priority, list, project status and own reminders, in this order.
 enum TaskRowText {
     static func accessibilityLabel(item: TaskItem, isRecurring: Bool, now: Date, calendar: Calendar,
-                                   locale: Locale = .current) -> String {
+                                   reminderMark: ReminderMark? = nil, locale: Locale = .current) -> String {
         var parts = [item.title]
         if let due = item.due {
             let dueText = DueText.text(due, now: now, calendar: calendar, locale: locale)
@@ -103,6 +126,29 @@ enum TaskRowText {
         if isRecurring { parts.append(String(localized: "wiederkehrend")) }
         if let priority = item.priority { parts.append(String(localized: "Priorität \(priority.rawValue)")) }
         parts.append(item.container.name)
+        if item.id.source == .github, let progress = GitHubMapping.progressStatus(of: item.statuses) {
+            switch progress {
+            case .stage(let name): parts.append(String(localized: "Status \(name)"))
+            case .several: parts.append(statusText(progress))
+            }
+        }
+        if let reminderMark { parts.append(reminderText(reminderMark)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// "3 eigene Erinnerungen", "1 eigene Erinnerung" or "keine Erinnerungen".
+    static func reminderText(_ mark: ReminderMark) -> String {
+        switch mark {
+        case .custom(let count): count == 1 ? String(localized: "1 eigene Erinnerung") : String(localized: "\(count) eigene Erinnerungen")
+        case .none: String(localized: "keine Erinnerungen")
+        }
+    }
+
+    /// The stage in work, or the count of different stages: "In Progress", "2 Status".
+    static func statusText(_ status: GitHubMapping.ProgressStatus) -> String {
+        switch status {
+        case .stage(let name): name
+        case .several(let count): String(localized: "\(count) Status")
+        }
     }
 }

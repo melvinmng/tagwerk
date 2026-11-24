@@ -4,8 +4,9 @@ import TagwerkCore
 /// The notes of one folder (or of "Alle Notizen", "Zuletzt gelöscht"): search, sorting, selection, quick
 /// capture at the bottom, pinning, moving and deleting. Notes stay on this device. It has no navigation stack of its own.
 struct NotesListView: View {
-    @Environment(AppEnvironment.self) private var environment
+    @Environment(AppEnvironment.self) var environment
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
     let store: NoteStore
     let scope: NotesScope
 
@@ -13,20 +14,24 @@ struct NotesListView: View {
     @State private var draftWasDictated = false
     @State private var voice: VoiceInputModel?
     @State private var searchText = ""
-    @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<UUID>()
-    @State private var movingNoteIDs: [UUID] = []
+    @State var editMode: EditMode = .inactive
+    @State var selection = Set<UUID>()
+    @State var movingNoteIDs: [UUID] = []
     @State private var confirmsEmptyTrash = false
-    @State private var deletingForGood: [UUID] = []
+    @State var deletingForGood: [UUID] = []
     @State private var isStartingBibleStudy = false
+    @State private var endingSession: BibleSessionEndModel?
     @State private var isCreatingRecipe = false
+    @State private var importTarget: NotionImportTarget?
+    /// Notes that wait for the explanation before their first lock (`NoteLockIntroSheet`).
+    @State var lockIntroIDs: [UUID] = []
 
     init(store: NoteStore, scope: NotesScope = .all) {
         self.store = store
         self.scope = scope
     }
 
-    private var isTrash: Bool { scope == .trash }
+    var isTrash: Bool { scope == .trash }
 
     /// The system folder of the journal: it opens with "Heute schreiben".
     private var isJournal: Bool {
@@ -41,7 +46,7 @@ struct NotesListView: View {
     }
 
     /// The role of the shown folder, if it is a system folder.
-    private var folderRole: NoteFolderRole? {
+    var folderRole: NoteFolderRole? {
         if case .folder(let id) = scope { return store.folder(id: id)?.role }
         return nil
     }
@@ -49,9 +54,47 @@ struct NotesListView: View {
     /// Whether the quick capture bar is offered: not in the trash and not in folders that only the routines fill.
     private var allowsCapture: Bool { scope.allowsCapture && (folderRole?.acceptsOwnNotes ?? true) }
 
+    /// A private folder behind the lock shows the lock screen instead of its notes (NO10c, NL3a).
     var body: some View {
-        @Bindable var settings = environment.settings
+        let lock = environment.noteLock
+        let isFolderProtected: Bool = {
+            guard case .folder(let id) = scope else { return false }
+            return NoteProtection.isProtectedFolder(isPrivateFolder: NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info)).contains(id),
+                                                    settings: lock.protection)
+        }()
+        let isFolderConcealed = isFolderProtected && !lock.isUnlocked
+        Group {
+            if isFolderConcealed {
+                LockedContentView(kind: .folder) { _ = await lock.unlock(reason: NoteLock.reason) }
+                    .navigationTitle(title)
+                    .navigationBarTitleDisplayMode(.inline)
+            } else {
+                listBody
+            }
+        }
+        // The app switcher shows no list of a protected folder.
+        .overlay { if isFolderProtected, scenePhase != .active { LockCoverView() } }
+        // A hidden folder asks once when it appears; a failed or cancelled check leaves the lock screen standing (the system sheet
+        // may move the scene to inactive, so the scene phase is not part of the task id).
+        .task(id: isFolderConcealed) {
+            guard isFolderConcealed, scenePhase == .active else { return }
+            _ = await lock.unlock(reason: NoteLock.reason)
+        }
+        .noteLockIntro(ids: $lockIntroIDs, store: store)
+    }
+
+    @ViewBuilder private var listBody: some View {
         let notes = visibleNotes
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
+        // "Tagesstart" also lists the days that only have gratitude (NO14); they are display entries, not notes.
+        let gratitudeDays = folderRole == .morningRoutine && !isTrash ? environment.routines.gratitudeDays() : [:]
+        let morningEntries = folderRole == .morningRoutine && !isTrash
+            ? Self.morningEntries(notes: notes, gratitudeDays: gratitudeDays, query: searchText) : []
+        let notesByID = Dictionary(uniqueKeysWithValues: notes.map { ($0.id, $0) })
+        let settings = environment.settings
+        let sections = Self.sections(of: notes, order: settings.noteSortOrder,
+                                     groupsByDate: settings.noteGroupsByDate && !isTrash && folderRole?.noteKind == nil,
+                                     now: .now, calendar: environment.planning.calendar)
         let attachmentIndex = store.attachments?.index() ?? [:]
         List(selection: $selection) {
             if isJournal, !editMode.isEditing {
@@ -77,46 +120,74 @@ struct NotesListView: View {
                     .buttonStyle(.plain)
                 }
             }
-            if notes.isEmpty {
+            if notes.isEmpty, morningEntries.isEmpty {
                 Text(emptyText)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
+                if let target = notionImportTarget {
+                    Section {
+                        Button { importTarget = target } label: {
+                            Label("Aus Notion importieren", systemImage: "square.and.arrow.down").foregroundStyle(.tint)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
-            Section {
-                ForEach(notes, id: \.id) { card($0, attachmentIndex: attachmentIndex) }
-            } footer: {
-                Text(isTrash ? Self.trashFootnote : Self.listFootnote)
+            ForEach(sections) { section in
+                Section {
+                    if folderRole == .morningRoutine, !isTrash {
+                        ForEach(morningEntries, id: \.self) { entry in
+                            switch entry {
+                            case .note(let id, _):
+                                if let note = notesByID[id] { card(note, attachmentIndex: attachmentIndex, privateFolderIDs: privateFolderIDs) }
+                            case .gratitudeOnly(let day):
+                                gratitudeOnlyCard(day, gratitude: gratitudeDays[day] ?? [])
+                            }
+                        }
+                    } else {
+                        ForEach(section.notes, id: \.id) { card($0, attachmentIndex: attachmentIndex, privateFolderIDs: privateFolderIDs) }
+                    }
+                } header: {
+                    if let group = section.group {
+                        Text(Self.groupTitle(group, calendar: environment.planning.calendar)).textCase(nil)
+                    } else if isTrash, !notes.isEmpty {
+                        Text(Self.trashHeader).textCase(nil)
+                    }
+                } footer: {
+                    if !isTrash, section.id == sections.last?.id { Text(Self.listFootnote) }
+                }
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle(title)
+        .navigationTitle(editMode.isEditing ? Self.selectionTitle(selection.count) : title)
+        .navigationBarBackButtonHidden(editMode.isEditing)
         .searchable(text: $searchText, prompt: "Notizen durchsuchen")
         .environment(\.editMode, $editMode)
         .toolbar {
-            if !isTrash || !notes.isEmpty { ToolbarItem(placement: .topBarTrailing) { EditButton() } }
-            if !isTrash {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("Sortieren nach", selection: $settings.noteSortOrder) {
-                            Text("Bearbeitet").tag(NoteSortOrder.modified)
-                            Text("Erstellt").tag(NoteSortOrder.created)
-                            Text("Titel").tag(NoteSortOrder.title)
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                    }
-                    .accessibilityLabel("Sortieren")
-                }
-            } else if !notes.isEmpty {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Alle löschen", role: .destructive) { confirmsEmptyTrash = true }
-                }
-            }
             if editMode.isEditing {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(selection.isSuperset(of: notes.map(\.id)) && !notes.isEmpty ? "Keine auswählen" : "Alle auswählen") {
+                        toggleSelectAll(notes)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") { endSelection() }.fontWeight(.semibold)
+                }
                 ToolbarItemGroup(placement: .bottomBar) { selectionActions }
+            } else {
+                if isTrash, !notes.isEmpty {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Alle löschen", role: .destructive) { confirmsEmptyTrash = true }
+                    }
+                }
+                if !isTrash || !notes.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) { optionsMenu }
+                }
             }
         }
+        // The notes chat from this list; not in "Zuletzt gelöscht" and not in a private folder.
+        .noteAssistantEntry(NoteAssistantEntry.Target(scope: scope), store: store)
         .safeAreaInset(edge: .bottom) {
             if allowsCapture, !editMode.isEditing { captureBar }
         }
@@ -134,8 +205,15 @@ struct NotesListView: View {
         .sheet(isPresented: $isCreatingRecipe) {
             RecipeNoteSaveSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
         }
+        .sheet(item: $endingSession) { model in
+            BibleSessionEndSheet(model: model) {}
+        }
         .sheet(isPresented: $isStartingBibleStudy) {
             BibleStudyStartSheet(store: store) { noteID in environment.tasksPath.append(.note(noteID)) }
+        }
+        .sheet(item: $importTarget) { target in
+            // The list is already the folder, so "Zum Tagebuch" only closes the sheet.
+            NotionImportView(fixedTarget: target)
         }
         .sheet(isPresented: movingBinding) {
             NoteFolderPickerSheet(store: store, title: "Bewegen nach") { target in
@@ -148,8 +226,10 @@ struct NotesListView: View {
             store.purgeExpired(calendar: environment.planning.calendar)
             prepareVoice()
             startRequestedDictation()
+            openRequestedBibleStudyStart()
         }
         .onChange(of: environment.router.dictationRequested) { _, _ in startRequestedDictation() }
+        .onChange(of: environment.router.bibleStudyStartRequested) { _, _ in openRequestedBibleStudyStart() }
         .onDisappear { voice?.cancel() }
     }
 
@@ -167,16 +247,27 @@ struct NotesListView: View {
                     Button { environment.tasksPath.append(.note(session.noteID)) } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Self.sessionTitle(session)).foregroundStyle(.primary)
-                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondary)
+                            Text("Sitzung läuft").font(.caption).foregroundStyle(.secondaryText)
                         }
                     }
                     .buttonStyle(.plain)
                     Spacer()
-                    Button("Abschließen") { store.completeSession(session.id) }
+                    Button("Abschließen") { complete(session) }
                         .buttonStyle(.bordered)
+                        .frame(minHeight: 44)
                 }
             }
         }
+    }
+
+    /// "Abschließen" of an open session asks "Bis wohin gelesen?" like the bar in the note; a passage typed as free text has
+    /// nothing to ask for.
+    private func complete(_ session: BibleStudySessionRecord) {
+        guard let model = BibleSessionEndModel(session: session, store: store) else {
+            store.completeSession(session.id)
+            return
+        }
+        if model.asksForEnd { endingSession = model } else { model.complete() }
     }
 
     /// "Römer 3,21-31".
@@ -198,11 +289,19 @@ struct NotesListView: View {
         environment.tasksPath.append(.note(entry.id))
     }
 
-    private var visibleNotes: [NoteRecord] {
-        let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder)
-            .filter { NoteText.matches($0.text, query: searchText) }
+    var visibleNotes: [NoteRecord] {
+        let privateFolderIDs = NoteFolderRules.privateFolderIDs(in: store.folders().map(\.info))
+        let notes = store.notes(scope.filter, sortedBy: environment.settings.noteSortOrder,
+                                ascending: environment.settings.noteSortAscending)
+            .filter { matchesSearch($0, privateFolderIDs: privateFolderIDs) }
         // The entries of a routine folder are days: newest day first, not by change date.
         return folderRole?.noteKind == nil ? notes : Self.byDayDescending(notes)
+    }
+
+    /// The search field of the list: a hidden note matches by its title only (NL4a), everything else by its text.
+    private func matchesSearch(_ note: NoteRecord, privateFolderIDs: Set<UUID>) -> Bool {
+        let isConcealed = environment.noteLock.isConcealed(note, privateFolderIDs: privateFolderIDs)
+        return Self.matchesSearch(note, gratitude: isConcealed ? [] : gratitude(of: note), query: searchText, titleOnly: isConcealed)
     }
 
     private var title: String {
@@ -214,45 +313,33 @@ struct NotesListView: View {
         }
     }
 
+    /// TB4b: the empty journal or Bible Study folder offers the import with its target already chosen.
+    private var notionImportTarget: NotionImportTarget? {
+        guard searchText.isEmpty, !isTrash, !editMode.isEditing else { return nil }
+        return isJournal ? .journal : isBibleStudy ? .bibleStudy : nil
+    }
+
     private var emptyText: String {
         if !searchText.isEmpty { return String(localized: "Keine Notizen gefunden.") }
         return isTrash ? String(localized: "Keine gelöschten Notizen.")
                        : String(localized: "Noch keine Notizen. Schreib oder diktiere unten die erste.")
     }
 
-    @ViewBuilder private var selectionActions: some View {
-        if isTrash {
-            Button("Wiederherstellen") {
-                for id in selection { store.restore(id) }
-                selection = []
-            }
-            .disabled(selection.isEmpty)
-            Spacer()
-            Button("Löschen", role: .destructive) { deletingForGood = Array(selection) }
-                .disabled(selection.isEmpty)
-        } else {
-            Button("Bewegen") { movingNoteIDs = Array(selection) }
-                .disabled(selection.isEmpty)
-            Spacer()
-            Button("Löschen", role: .destructive) {
-                for id in selection { store.trash(id) }
-                selection = []
-            }
-            .disabled(selection.isEmpty)
-        }
-    }
-
     // MARK: Cards
 
-    private func card(_ note: NoteRecord, attachmentIndex: [UUID: NoteAttachmentRecord]) -> some View {
-        let attachmentInfo = NoteAttachmentStore.cardInfo(text: note.text, index: attachmentIndex)
+    private func card(_ note: NoteRecord, attachmentIndex: [UUID: NoteAttachmentRecord], privateFolderIDs: Set<UUID>) -> some View {
+        let lock = environment.noteLock
+        // A hidden note shows its title only: no preview, no thumbnail, no count of attachments (NL3a).
+        let isConcealed = lock.isConcealed(note, privateFolderIDs: privateFolderIDs)
+        let attachmentInfo = isConcealed ? NoteAttachmentStore.CardInfo() : NoteAttachmentStore.cardInfo(text: note.text, index: attachmentIndex)
         let isJournalEntry = note.kind == .journal
         // The entries of the routine folders are named by their day.
         let isRoutineEntry = folderRole?.noteKind != nil
         let calendar = environment.planning.calendar
         let title = isJournalEntry ? Self.journalTitle(note, calendar: calendar)
             : isRoutineEntry ? Self.routineTitle(note, calendar: calendar) : NoteText.title(note.text)
-        let preview = isJournalEntry ? JournalTemplate.contentLines(note.text).prefix(2).joined(separator: "\n")
+        let preview = isConcealed ? Self.lockedPreview()
+            : isJournalEntry ? JournalTemplate.contentLines(note.text).prefix(2).joined(separator: "\n")
             : isRoutineEntry ? Self.routinePreview(note, gratitude: gratitude(of: note))
             : NoteText.preview(note.text)
         return Button {
@@ -266,21 +353,28 @@ struct NotesListView: View {
                         Text(title).font(.body.weight(.semibold)).foregroundStyle(.primary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                         Spacer(minLength: 4)
+                        // The open lock marks a locked note that is unlocked (or whose protection is off) right now.
+                        if note.isLocked, !isConcealed {
+                            Image(systemName: "lock.open").font(.footnote).foregroundStyle(.secondaryText).accessibilityHidden(true)
+                        }
+                        if isTrash, let deletedAt = note.deletedAt { trashBadge(deletedAt: deletedAt) }
                         if attachmentInfo.fileCount > 0 {
                             Label("\(attachmentInfo.fileCount)", systemImage: "paperclip")
-                                .font(.footnote).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                                .font(.footnote).foregroundStyle(.secondaryText).labelStyle(.titleAndIcon)
                                 .accessibilityLabel("Dateien angehängt: \(attachmentInfo.fileCount)")
                         }
                         if note.isPinned {
-                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondary)
+                            Image(systemName: "pin.fill").font(.footnote).foregroundStyle(.secondaryText)
                                 .accessibilityLabel("Angeheftet")
                         }
                     }
-                    if !preview.isEmpty {
-                        Text(preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    if isConcealed {
+                        Label(preview, systemImage: "lock.fill").font(.subheadline).foregroundStyle(.secondaryText)
+                    } else if !preview.isEmpty {
+                        Text(preview).font(.subheadline).foregroundStyle(.secondaryText).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     }
                     Text(footerText(for: note))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondaryText)
                 }
                 if let imageID = attachmentInfo.firstImageID, let thumbnail = store.attachments?.thumbnail(for: imageID) {
                     Image(uiImage: thumbnail).resizable().scaledToFill().frame(width: 48, height: 48)
@@ -294,14 +388,15 @@ struct NotesListView: View {
         // Without this the whole row takes the accent colour of a button (#173).
         .buttonStyle(.plain)
         .tag(note.id)
+        .accessibilityValue(note.isLocked ? (isConcealed ? Text("gesperrt") : Text("entsperrt")) : Text(""))
         .swipeActions(edge: .trailing) {
             if isTrash {
-                Button { deletingForGood = [note.id] } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+                Button { lock.afterUnlock(whenConcealed: isConcealed) { deletingForGood = [note.id] } } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
             } else {
-                // The trash is the way back, so deleting does not ask.
-                Button { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
+                // The trash is the way back, so deleting does not ask; a hidden note asks the device owner first (rule 7).
+                Button { lock.afterUnlock(whenConcealed: isConcealed) { store.trash(note.id) } } label: { Label("Löschen", systemImage: "trash") }.tint(.red)
                 if note.kind == .free {
-                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }.tint(.indigo)
+                    Button { lock.afterUnlock(whenConcealed: isConcealed) { movingNoteIDs = [note.id] } } label: { Label("Bewegen", systemImage: "folder") }.tint(.indigo)
                 }
             }
         }
@@ -320,18 +415,44 @@ struct NotesListView: View {
         .contextMenu {
             if isTrash {
                 Button { store.restore(note.id) } label: { Label("Wiederherstellen", systemImage: "arrow.uturn.backward") }
-                Button(role: .destructive) { deletingForGood = [note.id] } label: { Label("Endgültig löschen", systemImage: "trash") }
+                Button(role: .destructive) { lock.afterUnlock(whenConcealed: isConcealed) { deletingForGood = [note.id] } } label: { Label("Endgültig löschen", systemImage: "trash") }
             } else {
                 Button { store.setPinned(note.id, !note.isPinned) } label: {
                     Label(note.isPinned ? "Anheftung lösen" : "Anheften", systemImage: note.isPinned ? "pin.slash" : "pin")
                 }
                 if note.kind == .free {
-                    Button { movingNoteIDs = [note.id] } label: { Label("Bewegen", systemImage: "folder") }
+                    Button { lock.afterUnlock(whenConcealed: isConcealed) { movingNoteIDs = [note.id] } } label: { Label("Bewegen", systemImage: "folder") }
                 }
-                ShareLink(item: note.text) { Label("Teilen", systemImage: "square.and.arrow.up") }
-                Button(role: .destructive) { store.trash(note.id) } label: { Label("Löschen", systemImage: "trash") }
+                lockItems(note, privateFolderIDs: privateFolderIDs)
+                // The text of a hidden note is not shared.
+                if !isConcealed {
+                    ShareLink(item: note.text) { Label("Teilen", systemImage: "square.and.arrow.up") }
+                }
+                Button(role: .destructive) { lock.afterUnlock(whenConcealed: isConcealed) { store.trash(note.id) } } label: { Label("Löschen", systemImage: "trash") }
             }
         }
+    }
+
+    /// The card of a day that only has gratitude: the day, the gratitude and where it comes from. A tap opens its page;
+    /// the entry cannot be pinned, moved, selected or deleted (the gratitude is cleared in the morning routine).
+    private func gratitudeOnlyCard(_ day: PlanDay, gratitude: [String]) -> some View {
+        let calendar = environment.planning.calendar
+        return Button {
+            guard !editMode.isEditing else { return }
+            environment.tasksPath.append(.morningDay(day))
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Self.routineTitle(day: day, calendar: calendar)).font(.body.weight(.semibold)).foregroundStyle(.primary)
+                Text(Self.gratitudeLine(gratitude)).font(.subheadline).foregroundStyle(.secondaryText)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                Text(Self.gratitudeOnlyFooter(day: day, calendar: calendar)).font(.caption).foregroundStyle(.secondaryText)
+            }
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .selectionDisabled()
     }
 
     private func gratitude(of note: NoteRecord) -> [String] {
@@ -339,13 +460,24 @@ struct NotesListView: View {
         return environment.routines.value(day).gratitude
     }
 
-    /// In the trash the footer names the days left; elsewhere the usual change date or origin.
+    /// In the trash the footer names the day of the deletion and the folder; elsewhere the usual change date or origin.
     private func footerText(for note: NoteRecord) -> String {
-        guard isTrash, let deletedAt = note.deletedAt else {
-            return Self.footer(for: note, now: .now, calendar: environment.planning.calendar)
-        }
+        guard isTrash else { return Self.footer(for: note, now: .now, calendar: environment.planning.calendar) }
+        let folderName = note.folderID.flatMap { store.folder(id: $0)?.name } ?? String(localized: "Notizen")
+        return Self.trashFooter(for: note, folderName: folderName, now: .now, calendar: environment.planning.calendar)
+    }
+
+    /// "noch 3 Tage"; from the last week on with the clock and in the warning colour, so the colour is not the only sign.
+    private func trashBadge(deletedAt: Date) -> some View {
         let days = NoteFolderRules.daysLeft(deletedAt: deletedAt, now: .now, calendar: environment.planning.calendar)
-        return String(localized: "Noch \(days) Tage")
+        let isUrgent = days < Self.trashWarningDays
+        return HStack(spacing: 3) {
+            if isUrgent { Image(systemName: "clock") }
+            Text(Self.daysLeftText(days))
+        }
+        .font(.footnote)
+        .foregroundStyle(isUrgent ? Color.orangeText : Color.secondaryText)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Quick capture
@@ -362,7 +494,7 @@ struct NotesListView: View {
                         .padding(.vertical, 10)
                     if environment.settings.voiceInputEnabled, let voice {
                         VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                              language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                              language: environment.settings.dictationLanguage(at: .notes))
                     }
                     if !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Button {
@@ -398,9 +530,16 @@ struct NotesListView: View {
         if wanted, allowsCapture, environment.settings.voiceInputEnabled { voice?.tapMicrophone() }
     }
 
+    /// The Bible Study reminder was tapped: the list of the Bible Study folder opens the start sheet. Another list that is still
+    /// on screen while the path changes leaves the request alone.
+    private func openRequestedBibleStudyStart() {
+        guard isBibleStudy, environment.router.bibleStudyStartRequested else { return }
+        if environment.router.takeBibleStudyStartRequest() { isStartingBibleStudy = true }
+    }
+
     private func prepareVoice() {
         guard voice == nil else { return }
-        let model = VoiceInputFactory.make(environment)
+        let model = VoiceInputFactory.make(environment, place: .notes)
         model.readDraft = { draft }
         model.writeDraft = { spoken in
             draft = spoken
@@ -471,9 +610,38 @@ extension NotesListView {
 
     /// The title of an entry in a routine folder: its day ("Do., 19. Nov.").
     static func routineTitle(_ note: NoteRecord, calendar: Calendar) -> String {
-        let day = note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar)
+        routineTitle(day: note.dayKey.flatMap(NoteDayKey.day) ?? PlanDay(date: note.createdAt, calendar: calendar), calendar: calendar)
+    }
+
+    /// The title of a day in a routine folder ("Do., 19. Nov.").
+    static func routineTitle(day: PlanDay, calendar: Calendar) -> String {
         let style = Date.FormatStyle(locale: .current, calendar: calendar, timeZone: calendar.timeZone)
         return day.startDate(in: calendar).formatted(style.weekday(.abbreviated).day().month(.abbreviated))
+    }
+
+    /// A note matches by its text; an entry of "Tagesstart" also by the gratitude of its day.
+    /// `titleOnly` is for a hidden note: only its first line is searched.
+    static func matchesSearch(_ note: NoteRecord, gratitude: [String], query: String, titleOnly: Bool = false) -> Bool {
+        if titleOnly { return NoteText.matches(NoteText.title(note.text), query: query) }
+        // Text and gratitude are searched together, so a query of two words may find one in each.
+        return NoteText.matches(([note.text] + gratitude).joined(separator: "\n"), query: query)
+    }
+
+    /// Whether the gratitude of a day matches the search of the list; an empty search matches every day with gratitude.
+    static func matchesSearch(gratitude: [String], query: String) -> Bool {
+        !gratitude.isEmpty && NoteText.matches(gratitude.joined(separator: "\n"), query: query)
+    }
+
+    /// The entries of "Tagesstart" for the list: the notes (already filtered by the search) and the days with gratitude only
+    /// whose gratitude matches the search, days descending.
+    static func morningEntries(notes: [NoteRecord], gratitudeDays: [PlanDay: [String]], query: String) -> [RoutineFolderEntry<UUID>] {
+        let matching = Set(gratitudeDays.filter { matchesSearch(gratitude: $0.value, query: query) }.keys)
+        return RoutineFolderEntries.merge(notes: notes.map { (id: $0.id, day: $0.dayKey.flatMap(NoteDayKey.day)) }, gratitudeDays: matching)
+    }
+
+    /// "Tagesstart · 19.11. · nur Dankbarkeit".
+    static func gratitudeOnlyFooter(day: PlanDay, calendar: Calendar) -> String {
+        String(localized: "Tagesstart") + " · " + DateText.numericDay(day, calendar: calendar) + " · " + String(localized: "nur Dankbarkeit")
     }
 
     /// "Dankbar für: A · B · C"; empty without entries. Gratitude stays in the routine record, the card only shows it.
@@ -498,8 +666,24 @@ extension NotesListView {
         }
     }
 
-    static var trashFootnote: String {
-        String(localized: "Notizen bleiben hier \(NoteFolderRules.retentionDays) Tage und werden dann endgültig gelöscht.")
+    /// The days left from which a deleted note is marked as about to go.
+    static let trashWarningDays = 7
+
+    /// The hint at the top of "Zuletzt gelöscht".
+    static var trashHeader: String {
+        String(localized: "Notizen bleiben \(NoteFolderRules.retentionDays) Tage hier und werden dann endgültig gelöscht, mit ihren Anhängen.")
+    }
+
+    /// "Gelöscht am 23.10. · aus „Notizen“"; `folderName` is the folder the note lay in.
+    static func trashFooter(for note: NoteRecord, folderName: String, now: Date, calendar: Calendar) -> String {
+        guard let deletedAt = note.deletedAt else { return "" }
+        let date = DateText.numericDay(PlanDay(date: deletedAt, calendar: calendar), calendar: calendar)
+        return String(localized: "Gelöscht am \(date) · aus „\(folderName)“")
+    }
+
+    /// "noch 3 Tage", "noch 1 Tag".
+    static func daysLeftText(_ days: Int) -> String {
+        days == 1 ? String(localized: "noch 1 Tag") : String(localized: "noch \(days) Tage")
     }
 
     /// The line under "Notizen" in the task list: the note changed last, or that there is none.

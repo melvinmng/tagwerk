@@ -10,18 +10,23 @@ import TagwerkCore
 @MainActor
 enum DemoData {
     static let launchArgument = "-TagwerkDemoData"
+    /// Adds three appointments at the same time today (13:30–14:30), for the block that collapses overlapping entries.
+    static let overlapArgument = "-TagwerkDemoOverlap"
     private static let prefix = "Demo "
     private static let planCalendarTitle = "Demo Tagwerk"
 
     static var isRequested: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) || UITestMode.isActive }
 
-    static func seedIfRequested(_ environment: AppEnvironment) async {
-        guard isRequested else { return }
+    /// Creates the sample data. Returns `true` when it exists; the caller reports the app as ready (`isDemoDataReady`)
+    /// only after the rest of the start, so the UI tests never see a screen that is still changing.
+    static func seedIfRequested(_ environment: AppEnvironment) async -> Bool {
+        guard isRequested else { return false }
         let store = EKEventStore()
+        let handledBeforeSeed = environment.storeChangesHandled
         do {
             guard try await store.requestFullAccessToEvents(), try await store.requestFullAccessToReminders() else {
                 print("DemoData: calendar or reminder access denied; grant it with simctl privacy")
-                return
+                return false
             }
             try wipe(store)
             let ids = try seed(store, leadTimeMinutes: environment.settings.leadTimeMinutes)
@@ -40,6 +45,17 @@ enum DemoData {
             }
             settings.deadlineCalendarIDs = [ids.deadlineCalendar]
             seedRecurringLocalTask(environment)
+            // The UI tests show the same screens on every weekday: today and tomorrow are working days (see `uiTestWorkdayOverrides`).
+            if UITestMode.isActive {
+                let planning = environment.planning
+                let today = PlanDay(date: UITestMode.now(), calendar: planning.calendar)
+                for (day, value) in uiTestWorkdayOverrides(today: today, calendar: planning.calendar) {
+                    planning.planStore.setOverride(value, on: day)
+                }
+                // The card "Wochenplanung" shows on the planning weekday (Sunday by default); the tests keep it hidden, so the screens
+                // do not depend on the weekday of the run. The rules of the card are covered by unit tests.
+                settings.weekPlanningCardDismissedDayKey = today.dayKey
+            }
             await environment.taskList.reload()
             await planSamples(environment)
             await environment.planning.reload()
@@ -49,11 +65,52 @@ enum DemoData {
             seedNotes(environment)
             // Phase 4: the widget reads the demo plan right away.
             environment.writeSnapshot()
-            environment.isDemoDataReady = true
+            // The seeding wrote through its own store; the gateway's store reports that later and the app reloads.
+            if UITestMode.isActive { await waitForStoreChangeEcho(environment, handledBeforeSeed: handledBeforeSeed) }
             print("DemoData: sample data created")
+            return true
         } catch {
             print("DemoData: seeding failed: \(error)")
+            return false
         }
+    }
+
+    /// UI test mode: waits until the app has handled the EventKit changes of the seeding and nothing new arrived for
+    /// `StoreChangeSettle.quietTime`, at most `StoreChangeSettle.limit` seconds (then the run continues with a log line).
+    private static func waitForStoreChangeEcho(_ environment: AppEnvironment, handledBeforeSeed: Int) async {
+        let clock = ContinuousClock()
+        func seconds(_ duration: Duration) -> TimeInterval {
+            TimeInterval(duration.components.seconds) + TimeInterval(duration.components.attoseconds) / 1e18
+        }
+        let started = clock.now
+        var lastActivity = started
+        var lastHandled = environment.storeChangesHandled
+        while true {
+            let now = clock.now
+            if environment.isHandlingStoreChange || environment.storeChangesHandled != lastHandled {
+                lastHandled = environment.storeChangesHandled
+                lastActivity = now
+            }
+            let state = StoreChangeSettle.state(handled: environment.storeChangesHandled, handledBeforeSeed: handledBeforeSeed,
+                                                isHandling: environment.isHandlingStoreChange,
+                                                quietFor: seconds(now - lastActivity), waited: seconds(now - started))
+            switch state {
+            case .settled: return
+            case .timedOut:
+                print("DemoData: no store change echo within \(Int(StoreChangeSettle.limit)) s")
+                return
+            case .waiting: try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+    }
+
+    /// Working hours of today and tomorrow in the UI test mode: the standard week (09:00–18:00) on every weekday. Without
+    /// them a Saturday or Sunday run shows "heute ist vorbei" ("Unerledigtes verschieben", "Unerledigt von heute") at 09:30
+    /// and the next planning day is Monday, so the audits would test different screens depending on the weekday.
+    /// Pure function so the weekday logic is covered by a unit test.
+    nonisolated static func uiTestWorkdayOverrides(today: PlanDay, calendar: Calendar) -> [PlanDay: DayOverride] {
+        let hours = DayOverride.hours(WorkHours(startMinutes: 540, endMinutes: 1080))
+        return [today: hours, today.adding(days: 1, calendar: calendar): hours]
     }
 
     /// Phase 5: three notes (one pinned, one dictated, one evening thought of yesterday, so the filter shows)
@@ -217,7 +274,8 @@ enum DemoData {
 
     private static func seed(_ store: EKEventStore, leadTimeMinutes: Int) throws -> SeededIDs {
         let calendar = Calendar.tagwerk
-        let today = calendar.startOfDay(for: Date())
+        // The clock of the UI test mode (pinned time and weekday), so the events lie on the days the models call today.
+        let today = calendar.startOfDay(for: UITestMode.now())
         func at(_ dayOffset: Int, _ hour: Int, _ minute: Int = 0) -> Date {
             let day = calendar.date(byAdding: .day, value: dayOffset, to: today)!
             return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)!
@@ -261,6 +319,16 @@ enum DemoData {
         try event("Seminar", work, at(0, 10), at(0, 12, 30), location: "Universität, Unter den Linden 6, Berlin")
         try event("Seminar", copy, at(0, 10), at(0, 12, 30))
         try event("Sprechstunde", work, at(0, 15), at(0, 16), location: "Praxis Dr. Muster, Hauptstraße 5, Berlin")
+        if DemoTravelEstimator.isRequested {
+            // The trip to the seminar takes 30 minutes in the demo estimator, so it starts at 09:30, ten minutes before the
+            // call ends: the capsule "10 min zu früh" (PL10b).
+            try event("Team-Call", work, at(0, 8, 30), at(0, 9, 40), location: "Büro, Friedrichstraße 10, Berlin")
+        }
+        if ProcessInfo.processInfo.arguments.contains(overlapArgument) {
+            for title in ["Projektbesprechung", "Zahnarzt Kontrolle", "Anruf Steuerberater"] {
+                try event(title, work, at(0, 13, 30), at(0, 14, 30))
+            }
+        }
         try event("Projektwoche", work, at(0, 0), at(1, 0), allDay: true)
         try event("Anmeldung Abschlussarbeit", uni, at(0, 0), at(1, 0), allDay: true)
         try event("Klausur Statistik", uni, at(3, 10), at(3, 12))

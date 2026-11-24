@@ -45,6 +45,20 @@ struct NoteStoreTests {
         _ = b
     }
 
+    @Test func notes_ascendingReversesWithinPinnedAndUnpinned() throws {
+        let a = try #require(store.create(text: "a")); advance()
+        let b = try #require(store.create(text: "b")); advance()
+        let c = try #require(store.create(text: "c")); advance()
+        let d = try #require(store.create(text: "d"))
+        store.setPinned(b.id, true)
+        store.setPinned(d.id, true)
+        #expect(store.notes(sortedBy: .created).map(\.text) == ["d", "b", "c", "a"])
+        // Oldest first: still pinned first, but each block turned around.
+        #expect(store.notes(sortedBy: .created, ascending: true).map(\.text) == ["b", "d", "a", "c"])
+        #expect(store.notes(sortedBy: .title, ascending: true).map(\.text) == ["d", "b", "c", "a"])
+        _ = (a, c)
+    }
+
     @Test func updateText_changesUpdatedAtOnlyForNewText() throws {
         let note = try #require(store.create(text: "a"))
         let created = note.updatedAt
@@ -254,6 +268,36 @@ struct NoteStoreTests {
         #expect(store.folder(role: .brainDump)?.name == "Kopf leeren" && store.folders().count == 5)
     }
 
+    @Test func resetFolderName_restoresDefault() throws {
+        store.ensureDefaultFolders()
+        let folder = try #require(store.folder(role: .morningRoutine))
+        #expect(!NoteStore.isRenamed(folder))
+        try store.renameFolder(folder.id, to: "Morgen")
+        #expect(NoteStore.isRenamed(folder))
+        try store.resetFolderName(folder.id)
+        #expect(folder.name == "Tagesstart" && !NoteStore.isRenamed(folder))
+        // Resetting an unchanged name changes nothing and writes nothing.
+        let revision = store.revision
+        try store.resetFolderName(folder.id)
+        #expect(store.revision == revision)
+    }
+
+    @Test func resetFolderName_onOwnFolder_throwsSystemFolderError() throws {
+        let own = try store.createFolder(name: "Arbeit")
+        #expect(throws: NoteStore.FolderResetError.notASystemFolder) { try store.resetFolderName(own.id) }
+        #expect(!NoteStore.isRenamed(own))
+        #expect(own.name == "Arbeit")
+    }
+
+    @Test func resetFolderName_whenAnotherFolderUsesTheName_throwsDuplicate() throws {
+        store.ensureDefaultFolders()
+        let folder = try #require(store.folder(role: .brainDump))
+        try store.renameFolder(folder.id, to: "Kopf leeren")
+        try store.createFolder(name: "Brain Dump")
+        #expect(throws: NoteFolderRules.NameError.duplicate) { try store.resetFolderName(folder.id) }
+        #expect(folder.name == "Kopf leeren")
+    }
+
     @Test func ensureDefaultFolders_createsRecipesOnce_keepsRename() throws {
         // A user of an older version has the four folders already; the recipes folder is added without a migration.
         for role in [NoteFolderRole.brainDump, .morningRoutine, .eveningRoutine, .dreamLog] {
@@ -391,5 +435,31 @@ struct NoteStoreTests {
 
     @Test func schema_containsNoteFolderRecord() {
         #expect(ModelContainerFactory.schema.entities.contains { $0.name == "NoteFolderRecord" })
+    }
+
+    // MARK: Duplicating
+
+    @Test func duplicate_withoutAttachmentStore_keepsTextAndFolder() throws {
+        let folder = try store.createFolder(name: "Rezepte")
+        let original = try #require(store.create(text: "Alt", folderID: folder.id))
+        advance()
+        let copy = try #require(store.duplicate(original.id, text: "\n  Neu mit Rand \n"))
+        #expect(copy.text == "Neu mit Rand" && copy.folderID == folder.id && copy.kind == .free)
+        #expect(copy.createdAt == clock.now && original.text == "Alt")
+        #expect(store.count == 2)
+    }
+
+    @Test func duplicate_emptyTextPrivateOrTrashedNote_createsNothing() throws {
+        let note = try #require(store.create(text: "Alt"))
+        #expect(store.duplicate(note.id, text: "  \n") == nil)
+        #expect(store.duplicate(UUID(), text: "Text") == nil)
+        let journal = store.ensureJournalFolder()
+        let entry = try #require(store.create(text: "Tagebuch", kind: .journal, dayKey: "2026-11-20"))
+        #expect(store.duplicate(entry.id, text: "Kopie") == nil)
+        let inJournalFolder = try #require(store.create(text: "Frei im Tagebuch-Ordner", folderID: journal.id))
+        #expect(store.duplicate(inJournalFolder.id, text: "Kopie") == nil)
+        store.trash(note.id)
+        #expect(store.duplicate(note.id, text: "Kopie") == nil)
+        #expect(store.count == 2)
     }
 }

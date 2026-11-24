@@ -8,8 +8,10 @@ struct CaptureView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var sheet: CaptureSheet?
     @State private var showsReview = false
+    @State private var showsTrends = false
     @State private var showsHabitList = false
     @State private var limitBumps = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     enum CaptureSheet: Identifiable {
         case newMeal(text: String? = nil)
@@ -17,6 +19,10 @@ struct CaptureView: View {
         case drinks
         case newWorkout(activity: WorkoutActivity? = nil, minutes: Int? = nil)
         case workout(WorkoutValue)
+        case activeBreakdown
+        case foreignIntake
+        case newWeight
+        case weight(WeightValue)
 
         var id: String {
             switch self {
@@ -25,6 +31,10 @@ struct CaptureView: View {
             case .drinks: "drinks"
             case .newWorkout(let activity, let minutes): "newWorkout-\(activity?.rawValue ?? "")-\(minutes ?? 0)"
             case .workout(let workout): "workout-\(workout.id)"
+            case .activeBreakdown: "activeBreakdown"
+            case .foreignIntake: "foreignIntake"
+            case .newWeight: "newWeight"
+            case .weight(let weight): "weight-\(weight.id)"
             }
         }
     }
@@ -51,6 +61,9 @@ struct CaptureView: View {
             .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.7), trigger: limitBumps)
             .navigationDestination(isPresented: $showsReview) {
                 WeekReviewView(model: environment.makeWeekReviewModel())
+            }
+            .navigationDestination(isPresented: $showsTrends) {
+                TrendView(model: environment.makeTrendModel(), planning: { GoalPlanningEntries() })
             }
             .navigationDestination(isPresented: $showsHabitList) {
                 HabitListView(model: environment.habits)
@@ -89,6 +102,11 @@ struct CaptureView: View {
                 case .newWorkout(let activity, let minutes):
                     WorkoutSheet(model: model, existing: nil, initialActivity: activity, initialMinutes: minutes)
                 case .workout(let workout): WorkoutSheet(model: model, existing: workout)
+                case .activeBreakdown: BudgetBreakdownSheet(model: model)
+                case .foreignIntake:
+                    if let foreign = model.current.figures.totals.foreign { ForeignIntakeSheet(foreign: foreign) }
+                case .newWeight: WeightSheet(model: model, existing: nil)
+                case .weight(let weight): WeightSheet(model: model, existing: weight)
                 }
             }
         }
@@ -106,18 +124,17 @@ struct CaptureView: View {
         List {
                 Section {
                     DayNavigation(model: model, day: data.day)
-                    DaySummary(model: model, data: data)
+                    DaySummary(model: model, data: data, onShowActive: { sheet = .activeBreakdown })
                     // R3a: entry to the weekly review (a row of its own, so VoiceOver keeps the summary as one element).
                     Button { showsReview = true } label: {
                         HStack {
                             Label("Wochenrückblick", systemImage: "chart.bar")
                             Spacer()
-                            Text("Woche").foregroundStyle(.secondary)
+                            Text("Woche").foregroundStyle(.secondaryText)
                             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                         }
                     }
                     .foregroundStyle(.primary)
-                    
                 }
                 Section {
                     quickEntry
@@ -132,6 +149,25 @@ struct CaptureView: View {
                 }
                 RoutinesSection(model: environment.routines, day: data.day)
                 HabitsSection(model: environment.habits, capture: model, day: data.day) { showsHabitList = true }
+                // The trends of the intake and the weight, below the cards of the day: the entry is used less often than the routine and
+                // habit cards, which stay within reach of the head (a row between them pushed the evening wrap-up off the screen).
+                Section {
+                    // The value is the weight of the latest 7 days, when there is one.
+                    Button { showsTrends = true } label: {
+                        HStack {
+                            Label("Verlauf und Ziele", systemImage: "chart.line.uptrend.xyaxis")
+                            Spacer()
+                            if let kilograms = model.weightOverview.mean ?? model.weightOverview.latest {
+                                Text(WeightFormat.kilograms(kilograms)).monospacedDigit().foregroundStyle(.secondaryText)
+                            }
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .accessibilityIdentifier(AccessibilityID.Trend.entry)
+                }
+                // Below the routine cards: the card is an overview of the day, so the cards of the day stay within reach of the head.
+                Section { NutrientCardView(rows: model.nutrientRows(for: data.figures)) }
                 mealSection(data)
                 drinkSection(data)
                 workoutSection(data)
@@ -144,7 +180,7 @@ struct CaptureView: View {
     /// A link or shortcut asked for a sheet: entries from Siri belong to now, so the tab returns to today first.
     private func applyPrefill() {
         guard let prefill = environment.router.takeCapturePrefill() else { return }
-        if prefill != .review, !model.isToday {
+        if prefill != .review, prefill != .trends, !model.isToday {
             // The day switches at once; the sheet does not wait for the Health query of the reload.
             model.day = model.today
             Task { await model.reload() }
@@ -154,6 +190,7 @@ struct CaptureView: View {
         case .meal(let text): sheet = .newMeal(text: text)
         case .workout(let activity, let minutes): sheet = .newWorkout(activity: activity, minutes: minutes)
         case .review: showsReview = true
+        case .trends: showsTrends = true
         }
     }
 
@@ -161,10 +198,18 @@ struct CaptureView: View {
 
     private var quickEntry: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 8) {
+            // Four buttons in one row; with large text they wrap into two rows of two, so no label is cut off.
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: QuickEntryLayout.columns(for: dynamicTypeSize)),
+                      spacing: 8) {
                 quickButton("Essen", symbol: "fork.knife") { sheet = .newMeal() }
                 quickButton("Trinken", symbol: "drop.fill") { sheet = .drinks }
                 quickButton("Training", symbol: "figure.run") { sheet = .newWorkout() }
+                quickButton("Gewicht", symbol: "scalemass") { sheet = .newWeight }
+                    .accessibilityIdentifier(AccessibilityID.Capture.quickWeight)
+            }
+            // SI3: shown once, directly above the portions; renders nothing when the shortcuts are not registered.
+            if SiriTipPolicy.isVisible(done: model.settings.siriTipWaterDone) {
+                SiriTip(intent: LogWaterIntent(), isDone: siriTipDone)
             }
             HStack(spacing: 8) {
                 // By index: two portions may be equal, so the amount is no identity.
@@ -183,11 +228,16 @@ struct CaptureView: View {
         .padding(.vertical, 4)
     }
 
+    private var siriTipDone: Binding<Bool> {
+        let settings = model.settings
+        return Binding(get: { settings.siriTipWaterDone }, set: { settings.siriTipWaterDone = $0 })
+    }
+
     private func quickButton(_ title: LocalizedStringKey, symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.title3)
-                Text(title).font(.subheadline.weight(.semibold))
+                Text(title).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
         }
@@ -198,18 +248,25 @@ struct CaptureView: View {
 
     @ViewBuilder
     private func mealSection(_ data: CaptureDay) -> some View {
-        if !data.meals.isEmpty {
+        let foreign = data.figures.totals.foreign
+        if !data.meals.isEmpty || foreign != nil {
             Section {
                 ForEach(data.meals) { meal in
                     Button { sheet = .meal(meal) } label: { MealRow(meal: meal, calendar: model.calendar) }
                         .tint(.primary)
                         .contextMenu { deleteButton(meal.id) }
                 }
+                // Entries of other apps: one row with the day total and the app names; it has no editor and no delete.
+                if let foreign {
+                    Button { sheet = .foreignIntake } label: { ForeignIntakeRow(foreign: foreign) }
+                        .tint(.primary)
+                }
             } header: {
                 HStack {
                     Text("Essen")
                     Spacer()
-                    Text(IntakeFormat.kcal(data.intake.kcal, estimated: data.intake.hasEstimate))
+                    // Everything the day counts as eaten, the entries of other apps included.
+                    Text(IntakeFormat.kcal(data.figures.totals.kcal, estimated: data.figures.totals.hasEstimate))
                 }
             }
         }
@@ -223,10 +280,10 @@ struct CaptureView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Wasser")
-                            Text(drinkCaption(data)).font(.caption).foregroundStyle(.secondary)
+                            Text(drinkCaption(data)).font(.caption).foregroundStyle(.secondaryText)
                         }
                         Spacer()
-                        Text(IntakeFormat.liters(data.intake.waterMilliliters)).foregroundStyle(.secondary)
+                        Text(IntakeFormat.liters(data.intake.waterMilliliters)).foregroundStyle(.secondaryText)
                         Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                     }
                 }
@@ -343,25 +400,15 @@ extension CaptureModel {
 private struct DaySummary: View {
     let model: CaptureModel
     let data: CaptureDay
+    let onShowActive: () -> Void
 
     var body: some View {
-        let settings = model.settings
-        let intake = data.intake
-        let remaining = IntakeFormat.remaining(goal: settings.goalKilocalories, intake: intake)
+        let budget = data.figures.budget
         VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(IntakeFormat.kcalNumber(intake.kcal, estimated: intake.hasEstimate)) / \(IntakeFormat.grouped(settings.goalKilocalories)) kcal")
-                        .font(.title3.weight(.semibold))
-                    Spacer()
-                    Text(remaining.text).font(.subheadline).foregroundStyle(remaining.isOver ? .orange : .secondary)
-                }
-                ProgressView(value: min(1, intake.kcal / Double(max(1, settings.goalKilocalories))))
-                    .tint(remaining.isOver ? .orange : .green)
-            }
-            .accessibilityElement(children: .combine)
+            BudgetHead(budget: budget, offersAllow: model.offersActiveEnergy(for: budget), onShowActive: onShowActive,
+                       onAllow: { Task { await model.allowActiveEnergy() } })
             // ST1: water and protein, then steps and the weekly training; single tiles share one row.
-            ForEach(Array(model.summaryRows(steps: data.steps).enumerated()), id: \.offset) { _, row in
+            ForEach(Array(model.summaryRows(steps: data.steps, plan: data.figures.plan).enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(row, id: \.self) { tile($0) }
                 }
@@ -374,20 +421,16 @@ private struct DaySummary: View {
 
     @ViewBuilder
     private func tile(_ tile: CaptureModel.SummaryTile) -> some View {
-        let settings = model.settings
-        let intake = data.intake
+        let plan = data.figures.plan
+        let totals = data.figures.totals
         switch tile {
         case .water:
-            metric("Wasser", "\(IntakeFormat.liters(intake.waterMilliliters)) / \(IntakeFormat.liters(settings.goalWaterMilliliters))",
-                   progress: Double(intake.waterMilliliters) / Double(max(1, settings.goalWaterMilliliters)), tint: .cyan)
-        case .protein:
-            metric("Eiweiß", "\(IntakeFormat.grams(intake.protein, estimated: intake.hasEstimate)) / \(settings.goalProteinGrams) g"
-                .replacingOccurrences(of: " g /", with: " /"),
-                   progress: intake.protein / Double(max(1, settings.goalProteinGrams)), tint: .pink)
+            metric("Wasser", "\(IntakeFormat.liters(totals.waterMilliliters)) / \(IntakeFormat.liters(plan.waterMilliliters))",
+                   progress: Double(totals.waterMilliliters) / Double(max(1, plan.waterMilliliters)), tint: .cyan)
         case .steps:
             stepsTile
         case .training:
-            let goal = settings.goalWorkoutMinutesPerWeek
+            let goal = plan.workoutMinutesPerWeek
             metric("Training · Woche", IntakeFormat.duration(minutes: data.weekMinutes, goal: goal),
                    progress: Double(data.weekMinutes) / Double(max(1, goal)), tint: .mint,
                    spokenLabel: String(localized: "Training diese Woche"),
@@ -397,13 +440,13 @@ private struct DaySummary: View {
 
     @ViewBuilder
     private var stepsTile: some View {
-        let goal = model.settings.goalStepsPerDay
+        let goal = data.figures.plan.stepsPerDay
         switch model.stepsTile(for: data.steps) {
         case .hidden:
             EmptyView()
         case .allow:
             VStack(alignment: .leading, spacing: 3) {
-                Text("Schritte").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                Text("Schritte").font(.caption).foregroundStyle(.secondaryText).accessibilityHidden(true)
                 Button { Task { await model.allowSteps() } } label: {
                     Text("In Health erlauben \(Image(systemName: "chevron.right"))")
                         .font(.subheadline.weight(.medium))
@@ -430,7 +473,7 @@ private struct DaySummary: View {
     private func metric(_ title: LocalizedStringResource, _ value: String, progress: Double?, tint: Color,
                         spokenLabel: String? = nil, spokenValue: String? = nil) -> some View {
         let tile = VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(.secondaryText)
             Text(value).font(.subheadline.weight(.medium)).monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -460,13 +503,13 @@ struct MealRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(meal.title).lineLimit(2)
                 Text("\(meal.kind.displayName) · \(CaptureText.time(meal.date, calendar: calendar))")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).monospacedDigit()
                 Text(meal.hasEstimate ? IntakeFormat.shortRange(min: meal.kcalMin, max: meal.kcalMax) : String(localized: "eingetragen"))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondaryText)
             }
         }
     }
@@ -481,11 +524,11 @@ struct WorkoutRow: View {
             Image(systemName: workout.activity.symbolName).foregroundStyle(.mint).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(workout.displayName)
-                Text(caption).font(.caption).foregroundStyle(.secondary)
+                Text(caption).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer()
             if let kilocalories = workout.kilocalories, kilocalories > 0 {
-                Text("\(Int(kilocalories.rounded())) kcal").monospacedDigit().foregroundStyle(.secondary)
+                Text("\(Int(kilocalories.rounded())) kcal").monospacedDigit().foregroundStyle(.secondaryText)
             }
         }
     }
@@ -519,6 +562,13 @@ private struct HealthCard: View {
         }
         .padding(.vertical, 4)
     }
+}
+
+// MARK: - Quick entry layout
+
+enum QuickEntryLayout {
+    /// Buttons per row of the quick entry: all four in one row up to the default text sizes, two per row from "extra large" on.
+    static func columns(for size: DynamicTypeSize) -> Int { size >= .xLarge ? 2 : 4 }
 }
 
 // MARK: - Texts

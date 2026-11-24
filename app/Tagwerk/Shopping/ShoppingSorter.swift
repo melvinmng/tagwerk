@@ -96,9 +96,9 @@ final class ShoppingSorter {
         do {
             let slug = try await model()
             let input = InputItem.user(Self.inputText(request))
-            answer = try await withTimeout { [responder] in
-                try await Self.collect(responder.respond(model: slug, instructions: Self.instructions, input: [input],
-                                                         tools: [], jsonSchema: (name: "shopping_sort", schema: Self.schema)))
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions, input: [input],
+                                                                  tools: [], jsonSchema: (name: "shopping_sort", schema: Self.schema)))
             }
         } catch is CancellationError {
             throw CancellationError()
@@ -111,6 +111,59 @@ final class ShoppingSorter {
         }
         return try Self.validate(Data(answer.utf8), request: request, current: current)
     }
+
+    // MARK: Follow-up (plan ki-vorschlaege-anpassen, task D4)
+
+    /// A second request about the proposal on the sheet: the same item and category names as the first one, the proposal with
+    /// the categories the user picked by hand, what the message is about, and the message. Answered in the format of `sort` and
+    /// checked the same way against `request` and `current`, so an unknown item or category never gets in. `pinned` are the ids
+    /// (`Change.id`) of the changes the user set; `focus` is the id of the change the message is about. Without the current
+    /// consent nothing happens, not even the model list.
+    func revise(_ request: Request, current: [String: String], proposal: Proposal, pinned: Set<String>, focus: String?,
+                comment: String) async throws -> Proposal {
+        guard hasConsent() else { throw Failure.consentMissing }
+        let answer: String
+        do {
+            let slug = try await model()
+            let input = InputItem.user(Self.revisionText(request, proposal: proposal, pinned: pinned, focus: focus, comment: comment))
+            answer = try await RecipeRequest.withTimeout(timeout) { [responder] in
+                try await RecipeRequest.collect(responder.respond(model: slug, instructions: Self.instructions + "\n" + Self.revisionInstructions,
+                                                                  input: [input], tools: [],
+                                                                  jsonSchema: (name: "shopping_sort", schema: Self.schema)))
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as Failure {
+            throw error
+        } catch let error as ChatGPTError {
+            throw Self.failure(for: error)
+        } catch {
+            throw Failure.failed
+        }
+        return try Self.validate(Data(answer.utf8), request: request, current: current)
+    }
+
+    /// The message of a follow-up as JSON: the names of the first request, the proposal, the item the message is about and the
+    /// message. Quantities, notes and everything else of the list stay on the device.
+    static func revisionText(_ request: Request, proposal: Proposal, pinned: Set<String>, focus: String?, comment: String) -> String {
+        let entries: [[String: Any]] = proposal.changes.map { ["item": $0.itemName, "category": $0.toCategory, "fixed_by_user": pinned.contains($0.id)] }
+        let about = focus.flatMap { id in proposal.changes.first { $0.id == id }?.itemName }
+        let object: [String: Any] = ["items": request.itemNames, "categories": request.categoryNames, "proposal": entries,
+                                     "new_categories": proposal.newCategories, "about": about as Any? ?? NSNull(), "message": comment]
+        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    static let revisionInstructions = """
+    Jetzt überarbeitest du einen Vorschlag, den du schon gegeben hast. Die Eingabe enthält zusätzlich "proposal" (die Zuordnungen, die \
+    sich ändern würden, mit fixed_by_user), "new_categories" (die vorgeschlagenen neuen Kategorien), "about" (der Artikel, um den es \
+    geht, oder null) und "message" (die Nachricht der Person).
+    - Gib die vollständige Antwort im selben Format zurück. Ändere nur, was die Nachricht verlangt; wiederhole alle anderen \
+    Zuordnungen aus "proposal" unverändert.
+    - Zuordnungen mit fixed_by_user true hat die Person selbst gewählt: lass sie unverändert, außer die Nachricht betrifft sie.
+    - Betrifft die Nachricht einen einzelnen Artikel ("about"), ändere nur diesen.
+    - Verwendest du eine neue Kategorie weiter oder legst du eine an, nenne sie in new_categories.
+    """
 
     // MARK: Validation
 
@@ -177,42 +230,11 @@ final class ShoppingSorter {
     // MARK: Transport
 
     private static func failure(for error: ChatGPTError) -> Failure {
-        switch error {
+        switch RecipeRequest.failure(for: error) {
         case .network: .network
-        case .notSignedIn, .invalidUser: .signedOut
+        case .signedOut: .signedOut
         case .usageLimit: .usageLimit
-        case .server, .incomplete: .failed
-        }
-    }
-
-    /// Text of a completed answer; a stream that ends without `completed` is an error.
-    nonisolated private static func collect(_ stream: AsyncThrowingStream<StreamEvent, Error>) async throws -> String {
-        var text = ""
-        var completed = false
-        for try await event in stream {
-            switch event {
-            case .textDelta(let delta): text += delta
-            case .completed: completed = true
-            case .functionCall: break
-            }
-        }
-        guard completed else { throw ChatGPTError.incomplete }
-        return text
-    }
-
-    private struct TimedOut: Error {}
-
-    private func withTimeout(_ operation: @escaping @Sendable () async throws -> String) async throws -> String {
-        let limit = timeout
-        return try await withThrowingTaskGroup(of: String.self) { group in
-            group.addTask { try await operation() }
-            group.addTask {
-                try await Task.sleep(for: limit)
-                throw TimedOut()
-            }
-            defer { group.cancelAll() }
-            guard let first = try await group.next() else { throw TimedOut() }
-            return first
+        case .failed: .failed
         }
     }
 

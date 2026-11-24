@@ -15,6 +15,10 @@ struct MealSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private enum Phase { case input, estimating, editing }
+    private enum ListMode: String, CaseIterable, Identifiable {
+        case recent, foods
+        var id: String { rawValue }
+    }
 
     @State private var phase: Phase = .input
     @State private var text = ""
@@ -26,10 +30,17 @@ struct MealSheet: View {
     @State private var errorText: String?
     @State private var estimateTask: Task<Void, Never>?
     @State private var draft = MealDraft()
+    @State private var showsFurtherNutrients = false
+    /// The list below the input: earlier meals or "Meine Lebensmittel" (decision LM1b). Earlier meals are the default.
+    @State private var listMode: ListMode = .recent
+    @State private var foodCoordinator: FoodPickerCoordinator?
+    @State private var showsFoodPicker = false
     @State private var editingItem: EditedItem?
     @State private var prepared = false
     @State private var saving = false
     @State private var voice: VoiceInputModel?
+    /// The items with their marks and the follow-up about them (plan ki-vorschlaege-anpassen, task D1).
+    @State private var followUp = PreviewFollowUpModel<MealItem>(items: [])
     @FocusState private var textFocused: Bool
 
     private var isSignedIn: Bool { environment.ai.isSignedIn }
@@ -83,14 +94,21 @@ struct MealSheet: View {
                 }
                 .ignoresSafeArea()
             }
+            .sheet(isPresented: $showsFoodPicker) {
+                FoodPickerSheet { item in
+                    showsFoodPicker = false
+                    addFoodItem(item)
+                }
+            }
+            .modifier(OptionalFoodSheets(coordinator: foodCoordinator))
             .sheet(item: $editingItem) { edited in
-                MealItemEditor(item: edited.item) { updated in
+                MealItemEditor(item: edited.item, onSave: { updated in
                     if let index = draft.items.firstIndex(where: { $0.id == updated.id }) {
                         draft.items[index] = updated
                     } else {
                         draft.items.append(updated)
                     }
-                }
+                }, visibleNutrients: model.settings.visibleNutrients)
             }
             .onChange(of: pickerItem) { _, item in
                 guard let item else { return }
@@ -122,7 +140,7 @@ struct MealSheet: View {
                             .disabled(phase == .estimating)
                         if environment.settings.voiceInputEnabled, let voice, phase != .estimating {
                             VoiceMicrophoneButton(voice: voice, isEnabled: true,
-                                                  language: VoiceAvailability.recognitionLanguage(setting: environment.settings.voiceRecognitionLanguage))
+                                                  language: environment.settings.dictationLanguage(at: .meal))
                         }
                         if isSignedIn {
                             if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -147,7 +165,7 @@ struct MealSheet: View {
                         }
                         .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
             } footer: {
@@ -160,7 +178,7 @@ struct MealSheet: View {
                 if phase == .estimating {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Schätze …").foregroundStyle(.secondary)
+                        Text("Schätze …").foregroundStyle(.secondaryText)
                         Spacer()
                         Button("Stopp") {
                             estimateTask?.cancel()
@@ -170,7 +188,7 @@ struct MealSheet: View {
                     }
                 } else if isSignedIn {
                     if let errorText {
-                        Text(errorText).foregroundStyle(.orange).font(.subheadline)
+                        Text(errorText).foregroundStyle(.orangeText).font(.subheadline)
                     }
                     Button(errorText == nil ? "Schätzen" : "Erneut versuchen") { requestEstimate() }
                         .disabled(!hasInput)
@@ -178,7 +196,7 @@ struct MealSheet: View {
                     Button("Ohne Schätzung eintragen") { startManual() }
                 } else {
                     Text("Für Schätzungen aus Text oder Foto melde dich unter Einstellungen › KI bei ChatGPT an.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondaryText)
                     Button("Weiter") { startManual() }.fontWeight(.semibold)
                     Button("Zu den KI-Einstellungen") {
                         environment.requestedTab = 2
@@ -187,13 +205,13 @@ struct MealSheet: View {
                 }
             }
 
-            repeatSection
+            listSections
         }
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
             textFocused = existing == nil
             if voice == nil {
-                let model = VoiceInputFactory.make(environment)
+                let model = VoiceInputFactory.make(environment, place: .meal)
                 model.readDraft = { text }
                 model.writeDraft = { text = $0 }
                 model.onSend = { spoken in
@@ -211,13 +229,35 @@ struct MealSheet: View {
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || photoJPEG != nil
     }
 
+    /// The switch between earlier meals and "Meine Lebensmittel", and the list that goes with it.
+    @ViewBuilder
+    private var listSections: some View {
+        Section {
+            Picker("Quelle", selection: $listMode) {
+                Text("Zuletzt").tag(ListMode.recent)
+                Text("Meine Lebensmittel").tag(ListMode.foods)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .accessibilityIdentifier("meal.listMode")
+        }
+        switch listMode {
+        case .recent:
+            repeatSection
+        case .foods:
+            if let foodCoordinator {
+                FoodPickerSection(query: photo == nil ? text : "", coordinator: foodCoordinator)
+            }
+        }
+    }
+
     @ViewBuilder
     private var repeatSection: some View {
         let suggestions = model.repeatSuggestions(filter: photo == nil ? text : "")
         Section {
             if suggestions.isEmpty {
                 Text("Hier erscheinen Mahlzeiten, die du schon einmal erfasst hast.")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
             }
             ForEach(suggestions) { meal in
                 HStack {
@@ -225,12 +265,12 @@ struct MealSheet: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(meal.title).lineLimit(1)
                             Text(String(localized: "zuletzt \(CaptureText.lastUsedDay(PlanDay(date: meal.date, calendar: model.calendar), today: model.today, calendar: model.calendar))"))
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondaryText)
                         }
                     }
                     .tint(.primary)
                     Spacer()
-                    Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).font(.subheadline).foregroundStyle(.secondary)
+                    Text(IntakeFormat.kcal(meal.kcal, estimated: meal.hasEstimate)).font(.subheadline).foregroundStyle(.secondaryText)
                     Button {
                         Task {
                             await model.repeatMeal(meal)
@@ -269,11 +309,12 @@ struct MealSheet: View {
             } else {
                 estimateSummary
                 itemsSection
+                followUpSection
             }
 
             if let existing {
                 Section {
-                    Text(provenance).font(.footnote).foregroundStyle(.secondary)
+                    Text(provenance).font(.footnote).foregroundStyle(.secondaryText)
                     Button("Mahlzeit löschen", role: .destructive) {
                         Task {
                             await model.delete(existing.id)
@@ -291,6 +332,10 @@ struct MealSheet: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
+        // A new draft (estimate, "Neu schätzen", a saved meal) starts a new proposal; changes by hand follow the list.
+        .onChange(of: draft.id) { _, _ in followUp.replaceItems(draft.items) }
+        .onChange(of: draft.items) { _, items in followUp.syncByHand(items) }
+        .onDisappear { followUp.discard() }
     }
 
     private var provenance: String {
@@ -315,11 +360,31 @@ struct MealSheet: View {
             numberRow("Eiweiß", unit: "g", value: $draft.manualProtein)
             numberRow("Kohlenhydrate", unit: "g", value: $draft.manualCarbs)
             numberRow("Fett", unit: "g", value: $draft.manualFat)
+            furtherNutrients
         } header: {
             Text("Werte")
         } footer: {
-            Text("Nur Kalorien sind nötig. Leere Felder werden nicht nach Health geschrieben.")
+            Text("Nur Kalorien sind nötig. Leere Felder sind unbekannt und werden nicht nach Health geschrieben.")
         }
+    }
+
+    /// "Weitere Nährwerte 2 von 4": the further nutrients fold out (decision NU3b); an empty field is unknown, not 0.
+    private var furtherNutrients: some View {
+        let visible = model.settings.visibleNutrients
+        return DisclosureGroup(isExpanded: $showsFurtherNutrients) {
+            ForEach(visible, id: \.self) { nutrient in
+                nutrientRow(nutrient, value: Binding(get: { draft.manualNutrient(nutrient) },
+                                                     set: { draft.setManualNutrient(nutrient, $0) }))
+            }
+        } label: {
+            HStack {
+                Text("Weitere Nährwerte")
+                Spacer()
+                Text("\(draft.knownManualNutrients(in: visible)) von \(visible.count)")
+                    .foregroundStyle(.secondaryText).monospacedDigit()
+            }
+        }
+        .accessibilityIdentifier("meal.furtherNutrients")
     }
 
     private func numberRow(_ title: LocalizedStringResource, unit: String, value: Binding<Double?>) -> some View {
@@ -327,7 +392,19 @@ struct MealSheet: View {
             Text(title)
             Spacer()
             DecimalField(value: value).accessibilityLabel(Text(title))
-            Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
+            Text(unit).foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
+        }
+    }
+
+    /// A row of a further nutrient; its name is already localized by `Nutrient.displayName`.
+    private func nutrientRow(_ nutrient: Nutrient, value: Binding<Double?>) -> some View {
+        HStack {
+            Text(verbatim: nutrient.displayName)
+            Spacer()
+            DecimalField(value: value)
+                .accessibilityLabel(Text(verbatim: nutrient.displayName))
+                .accessibilityIdentifier("meal.nutrient.\(nutrient.rawValue)")
+            Text("g").foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
         }
     }
 
@@ -341,14 +418,21 @@ struct MealSheet: View {
                 Text(IntakeFormat.kcal(meal.kcal, estimated: estimated)).fontWeight(.semibold).monospacedDigit()
             }
             if estimated, let range = IntakeFormat.rangeIfEstimated(min: meal.kcalMin, max: meal.kcalMax) {
-                Text(range).font(.subheadline).foregroundStyle(.secondary)
+                Text(range).font(.subheadline).foregroundStyle(.secondaryText)
             }
             let protein = IntakeFormat.grams(meal.protein, estimated: estimated)
             let carbs = IntakeFormat.grams(meal.carbs, estimated: estimated)
             let fat = IntakeFormat.grams(meal.fat, estimated: estimated)
             Text([String(localized: "\(protein) Eiweiß"), String(localized: "\(carbs) Kohlenhydrate"),
                   String(localized: "\(fat) Fett")].joined(separator: " · "))
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(.secondaryText)
+            let known = IntakeRules.dayIntake(meals: [meal], drinks: [])
+            let further = model.settings.visibleNutrients.compactMap { nutrient -> String? in
+                known[nutrient].value == nil ? nil : "\(nutrient.displayName) \(IntakeFormat.nutrient(nutrient, sum: known[nutrient]))"
+            }
+            if !further.isEmpty {
+                Text(further.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondaryText)
+            }
         } header: {
             Text(draft.origin == .estimated ? "Schätzung von ChatGPT" : "Werte")
         }
@@ -363,7 +447,7 @@ struct MealSheet: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name)
                                 if !item.amount.isEmpty {
-                                    Text(item.amount).font(.caption).foregroundStyle(.secondary)
+                                    Text(item.amount).font(.caption).foregroundStyle(.secondaryText)
                                 }
                             }
                             Spacer()
@@ -374,6 +458,18 @@ struct MealSheet: View {
                     ValueStepper("Menge", value: $item.factor, in: MealItem.factorRange, step: MealItem.factorStep,
                                  kind: .decimal(fractionDigits: 2)) { IntakeFormat.factor($0) }
                         .font(.subheadline)
+                    HStack {
+                        PreviewRowMark(mark: followUp.mark(of: item.id))
+                        Spacer()
+                        Button("Als Lebensmittel sichern", systemImage: "square.and.arrow.down") {
+                            saveAsFood(item)
+                        }
+                        .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                        if followUpAvailability != .hidden {
+                            Button("Mit ChatGPT zu diesem Posten schreiben", systemImage: "sparkles") { followUp.focus = item.id }
+                                .labelStyle(.iconOnly).buttonStyle(.borderless).minimumTapTarget()
+                        }
+                    }
                 }
                 .swipeActions {
                     let id = item.id
@@ -382,6 +478,8 @@ struct MealSheet: View {
                     }
                 }
             }
+            Button("Lebensmittel hinzufügen", systemImage: "fork.knife") { showsFoodPicker = true }
+                .accessibilityIdentifier("meal.addFood")
             Button("Posten hinzufügen", systemImage: "plus") {
                 editingItem = EditedItem(item: MealItem(name: "", amount: "", kcalMin: 0, kcal: 0, kcalMax: 0,
                                                                     protein: 0, carbs: 0, fat: 0))
@@ -393,11 +491,51 @@ struct MealSheet: View {
         }
     }
 
+    // MARK: Follow-up
+
+    private var followUpAvailability: FollowUpAvailability {
+        FollowUpAvailability.state(hasConsent: environment.settings.mealEstimationConsent, isSignedIn: isSignedIn, isOffline: false)
+    }
+
+    /// The input line below the items. What goes out is named in its note: the description and the photo while the sheet holds
+    /// them, the items with the changes of the user, the message. Health values, goals and earlier meals never go.
+    private var followUpSection: some View {
+        let footer = draft.estimatedAt != nil && existing == nil && photoJPEG != nil
+            ? Text("Senden gibt deine Beschreibung, das Foto, die Posten mit deinen Änderungen und deine Nachricht an ChatGPT. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.")
+            : Text("Senden gibt die Posten mit deinen Änderungen und deine Nachricht an ChatGPT, dazu deine Beschreibung, solange sie hier steht. Daten aus Health, deine Ziele und frühere Einträge gehen nicht mit.")
+        return PreviewFollowUpSection(
+            model: followUp, availability: followUpAvailability, place: .meal,
+            quickReplies: [String(localized: "Größere Portion"), String(localized: "Kleinere Portion"), String(localized: "Genauer aufteilen")],
+            placeholder: "Zur Schätzung etwas sagen …", footer: footer,
+            focusLabel: { String(localized: "Zu: \($0.name)") }, onSend: sendFollowUp)
+    }
+
+    private func sendFollowUp(_ message: String) {
+        // A meal that was saved earlier counts as the current meal: only its items go out, no description.
+        let sendsInput = draft.estimatedAt != nil && existing == nil
+        let input = sendsInput ? text : ""
+        let jpeg = sendsInput ? photoJPEG : nil
+        followUp.syncByHand(draft.items)
+        Task {
+            await followUp.send(message, using: { request in
+                var focus: UUID?
+                if case .one(let id) = request.scope { focus = id }
+                let answer = try await estimator.revise(text: input, jpeg: jpeg, items: request.items, pinned: Set(request.pinned),
+                                                        focus: focus, comment: request.comment)
+                let aligned = MealEstimator.align(answer.items, with: request.items, focus: focus)
+                return .init(items: aligned, message: aligned == request.items ? String(localized: "Keine Änderung.")
+                                                                                  : String(localized: "Schätzung überarbeitet."))
+            }, failure: { ($0 as? MealEstimator.Failure ?? .failed).message })
+            draft.items = followUp.items
+        }
+    }
+
     // MARK: Actions
 
     private func prepare() {
         guard !prepared else { return }
         prepared = true
+        foodCoordinator = FoodPickerCoordinator { item in addFoodItem(item) }
         if let existing {
             draft = MealDraft(meal: existing, estimatedAt: model.estimatedAt(meal: existing.id))
             phase = .editing
@@ -460,6 +598,27 @@ struct MealSheet: View {
         phase = .editing
     }
 
+    /// An item of an own food and an amount: starts a meal with it, or joins the items of the meal being edited.
+    private func addFoodItem(_ item: MealItem) {
+        if phase == .editing {
+            draft.items.append(item)
+            draft.usesItemList = true
+            return
+        }
+        let date = model.entryDate
+        draft = MealDraft(title: item.name, kind: MealKind.forTime(date, calendar: model.calendar), date: date, items: [item],
+                          origin: .manual, estimatedAt: nil)
+        draft.usesItemList = true
+        phase = .editing
+    }
+
+    /// "Als Lebensmittel sichern": the item becomes the prefilled draft of a new food, saved only after the user confirms.
+    private func saveAsFood(_ item: MealItem) {
+        var food = FoodValue.fromItem(item)
+        if !item.isEstimated { food.origin = .typed }
+        foodCoordinator?.edit = FoodEditSheet.Seed(food: food)
+    }
+
     private func startEditing(copyOf meal: MealValue) {
         let date = model.entryDate
         draft = MealDraft(title: meal.title, kind: MealKind.forTime(date, calendar: model.calendar), date: date,
@@ -480,6 +639,8 @@ struct MealDraft {
     var items: [MealItem] = []
     var origin: MealOrigin = .manual
     var estimatedAt: Date?
+    /// The meal was built from own foods: its items show with their amounts instead of the four value fields of a typed meal.
+    var usesItemList = false
 
     init() {}
 
@@ -499,7 +660,7 @@ struct MealDraft {
     }
 
     /// Typed meals with one item show the four value fields instead of the item list (mockup E2a, manual form).
-    var isManualSingle: Bool { origin == .manual && items.count <= 1 && !(items.first?.isEstimated ?? false) }
+    var isManualSingle: Bool { origin == .manual && items.count <= 1 && !(items.first?.isEstimated ?? false) && !usesItemList }
 
     var value: MealValue {
         var finalItems = items
@@ -519,17 +680,42 @@ struct MealDraft {
         return value > 0 ? value : nil
     }
 
-    private mutating func setManual(_ value: Double?, _ apply: (inout MealItem, Double) -> Void) {
+    /// Makes sure there is one item and that its values are what is shown (the quantity factor folded in, nutrients included).
+    private mutating func prepareManualItem() {
         if items.isEmpty {
             items = [MealItem(name: title, amount: "", kcalMin: 0, kcal: 0, kcalMax: 0, protein: 0, carbs: 0, fat: 0)]
         }
         if items[0].factor != 1 {
             let factor = items[0].factor
+            let nutrients = items[0].nutrients.scaled(by: factor)
             items[0] = items[0].overridden(kcal: items[0].kcal * factor, protein: items[0].protein * factor,
                                            carbs: items[0].carbs * factor, fat: items[0].fat * factor)
+            items[0].nutrients = nutrients
             items[0].factor = 1
         }
+    }
+
+    private mutating func setManual(_ value: Double?, _ apply: (inout MealItem, Double) -> Void) {
+        prepareManualItem()
         apply(&items[0], max(0, value ?? 0))
+    }
+
+    /// A further nutrient of the typed item as shown. A stated 0 stays 0; only an empty field is unknown (`nil`).
+    func manualNutrient(_ nutrient: Nutrient) -> Double? {
+        guard let item = items.first else { return nil }
+        return item.totalNutrient(nutrient)
+    }
+
+    /// Sets or clears a further nutrient: `nil` (an empty field) makes it unknown, never 0.
+    mutating func setManualNutrient(_ nutrient: Nutrient, _ value: Double?) {
+        if items.isEmpty && value == nil { return }
+        prepareManualItem()
+        items[0].nutrients[nutrient] = value.map { max(0, $0) }
+    }
+
+    /// How many of `nutrients` the typed item knows ("2 von 4").
+    func knownManualNutrients(in nutrients: [Nutrient]) -> Int {
+        nutrients.filter { manualNutrient($0) != nil }.count
     }
 
     var manualKcal: Double? {
@@ -550,6 +736,19 @@ struct MealDraft {
     }
 }
 
+/// Attaches the sheets of the food list once the list exists.
+private struct OptionalFoodSheets: ViewModifier {
+    let coordinator: FoodPickerCoordinator?
+
+    func body(content: Content) -> some View {
+        if let coordinator {
+            content.foodSheets(coordinator)
+        } else {
+            content
+        }
+    }
+}
+
 struct EditedItem: Identifiable {
     var id: UUID { item.id }
     let item: MealItem
@@ -566,7 +765,12 @@ private struct MealItemEditor: View {
     @State private var protein: Double?
     @State private var carbs: Double?
     @State private var fat: Double?
+    /// The further nutrients per portion; an empty field is unknown.
+    @State private var nutrients = NutrientValues()
+    @State private var showsFurtherNutrients = false
     @State private var prepared = false
+    /// The nutrients the user has switched on (fiber and sugar are always there).
+    let visibleNutrients: [Nutrient]
 
     var body: some View {
         NavigationStack {
@@ -580,8 +784,26 @@ private struct MealItemEditor: View {
                     row("Eiweiß", "g", $protein)
                     row("Kohlenhydrate", "g", $carbs)
                     row("Fett", "g", $fat)
+                    DisclosureGroup(isExpanded: $showsFurtherNutrients) {
+                        ForEach(visibleNutrients, id: \.self) { nutrient in
+                            HStack {
+                                Text(verbatim: nutrient.displayName)
+                                Spacer()
+                                DecimalField(value: Binding(get: { nutrients[nutrient] }, set: { nutrients[nutrient] = $0.map { max(0, $0) } }))
+                                    .accessibilityLabel(Text(verbatim: nutrient.displayName))
+                                Text("g").foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text("Weitere Nährwerte")
+                            Spacer()
+                            Text("\(visibleNutrients.filter { nutrients[$0] != nil }.count) von \(visibleNutrients.count)")
+                                .foregroundStyle(.secondaryText).monospacedDigit()
+                        }
+                    }
                 } footer: {
-                    Text("Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“.")
+                    Text("Werte je Menge ×1. Eigene Werte gelten als genau und stehen ohne „~“. Ein leeres Feld ist unbekannt, nicht 0.")
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -598,6 +820,8 @@ private struct MealItemEditor: View {
                         if changedValues || !item.isEstimated {
                             updated = updated.overridden(kcal: kcal ?? 0, protein: protein ?? 0, carbs: carbs ?? 0, fat: fat ?? 0)
                         }
+                        // The nutrients come from the fields; changing only them does not turn an estimate into typed values.
+                        updated.nutrients = nutrients
                         onSave(updated)
                         dismiss()
                     }
@@ -613,6 +837,8 @@ private struct MealItemEditor: View {
                 protein = item.protein
                 carbs = item.carbs
                 fat = item.fat
+                nutrients = item.nutrients
+                showsFurtherNutrients = visibleNutrients.contains { nutrients[$0] != nil }
             }
         }
         .presentationDetents([.medium, .large])
@@ -623,7 +849,7 @@ private struct MealItemEditor: View {
             Text(title)
             Spacer()
             DecimalField(value: value).accessibilityLabel(Text(title))
-            Text(unit).foregroundStyle(.secondary).frame(width: 34, alignment: .leading)
+            Text(unit).foregroundStyle(.secondaryText).frame(width: 34, alignment: .leading)
         }
     }
 }

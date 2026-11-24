@@ -86,7 +86,7 @@ struct RoutineStoreTests {
 
     @Test func adoptSuggestion_createsFiveItems_onlyIntoAnEmptyList() {
         store.adoptSuggestion()
-        #expect(store.checklist().map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
+        #expect(store.checklist().map(\.offsetMinutes) == [60, 90, 60, nil, 30])
         #expect(store.checklist().first?.title == "Helle Lichter ausmachen")
         // The long titles of the original template are stored whole.
         #expect(store.checklist().map(\.title) == RoutineSchedule.suggestedItems.map(\.title))
@@ -106,7 +106,7 @@ struct RoutineStoreTests {
         let items = store.checklist()
         #expect(items.count == 5)
         #expect(Set(items.map(\.id)).isDisjoint(with: Set(old.map(\.id))))
-        #expect(items.map(\.offsetMinutes) == [nil, 90, 60, nil, 30])
+        #expect(items.map(\.offsetMinutes) == [60, 90, 60, nil, 30])
     }
 
     @Test func replaceLegacySuggestion_keepsAnEditedList() {
@@ -121,6 +121,24 @@ struct RoutineStoreTests {
         #expect(store.checklist().isEmpty)
     }
 
+    private func adoptFivePointList(offsets: [Int?] = [nil, 90, 60, nil, 30]) {
+        let titles = RoutineSchedule.fivePointSuggestionTitles[0]
+        for (index, title) in titles.enumerated() { store.saveItem(ChecklistItem(title: title, order: index, offsetMinutes: offsets[index])) }
+    }
+
+    @Test func upgradeLightsOffset_untouchedFivePointList_setsSixtyOnce() {
+        adoptFivePointList()
+        #expect(store.upgradeLightsOffset())
+        #expect(store.checklist().map(\.offsetMinutes) == [60, 90, 60, nil, 30])
+        #expect(!store.upgradeLightsOffset())
+    }
+
+    @Test func upgradeLightsOffset_changedList_staysAsItIs() {
+        adoptFivePointList(offsets: [nil, 90, 60, nil, 45])
+        #expect(!store.upgradeLightsOffset())
+        #expect(store.checklist().map(\.offsetMinutes) == [nil, 90, 60, nil, 45])
+    }
+
     @Test func settingsDefaults() throws {
         let settings = try AppSettings.current(in: container.mainContext)
         #expect(settings.bedtimeMinutes == 1380)
@@ -129,6 +147,11 @@ struct RoutineStoreTests {
         #expect(settings.morningReminderMinutes == 450)
         #expect(settings.showsRoutinesInPlan)
         #expect(!settings.noteSuggestionConsent)
+    }
+
+    @Test func noteAssistantConsent_defaultsToFalse() throws {
+        let settings = try AppSettings.current(in: container.mainContext)
+        #expect(!settings.noteAssistantConsent)
     }
 
     @Test func schema_containsTheRoutineTypes() {
@@ -172,5 +195,23 @@ struct RoutineStoreTests {
 
     @Test func schema_containsFocusMark() {
         #expect(ModelContainerFactory.schema.entities.map(\.name).contains("FocusMarkRecord"))
+    }
+
+    @Test func gratitudeDays_skipsEmptyAndWhitespace() {
+        store.update(day) { $0.gratitude = ["Kaffee", "Sonne"] }
+        store.update(PlanDay(year: 2026, month: 11, day: 19)) { $0.startCompletedAt = testNow() }
+        // A record with blank entries only (written by an older version or by hand) is not a day with gratitude.
+        let blank = RoutineDayRecord(day: PlanDay(year: 2026, month: 11, day: 20))
+        blank.gratitudeData = try? JSONEncoder().encode(["  ", ""])
+        container.mainContext.insert(blank)
+        try? container.mainContext.save()
+        #expect(store.gratitudeDays() == [day: ["Kaffee", "Sonne"]])
+    }
+
+    @Test func gratitudeDays_afterClearing_isGone() {
+        store.update(day) { $0.gratitude = ["Kaffee"] }
+        #expect(store.gratitudeDays().keys.contains(day))
+        store.update(day) { $0.gratitude = [] }
+        #expect(store.gratitudeDays().isEmpty)
     }
 }

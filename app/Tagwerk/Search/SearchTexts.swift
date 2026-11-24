@@ -129,11 +129,12 @@ enum SearchTexts {
         case .location: String(localized: "Ort")
         case .calendar: String(localized: "Kalender")
         case .container: String(localized: "Liste")
-        case .project: String(localized: "Project")
+        case .project: String(localized: "GitHub-Projekt")
         case .label: String(localized: "Label")
         case .issueNumber: String(localized: "Nummer")
         case .kind: String(localized: "Art")
         case .quantity: String(localized: "Menge")
+        case .scan: String(localized: "Im Scan")
         }
     }
 
@@ -152,7 +153,7 @@ enum SearchTexts {
         case .closed: String(localized: "geschlossen")
         case .unassigned: String(localized: "nicht zugewiesen")
         case .assignedToOthers: String(localized: "anderen zugewiesen")
-        case .noProject: String(localized: "ohne Project")
+        case .noProject: String(localized: "ohne Projekt")
         }
     }
 

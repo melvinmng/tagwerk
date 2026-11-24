@@ -49,18 +49,34 @@
         }
       }
     },
-    "NSHealthShareUsageDescription": {
+    "NSFaceIDUsageDescription": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk zeigt deine Trainings und Schritte aus Health im Tab „Erfassen“."
+            "value": "Tagwerk entsperrt damit gesperrte Notizen und private Ordner."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk shows your workouts and steps from Health in the “Log” tab."
+            "value": "Tagwerk uses this to unlock locked notes and private folders."
+          }
+        }
+      }
+    },
+    "NSHealthShareUsageDescription": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk zeigt deine Trainings, Schritte, Aktivitätsenergie, dein Gewicht und deine Körperdaten aus Health im Tab „Erfassen“ und liest auf Wunsch Ernährungseinträge anderer Apps."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk shows your workouts, steps, active energy, weight and body data from Health in the “Log” tab and, on request, reads nutrition entries of other apps."
           }
         }
       }
@@ -70,13 +86,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health."
+            "value": "Tagwerk speichert deine Mahlzeiten mit ihren Nährwerten, dein Wasser, deine Trainings und dein Gewicht in Health."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk saves your meals, water and workouts in Health."
+            "value": "Tagwerk saves your meals with their nutrients, your water, workouts and weight in Health."
           }
         }
       }

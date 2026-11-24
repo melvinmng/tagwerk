@@ -1,36 +1,112 @@
-import AppIntents
 import SwiftUI
 import TagwerkCore
 
-/// Einstellungen › Erfassen (mockup E6a, ST1): goals and the meal-estimate consent.
+/// Einstellungen › Erfassen (mockup E6a, ST1): goals, the activity credit, nutrients and the meal-estimate consent.
 struct CaptureSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var showsWaterTip = true
+
+    var body: some View {
+        CaptureSettingsForm(goals: environment.goals)
+    }
+}
+
+/// The form of the settings; the goal editor lives here so that the sub page for the further goals edits the same plan.
+private struct CaptureSettingsForm: View {
+    @Environment(AppEnvironment.self) private var environment
+    @State private var editor: GoalPlanEditor
+    @State private var showsLookupConsent = false
+
+    init(goals: GoalStore) {
+        _editor = State(initialValue: GoalPlanEditor(goals: goals))
+    }
+
+    private func goal<Value>(_ keyPath: WritableKeyPath<GoalPlan, Value>) -> Binding<Value> {
+        Binding(get: { editor.plan[keyPath: keyPath] }, set: { editor.set(keyPath, to: $0) })
+    }
 
     var body: some View {
         @Bindable var settings = environment.settings
+        let capture = environment.capture
         Form {
             Section {
-                ValueStepper("Kalorien", value: $settings.goalKilocalories, in: 1000...6000, step: 50, unit: "kcal") {
+                ValueStepper("Kalorien (Grundziel)", value: goal(\.kcal), in: GoalRanges.kcal, step: 50, unit: "kcal") {
                     IntakeFormat.kcal(Double($0), estimated: false)
                 }
-                ValueStepper("Wasser", value: $settings.goalWaterMilliliters, in: 500...6000, step: 250,
+                ValueStepper("Wasser", value: goal(\.waterMilliliters), in: GoalRanges.waterMilliliters, step: 250,
                              kind: .decimal(fractionDigits: 2), scale: 1000, unit: "l") { IntakeFormat.liters($0) }
-                ValueStepper("Training pro Woche", value: $settings.goalWorkoutMinutesPerWeek, in: 0...1200, step: 15,
+                ValueStepper("Training pro Woche", value: goal(\.workoutMinutesPerWeek), in: GoalRanges.workoutMinutesPerWeek, step: 15,
                              kind: .durationMinutes, display: workoutGoalText)
-                ValueStepper("Schritte pro Tag", value: $settings.goalStepsPerDay, in: 0...30000, step: 500,
+                ValueStepper("Schritte pro Tag", value: goal(\.stepsPerDay), in: GoalRanges.stepsPerDay, step: 500,
                              unit: "Schritte", display: stepGoalText)
-                Toggle("Eiweiß-Ziel", isOn: $settings.proteinGoalEnabled)
-                if settings.proteinGoalEnabled {
-                    ValueStepper("Eiweiß", value: $settings.goalProteinGrams, in: 20...400, step: 5, unit: "g") {
+                Toggle("Eiweiß-Ziel", isOn: optionalGoal(\.proteinGrams, start: 120))
+                if let protein = editor.plan.proteinGrams {
+                    ValueStepper("Eiweiß", value: goal(\.proteinGrams, orStart: protein), in: GoalRanges.proteinGrams, step: 5, unit: "g") {
                         IntakeFormat.grams(Double($0), estimated: false)
                     }
+                }
+                NavigationLink {
+                    GoalPlanView(editor: editor)
+                } label: {
+                    Text("Weitere Ziele und frühere Stände")
                 }
             } header: {
                 Text("Ziele")
             } footer: {
-                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
+                Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Eine Änderung gilt ab heute; frühere Tage behalten ihr Ziel. Das Kalorienziel ist das Grundziel für einen Tag ohne angerechnete Aktivität. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
             }
+
+            Section {
+                Picker("Aktivität anrechnen", selection: $settings.activityCreditPercent) {
+                    ForEach(EnergyBudget.creditPercents, id: \.self) { percent in
+                        Text(percent == 0 ? String(localized: "Aus") : "\(percent) %").tag(percent)
+                    }
+                }
+                .accessibilityIdentifier("activityCredit")
+            } header: {
+                Text("Aktivität")
+            } footer: {
+                Text("Ein Teil der Aktivitätsenergie aus Health erhöht dein Tagesbudget. Geräte schätzen sie eher zu hoch, deshalb zählt voreingestellt die Hälfte. Das Kalorienziel gilt für einen Tag ohne angerechnete Aktivität.")
+            }
+
+            Section {
+                Toggle("Gesättigte Fettsäuren", isOn: $settings.saturatedFatEnabled)
+                Toggle("Salz", isOn: $settings.saltEnabled)
+                Toggle("Einträge anderer Apps mitzählen", isOn: Binding(
+                    get: { settings.countsForeignNutrition },
+                    set: { enabled in Task { await capture.setCountsForeignNutrition(enabled) } }))
+                    .accessibilityIdentifier("countsForeignNutrition")
+                LabeledContent("Weitere Nährwerte nach Health") {
+                    if capture.furtherNutrientsAccess == .notAsked {
+                        Button("Erlauben") { Task { await capture.allowFurtherNutrients() } }
+                    } else {
+                        Text("Angefragt").foregroundStyle(.secondaryText)
+                    }
+                }
+            } header: {
+                Text("Nährwerte")
+            } footer: {
+                Text("Ballaststoffe und Zucker sind immer dabei; gesättigte Fettsäuren und Salz erscheinen im Mahlzeitenblatt und in der Karte „Nährwerte“, wenn du sie einschaltest. Tagwerk liest für „Einträge anderer Apps mitzählen“ Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ob Health das Schreiben der weiteren Nährwerte erlaubt, steht an derselben Stelle.")
+            }
+
+            Section {
+                Toggle("Körperfett erfassen", isOn: $settings.bodyFatEnabled)
+                    .accessibilityIdentifier("bodyFatEnabled")
+                if capture.healthConnected, capture.bodyAccess == .notAsked {
+                    LabeledContent("Gewicht in Health") {
+                        Button("Erlauben") { Task { await capture.allowBodyAccess() } }
+                    }
+                } else if capture.bodyAccess == .asked {
+                    LabeledContent("Gewicht in Health") { Text("Angefragt").foregroundStyle(.secondaryText) }
+                }
+            } header: {
+                Text("Gewicht")
+            } footer: {
+                Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
+            }
+
+            BodyProfileSection(store: environment.bodyProfile)
+
+            GoalPlanningSettingsSection()
 
             Section {
                 ForEach(0..<DrinkPresets.defaults.count, id: \.self) { index in
@@ -53,10 +129,28 @@ struct CaptureSettingsView: View {
                 Text("Schätzung")
             } footer: {
                 if environment.ai.isSignedIn {
-                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), und nur, wenn du auf „Schätzen“ tippst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
+                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ tippst oder ein Foto für ein Etikett aufnimmst oder auswählst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
                 } else {
                     Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
                 }
+            }
+
+            Section {
+                Toggle("Online-Suche in Open Food Facts", isOn: Binding(
+                    get: { settings.isFoodLookupEnabled },
+                    set: { enabled in
+                        // Switching on asks for the consent and the contact address again; switching off keeps the address.
+                        if enabled { showsLookupConsent = true } else { settings.foodLookupConsent = false }
+                    }))
+                    .accessibilityIdentifier(AccessibilityID.FoodLookup.toggle)
+                if settings.isFoodLookupEnabled {
+                    FoodLookupContactField()
+                }
+                Link("Daten: Open Food Facts (ODbL)", destination: Self.openFoodFactsURL)
+            } header: {
+                Text("Online-Suche")
+            } footer: {
+                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
             }
 
             Section {
@@ -67,32 +161,29 @@ struct CaptureSettingsView: View {
             } footer: {
                 Text("„In Planen anzeigen“ zeigt Kalorien, Wasser und Schritte von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte und die Schritte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.")
             }
-
-            Section {
-                // The tip view only renders for an intent that belongs to an App Shortcut; it shows the spoken phrase
-                // as the system registered it, so an empty row means the shortcuts are not registered.
-                SiriTipView(intent: LogWaterIntent(), isVisible: $showsWaterTip)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                phrase("Wasser in Tagwerk erfassen", "Trägt 250 ml ein, ohne Tagwerk zu öffnen")
-                phrase("Mahlzeit in Tagwerk erfassen", "Öffnet das Blatt „Essen“")
-                phrase("Training in Tagwerk erfassen", "Öffnet das Blatt „Training“")
-                phrase("Was steht heute in Tagwerk an?", "Nennt Termine, Blöcke und Deadlines von heute")
-                phrase("Gewohnheit in Tagwerk abhaken", "Hakt eine Gewohnheit für heute ab")
-                phrase("Auf die Einkaufsliste in Tagwerk", "Fügt Artikel hinzu, ohne Tagwerk zu öffnen")
-                phrase("Füge Milch zur Einkaufsliste in Tagwerk hinzu", "Nennt den Artikel im Satz; Siri kennt deine bisherigen Artikel")
-                phrase("Einkaufsliste in Tagwerk zeigen", "Öffnet die Einkaufsliste")
-                phrase("Fokus starten in Tagwerk", "Startet oder beendet einen freien Fokus-Timer")
-                phrase("Notiz in Tagwerk diktieren", "Öffnet Brain Dump und startet das Diktat")
-                ShortcutsLink()
-            } header: {
-                Text("Siri & Kurzbefehle")
-            } footer: {
-                Text("Sag einen der Sätze zu Siri oder füge ihn in der App „Kurzbefehle“ hinzu. „Wasser erfassen“ lässt sich dort auch auf die Aktionstaste oder den Home-Bildschirm legen. Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.")
-            }
         }
         .navigationTitle("Erfassen")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showsLookupConsent) {
+            FoodLookupConsentSheet {
+                showsLookupConsent = false
+            } onDecline: {
+                showsLookupConsent = false
+            }
+        }
+    }
+
+    /// The home page of the data source named in the attribution.
+    private static let openFoodFactsURL = URL(string: "https://world.openfoodfacts.org")!
+
+    /// A goal that can be switched off (`nil`): the toggle sets `start` when it is switched on.
+    private func optionalGoal(_ keyPath: WritableKeyPath<GoalPlan, Int?>, start: Int) -> Binding<Bool> {
+        Binding(get: { editor.plan[keyPath: keyPath] != nil }, set: { editor.set(keyPath, to: $0 ? start : nil) })
+    }
+
+    /// The value of a goal that is switched on, as a plain number for the stepper.
+    private func goal(_ keyPath: WritableKeyPath<GoalPlan, Int?>, orStart start: Int) -> Binding<Int> {
+        Binding(get: { editor.plan[keyPath: keyPath] ?? start }, set: { editor.set(keyPath, to: $0) })
     }
 
     /// One portion of the quick buttons; every write goes through the rules, so the three values stay inside the range.
@@ -114,12 +205,5 @@ struct CaptureSettingsView: View {
     /// "8.000"; "ohne Ziel" at 0.
     private func stepGoalText(_ steps: Int) -> String {
         steps > 0 ? IntakeFormat.grouped(steps) : String(localized: "ohne Ziel")
-    }
-
-    private func phrase(_ text: LocalizedStringResource, _ detail: LocalizedStringResource) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("„\(String(localized: text))“")
-            Text(detail).font(.caption).foregroundStyle(.secondary)
-        }
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import TagwerkCore
+import GitHubKit
 @testable import Tagwerk
 
 /// The spoken text of a task row: one element with title, due date, repeat, priority and list.
@@ -30,5 +31,52 @@ struct TaskRowTextTests {
         let tomorrow = TaskRowText.accessibilityLabel(item: item(due: DueDate(year: 2026, month: 11, day: 19), priority: nil),
                                                       isRecurring: false, now: now, calendar: calendar)
         #expect(tomorrow == "Bericht, fällig morgen, Uni")
+    }
+
+    @Test func accessibilityLabel_namesOwnReminders() {
+        let due = DueDate(year: 2026, month: 11, day: 19)
+        func label(_ mark: ReminderMark?) -> String {
+            TaskRowText.accessibilityLabel(item: item(due: due, priority: nil), isRecurring: false, now: now, calendar: calendar,
+                                           reminderMark: mark)
+        }
+        #expect(label(nil) == "Bericht, fällig morgen, Uni")
+        #expect(label(.custom(count: 3)) == "Bericht, fällig morgen, Uni, 3 eigene Erinnerungen")
+        #expect(label(.custom(count: 1)) == "Bericht, fällig morgen, Uni, 1 eigene Erinnerung")
+        #expect(label(ReminderMark.none) == "Bericht, fällig morgen, Uni, keine Erinnerungen")
+    }
+
+    private func issue(statuses: [SubContainerStatus], source: TaskSource = .github) -> TaskItem {
+        TaskItem(id: TaskID(source: source, rawValue: "I_1"), title: "Bericht", notes: nil, due: nil, priority: nil,
+                 estimateMinutes: nil, isCompleted: false, container: TaskContainer(id: "beispiel/app", name: "beispiel/app", colorHex: nil),
+                 url: nil, version: "1", editableFields: [], statuses: statuses)
+    }
+
+    private func stage(_ current: String, project: String = "Tagwerk", options: [String] = ["Backlog", "Ready", "In Progress", "In Review", "Done"]) -> SubContainerStatus {
+        SubContainerStatus(subContainerID: "PVT_\(project)", subContainerName: project, current: current, options: options, isWritable: true)
+    }
+
+    @Test func accessibilityLabel_namesTheStatus() {
+        let one = TaskRowText.accessibilityLabel(item: issue(statuses: [stage("In Progress")]), isRecurring: false, now: now, calendar: calendar)
+        #expect(one == "Bericht, beispiel/app, Status In Progress")
+        let several = TaskRowText.accessibilityLabel(
+            item: issue(statuses: [stage("In Progress", project: "A"), stage("In Review", project: "B")]),
+            isRecurring: false, now: now, calendar: calendar)
+        #expect(several == "Bericht, beispiel/app, 2 Status")
+    }
+
+    @Test func accessibilityLabel_startStageHasNoStatus() {
+        let text = TaskRowText.accessibilityLabel(item: issue(statuses: [stage("Ready")]), isRecurring: false, now: now, calendar: calendar)
+        #expect(text == "Bericht, beispiel/app")
+    }
+
+    @Test func accessibilityLabel_localTask_hasNoStatus() {
+        let text = TaskRowText.accessibilityLabel(item: issue(statuses: [stage("In Progress")], source: .local), isRecurring: false,
+                                                  now: now, calendar: calendar)
+        #expect(text == "Bericht, beispiel/app")
+    }
+
+    @Test func statusText_isTheStageOrTheCount() {
+        #expect(TaskRowText.statusText(.stage("In Progress")) == "In Progress")
+        #expect(TaskRowText.statusText(.several(3)) == "3 Status")
     }
 }

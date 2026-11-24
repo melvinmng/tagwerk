@@ -13,6 +13,7 @@ struct RoutineSettingsView: View {
         @Bindable var settings = environment.settings
         let store = environment.routineStore
         let items = store.checklist()
+        let reminding = Set(RoutineSchedule.reminderItems(items).map(\.id))
         let conflict = RoutineSchedule.quietHoursConflict(
             settings.quietHours, items: items, bedtimeMinutes: settings.bedtimeMinutes, eveningEnabled: settings.eveningRemindersEnabled,
             morningEnabled: settings.morningReminderEnabled, morningMinutes: settings.morningReminderMinutes,
@@ -27,7 +28,10 @@ struct RoutineSettingsView: View {
             } header: {
                 Text("Tagesabschluss")
             } footer: {
-                if conflict.evening { Text(Self.quietHoursNote) }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Abgehakte Punkte erinnern an dem Abend nicht mehr. Tagwerk plant die Erinnerungen für die nächsten 3 Tage und füllt sie nach, sobald du die App öffnest.")
+                    if conflict.evening { Text(Self.quietHoursNote) }
+                }
             }
 
             Section {
@@ -36,9 +40,14 @@ struct RoutineSettingsView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.title)
-                                Text(detail(item, bedtime: settings.bedtimeMinutes)).font(.caption).foregroundStyle(.secondary)
+                                if let detail = ChecklistText.settingsDetail(item, bedtime: settings.bedtimeMinutes, calendar: .tagwerk) {
+                                    Text(detail).font(.caption).foregroundStyle(.secondaryText)
+                                }
                             }
                             Spacer()
+                            if settings.eveningRemindersEnabled, reminding.contains(item.id) {
+                                Image(systemName: "bell").font(.caption).foregroundStyle(Color.secondaryText).accessibilityLabel("erinnert")
+                            }
                             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                         }
                     }
@@ -58,7 +67,7 @@ struct RoutineSettingsView: View {
             } header: {
                 Text("Abend-Checkliste")
             } footer: {
-                Text("Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.")
+                Text("\(Image(systemName: "bell")) erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern; weitere stehen nur in der Liste.")
             }
 
             Section {
@@ -66,10 +75,14 @@ struct RoutineSettingsView: View {
                 if settings.morningReminderEnabled {
                     DatePicker("Uhrzeit", selection: $settings.morningReminderMinutes.asTime(), displayedComponents: .hourAndMinute)
                 }
+                Toggle("Gewicht abfragen", isOn: $settings.morningWeightEnabled)
             } header: {
                 Text("Tagesstart")
             } footer: {
-                if conflict.morning { Text(Self.quietHoursNote) }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Die Zeile „Gewicht“ im Tagesstart erinnert ans Wiegen, ohne eine eigene Mitteilung.")
+                    if conflict.morning { Text(Self.quietHoursNote) }
+                }
             }
 
             Section {
@@ -94,6 +107,15 @@ struct RoutineSettingsView: View {
                 Text("Planen")
             } footer: {
                 Text("Zeigt die Karte „Tagesstart“ bzw. „Fokus heute“ und abends die Zeile „Tagesabschluss“ im Tab „Planen“.")
+            }
+
+            Section {
+                NavigationLink("Bible Study") { BibleStudySettingsView() }
+                    .frame(minHeight: 44)
+            } header: {
+                Text("Zeit mit Gott")
+            } footer: {
+                Text("Wo „Bible Study starten“ steht und wann Tagwerk daran erinnert. Das Tagebuch steht im Tagesabschluss.")
             }
 
             Section {
@@ -138,7 +160,7 @@ struct RoutineSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Mitteilungen sind für Tagwerk nicht erlaubt. Ohne Erlaubnis erinnert nur die Zeile in „Planen“.",
                   systemImage: "bell.slash")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondaryText)
             Button(environment.routineNotifications.authorization == .notDetermined ? "Mitteilungen erlauben" : "Mitteilungen in den Einstellungen") {
                 if environment.routineNotifications.authorization == .notDetermined {
                     Task {
@@ -150,14 +172,6 @@ struct RoutineSettingsView: View {
                 }
             }
         }
-    }
-
-    /// "60 min vorher · 22:00" or "ohne Erinnerung".
-    private func detail(_ item: ChecklistItem, bedtime: Int) -> String {
-        guard let offset = item.offsetMinutes else { return String(localized: "ohne Erinnerung") }
-        let clock = DateText.time(minutes: RoutineSchedule.anchorMinutes(bedtimeMinutes: bedtime, offsetMinutes: offset),
-                                  calendar: .tagwerk)
-        return String(localized: "\(offset) min vorher · \(clock)")
     }
 
     /// Routine reminders are exempt from the quiet hours; the hint says so where one of them falls into the window.

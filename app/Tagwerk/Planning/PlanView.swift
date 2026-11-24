@@ -13,6 +13,8 @@ struct PlanView: View {
     @State private var dueDateFor: TaskItem?
     @State private var creatingEvent = false
     @State private var preparingDeadline: ImportantDeadline?
+    /// Width of the window; the date title takes the longest form that fits next to the bar buttons (PL16b).
+    @State private var windowWidth: CGFloat = 0
 
     @Environment(AppEnvironment.self) private var environment
 
@@ -26,7 +28,7 @@ struct PlanView: View {
                         symbol: "sparkles", duration: 5,
                         onUndo: { Task { await environment.planner.undoDismissAll() } },
                         onExpire: { environment.planner.clearDismissUndo() })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -37,7 +39,7 @@ struct PlanView: View {
             UndoCapsule(title: copy.title, caption: "Dupliziert", symbol: "plus.square.on.square", duration: 5,
                         onUndo: { Task { await model.undoDuplicate() } },
                         onExpire: { if model.lastDuplicate?.id == copy.id { model.clearDuplicateUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -52,7 +54,7 @@ struct PlanView: View {
             UndoCapsule(title: task.title, caption: caption, symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
                         onUndo: { Task { await model.undoMove() } },
                         onExpire: { if model.lastMove == move { model.clearMoveUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -64,7 +66,7 @@ struct PlanView: View {
                         symbol: "arrow.left.arrow.right.circle.fill", duration: 5,
                         onUndo: { Task { await model.undoMoveGroup() } },
                         onExpire: { if model.lastMoveGroup == moves { model.clearMoveGroupUndo() } })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -77,7 +79,7 @@ struct PlanView: View {
                         onUndo: { Task { await taskList.undoComplete(); await model.reload() } },
                         onExpire: { if taskList.lastCompleted?.id == completed.id { taskList.dismissUndo() } })
                 .id(completed.id)
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
 
@@ -89,9 +91,12 @@ struct PlanView: View {
                         symbol: "sparkles", duration: 6,
                         onUndo: { Task { await environment.planner.undoAcceptAll() } },
                         onExpire: { environment.planner.clearAcceptUndo() })
-                .padding(.bottom, 60)
+                .padding(.bottom, capsuleInset)
         }
     }
+
+    /// The capsules sit higher while the focus bar is shown above the tabs.
+    private var capsuleInset: CGFloat { UndoCapsuleMetrics.bottomInset(focusBarVisible: environment.focus.isRunning) }
 
     var body: some View {
         NavigationStack {
@@ -99,14 +104,16 @@ struct PlanView: View {
                 switch model.scope {
                 case .day: DayView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, onOpenEvent: onOpenEvent,
                                    onEditRecurring: onEditRecurring, menuActions: menuActions, deadlineActions: deadlineActions)
-                case .week: WeekView(model: model, onOpenTask: onOpenTask, menuActions: menuActions, deadlineActions: deadlineActions)
+                case .week: WeekView(model: model, onOpenTask: onOpenTask, onShowTask: onShowTask, menuActions: menuActions,
+                                     deadlineActions: deadlineActions)
                 case .month:
                     MonthView(model: model, onSelectDay: { day in
-                        model.anchor = day
                         model.scope = .day
+                        model.jump(to: day)
                     }, onOpenEvent: onOpenEvent, onOpenTask: onOpenTask, deadlineActions: deadlineActions)
                 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
             .safeAreaBar(edge: .top) { PlanControlRow(model: model) }
             .overlay(alignment: .bottom) { dismissUndo }
             .overlay(alignment: .bottom) { duplicateUndo }
@@ -114,7 +121,7 @@ struct PlanView: View {
             .overlay(alignment: .bottom) { moveGroupUndo }
             .overlay(alignment: .bottom) { acceptAllUndo }
             .overlay(alignment: .bottom) { completeUndo }
-            .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, 60) }
+            .overlay(alignment: .bottom) { HandedOverCapsule(model: environment.taskList).padding(.bottom, capsuleInset) }
             .animation(.spring(duration: 0.35), value: environment.taskList.lastHandedOver)
             .animation(.spring(duration: 0.35), value: environment.taskList.lastCompleted?.id)
             .navigationTitle("Planen")
@@ -122,7 +129,9 @@ struct PlanView: View {
             // The date title replaces the bar title; the tab bar already says "Planen" (mockup PK2).
             .toolbar(removing: .title)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { PlanTitleButton(model: model) }
+                ToolbarItem(placement: .topBarLeading) {
+                    PlanTitleButton(model: model, windowWidth: windowWidth)
+                }
                     .sharedBackgroundVisibility(.hidden)
                 // Search and ＋ share one glass area; the assistant stays apart on the outside.
                 ToolbarItem(placement: .topBarTrailing) { SearchButton() }
@@ -175,8 +184,8 @@ struct PlanView: View {
     private var deadlineActions: DeadlineActions {
         DeadlineActions(openEvent: onOpenEvent, openTask: onOpenTask,
                         showDay: { day in
-                            model.anchor = day
                             model.scope = .day
+                            model.jump(to: day)
                         },
                         prepare: { preparingDeadline = $0 })
     }

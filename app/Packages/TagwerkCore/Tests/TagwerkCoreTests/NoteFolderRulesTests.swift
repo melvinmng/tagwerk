@@ -113,6 +113,70 @@ struct NoteFolderRulesTests {
         #expect(NoteFolderRole.journal.acceptsOwnNotes && NoteFolderRole.bibleStudy.acceptsOwnNotes)
     }
 
+    @Test func privateFolderIDs_includesSubfolders() {
+        // Subfolders below system folders cannot be created in the app (`subfolderBelowSystemFolder_cannotBeCreatedOrMovedThere`);
+        // this data is built directly and only guards against future changes and damaged data.
+        let journal = folder("Tagebuch", role: .journal)
+        let sub = folder("Unter Tagebuch", parent: journal)
+        let subSub = folder("Tiefer", parent: sub)
+        let free = folder("Arbeit")
+        let ids = NoteFolderRules.privateFolderIDs(in: [journal, sub, subSub, free])
+        #expect(ids == [journal.id, sub.id, subSub.id])
+    }
+
+    @Test func privateFolderIDs_ignoresRecipesAndBrainDump() {
+        let folders = [folder("Rezepte", role: .recipes), folder("Gedanken", role: .brainDump),
+                       folder("Morgens", role: .morningRoutine), folder("Abends", role: .eveningRoutine), folder("Eigener")]
+        #expect(NoteFolderRules.privateFolderIDs(in: folders).isEmpty)
+    }
+
+    @Test func privateFolderIDs_coversAllPrivateRoles() {
+        let folders = [folder("Tagebuch", role: .journal), folder("Bible Study", role: .bibleStudy), folder("Dream Log", role: .dreamLog)]
+        #expect(NoteFolderRules.privateFolderIDs(in: folders) == Set(folders.map(\.id)))
+    }
+
+    @Test func privateFolderIDs_cycleTerminates() {
+        let idA = UUID(), idB = UUID()
+        let a = NoteFolderInfo(id: idA, name: "A", parentID: idB, role: .journal)
+        let b = NoteFolderInfo(id: idB, name: "B", parentID: idA)
+        let other = folder("Frei")
+        #expect(NoteFolderRules.privateFolderIDs(in: [a, b, other]) == [idA, idB])
+    }
+
+    @Test func mayLeaveDevice_freeNoteInJournalFolder_isFalse() {
+        let journal = folder("Tagebuch", role: .journal)
+        let ids = NoteFolderRules.privateFolderIDs(in: [journal])
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .free, folderID: journal.id, privateFolderIDs: ids))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: ids))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .morning, folderID: UUID(), privateFolderIDs: ids))
+    }
+
+    @Test func mayLeaveDevice_lockedFreeNote_isFalse() {
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: [], isLocked: true))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .morning, folderID: UUID(), privateFolderIDs: [], isLocked: true))
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: [], isLocked: false))
+    }
+
+    @Test func mayLeaveDevice_defaultParameterKeepsOldBehaviour() {
+        #expect(NoteFolderRules.mayLeaveDevice(kind: .free, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .journal, folderID: nil, privateFolderIDs: []))
+    }
+
+    @Test func mayLeaveDevice_dreamKind_isFalse() {
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .dream, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .journal, folderID: nil, privateFolderIDs: []))
+        #expect(!NoteFolderRules.mayLeaveDevice(kind: .bibleStudy, folderID: nil, privateFolderIDs: []))
+    }
+
+    @Test func subfolderBelowSystemFolder_cannotBeCreatedOrMovedThere() throws {
+        let journal = folder("Tagebuch", role: .journal)
+        let own = folder("Eigener")
+        #expect(!NoteFolderRules.canCreateFolder(under: journal.id, in: [journal, own]))
+        #expect(throws: NoteFolderRules.MoveError.systemFolder) {
+            try NoteFolderRules.validateMove(own.id, to: journal.id, in: [journal, own])
+        }
+    }
+
     @Test func canCreateFolder_belowBrainDump_isFalse() {
         let brainDump = folder("Brain Dump", role: .brainDump)
         #expect(!NoteFolderRules.canCreateFolder(under: brainDump.id, in: [brainDump]))
@@ -195,5 +259,32 @@ struct NoteFolderRulesTests {
         #expect(sorted(.modified) == ["Zitrone", "banane", "Apfel"])
         #expect(sorted(.created) == ["Zitrone", "Apfel", "banane"])
         #expect(sorted(.title) == ["Zitrone", "Apfel", "banane"])
+    }
+
+    @Test func sortOrder_reversedKeepsPinnedOnTop() {
+        let old = instant(2026, 1, 1)
+        let mid = instant(2026, 6, 1)
+        let new = instant(2026, 11, 1)
+        let apple = NoteSortKey(isPinned: false, createdAt: new, updatedAt: old, title: "Apfel")
+        let banana = NoteSortKey(isPinned: false, createdAt: old, updatedAt: new, title: "banane")
+        let cherry = NoteSortKey(isPinned: true, createdAt: mid, updatedAt: mid, title: "Zitrone")
+        let lemon = NoteSortKey(isPinned: true, createdAt: new, updatedAt: new, title: "Limone")
+        func sorted(_ order: NoteSortOrder, reversed: Bool) -> [String] {
+            [apple, banana, cherry, lemon].sorted { order.precedes($0, $1, reversed: reversed) }.map(\.title)
+        }
+        #expect(sorted(.modified, reversed: false) == ["Limone", "Zitrone", "banane", "Apfel"])
+        #expect(sorted(.modified, reversed: true) == ["Zitrone", "Limone", "Apfel", "banane"])
+        // "Z bis A" for titles.
+        #expect(sorted(.title, reversed: false) == ["Limone", "Zitrone", "Apfel", "banane"])
+        #expect(sorted(.title, reversed: true) == ["Zitrone", "Limone", "banane", "Apfel"])
+    }
+
+    @Test func sortOrder_groupingDateFollowsTheOrder() {
+        let created = instant(2026, 1, 1)
+        let updated = instant(2026, 11, 1)
+        let key = NoteSortKey(isPinned: false, createdAt: created, updatedAt: updated, title: "A")
+        #expect(NoteSortOrder.modified.groupingDate(of: key) == updated)
+        #expect(NoteSortOrder.created.groupingDate(of: key) == created)
+        #expect(NoteSortOrder.title.groupingDate(of: key) == nil)
     }
 }

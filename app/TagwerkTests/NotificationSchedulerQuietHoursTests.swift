@@ -54,7 +54,7 @@ struct NotificationSchedulerQuietHoursTests {
         local.tasks = [task("A", day: 19, hour: 1)]
         await scheduler(now: testNow()).reschedule()
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
-        #expect(center.added.last?.body == "War fällig heute um 01:00 · local")
+        #expect(center.added.last?.body == "Seit heute, 01:00 fällig · local")
     }
 
     @Test func windowStartFollowsTheBedtime_whileCoupled() async {
@@ -85,26 +85,51 @@ struct NotificationSchedulerQuietHoursTests {
         await scheduler(now: testNow()).reschedule()
         #expect(center.pending.count == NotificationScheduler.limit)
         #expect(center.pending.values.allSatisfy { $0.fireDate == at(19, 7) })
-        // All share one time: the order falls back to the identifier, so the first fifty identifiers stay.
-        #expect(center.pendingIDs.contains("tagwerk.task.local:T49#0"))
-        #expect(!center.pendingIDs.contains("tagwerk.task.local:T50#0"))
+        // All share one time: the order falls back to the identifier, so the first 44 identifiers stay.
+        #expect(center.pendingIDs.contains("tagwerk.task.local:T43#0"))
+        #expect(!center.pendingIDs.contains("tagwerk.task.local:T44#0"))
     }
 
     // MARK: Focus filter
 
-    @Test func focusActive_holdsNotificationsBack_untilEightHoursAfterTheStart() async {
+    @Test func focusActive_withoutQuietHours_holdsForFourHours() async {
         settings.focusQuietSince = at(18, 9)
         local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
         await scheduler(now: testNow()).reschedule()
-        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 17))
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
     }
 
-    @Test func focusActive_withQuietHours_holdsUntilTheirEnd() async {
+    @Test func focusActive_withQuietHours_holdsForFourHours() async {
         enableQuietHours()
         settings.focusQuietSince = at(18, 9)
-        local.tasks = [task("A", day: 18, hour: 14)]
+        local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00
         await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
+    }
+
+    @Test func focusActive_fallbackInsideQuietHours_movesToTheirEnd() async {
+        enableQuietHours()
+        settings.focusQuietSince = at(18, 20)
+        local.tasks = [task("A", day: 18, hour: 23, minute: 30)]  // fires 21:30; four hours after 20:00 is 00:00
+        await scheduler(now: at(18, 21)).reschedule()
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(19, 7))
+    }
+
+    @Test func focusEndsAfterTheFallback_deliversNothingTwice() async {
+        enableQuietHours()
+        settings.focusQuietSince = at(18, 9)
+        local.tasks = [task("A", day: 18, hour: 14)]  // fires 12:00, held until 13:00
+        await scheduler(now: testNow()).reschedule()
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == at(18, 13))
+        // 13:00 passes and iOS delivers the held notification.
+        center.removePendingForTest("tagwerk.task.local:A#0")
+        // The end of the Focus is reported late, after the fallback target.
+        let late = at(18, 17)
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: late, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: late).reschedule()
+        #expect(center.pending.isEmpty)
+        #expect(settings.focusQuietState == FocusQuiet.State())
     }
 
     @Test func focusEndsEarly_restoresTheOriginalTime() async {
@@ -125,7 +150,7 @@ struct NotificationSchedulerQuietHoursTests {
         let catchUpMoment = now.addingTimeInterval(60)
         #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == catchUpMoment)
         #expect(center.pending["tagwerk.task.local:B#0"] == nil)  // came due before the Focus started
-        #expect(center.added.last?.body == "War fällig heute um 13:00 · local")
+        #expect(center.added.last?.body == "Seit heute, 13:00 fällig · local")
 
         // A second run before the moment plans the same one; after it, nothing is planned again.
         await scheduler(now: now.addingTimeInterval(30)).reschedule()
@@ -134,6 +159,47 @@ struct NotificationSchedulerQuietHoursTests {
         await scheduler(now: catchUpMoment.addingTimeInterval(5)).reschedule()
         #expect(center.pending.isEmpty)
         #expect(settings.focusQuietState == FocusQuiet.State())
+    }
+
+    @Test func secondFocusAfterTheCatchUpFired_doesNotReplayIt() async {
+        local.tasks = [task("A", day: 18, hour: 11)]  // fires 09:00; an earlier Focus caught it up at 10:01
+        settings.focusQuietState = FocusQuiet.State(since: nil, catchUpFrom: at(18, 8), catchUpAt: at(18, 10, 1))
+        settings.focusQuietState = FocusQuiet.applying(active: true, now: at(18, 14), to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: at(18, 14)).reschedule()
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: at(18, 15), to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: at(18, 15)).reschedule()
+        #expect(center.pending.isEmpty)
+    }
+
+    @Test func secondFocusRunningPastItsTarget_doesNotDeliverItsSpanTwice() async {
+        // Focus A: 09:00 to 10:00, ended before its target. Its catch-up has no moment yet when Focus B starts half a minute
+        // later (the run after the end of A is still busy loading). B never reports its end in time.
+        local.tasks = [task("A", day: 18, hour: 11, minute: 30),  // fires 09:30, inside A
+                       task("B", day: 18, hour: 13),  // fires 11:00, inside B
+                       task("C", day: 18, hour: 18)]  // fires 16:00, after B
+        settings.focusQuietSince = at(18, 9)
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: at(18, 10), to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        let startOfB = at(18, 10).addingTimeInterval(30)
+        settings.focusQuietState = FocusQuiet.applying(active: true, now: startOfB, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: startOfB).reschedule()
+        let targetOfB = startOfB.addingTimeInterval(FocusQuiet.unreportedEndHold)
+        #expect(center.pending["tagwerk.task.local:B#0"]?.fireDate == targetOfB)
+
+        // The target passes and iOS delivers B.
+        center.removePendingForTest("tagwerk.task.local:B#0")
+        // The end of B is reported late.
+        let late = at(18, 15)
+        settings.focusQuietState = FocusQuiet.applying(active: false, now: late, to: settings.focusQuietState,
+                                                       quietHours: settings.quietHours, calendar: calendar)
+        await scheduler(now: late).reschedule()
+        // A is caught up once; B was delivered at its target and stays out; C keeps its time.
+        #expect(center.pending["tagwerk.task.local:A#0"]?.fireDate == late.addingTimeInterval(60))
+        #expect(center.pending["tagwerk.task.local:B#0"] == nil)
+        #expect(center.pending["tagwerk.task.local:C#0"]?.fireDate == at(18, 16))
     }
 
     @Test func staleFocusStart_isDropped() async {

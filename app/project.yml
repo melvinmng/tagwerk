@@ -29,7 +29,9 @@ targets:
   Tagwerk:
     type: application
     platform: iOS
-    sources: [Tagwerk]
+    sources:
+      - Tagwerk
+      - Design/Colors.xcassets
     dependencies:
       - package: TagwerkCore
       - package: SecureStore
@@ -51,15 +53,23 @@ targets:
         UILaunchScreen: {}
         NSRemindersFullAccessUsageDescription: "Tagwerk liest und bearbeitet deine Erinnerungen, um sie mit deinen anderen Aufgaben zusammenzuführen."
         NSCalendarsFullAccessUsageDescription: "Tagwerk liest deinen Kalender, um deinen Tag zu planen."
-        NSHealthShareUsageDescription: "Tagwerk zeigt deine Trainings und Schritte aus Health im Tab „Erfassen“."
-        NSHealthUpdateUsageDescription: "Tagwerk speichert deine Mahlzeiten, dein Wasser und deine Trainings in Health."
+        NSHealthShareUsageDescription: "Tagwerk zeigt deine Trainings, Schritte, Aktivitätsenergie, dein Gewicht und deine Körperdaten aus Health im Tab „Erfassen“ und liest auf Wunsch Ernährungseinträge anderer Apps."
+        NSHealthUpdateUsageDescription: "Tagwerk speichert deine Mahlzeiten mit ihren Nährwerten, dein Wasser, deine Trainings und dein Gewicht in Health."
         NSMicrophoneUsageDescription: "Tagwerk wandelt deine Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht."
+        NSFaceIDUsageDescription: "Tagwerk entsperrt damit gesperrte Notizen und private Ordner."
         NSCameraUsageDescription: "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst."
         GitHubClientID: $(GITHUB_CLIENT_ID)
         UIBackgroundModes: [fetch]
         NSSupportsLiveActivities: true
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: de.tagwerk.backup
+            UTTypeDescription: Tagwerk-Sicherung
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [tagwerk]
+              public.mime-type: application/x-tagwerk-backup
         CFBundleURLTypes:
           - CFBundleURLName: $(TAGWERK_BUNDLE_ID)
             CFBundleURLSchemes: [tagwerk]
@@ -70,6 +80,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID)
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
   TagwerkWidget:
     type: app-extension
     platform: iOS
@@ -101,6 +112,8 @@ targets:
     platform: iOS
     sources:
       - TagwerkShare
+      - Design/Colors.xcassets
+      - path: Tagwerk/Common/TextTones.swift
     dependencies:
       - package: TagwerkCore
     entitlements:
@@ -128,10 +141,14 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(TAGWERK_BUNDLE_ID).share
         GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
   TagwerkTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [TagwerkTests]
+    sources:
+      - TagwerkTests
+      # The rule that confirms audit findings is plain Swift of the UI test target; its unit test runs here, without a simulator app launch.
+      - path: TagwerkUITests/AuditConfirmation.swift
     dependencies:
       - target: Tagwerk
     settings:
@@ -160,7 +177,11 @@ schemes:
         Tagwerk: all
         TagwerkTests: [test]
     test:
-      targets: [TagwerkTests]
+      targets:
+        - TagwerkTests
+        # Tests of the packages that cannot run on macOS (AIKit imports UIKit): one build graph and one DerivedData folder
+        # with the app, instead of a separate package build. Keep in sync with PACKAGE_TEST_PLATFORM in test-all.sh.
+        - package: AIKit/AIKitTests
       language: de
       region: DE
   TagwerkUITests:

@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "%@ %%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %%"
+          }
+        }
+      }
+    },
     "%@ + %lld weitere": {
       "localizations": {
         "de": {
@@ -18,6 +28,7 @@
       }
     },
     "%@ / %@ kcal · %@ / %@": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -33,12 +44,94 @@
         }
       }
     },
+    "%@ / %lld g": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ / %2$lld g"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / %2$lld g"
+          }
+        }
+      }
+    },
+    "%@ Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ protein"
+          }
+        }
+      }
+    },
+    "%@ Gramm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ grams"
+          }
+        }
+      }
+    },
+    "%@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories over budget"
+          }
+        }
+      }
+    },
     "%@ Schritte": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ steps"
+          }
+        }
+      }
+    },
+    "%@ Schritte pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ steps per day"
+          }
+        }
+      }
+    },
+    "%@ Schritte pro Tag, %@ Training pro Woche": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ Schritte pro Tag, %2$@ Training pro Woche"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ steps per day, %@ of training per week"
+          }
+        }
+      }
+    },
+    "%@ Training pro Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of training per week"
           }
         }
       }
@@ -59,6 +152,32 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kcal"
+          }
+        }
+      }
+    },
+    "%@ kcal aktiv pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal active per day"
+          }
+        }
+      }
+    },
+    "%@ kcal entsprechen etwa %@ (%@; grobe Schätzung, der tatsächliche Verlauf flacht ab).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kcal entsprechen etwa %2$@ (%3$@; grobe Schätzung, der tatsächliche Verlauf flacht ab)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal correspond to about %@ (%@; rough estimate, the actual course flattens out)."
           }
         }
       }
@@ -95,12 +214,52 @@
         }
       }
     },
+    "%@ kcal über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal over budget"
+          }
+        }
+      }
+    },
+    "%@ kg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg"
+          }
+        }
+      }
+    },
+    "%@ kg/Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kg/week"
+          }
+        }
+      }
+    },
     "%@ l": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ L"
+          }
+        }
+      }
+    },
+    "%@ pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per day"
           }
         }
       }
@@ -117,6 +276,80 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ von %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$lld grams"
+          }
+        }
+      }
+    },
+    "%@ von höchstens %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ von höchstens %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of at most %2$lld grams"
+          }
+        }
+      }
+    },
+    "%@ · %@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ / %3$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld von %lld Mahlzeiten": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$lld von %3$lld Mahlzeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld of %3$lld meals"
+          }
+        }
+      }
+    },
+    "%@ über Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over budget"
           }
         }
       }
@@ -211,6 +444,16 @@
         }
       }
     },
+    "%lld Gramm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld grams"
+          }
+        }
+      }
+    },
     "%lld Mal": {
       "localizations": {
         "de": {
@@ -247,6 +490,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Messungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld measurements."
           }
         }
       }
@@ -507,6 +760,26 @@
         }
       }
     },
+    "%lld g Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld g of fibre"
+          }
+        }
+      }
+    },
+    "%lld g Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld g of protein"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "en": {
@@ -559,6 +832,22 @@
         }
       }
     },
+    "%lld von %lld Gramm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld von %2$lld Gramm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld grams"
+          }
+        }
+      }
+    },
     "1 Tag vorher um %@": {
       "localizations": {
         "en": {
@@ -575,6 +864,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "5 minutes for the new week?"
+          }
+        }
+      }
+    },
+    "7-Tage-Mittel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean %@"
+          }
+        }
+      }
+    },
+    "7-Tage-Mittel %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean %@."
+          }
+        }
+      }
+    },
+    "Ab %@ für alle folgenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@ on, for all following"
           }
         }
       }
@@ -659,6 +978,16 @@
         }
       }
     },
+    "Alle Werte sind Schätzungen; Einzelfehler von ±10 % und mehr sind möglich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All values are estimates; individual errors of ±10 % and more are possible."
+          }
+        }
+      }
+    },
     "Allgemeine Stimmung": {
       "localizations": {
         "en": {
@@ -669,12 +998,42 @@
         }
       }
     },
-    "Am selben Tag um %@": {
+    "Alter": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On the same day at %@"
+            "value": "Age"
+          }
+        }
+      }
+    },
+    "Alter %lld Jahre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age %lld years"
+          }
+        }
+      }
+    },
+    "Am Tag selbst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the day"
+          }
+        }
+      }
+    },
+    "Am Tag selbst um %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the day at %@"
           }
         }
       }
@@ -685,6 +1044,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imported from Notion"
+          }
+        }
+      }
+    },
+    "Ausgangswerte aus Open Food Facts, von dir geändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting values from Open Food Facts, changed by you"
+          }
+        }
+      }
+    },
+    "Ballaststoffe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiber"
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Anfang %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around early %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Ende %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around late %@."
+          }
+        }
+      }
+    },
+    "Bei diesem Tempo etwa Mitte %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At this pace, around mid-%@."
           }
         }
       }
@@ -749,6 +1158,94 @@
         }
       }
     },
+    "Das Eiweißziel liegt unter %lld g, dem Richtwert von %@ g je Kilogramm Referenzgewicht.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Eiweißziel liegt unter %1$lld g, dem Richtwert von %2$@ g je Kilogramm Referenzgewicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The protein goal is below %lld g, the reference of %@ g per kilogram of reference weight."
+          }
+        }
+      }
+    },
+    "Das Grundziel bedeutet bei deinem geschätzten Verbrauch etwa %@. Das liegt über der Regel von Tagwerk von %@ pro Woche.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Grundziel bedeutet bei deinem geschätzten Verbrauch etwa %1$@. Das liegt über der Regel von Tagwerk von %2$@ pro Woche."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At your estimated expenditure the base goal means about %@. That is above Tagwerk’s rule of %@ per week."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter %@ kcal. Besprich ein so niedriges Ziel mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below %@ kcal. Discuss such a low goal with a doctor."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter deinem geschätzten Ruheumsatz (~%@ kcal).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below your estimated resting energy (~%@ kcal)."
+          }
+        }
+      }
+    },
+    "Das Grundziel liegt unter der harten Grenze von %@ kcal und lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base goal is below the hard limit of %@ kcal and cannot be adopted."
+          }
+        }
+      }
+    },
+    "Das Tempo %@ liegt über %@ pro Woche. Das ist die Regel von Tagwerk: der kleinere Wert aus %lld %% des Körpergewichts und %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Das Tempo %1$@ liegt über %2$@ pro Woche. Das ist die Regel von Tagwerk: der kleinere Wert aus %3$lld %% des Körpergewichts und %4$@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pace %@ is above %@ per week. That is Tagwerk’s rule: the smaller of %lld %% of body weight and %@."
+          }
+        }
+      }
+    },
+    "Das Tempo liegt über %@ Abnahme pro Woche. Schlage ein langsameres Tempo vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pace is above %@ of loss per week. Propose a slower pace."
+          }
+        }
+      }
+    },
     "Das verlängert die Arbeitszeit nicht.": {
       "localizations": {
         "en": {
@@ -779,22 +1276,44 @@
         }
       }
     },
-    "Deadline war %@": {
+    "Deadline seit %@ abgelaufen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@"
+            "value": "Deadline passed %@"
           }
         }
       }
     },
-    "Deadline war %@, ganztägig": {
+    "Deadline seit %@, %@ abgelaufen": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Deadline seit %1$@, %2$@ abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deadline was %@, all day"
+            "value": "Deadline passed %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Dein Trend liegt bei %@ kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von %@ %% des Körpergewichts und %@ kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Dein Trend liegt bei %1$@ kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von %2$@ %% des Körpergewichts und %3$@ kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trend is a loss of %@ kg per week. Tagwerk points this out above the smaller of %@ %% of body weight and %@ kg per week. This is a rule of the app, not a guideline; talk to a doctor if you have questions."
           }
         }
       }
@@ -999,6 +1518,16 @@
         }
       }
     },
+    "Doppelt: „%@“ – Tagwerk und Kalender erinnern beide am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate: “%1$@” – Tagwerk and the calendar both remind you on %2$@"
+          }
+        }
+      }
+    },
     "Drogerie": {
       "localizations": {
         "en": {
@@ -1029,6 +1558,16 @@
         }
       }
     },
+    "Ein Grundziel unter %@ kcal lässt sich nicht übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A base goal below %@ kcal cannot be adopted."
+          }
+        }
+      }
+    },
     "Ein ruhiger Start in den Tag?": {
       "localizations": {
         "en": {
@@ -1055,6 +1594,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go to bed half an hour before sleep"
+          }
+        }
+      }
+    },
+    "Eiweiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein"
+          }
+        }
+      }
+    },
+    "Eiweiß, Kohlenhydrate und Fett ergeben etwa %@ kcal und weichen um mehr als %lld %% vom Grundziel ab.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Eiweiß, Kohlenhydrate und Fett ergeben etwa %1$@ kcal und weichen um mehr als %2$lld %% vom Grundziel ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein, carbohydrates and fat add up to about %@ kcal and differ from the base goal by more than %lld %%."
+          }
+        }
+      }
+    },
+    "Eiweiß, Kohlenhydrate und Fett ergeben zusammen etwa %@ kcal und weichen um mehr als %lld %% vom Grundziel ab. Rechne sie so, dass sie zum Grundziel passen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Eiweiß, Kohlenhydrate und Fett ergeben zusammen etwa %1$@ kcal und weichen um mehr als %2$lld %% vom Grundziel ab. Rechne sie so, dass sie zum Grundziel passen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein, carbohydrates and fat together add up to about %@ kcal and differ from the base goal by more than %lld %%. Recalculate them so they fit the base goal."
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Fälligkeiten ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which due dates?"
+          }
+        }
+      }
+    },
+    "Erinnerungen für welche Termine ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change reminders for which events?"
+          }
+        }
+      }
+    },
+    "Etwa %@ Kilokalorien über dem Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories over budget"
+          }
+        }
+      }
+    },
+    "Fehlt noch: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still missing: %@"
+          }
+        }
+      }
+    },
+    "Fett": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fat"
           }
         }
       }
@@ -1105,6 +1736,58 @@
         }
       }
     },
+    "Für %@ wären etwa %@ kcal nötig.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Für %1$@ wären etwa %2$@ kcal nötig."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For %@ about %@ kcal would be needed."
+          }
+        }
+      }
+    },
+    "Für die volle Gegenrechnung fehlen: %@. Trage Größe, Geburtsjahr und Geschlecht unter Einstellungen › Erfassen › Körper ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full cross-check is missing: %@. Enter height, year of birth and sex under Settings › Capture › Body."
+          }
+        }
+      }
+    },
+    "Geburtsjahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year of birth"
+          }
+        }
+      }
+    },
+    "Gegenrechnung von Tagwerk: Ruheumsatz ~%@ kcal, Grundbedarf ohne Bewegung ~%@ kcal.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Gegenrechnung von Tagwerk: Ruheumsatz ~%1$@ kcal, Grundbedarf ohne Bewegung ~%2$@ kcal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk’s cross-check: resting energy ~%@ kcal, base need without movement ~%@ kcal."
+          }
+        }
+      }
+    },
     "Gehen": {
       "localizations": {
         "en": {
@@ -1125,12 +1808,102 @@
         }
       }
     },
+    "Geschlecht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex"
+          }
+        }
+      }
+    },
+    "Geschlecht männlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex male"
+          }
+        }
+      }
+    },
+    "Geschlecht weiblich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sex female"
+          }
+        }
+      }
+    },
+    "Gestern %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday %@"
+          }
+        }
+      }
+    },
+    "Gesättigte Fettsäuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturated fat"
+          }
+        }
+      }
+    },
     "Getränke": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Drinks"
+          }
+        }
+      }
+    },
+    "Gewicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight"
+          }
+        }
+      }
+    },
+    "Grundziel %@ kcal ohne Aktivität": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base goal %@ kcal without activity"
+          }
+        }
+      }
+    },
+    "Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        }
+      }
+    },
+    "Größe %lld cm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height %lld cm"
           }
         }
       }
@@ -1217,6 +1990,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today: %@. Nothing more coming up."
+          }
+        }
+      }
+    },
+    "Hinweis: Der Richtwert liegt bei %lld g Ballaststoffen oder %@ g je 1.000 kcal, bei diesem Grundziel etwa %lld g.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hinweis: Der Richtwert liegt bei %1$lld g Ballaststoffen oder %2$@ g je 1.000 kcal, bei diesem Grundziel etwa %3$lld g."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: the reference is %lld g of fibre or %@ g per 1,000 kcal, about %lld g for this base goal."
+          }
+        }
+      }
+    },
+    "Hinweis: Getränke von etwa %@ bis %@ l am Tag gelten als Richtwert.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hinweis: Getränke von etwa %1$@ bis %2$@ l am Tag gelten als Richtwert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: drinks of about %@ to %@ l a day are the reference."
           }
         }
       }
@@ -1363,12 +2168,42 @@
         }
       }
     },
+    "Keine Einträge in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries in this period."
+          }
+        }
+      }
+    },
+    "Keine Messungen in diesem Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No measurements in this period."
+          }
+        }
+      }
+    },
     "Keine Schritte aus Health": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No steps from Health"
+          }
+        }
+      }
+    },
+    "Kohlenhydrate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carbs"
           }
         }
       }
@@ -1473,6 +2308,16 @@
         }
       }
     },
+    "Noch %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilocalories left"
+          }
+        }
+      }
+    },
     "Noch %lld min bis zur Schlafzeit (%@)": {
       "localizations": {
         "de": {
@@ -1489,12 +2334,32 @@
         }
       }
     },
+    "Noch etwa %@ Kilokalorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ kilocalories left"
+          }
+        }
+      }
+    },
     "Notizen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notes"
+          }
+        }
+      }
+    },
+    "Nur am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on %@"
           }
         }
       }
@@ -1539,6 +2404,16 @@
         }
       }
     },
+    "Open Food Facts, abgerufen am %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts, retrieved on %@"
+          }
+        }
+      }
+    },
     "Portionen": {
       "localizations": {
         "en": {
@@ -1569,6 +2444,16 @@
         }
       }
     },
+    "Salz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salt"
+          }
+        }
+      }
+    },
     "Schlafzeit (%@)": {
       "localizations": {
         "en": {
@@ -1585,6 +2470,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Swimming"
+          }
+        }
+      }
+    },
+    "Seit %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@ fällig · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Seit %@, %@ fällig · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Seit %1$@, %2$@ fällig · %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due since %1$@, %2$@ · %3$@"
           }
         }
       }
@@ -1629,6 +2546,36 @@
         }
       }
     },
+    "Standard · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default · %@"
+          }
+        }
+      }
+    },
+    "Start %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start %@"
+          }
+        }
+      }
+    },
+    "Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pc."
+          }
+        }
+      }
+    },
     "Tag reflektieren": {
       "localizations": {
         "en": {
@@ -1649,6 +2596,22 @@
         }
       }
     },
+    "Tagesmittel etwa %@ Kilokalorien, Budget %@. Einträge an %lld Tagen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Tagesmittel etwa %1$@ Kilokalorien, Budget %2$@. Einträge an %3$lld Tagen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily mean about %@ kilocalories, budget %@. Entries on %lld days."
+          }
+        }
+      }
+    },
     "Tagesstart": {
       "localizations": {
         "en": {
@@ -1659,12 +2622,42 @@
         }
       }
     },
+    "Tempo %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace %@"
+          }
+        }
+      }
+    },
     "Tiefkühl": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Frozen"
+          }
+        }
+      }
+    },
+    "Trend %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend %@"
+          }
+        }
+      }
+    },
+    "Trend %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend %@."
           }
         }
       }
@@ -1685,22 +2678,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hiking"
-          }
-        }
-      }
-    },
-    "War fällig %@ · %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "new",
-            "value": "War fällig %1$@ · %2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was due %1$@ · %2$@"
           }
         }
       }
@@ -1785,6 +2762,22 @@
         }
       }
     },
+    "Weiter in %@ ab %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Weiter in %1$@ ab %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue in %1$@ from %2$@"
+          }
+        }
+      }
+    },
     "Wie geht es mir im Moment grundsätzlich?": {
       "localizations": {
         "en": {
@@ -1825,6 +2818,26 @@
         }
       }
     },
+    "Zeit für Bible Study.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time for Bible Study."
+          }
+        }
+      }
+    },
+    "Ziel %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal %@"
+          }
+        }
+      }
+    },
     "Ziel an %lld von %lld Tagen": {
       "localizations": {
         "de": {
@@ -1841,6 +2854,16 @@
         }
       }
     },
+    "Zielgewicht %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target weight %@"
+          }
+        }
+      }
+    },
     "Zubereitung": {
       "localizations": {
         "en": {
@@ -1851,12 +2874,42 @@
         }
       }
     },
-    "Zum Zeitpunkt": {
+    "Zucker": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "At time of event"
+            "value": "Sugar"
+          }
+        }
+      }
+    },
+    "Zum Beginn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At start"
+          }
+        }
+      }
+    },
+    "Zur Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the deadline"
+          }
+        }
+      }
+    },
+    "Zur Fälligkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At due time"
           }
         }
       }
@@ -1897,12 +2950,38 @@
         }
       }
     },
+    "an %lld von %lld Tagen erfasst": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "an %1$lld von %2$lld Tagen erfasst"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "recorded on %lld of %lld days"
+          }
+        }
+      }
+    },
     "bis %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "until %@"
+          }
+        }
+      }
+    },
+    "etwa %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about %@"
           }
         }
       }
@@ -1927,6 +3006,116 @@
         }
       }
     },
+    "je 100 g": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 g"
+          }
+        }
+      }
+    },
+    "je 100 ml": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per 100 ml"
+          }
+        }
+      }
+    },
+    "je Stück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece"
+          }
+        }
+      }
+    },
+    "je Stück (%@ g)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per piece (%@ g)"
+          }
+        }
+      }
+    },
+    "keine Angabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not stated"
+          }
+        }
+      }
+    },
+    "max. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "max. %@"
+          }
+        }
+      }
+    },
+    "mind. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
+          }
+        }
+      }
+    },
+    "mindestens %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at least %@"
+          }
+        }
+      }
+    },
+    "minus %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus %@ eaten"
+          }
+        }
+      }
+    },
+    "minus etwa %@ gegessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus about %@ eaten"
+          }
+        }
+      }
+    },
+    "mit der mittleren Aktivenergie der letzten %lld Tage gerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calculated with the mean active energy of the last %lld days"
+          }
+        }
+      }
+    },
     "morgen": {
       "localizations": {
         "en": {
@@ -1947,6 +3136,46 @@
         }
       }
     },
+    "noch %@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal left"
+          }
+        }
+      }
+    },
+    "ohne Aktivitätsdaten aus Health mit dem Faktor %@ gerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calculated without activity data from Health, with the factor %@"
+          }
+        }
+      }
+    },
+    "plus %@ aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus %@ active"
+          }
+        }
+      }
+    },
+    "plus aktiv ohne Werte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus active without values"
+          }
+        }
+      }
+    },
     "wahrscheinlich zwischen %@ und %@ kcal": {
       "localizations": {
         "de": {
@@ -1959,6 +3188,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "probably between %1$@ and %2$@ kcal"
+          }
+        }
+      }
+    },
+    "~%@ kcal pro Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%@ kcal per day"
           }
         }
       }

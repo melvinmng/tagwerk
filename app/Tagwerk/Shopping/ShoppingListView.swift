@@ -28,11 +28,15 @@ struct ShoppingListView: View {
     /// Identifies the running request, so a cancelled one cannot clear the state of its successor.
     @State private var sortingID: UUID?
     @State private var proposal: SortProposal?
+    /// The card, preview and undo of "Artikel übersetzen"; created with the page, because it needs the environment.
+    @State private var translation: ShoppingTranslationModel?
+    @State private var showsTranslateConsent = false
+    @Environment(\.scenePhase) private var scenePhase
 
     /// The proposal of one request, identifiable for the result sheet.
     private struct SortProposal: Identifiable {
         let id = UUID()
-        let value: ShoppingSorter.Proposal
+        let draft: ShoppingSortDraft
     }
 
     init(model: ShoppingModel) {
@@ -41,46 +45,13 @@ struct ShoppingListView: View {
 
     private var categories: [ShoppingCategoryInfo] { environment.shoppingCategories.categories() }
 
+    private var siriTipDone: Binding<Bool> {
+        let settings = environment.settings
+        return Binding(get: { settings.siriTipShoppingDone }, set: { settings.siriTipShoppingDone = $0 })
+    }
+
     var body: some View {
-        content
-            .navigationTitle("Einkaufsliste")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if model.state == .ready {
-                    ToolbarItem(placement: .topBarTrailing) { menu }
-                }
-                AssistantToolbarItems { .tasks }
-            }
-            .navigationDestination(isPresented: $showsCategories) {
-                ShoppingCategoriesView(store: environment.shoppingCategories, model: model)
-            }
-            .sheet(item: $editing) { item in
-                ShoppingItemSheet(model: model, item: item) { notice = $0 }
-            }
-            .sheet(isPresented: $showsSortConsent) {
-                ShoppingSortConsentSheet {
-                    environment.settings.shoppingSortConsent = true
-                    showsSortConsent = false
-                    sort()
-                } onDecline: {
-                    showsSortConsent = false
-                }
-            }
-            .sheet(isPresented: $showsRecipe) {
-                RecipeSheet(model: model) { notice = $0 }
-            }
-            .sheet(item: $proposal) { proposal in
-                ShoppingSortResultSheet(proposal: proposal.value) { selected in
-                    ShoppingSorter.apply(selected, categories: environment.shoppingCategories, model: model)
-                    self.proposal = nil
-                } onDiscard: {
-                    self.proposal = nil
-                }
-            }
-            .overlay {
-                if sorting != nil { sortingOverlay }
-            }
-            .onDisappear { cancelSorting() }
+        translationLayer
             .alert("Neue Kategorie", isPresented: newCategoryBinding) {
                 TextField("Name", text: $newCategoryName)
                 Button("Anlegen", action: createCategory)
@@ -88,7 +59,7 @@ struct ShoppingListView: View {
             }
             .confirmationDialog(Self.removeCompletedQuestion(count: completedTotal), isPresented: $confirmsRemoveCompleted,
                                 titleVisibility: .visible) {
-                Button("Alle erledigten löschen", role: .destructive) {
+                Button("Entfernen", role: .destructive) {
                     Task {
                         await model.removeAllCompleted()
                         completedTotal = await model.allCompletedCount()
@@ -110,9 +81,104 @@ struct ShoppingListView: View {
                 Text(Self.remindersNotice)
             }
             .task {
+                if translation == nil {
+                    translation = ShoppingTranslationModel(shopping: model, settings: environment.settings,
+                                                           translator: environment.shoppingTranslator)
+                }
                 environment.shoppingCategories.seedIfNeeded()
                 await model.reload()
+                translation?.refreshOffer()
                 completedTotal = await model.allCompletedCount()
+            }
+    }
+
+    /// The page with the sheets and hooks of "Artikel übersetzen"; split from `body` to keep the modifier chains type-checkable.
+    private var translationLayer: some View {
+        pageWithSheets
+            .sheet(isPresented: $showsTranslateConsent) {
+                ShoppingSortConsentSheet(purpose: .translate) {
+                    environment.settings.hasShoppingSortConsent = true
+                    showsTranslateConsent = false
+                    translate()
+                } onDecline: {
+                    showsTranslateConsent = false
+                }
+            }
+            .sheet(item: Binding(get: { translation?.preview }, set: { if $0 == nil { translation?.discard() } })) { preview in
+                if let draft = translation?.draft {
+                ShoppingTranslationResultSheet(preview: preview, language: environment.settings.contentLanguages.shoppingLanguage(), draft: draft) { selected in
+                    Task {
+                        if let line = await translation?.apply(selected) { notice = line }
+                    }
+                } onDiscard: {
+                    translation?.discard()
+                }
+                }
+            }
+            .overlay {
+                if sorting != nil {
+                    busyOverlay(title: "ChatGPT sortiert …", cancel: cancelSorting)
+                } else if translation?.isTranslating == true {
+                    busyOverlay(title: "ChatGPT übersetzt …") { translation?.cancel() }
+                }
+            }
+            .onDisappear {
+                cancelSorting()
+                translation?.cancel()
+            }
+            .onChange(of: model.openItems.count) { translation?.refreshOffer() }
+            .onChange(of: model.state) { translation?.refreshOffer() }
+            .onChange(of: environment.settings.contentLanguages.shoppingLanguage()) { translation?.refreshOffer() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    translation?.refreshOffer()
+                    refreshCompletedTotal()
+                }
+            }
+            // The menu names the number of completed items, so it follows every check-off and removal.
+            .onChange(of: model.completedItems.count) { refreshCompletedTotal() }
+            .onChange(of: translation?.notice) { _, line in
+                guard let line else { return }
+                notice = line
+                translation?.notice = nil
+            }
+    }
+
+    private var pageWithSheets: some View {
+        content
+            .navigationTitle("Einkaufsliste")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if model.state == .ready {
+                    ToolbarItem(placement: .topBarTrailing) { menu }
+                }
+                AssistantToolbarItems { .tasks }
+            }
+            .navigationDestination(isPresented: $showsCategories) {
+                ShoppingCategoriesView(store: environment.shoppingCategories, model: model)
+            }
+            .sheet(item: $editing) { item in
+                ShoppingItemSheet(model: model, item: item) { notice = $0 }
+            }
+            .sheet(isPresented: $showsSortConsent) {
+                ShoppingSortConsentSheet {
+                    environment.settings.hasShoppingSortConsent = true
+                    showsSortConsent = false
+                    sort()
+                } onDecline: {
+                    showsSortConsent = false
+                }
+            }
+            .sheet(isPresented: $showsRecipe) {
+                RecipeSheet(model: model) { notice = $0 }
+            }
+            .sheet(item: $proposal) { proposal in
+                ShoppingSortResultSheet(draft: proposal.draft) { selected in
+                    ShoppingSorter.apply(selected, categories: environment.shoppingCategories, model: model)
+                    self.proposal = nil
+                } onDiscard: {
+                    self.proposal = nil
+                }
             }
     }
 
@@ -122,7 +188,13 @@ struct ShoppingListView: View {
         switch model.state {
         case .ready:
             list
-                .safeAreaInset(edge: .bottom) { ShoppingInputBar(model: model, notice: $notice) }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    VStack(spacing: 0) {
+                        translationCard
+                        undoCapsule
+                        ShoppingInputBar(model: model, notice: $notice)
+                    }
+                }
         case .accessDenied:
             ContentUnavailableView {
                 Label("Kein Zugriff auf Erinnerungen", systemImage: "lock")
@@ -155,15 +227,23 @@ struct ShoppingListView: View {
     private var list: some View {
         List {
             Section {
+                // SI3: shown once; renders nothing, and takes no height, when the shortcuts are not registered.
+                if SiriTipPolicy.isVisible(done: environment.settings.siriTipShoppingDone) {
+                    SiriTip(intent: AddShoppingArticleIntent(), isDone: siriTipDone)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .environment(\.defaultMinListRowHeight, 0)
+                }
                 Text("\(model.openItems.count) offen · Liste „\(model.listTitle ?? "")“ in Erinnerungen")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondaryText)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
             }
             if model.openItems.isEmpty && model.completedItems.isEmpty {
                 Section {
                     Text("Die Liste ist leer. Füge unten Artikel hinzu.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .listRowBackground(Color.clear)
                 }
@@ -180,14 +260,17 @@ struct ShoppingListView: View {
                     DisclosureGroup(isExpanded: $showsCompleted) {
                         ForEach(model.completedItems) { row($0) }
                     } label: {
-                        Text("Erledigt · \(model.completedItems.count)").foregroundStyle(.secondary)
+                        Text("Erledigt · \(model.completedItems.count)").foregroundStyle(.secondaryText)
                     }
                 }
             }
         }
         .scrollDismissesKeyboard(.interactively)
         .listStyle(.insetGrouped)
-        .refreshable { await model.reload() }
+        .refreshable {
+            await model.reload()
+            completedTotal = await model.allCompletedCount()
+        }
     }
 
     private func sectionHeader(_ section: ShoppingSection) -> some View {
@@ -216,7 +299,7 @@ struct ShoppingListView: View {
             } label: {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundStyle(item.isCompleted ? Color.secondary : Color.accentColor)
+                    .foregroundStyle(item.isCompleted ? Color.secondaryText : Color.accentColor)
                     .frame(width: 32, height: 44)
                     .contentShape(Rectangle())
             }
@@ -224,9 +307,9 @@ struct ShoppingListView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)
                     .strikethrough(item.isCompleted)
-                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(item.isCompleted ? Color.secondaryText : Color.primary)
                 if let quantity = item.quantity {
-                    Text(quantity).font(.subheadline).foregroundStyle(.secondary)
+                    Text(quantity).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
             Spacer(minLength: 0)
@@ -272,31 +355,46 @@ struct ShoppingListView: View {
 
     // MARK: Menu
 
+    /// The menu "⋯" in three groups (EK1b): adding, ordering, tidying up. The tidying entries carry the number of items they touch,
+    /// and only "Liste leeren", the one with the larger damage, is red.
     private var menu: some View {
-        Menu {
-            Button(action: startSorting) {
-                Label("Mit ChatGPT sortieren", systemImage: "sparkles")
-                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+        let busy = sorting != nil || translation?.isTranslating == true
+        let completedCount = Self.completedCount(total: completedTotal, shown: model.completedItems.count)
+        let listCount = model.openItems.count + completedCount
+        return Menu {
+            Section {
+                Button { showsRecipe = true } label: {
+                    Label("Rezept hinzufügen …", systemImage: "fork.knife")
+                    if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+                }
+                .disabled(!environment.ai.isSignedIn)
             }
-            .disabled(!environment.ai.isSignedIn || sorting != nil)
-            Button { showsRecipe = true } label: {
-                Label("Rezept hinzufügen …", systemImage: "fork.knife")
-                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+            Section {
+                Button(action: startSorting) {
+                    Label("Mit ChatGPT sortieren", systemImage: "sparkles")
+                    if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+                }
+                .disabled(!environment.ai.isSignedIn || busy)
+                Button(action: startTranslating) {
+                    Label("Artikel übersetzen …", systemImage: "globe")
+                    Text(environment.ai.isSignedIn ? Self.translateSubtitle(environment.settings.contentLanguages.shoppingLanguage())
+                                                   : String(localized: "Anmeldung unter Einstellungen › KI"))
+                }
+                .disabled(!environment.ai.isSignedIn || model.openItems.isEmpty || busy)
+                Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
             }
-            .disabled(!environment.ai.isSignedIn)
-            Button { showsCategories = true } label: { Label("Kategorien verwalten", systemImage: "list.bullet.indent") }
-            Button(role: .destructive) {
-                askRemoveCompleted()
-            } label: {
-                Label("Alle erledigten löschen", systemImage: "trash")
+            Section {
+                Button(action: askRemoveCompleted) {
+                    Label(Self.removeCompletedTitle(count: completedCount), systemImage: "checkmark.circle")
+                }
+                .disabled(completedCount == 0)
+                .accessibilityIdentifier(AccessibilityID.Shopping.removeCompleted)
+                Button(role: .destructive, action: askClearList) {
+                    Label(Self.clearListTitle(count: listCount), systemImage: "trash")
+                }
+                .disabled(listCount == 0)
+                .accessibilityIdentifier(AccessibilityID.Shopping.clearList)
             }
-            .disabled(model.completedItems.isEmpty && completedTotal == 0)
-            Button(role: .destructive) {
-                askClearList()
-            } label: {
-                Label("Liste leeren", systemImage: "trash.slash")
-            }
-            .disabled(model.openItems.isEmpty && model.completedItems.isEmpty && completedTotal == 0)
         } label: {
             Image(systemName: "ellipsis")
         }
@@ -305,9 +403,23 @@ struct ShoppingListView: View {
 
     // MARK: Clearing
 
-    /// "12 erledigte Artikel löschen?"
+    /// "Erledigte entfernen (5)": the menu entry. Without completed items there is no number; the entry is greyed out.
+    static func removeCompletedTitle(count: Int) -> String {
+        count > 0 ? String(localized: "Erledigte entfernen (\(count))") : String(localized: "Erledigte entfernen")
+    }
+
+    /// "Liste leeren (17) …": the menu entry; the dots announce the confirmation.
+    static func clearListTitle(count: Int) -> String {
+        count > 0 ? String(localized: "Liste leeren (\(count)) …") : String(localized: "Liste leeren …")
+    }
+
+    /// How many completed items the menu names: the total of the whole list, or the section "Erledigt" if that is larger (a
+    /// check-off shows in the section before the total is read again).
+    static func completedCount(total: Int, shown: Int) -> Int { max(total, shown) }
+
+    /// "12 erledigte Artikel entfernen?"
     static func removeCompletedQuestion(count: Int) -> String {
-        String(localized: "\(count) erledigte Artikel löschen?")
+        String(localized: "\(count) erledigte Artikel entfernen?")
     }
 
     /// "Gesamte Liste leeren? 20 Artikel werden gelöscht."
@@ -316,6 +428,10 @@ struct ShoppingListView: View {
     }
 
     static var remindersNotice: String { String(localized: "Sie verschwinden auch aus Apple Erinnerungen.") }
+
+    private func refreshCompletedTotal() {
+        Task { completedTotal = await model.allCompletedCount() }
+    }
 
     /// Reads the number first, so the question names what is really deleted, including items older than seven days.
     private func askRemoveCompleted() {
@@ -375,10 +491,10 @@ struct ShoppingListView: View {
 
     // MARK: Sorting with ChatGPT
 
-    private var sortingOverlay: some View {
+    private func busyOverlay(title: LocalizedStringKey, cancel: @escaping () -> Void) -> some View {
         VStack(spacing: 12) {
-            ProgressView("ChatGPT sortiert …")
-            Button("Abbrechen", action: cancelSorting)
+            ProgressView(title)
+            Button("Abbrechen", action: cancel)
         }
         .padding(20)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -386,8 +502,8 @@ struct ShoppingListView: View {
 
     /// The first tap asks for consent; nothing is sent before the user agreed.
     private func startSorting() {
-        guard environment.ai.isSignedIn, sorting == nil else { return }
-        if environment.settings.shoppingSortConsent { sort() } else { showsSortConsent = true }
+        guard environment.ai.isSignedIn, sorting == nil, translation?.isTranslating != true else { return }
+        if environment.settings.hasShoppingSortConsent { sort() } else { showsSortConsent = true }
     }
 
     private func sort() {
@@ -407,13 +523,54 @@ struct ShoppingListView: View {
                 let result = try await environment.shoppingSorter.sort(request, current: current)
                 // A cancelled request must not show a late answer.
                 guard !Task.isCancelled else { return }
-                proposal = SortProposal(value: result)
+                // The follow-up sends the same names again and checks every answer against them.
+                let sorter = environment.shoppingSorter
+                let draft = ShoppingSortDraft(proposal: result, request: request, current: current) { request, current, proposal, pinned, focus, comment in
+                    try await sorter.revise(request, current: current, proposal: proposal, pinned: pinned, focus: focus, comment: comment)
+                }
+                proposal = SortProposal(draft: draft)
             } catch let failure as ShoppingSorter.Failure {
                 if !Task.isCancelled { notice = failure.message }
             } catch {
                 // Cancelled by the user: nothing to report.
             }
         }
+    }
+
+    // MARK: Translating with ChatGPT
+
+    /// "ins Englische, mit ChatGPT"
+    static func translateSubtitle(_ language: VoiceLanguage) -> String {
+        language == .english ? String(localized: "ins Englische, mit ChatGPT") : String(localized: "ins Deutsche, mit ChatGPT")
+    }
+
+    @ViewBuilder private var translationCard: some View {
+        if let translation, let offer = translation.offer, translation.preview == nil {
+            ShoppingTranslationCard(offer: offer, isSignedIn: environment.ai.isSignedIn, onTranslate: startTranslating,
+                                    onKeep: { translation.keepAsIs() })
+        }
+    }
+
+    @ViewBuilder private var undoCapsule: some View {
+        if let translation, !translation.undo.isEmpty {
+            let caption: LocalizedStringResource = environment.settings.contentLanguages.shoppingLanguage() == .english ? "Englisch" : "Deutsch"
+            UndoCapsule(title: String(localized: "\(translation.undo.count) Artikel übersetzt"), caption: caption, duration: 8,
+                        actionHint: "Stellt die alten Namen wieder her",
+                        onUndo: { Task { await translation.undoLast() } },
+                        onExpire: { translation.capsuleExpired() })
+                .id(translation.undo.map(\.id))
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    /// The first tap asks for the consent; nothing is sent before the user agreed.
+    private func startTranslating() {
+        guard environment.ai.isSignedIn, sorting == nil, translation?.isTranslating != true else { return }
+        if environment.settings.hasShoppingSortConsent { translate() } else { showsTranslateConsent = true }
+    }
+
+    private func translate() {
+        Task { await translation?.translate() }
     }
 
     private func cancelSorting() {

@@ -8,12 +8,14 @@ enum IntakeEntry: Sendable, Hashable {
     case meal(MealValue)
     case drink(DrinkValue)
     case workout(WorkoutValue)
+    case weight(WeightValue)
 
     var id: UUID {
         switch self {
         case .meal(let meal): meal.id
         case .drink(let drink): drink.id
         case .workout(let workout): UUID(uuidString: workout.id) ?? UUID()
+        case .weight(let weight): weight.id
         }
     }
 }
@@ -24,7 +26,7 @@ struct UnsyncedEntry: Sendable, Hashable {
     var version: Int
 }
 
-/// Stores meals, water and workouts in SwiftData. Every change marks the entry for the Health mirror.
+/// Stores meals, water, workouts and body weights in SwiftData. Every change marks the entry for the Health mirror.
 @MainActor
 final class IntakeStore {
     private let context: ModelContext
@@ -37,6 +39,15 @@ final class IntakeStore {
 
     func meals(on day: PlanDay, calendar: Calendar) -> [MealValue] {
         let (start, end) = bounds(day, calendar)
+        let descriptor = FetchDescriptor<MealRecord>(predicate: #Predicate { $0.date >= start && $0.date < end },
+                                                     sortBy: [SortDescriptor(\.date)])
+        return ((try? context.fetch(descriptor)) ?? []).map(\.value)
+    }
+
+    /// Meals that start in `interval` (end exclusive), oldest first; one query for a whole period.
+    func meals(in interval: DateInterval) -> [MealValue] {
+        let start = interval.start
+        let end = interval.end
         let descriptor = FetchDescriptor<MealRecord>(predicate: #Predicate { $0.date >= start && $0.date < end },
                                                      sortBy: [SortDescriptor(\.date)])
         return ((try? context.fetch(descriptor)) ?? []).map(\.value)
@@ -73,6 +84,42 @@ final class IntakeStore {
         return ((try? context.fetch(descriptor)) ?? []).map(\.value)
     }
 
+    /// The own workouts that start on `day`, as the active energy needs them. A workout counts as inside the Health sum when it
+    /// was mirrored with its calories; for one mirrored before that was recorded (`energyInHealth == nil`) the current permission
+    /// decides (`mayWriteEnergy`).
+    func ownWorkoutEnergy(on day: PlanDay, calendar: Calendar, mayWriteEnergy: Bool) -> [OwnWorkoutEnergy] {
+        let (start, end) = bounds(day, calendar)
+        let descriptor = FetchDescriptor<WorkoutRecord>(predicate: #Predicate { $0.start >= start && $0.start < end })
+        return ((try? context.fetch(descriptor)) ?? []).map {
+            OwnWorkoutEnergy(kilocalories: $0.kilocalories, energyInHealth: $0.healthSynced && ($0.energyInHealth ?? mayWriteEnergy))
+        }
+    }
+
+    /// Own weights that were taken in `interval` (end exclusive), oldest first.
+    func weights(in interval: DateInterval) -> [WeightValue] {
+        let start = interval.start
+        let end = interval.end
+        let descriptor = FetchDescriptor<WeightRecord>(predicate: #Predicate { $0.date >= start && $0.date < end },
+                                                       sortBy: [SortDescriptor(\.date)])
+        return ((try? context.fetch(descriptor)) ?? []).map(\.value)
+    }
+
+    /// The newest own weight, for the default of a new one.
+    func latestWeight() -> WeightValue? {
+        var descriptor = FetchDescriptor<WeightRecord>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first?.value
+    }
+
+    /// The oldest own weight; the trends page needs it to know how far back the history reaches.
+    func earliestWeightDate() -> Date? {
+        var descriptor = FetchDescriptor<WeightRecord>(sortBy: [SortDescriptor(\.date)])
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first?.date
+    }
+
+    func weight(_ id: UUID) -> WeightValue? { weightRecord(id)?.value }
+
     /// The most recent own workout, for the defaults of a new one.
     func latestWorkout() -> WorkoutValue? {
         var descriptor = FetchDescriptor<WorkoutRecord>(sortBy: [SortDescriptor(\.start, order: .reverse)])
@@ -83,10 +130,15 @@ final class IntakeStore {
     func estimatedAt(meal id: UUID) -> Date? { mealRecord(id)?.estimatedAt }
 
     func healthSynced(_ id: UUID) -> Bool {
-        mealRecord(id)?.healthSynced ?? drinkRecord(id)?.healthSynced ?? workoutRecord(id)?.healthSynced ?? false
+        mealRecord(id)?.healthSynced ?? drinkRecord(id)?.healthSynced ?? workoutRecord(id)?.healthSynced
+            ?? weightRecord(id)?.healthSynced ?? false
     }
 
-    func exists(_ id: UUID) -> Bool { mealRecord(id) != nil || drinkRecord(id) != nil || workoutRecord(id) != nil }
+    /// Whether an entry of any kind has this id. The Health mirror asks before it executes a queued deletion: an entry that came
+    /// back ("Widerrufen") must keep its samples.
+    func exists(_ id: UUID) -> Bool {
+        mealRecord(id) != nil || drinkRecord(id) != nil || workoutRecord(id) != nil || weightRecord(id) != nil
+    }
 
     // MARK: Writing
 
@@ -136,6 +188,21 @@ final class IntakeStore {
         save()
     }
 
+    func addWeight(_ weight: WeightValue) {
+        context.insert(WeightRecord(weight))
+        save()
+    }
+
+    func updateWeight(_ weight: WeightValue) {
+        guard let record = weightRecord(weight.id) else { return addWeight(weight) }
+        record.date = weight.date
+        record.kilograms = weight.kilograms
+        record.bodyFatPercent = weight.bodyFatPercent
+        record.healthVersion += 1
+        record.healthSynced = false
+        save()
+    }
+
     /// A deleted entry and what is needed to bring it back.
     struct Deleted: Sendable {
         var entry: IntakeEntry
@@ -158,6 +225,10 @@ final class IntakeStore {
         } else if let record = workoutRecord(id) {
             deleted = Deleted(entry: .workout(record.value), estimatedAt: nil, version: record.healthVersion)
             kind = .workout
+            context.delete(record)
+        } else if let record = weightRecord(id) {
+            deleted = Deleted(entry: .weight(record.value), estimatedAt: nil, version: record.healthVersion)
+            kind = .weight
             context.delete(record)
         }
         guard deleted != nil else { return nil }
@@ -184,6 +255,8 @@ final class IntakeStore {
             guard let id = UUID(uuidString: workout.id) else { return }
             context.insert(WorkoutRecord(id: id, activity: workout.activity, start: workout.start, minutes: workout.minutes,
                                          kilocalories: workout.kilocalories, healthVersion: version))
+        case .weight(let weight):
+            context.insert(WeightRecord(weight, healthVersion: version))
         }
         save()
     }
@@ -194,16 +267,39 @@ final class IntakeStore {
         let meals = (try? context.fetch(FetchDescriptor<MealRecord>(predicate: #Predicate { !$0.healthSynced }))) ?? []
         let drinks = (try? context.fetch(FetchDescriptor<DrinkRecord>(predicate: #Predicate { !$0.healthSynced }))) ?? []
         let workouts = (try? context.fetch(FetchDescriptor<WorkoutRecord>(predicate: #Predicate { !$0.healthSynced }))) ?? []
+        let weights = (try? context.fetch(FetchDescriptor<WeightRecord>(predicate: #Predicate { !$0.healthSynced }))) ?? []
         return meals.map { UnsyncedEntry(entry: .meal($0.value), version: $0.healthVersion) }
             + drinks.map { UnsyncedEntry(entry: .drink($0.value), version: $0.healthVersion) }
             + workouts.map { UnsyncedEntry(entry: .workout($0.value), version: $0.healthVersion) }
+            + weights.map { UnsyncedEntry(entry: .weight($0.value), version: $0.healthVersion) }
     }
 
-    /// Marks the entry as mirrored, unless it was edited (higher version) or deleted meanwhile.
-    func markSynced(_ id: UUID, version: Int) {
+    /// After the group "weitere Nährwerte" was allowed: meals with a value for one of its nutrients are written again, with a
+    /// higher version so Health replaces the samples already there. Returns how many meals were marked.
+    @discardableResult
+    func markMealsWithFurtherNutrientsUnsynced() -> Int {
+        var count = 0
+        for record in (try? context.fetch(FetchDescriptor<MealRecord>())) ?? [] {
+            let meal = record.value
+            guard Nutrient.allCases.contains(where: { meal.nutrient($0) != nil }) else { continue }
+            record.healthVersion += 1
+            record.healthSynced = false
+            count += 1
+        }
+        if count > 0 { save() }
+        return count
+    }
+
+    /// Marks the entry as mirrored, unless it was edited (higher version) or deleted meanwhile. `energyInHealth` is the state of
+    /// the calories permission at the time of the write; it only matters for workouts.
+    func markSynced(_ id: UUID, version: Int, energyInHealth: Bool? = nil) {
         if let record = mealRecord(id), record.healthVersion == version { record.healthSynced = true }
         if let record = drinkRecord(id), record.healthVersion == version { record.healthSynced = true }
-        if let record = workoutRecord(id), record.healthVersion == version { record.healthSynced = true }
+        if let record = workoutRecord(id), record.healthVersion == version {
+            record.healthSynced = true
+            record.energyInHealth = energyInHealth
+        }
+        if let record = weightRecord(id), record.healthVersion == version { record.healthSynced = true }
         save()
     }
 
@@ -242,6 +338,10 @@ final class IntakeStore {
         try? context.fetch(FetchDescriptor<WorkoutRecord>(predicate: #Predicate { $0.id == id })).first
     }
 
+    private func weightRecord(_ id: UUID) -> WeightRecord? {
+        try? context.fetch(FetchDescriptor<WeightRecord>(predicate: #Predicate { $0.id == id })).first
+    }
+
     private func pendingDeletion(_ id: UUID) -> PendingHealthDeletion? {
         try? context.fetch(FetchDescriptor<PendingHealthDeletion>(predicate: #Predicate { $0.entryID == id })).first
     }
@@ -256,13 +356,21 @@ extension IntakeEntry {
     func healthValue(version: Int) -> HealthValue {
         switch self {
         case .meal(let meal):
+            // A further nutrient goes to Health only when every item knows it: a partial sum would look like the whole meal.
             .meal(HealthMeal(id: meal.id, date: meal.date, version: version, kcal: meal.kcal, protein: meal.protein,
-                             carbs: meal.carbs, fat: meal.fat, estimated: meal.hasEstimate))
+                             carbs: meal.carbs, fat: meal.fat,
+                             fiber: meal.knowsNutrient(.fiber) ? meal.nutrient(.fiber) : nil,
+                             sugar: meal.knowsNutrient(.sugar) ? meal.nutrient(.sugar) : nil,
+                             saturatedFat: meal.knowsNutrient(.saturatedFat) ? meal.nutrient(.saturatedFat) : nil,
+                             salt: meal.knowsNutrient(.salt) ? meal.nutrient(.salt) : nil, estimated: meal.hasEstimate))
         case .drink(let drink):
             .drink(HealthDrink(id: drink.id, date: drink.date, version: version, milliliters: drink.milliliters))
         case .workout(let workout):
             .workout(HealthWorkout(id: id, version: version, activity: workout.activity, start: workout.start,
                                    end: workout.end, kilocalories: workout.kilocalories))
+        case .weight(let weight):
+            .weight(HealthWeight(id: weight.id, date: weight.date, version: version, kilograms: weight.kilograms,
+                                 bodyFatPercent: weight.bodyFatPercent))
         }
     }
 
@@ -270,5 +378,6 @@ extension IntakeEntry {
         case meal(HealthMeal)
         case drink(HealthDrink)
         case workout(HealthWorkout)
+        case weight(HealthWeight)
     }
 }

@@ -10,10 +10,13 @@ public extension PlanDay {
     }
 }
 
-/// What fulfils a habit besides a manual check. The three last cases come from the app's own routines: a closed evening
-/// wrap-up, a journal entry that holds more than the template, and a completed Bible Study session.
+/// What fulfils a habit besides a manual check. The three cases before `movement` come from the app's own routines: a closed
+/// evening wrap-up, a journal entry that holds more than the template, and a completed Bible Study session.
 public enum HabitSource: String, Sendable, Codable, CaseIterable {
     case manual, water, workout, steps, daylight, eveningClosed, journal, bibleStudy
+    /// "Bewegung": a workout was recorded or the step goal was reached. It is a source of its own and may exist next to one habit
+    /// with "Training erfasst" and one with "Schrittziel erreicht". An older app that reads a backup with it falls back to `manual`.
+    case movement
 }
 
 /// A closed pause of a habit; both ends are included.
@@ -155,12 +158,18 @@ public enum HabitRules {
         case .manual: false
         case .water: facts.goalWaterMilliliters > 0 && (facts.waterMilliliters[day] ?? 0) >= facts.goalWaterMilliliters
         case .workout: facts.workoutDays.contains(day)
-        case .steps: facts.goalSteps > 0 && (facts.steps[day] ?? 0) >= facts.goalSteps
+        case .steps: isStepGoalReached(on: day, facts: facts)
+        case .movement: facts.workoutDays.contains(day) || isStepGoalReached(on: day, facts: facts)
         case .daylight: facts.daylightMinutes[day].map { $0 >= habit.daylightMinutes } ?? false
         case .eveningClosed: facts.closedDays.contains(day)
         case .journal: facts.journalDays.contains(day)
         case .bibleStudy: facts.bibleStudyDays.contains(day)
         }
+    }
+
+    /// The step goal is set and the steps of the day reach it; without access to steps nothing is known, so it is not reached.
+    static func isStepGoalReached(on day: PlanDay, facts: HabitFacts) -> Bool {
+        facts.goalSteps > 0 && (facts.steps[day] ?? 0) >= facts.goalSteps
     }
 
     /// Rule 2.

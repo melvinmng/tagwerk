@@ -21,7 +21,7 @@ final class NoteRecord {
     var processedAt: Date? = nil
     /// Phase 7: executed suggestions and tasks created by hand from this note ("2 Aufgaben daraus").
     var derivedActionCount: Int = 0
-    /// The folder the note lies in; `nil` is the default folder "Notizen" (and the virtual "Gedanken" for thought notes).
+    /// The folder the note lies in; `nil` is the default folder "Notizen".
     /// A note in the trash keeps its folder, so "Wiederherstellen" can put it back.
     var folderID: UUID? = nil
     /// When the note went to "Zuletzt gelöscht"; `nil` for a live note.
@@ -31,6 +31,9 @@ final class NoteRecord {
     var importSourceID: String? = nil
     /// `BibleBook.key` of a Bible Study note (one note per book); `nil` for every other note.
     var bookKey: String? = nil
+    /// The user locked this note (NL1a). A locked note does not leave the device while it is locked; unlocked in the current lock
+    /// session it is open to the assistant until the user leaves Tagwerk (`NoteStore.isPrivate`).
+    var isLocked: Bool = false
 
     init(text: String, kind: NoteKind = .free, dayKey: String? = nil, wasDictated: Bool = false, now: Date = .now) {
         self.text = text

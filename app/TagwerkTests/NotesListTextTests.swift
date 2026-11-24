@@ -40,6 +40,27 @@ struct NotesListTextTests {
         #expect(footer(note(kind: .morning, dayKey: nil, updated: at(17, 7))) == "Tagesstart · 17.11.")
     }
 
+    @Test func lockedPreview_text() {
+        #expect(NotesListView.lockedPreview() == "Gesperrt")
+    }
+
+    @Test func selection_lockSkipsNotesInPrivateFolders() {
+        let privateFolder = UUID()
+        let settings = NoteProtection.Settings(isEnabled: true, locksPrivateFolders: true, canAuthenticate: true)
+        let own = note(updated: now)
+        let inPrivateFolder = note(updated: now)
+        inPrivateFolder.folderID = privateFolder
+        let journal = note(kind: .journal, dayKey: "2026-11-18", updated: now)
+        let alreadyLocked = note(updated: now)
+        alreadyLocked.isLocked = true
+        let ids = NotesListView.lockableIDs(of: [own, inPrivateFolder, journal, alreadyLocked], privateFolderIDs: [privateFolder], settings: settings)
+        #expect(ids == [own.id])
+        // With the folder switch off the note in the private folder can be locked as well.
+        let relaxed = NoteProtection.Settings(isEnabled: true, locksPrivateFolders: false, canAuthenticate: true)
+        #expect(Set(NotesListView.lockableIDs(of: [own, inPrivateFolder, journal], privateFolderIDs: [privateFolder], settings: relaxed))
+                == [own.id, inPrivateFolder.id])
+    }
+
     @Test func entrySubtitle_latestOrEmpty() {
         #expect(NotesListView.entrySubtitle(latest: note(updated: at(19, 8, 12)), now: now, calendar: calendar)
                 == "zuletzt: „Ideen Hausarbeit“ · heute 08:12")
@@ -96,6 +117,110 @@ struct NotesListTextTests {
 
     @Test func footer_dream_namesTheDreamLogAndDay() {
         #expect(footer(note(kind: .dream, dayKey: "2026-11-18", updated: at(19, 7))) == "Dream Log · 18.11.")
+    }
+
+    @Test func symbol_dreamLogDiffersFromEvening() {
+        #expect(NotesFoldersView.symbol(for: .dreamLog) == "cloud.moon")
+        #expect(NotesFoldersView.symbol(for: .dreamLog) != NotesFoldersView.symbol(for: .eveningRoutine))
+        // Every role keeps its own symbol, so the sections stay readable at a glance.
+        let symbols = NoteFolderRole.allCases.map { NotesFoldersView.symbol(for: $0) }
+        #expect(Set(symbols).count == symbols.count)
+    }
+
+    // MARK: Sorting, groups, selection and the trash (NF3)
+
+    @Test func trashFooter_namesDateAndFolder() {
+        let trashed = note(updated: at(10, 9))
+        trashed.deletedAt = at(15, 23, 30)
+        #expect(NotesListView.trashFooter(for: trashed, folderName: "Notizen", now: now, calendar: calendar) == "Gelöscht am 15.11. · aus „Notizen“")
+    }
+
+    @Test func trashFooter_deletedFolderFallsBackToNotizen() {
+        // The view passes "Notizen" when the folder of the note is gone; the text keeps its shape.
+        let trashed = note(updated: at(10, 9))
+        trashed.deletedAt = at(2, 8)
+        #expect(NotesListView.trashFooter(for: trashed, folderName: "Notizen", now: now, calendar: calendar).hasSuffix("aus „Notizen“"))
+        #expect(NotesListView.trashFooter(for: note(updated: at(10, 9)), folderName: "Notizen", now: now, calendar: calendar).isEmpty)
+    }
+
+    @Test func daysLeft_singularAndPlural() {
+        #expect(NotesListView.daysLeftText(1) == "noch 1 Tag")
+        #expect(NotesListView.daysLeftText(3) == "noch 3 Tage")
+        #expect(NotesListView.daysLeftText(0) == "noch 0 Tage")
+    }
+
+    @Test func selectionTitle_counts() {
+        #expect(NotesListView.selectionTitle(2) == "2 ausgewählt")
+        #expect(NotesListView.selectionTitle(1) == "1 ausgewählt")
+        #expect(NotesListView.selectionTitle(0) == "Notizen auswählen")
+    }
+
+    @Test func shouldPin_whenOneChosenNoteIsNotPinned() {
+        let pinned = note(updated: at(10, 9)); pinned.isPinned = true
+        let loose = note(updated: at(10, 9))
+        #expect(NotesListView.shouldPin([pinned, loose]))
+        #expect(NotesListView.shouldPin([loose]))
+        #expect(!NotesListView.shouldPin([pinned]))
+    }
+
+    @Test func groupTitle_namesTheGroups() {
+        let german = Locale(identifier: "de_DE")
+        #expect(NotesListView.groupTitle(.pinned, calendar: calendar, locale: german) == "Angeheftet")
+        #expect(NotesListView.groupTitle(.today, calendar: calendar, locale: german) == "Heute")
+        #expect(NotesListView.groupTitle(.lastSevenDays, calendar: calendar, locale: german) == "Letzte 7 Tage")
+        #expect(NotesListView.groupTitle(.month(year: 2026, month: 10), calendar: calendar, locale: german) == "Oktober 2026")
+    }
+
+    @Test func directionNames_followTheOrder() {
+        #expect(NotesListView.directionNames(for: .modified) == ("Neueste zuerst", "Älteste zuerst"))
+        #expect(NotesListView.directionNames(for: .created) == ("Neueste zuerst", "Älteste zuerst"))
+        #expect(NotesListView.directionNames(for: .title) == ("A bis Z", "Z bis A"))
+    }
+
+    @Test func sections_groupByTheSortDate() {
+        let pinned = note("Angeheftet", updated: at(1, 8)); pinned.isPinned = true
+        let today = note("Heute", updated: at(19, 8))
+        let week = note("Woche", updated: at(15, 8))
+        let old = note("Alt", updated: at(3, 8))
+        let notes = [pinned, today, week, old]
+        let grouped = NotesListView.sections(of: notes, order: .modified, groupsByDate: true, now: now, calendar: calendar)
+        #expect(grouped.map(\.group) == [.pinned, .today, .lastSevenDays, .month(year: 2026, month: 11)])
+        #expect(grouped.map { $0.notes.map(\.text) } == [["Angeheftet"], ["Heute"], ["Woche"], ["Alt"]])
+        // The title order and a switched-off grouping give one block.
+        #expect(NotesListView.sections(of: notes, order: .title, groupsByDate: true, now: now, calendar: calendar).count == 1)
+        let flat = NotesListView.sections(of: notes, order: .modified, groupsByDate: false, now: now, calendar: calendar)
+        #expect(flat.count == 1 && flat[0].group == nil && flat[0].notes.count == 4)
+    }
+
+    // MARK: Gratitude in "Tagesstart" (NF4)
+
+    @Test func listSearch_matchesGratitude() {
+        let entry = note("Heute steht die Abgabe an", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        #expect(NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "kaffee"))
+        #expect(NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "abgabe"))
+        #expect(!NotesListView.matchesSearch(entry, gratitude: ["Kaffee mit Jonas"], query: "zebra"))
+        #expect(NotesListView.matchesSearch(gratitude: ["Sonne"], query: "sonne"))
+        #expect(!NotesListView.matchesSearch(gratitude: [], query: "sonne"))
+        #expect(NotesListView.matchesSearch(gratitude: ["Sonne"], query: ""))
+    }
+
+    @Test func morningEntries_listGratitudeOnlyDaysBetweenTheNotes() {
+        let first = note("Alt", kind: .morning, dayKey: "2026-11-17", updated: at(17, 7))
+        let second = note("Neu", kind: .morning, dayKey: "2026-11-19", updated: at(19, 7))
+        let days: [PlanDay: [String]] = [PlanDay(year: 2026, month: 11, day: 18): ["Ruhe"], PlanDay(year: 2026, month: 11, day: 19): ["Sonne"]]
+        let entries = NotesListView.morningEntries(notes: [second, first], gratitudeDays: days, query: "")
+        #expect(entries == [.note(id: second.id, day: PlanDay(year: 2026, month: 11, day: 19)),
+                            .gratitudeOnly(day: PlanDay(year: 2026, month: 11, day: 18)),
+                            .note(id: first.id, day: PlanDay(year: 2026, month: 11, day: 17))])
+        // The search keeps only the days whose gratitude matches.
+        #expect(NotesListView.morningEntries(notes: [], gratitudeDays: days, query: "ruhe")
+            == [.gratitudeOnly(day: PlanDay(year: 2026, month: 11, day: 18))])
+    }
+
+    @Test func gratitudeOnlyFooter_namesTheOriginAndDay() {
+        #expect(NotesListView.gratitudeOnlyFooter(day: PlanDay(year: 2026, month: 11, day: 19), calendar: calendar)
+            == "Tagesstart · 19.11. · nur Dankbarkeit")
+        #expect(NotesListView.routineTitle(day: PlanDay(year: 2026, month: 11, day: 19), calendar: calendar) == "Do. 19. Nov.")
     }
 
     // MARK: Markdown and attachments (P5)

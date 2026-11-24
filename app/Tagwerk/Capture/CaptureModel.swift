@@ -11,7 +11,10 @@ struct CaptureDay: Equatable {
     var drinks: [DrinkValue]
     /// Own and Health workouts of the day, by start.
     var workouts: [WorkoutValue]
+    /// The day's own entries only; what counts as eaten (with other apps' entries) is in `figures.totals`.
     var intake: DayIntake
+    /// Plan, Health values and budget of the day.
+    var figures: DayFigures
     var dayMinutes: Int
     var weekMinutes: Int
     /// `nil` without a value (shown as "–", never 0).
@@ -48,6 +51,10 @@ final class CaptureModel {
     private let store: IntakeStore
     private let mirror: HealthMirror
     private let health: any HealthStoring
+    /// Own and foreign body weights for the sheet, the morning start and the trends page.
+    let weights: WeightStore
+    /// Goal plan, Health values and budget of a day; shared with the plan header, the widget and the weekly review.
+    let budgets: DayBudgets
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var deletedEntries: [UUID: IntakeStore.Deleted] = [:]
 
@@ -57,6 +64,10 @@ final class CaptureModel {
     /// Own and Health workouts of the day, by start.
     private(set) var workouts: [WorkoutValue] = []
     private(set) var intake: DayIntake = .empty
+    /// Plan, Health values and budget of the displayed day.
+    private(set) var figures: DayFigures
+    /// The same for today, whatever day is displayed: plan header, widget and Siri.
+    private(set) var todayFigures: DayFigures
     /// Today's sums regardless of the displayed day: plan header, widget and Siri (phase 4).
     private(set) var todayIntake: DayIntake = .empty
     private(set) var todayHasEntries = false
@@ -67,11 +78,23 @@ final class CaptureModel {
     private(set) var access: HealthAccess?
     /// Step permission, asked separately from `access`; `nil` until the first query.
     private(set) var stepsAccess: StepsAccess?
+    /// Permission group of the active energy, asked separately; `nil` until the first query.
+    private(set) var activeEnergyAccess: HealthGroupAccess?
+    /// Permission group "weitere Nährwerte nach Health" (settings); `nil` until the first query.
+    private(set) var furtherNutrientsAccess: HealthGroupAccess?
+    /// Permission group of other apps' nutrition (settings); `nil` until the first query.
+    private(set) var foreignNutritionAccess: HealthGroupAccess?
+    /// Permission group "body" (weight and body fat, read and write); `nil` until the first query.
+    private(set) var bodyAccess: HealthGroupAccess?
+    /// Whether Health is connected at all (the core group was asked); only then a weight asks for its own group.
+    private(set) var healthConnected = false
     /// Steps of the displayed day; `nil` without a value, while loading or without permission (shown as "–", never 0).
     private(set) var steps: Int?
     /// Today's steps with their day, so a value from before midnight is never shown as today's.
     private var todayStepsValue: DaySteps?
     private(set) var undo: UndoNotice?
+    /// Weight of today, yesterday and the 7-day mean for the row "Verlauf und Ziele"; read with every reload.
+    private(set) var weightOverview = WeightOverview()
     @ObservationIgnored private var weekForeign: [WorkoutValue] = []
     /// Health workouts and steps of the weeks around the shown day, read after each reload. A day change inside this
     /// window shows them at once, so the neighbour page and the page after it carry the same numbers.
@@ -95,18 +118,27 @@ final class CaptureModel {
     /// Tests wait for each Health run, so no run outlives the test's store.
     @ObservationIgnored private let waitsForHealth: Bool
 
-    init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings,
+    /// `budgets` defaults to a service without stored plans and Health values: the single goals of the settings and the own
+    /// entries stand in (previews, tests that do not care for the budget).
+    init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
          calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false) {
         self.waitsForHealth = waitsForHealth
         self.store = store
         self.mirror = mirror
         self.health = health
+        self.weights = WeightStore(intake: store, health: health, calendar: calendar)
         self.settings = settings
         self.calendar = calendar
         self.now = now
+        let budgets = budgets ?? DayBudgets(intake: store, goals: nil, dayHealth: nil, health: health, settings: settings,
+                                            calendar: calendar, now: now)
+        self.budgets = budgets
         let today = PlanDay(date: now(), calendar: calendar)
         self.day = today
         self.lastToday = today
+        let initial = budgets.figures(on: today, own: .empty)
+        self.figures = initial
+        self.todayFigures = initial
     }
 
     var today: PlanDay { PlanDay(date: now(), calendar: calendar) }
@@ -140,24 +172,28 @@ final class CaptureModel {
     }
 
     enum SummaryTile: Hashable {
-        case water, protein, steps, training
+        case water, steps, training
     }
 
-    /// Tiles of the summary (ST1): water and protein in the first row, steps and the weekly training in the second.
-    /// When each row would hold a single tile, they share one row.
-    static func summaryRows(protein: Bool, steps: Bool, training: Bool) -> [[SummaryTile]] {
-        let first: [SummaryTile] = protein ? [.water, .protein] : [.water]
-        let second: [SummaryTile] = (steps ? [.steps] : []) + (training ? [.training] : [])
-        if second.isEmpty { return [first] }
-        if first.count == 1 && second.count == 1 { return [first + second] }
-        return [first, second]
+    /// Tiles of the summary (ST1): water, steps and the weekly training. Protein moved to the card "Nährwerte" (decision NU2b).
+    /// Water and steps share the first row; the training follows alone or, with room, on the same row.
+    static func summaryRows(steps: Bool, training: Bool) -> [[SummaryTile]] {
+        let tiles: [SummaryTile] = [.water] + (steps ? [.steps] : []) + (training ? [.training] : [])
+        // Up to two tiles per row, so a tile keeps enough width for its value at larger text sizes.
+        return stride(from: 0, to: tiles.count, by: 2).map { Array(tiles[$0..<min($0 + 2, tiles.count)]) }
     }
 
-    var summaryRows: [[SummaryTile]] { summaryRows(steps: steps) }
+    var summaryRows: [[SummaryTile]] { summaryRows(steps: steps, plan: figures.plan) }
 
-    func summaryRows(steps: Int?) -> [[SummaryTile]] {
-        Self.summaryRows(protein: settings.proteinGoalEnabled, steps: stepsTile(for: steps) != .hidden,
-                         training: settings.goalWorkoutMinutesPerWeek > 0)
+    /// The tiles of a page: the training tile follows the goal plan that holds on that page's day.
+    func summaryRows(steps: Int?, plan: GoalPlan) -> [[SummaryTile]] {
+        Self.summaryRows(steps: stepsTile(for: steps) != .hidden, training: plan.workoutMinutesPerWeek > 0)
+    }
+
+    /// The rows of the card "Nährwerte" for a page: the totals of the day (own and, when switched on, other apps' entries) against the
+    /// goal plan and the budget of that day.
+    func nutrientRows(for figures: DayFigures) -> [NutrientRow] {
+        NutrientCard.rows(totals: figures.totals, plan: figures.plan, budget: figures.budget, visible: settings.visibleNutrients)
     }
 
     // MARK: Loading
@@ -184,6 +220,11 @@ final class CaptureModel {
         }
         let stepsAccess = await health.stepsAccess()
         self.stepsAccess = stepsAccess
+        self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
+        self.furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
+        self.foreignNutritionAccess = await health.groupAccess(.foreignNutrition)
+        self.bodyAccess = await health.groupAccess(.body)
+        self.healthConnected = access.wasAsked
         var stepsOfDay: Int?
         if stepsAccess == .asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
@@ -200,11 +241,23 @@ final class CaptureModel {
         guard day == requestedDay else { return }
         weekForeign = foreignOfWeek
         steps = stepsOfDay
+        // The day sums of the active energy and of other apps' nutrition go into the store; the figures read them from there.
+        await budgets.refreshHealth(in: week)
+        guard day == requestedDay else { return }
         refreshLocal(week: week)
+        await refreshWeightOverview()
         await prefetchNeighbourHealth()
     }
 
-    private static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
+    /// The weight figures from own entries and, once the group "body" was asked, the measurements of other apps.
+    func refreshWeightOverview() async {
+        let today = self.today
+        let end = today.adding(days: 1, calendar: calendar).startDate(in: calendar)
+        let days = await weights.dayValues(in: DateInterval(start: end.addingTimeInterval(-45 * 86_400), end: end))
+        weightOverview = WeightOverview.make(days, today: today, calendar: calendar)
+    }
+
+    static func workoutValue(_ workout: ForeignWorkout) -> WorkoutValue {
         WorkoutValue(id: workout.id.uuidString, activity: workout.activity ?? .other, start: workout.start,
                      minutes: max(0, Int(workout.end.timeIntervalSince(workout.start) / 60)),
                      kilocalories: workout.kilocalories, sourceName: workout.sourceName, isOwn: false,
@@ -232,6 +285,7 @@ final class CaptureModel {
         }
         guard !Task.isCancelled else { return }
         healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
+        await budgets.refreshHealth(in: interval)
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -258,13 +312,14 @@ final class CaptureModel {
         dayMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd))
         weekMinutes = IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval)
         intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+        figures = budgets.figures(on: day, own: intake)
         refreshToday()
     }
 
     /// The shown day as the page displays it.
     var current: CaptureDay {
-        CaptureDay(day: day, meals: meals, drinks: drinks, workouts: workouts, intake: intake, dayMinutes: dayMinutes,
-                   weekMinutes: weekMinutes, steps: steps)
+        CaptureDay(day: day, meals: meals, drinks: drinks, workouts: workouts, intake: intake, figures: figures,
+                   dayMinutes: dayMinutes, weekMinutes: weekMinutes, steps: steps)
     }
 
     /// The page of another day for the preview beside the shown one: the local entries and, from the Health cache,
@@ -282,8 +337,9 @@ final class CaptureModel {
         let weekWorkouts = store.workouts(in: weekInterval) + foreign.filter { weekInterval.contains($0.start) }
         let workouts = weekWorkouts.filter { $0.start >= dayStart && $0.start < dayEnd }.sorted { $0.start < $1.start }
         let steps = target == today ? todaySteps : healthCache?.steps[target]
-        return CaptureDay(day: target, meals: meals, drinks: drinks, workouts: workouts,
-                          intake: IntakeRules.dayIntake(meals: meals, drinks: drinks),
+        let intake = IntakeRules.dayIntake(meals: meals, drinks: drinks)
+        return CaptureDay(day: target, meals: meals, drinks: drinks, workouts: workouts, intake: intake,
+                          figures: budgets.figures(on: target, own: intake),
                           dayMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: DateInterval(start: dayStart, end: dayEnd)),
                           weekMinutes: IntakeRules.workoutMinutes(weekWorkouts, in: weekInterval), steps: steps)
     }
@@ -294,6 +350,7 @@ final class CaptureModel {
         let todayMeals = day == today ? meals : store.meals(on: today, calendar: calendar)
         let todayDrinks = day == today ? drinks : store.drinks(on: today, calendar: calendar)
         todayIntake = IntakeRules.dayIntake(meals: todayMeals, drinks: todayDrinks)
+        todayFigures = day == today ? figures : budgets.figures(on: today, own: todayIntake)
         todayHasEntries = !todayMeals.isEmpty || !todayDrinks.isEmpty
         onTodayChanged?()
     }
@@ -301,13 +358,15 @@ final class CaptureModel {
     /// Called after today's sums changed; the environment rewrites the widget snapshot.
     @ObservationIgnored var onTodayChanged: (() -> Void)?
 
-    /// "~1.240 / 2.300 kcal · 1,2 / 2,0 l · 6.412 Schritte" for the head of "Planen"; `nil` when switched off or nothing
-    /// recorded today. Steps appear only when known for today.
+    /// "noch ~1.480 kcal · 1,2 / 2,0 l · 6.412 Schritte" for the head of "Planen": what is left of today's budget, from the same
+    /// figures as the head of "Erfassen". `nil` when switched off or nothing recorded today (entries of other apps count as
+    /// recorded). Steps appear only when known for today.
     var planHeaderLine: String? {
         guard settings.showsIntakeInPlan else { return nil }
-        return IntakeFormat.planHeaderLine(intake: todayIntake, goalKcal: settings.goalKilocalories,
-                                           goalWaterMilliliters: settings.goalWaterMilliliters, hasEntries: todayHasEntries,
-                                           steps: todaySteps)
+        let figures = todayFigures
+        return IntakeFormat.planHeaderLine(budget: figures.budget, waterMilliliters: figures.totals.waterMilliliters,
+                                           goalWaterMilliliters: figures.plan.waterMilliliters,
+                                           hasEntries: todayHasEntries || figures.totals.foreign != nil, steps: todaySteps)
     }
 
     func goBack(days: Int = 1) async {
@@ -399,6 +458,44 @@ final class CaptureModel {
         await changed()
     }
 
+    /// A weight: new entries offer "Widerrufen". The first one asks for the Health group "body" (a user tap started this call), after the
+    /// entry is saved and shown, so the sheet of iOS never holds up the entry itself. Without a connected Health nothing is asked.
+    func saveWeight(_ weight: WeightValue, isNew: Bool) async {
+        if isNew {
+            store.addWeight(weight)
+            undo = UndoNotice(text: String(localized: "\(WeightFormat.kilograms(weight.kilograms)) erfasst"), action: .remove(weight.id))
+        } else {
+            store.updateWeight(weight)
+        }
+        refreshLocal()
+        await requestBodyAccessIfDue()
+        await changed()
+    }
+
+    /// The time of a new weight: now, also when another day is shown (a weighing is not back-filled like a meal).
+    var weightEntryDate: Date { now() }
+
+    /// The newest known weight for the start of a new entry: an own one or one that another app wrote in the last 90 days.
+    func latestKnownKilograms() async -> Double? {
+        let end = now().addingTimeInterval(86_400)
+        let measurements = await weights.measurements(in: DateInterval(start: end.addingTimeInterval(-91 * 86_400), end: end))
+        return measurements.last?.kilograms
+    }
+
+    /// "Gewicht aus Health" in the settings or on the trends page: asks for the group "body" once, then mirrors waiting weights.
+    func allowBodyAccess() async {
+        await requestBodyAccessIfDue(force: true)
+        await changed()
+    }
+
+    private func requestBodyAccessIfDue(force: Bool = false) async {
+        let connected = await health.access().wasAsked
+        if (force || connected), await health.groupAccess(.body) == .notAsked {
+            try? await health.requestAuthorization(for: .body)
+        }
+        bodyAccess = await health.groupAccess(.body)
+    }
+
     func delete(_ id: UUID) async {
         guard let deleted = store.delete(id, healthNotBefore: now().addingTimeInterval(HealthMirror.undoWindow)) else { return }
         deletedEntries[id] = deleted
@@ -428,6 +525,7 @@ final class CaptureModel {
     /// Shows the change at once; the Health mirror runs afterwards and never holds up a sheet.
     private func changed() async {
         refreshLocal()
+        await refreshWeightOverview()
         let mirror = self.mirror
         let run = Task { await mirror.sync() }
         pendingSync = run
@@ -458,6 +556,38 @@ final class CaptureModel {
         } else {
             await connectHealth()
         }
+    }
+
+    /// The budget line offers "In Health erlauben" for the active energy until its sheet was shown; with crediting switched off
+    /// (share 0) there is nothing to offer.
+    func offersActiveEnergy(for budget: EnergyBudget) -> Bool {
+        activeEnergyAccess == .notAsked && budget.creditPercent > 0
+    }
+
+    /// "In Health erlauben" at the budget line: the sheet for the active energy only, which leaves the other permissions alone.
+    func allowActiveEnergy() async {
+        try? await health.requestAuthorization(for: .activeEnergy)
+        await reload()
+    }
+
+    /// "Weitere Nährwerte nach Health" in the settings: asks for the write permission of fibre, sugar, saturated fat and sodium once,
+    /// then mirrors the meals that carry such values again (the mirror skips types that stay denied).
+    func allowFurtherNutrients() async {
+        if await health.groupAccess(.moreNutrients) == .notAsked {
+            try? await health.requestAuthorization(for: .moreNutrients)
+        }
+        furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
+        await mirror.furtherNutrientsGranted()
+    }
+
+    /// The switch "Einträge anderer Apps mitzählen": switching it on asks for the read permission once; switching it off stops
+    /// reading and removes foreign values from the sums at once. The sums follow with the reload.
+    func setCountsForeignNutrition(_ enabled: Bool) async {
+        settings.countsForeignNutrition = enabled
+        if enabled, await health.groupAccess(.foreignNutrition) == .notAsked {
+            try? await health.requestAuthorization(for: .foreignNutrition)
+        }
+        await reload()
     }
 
     func connectSteps() async {

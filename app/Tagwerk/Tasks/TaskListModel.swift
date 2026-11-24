@@ -73,6 +73,11 @@ extension Calendar {
 final class TaskListModel {
     var filter: TaskFilter = .all
     private(set) var items: [TaskItem] = []
+    /// What each task row says about reminders (plan g1, ER4b), by task key: only tasks whose list differs from the default.
+    /// Rebuilt after a reload, after a task was written and after the editor saved reminders (`refreshReminderMarks`).
+    private(set) var reminderMarks: [String: ReminderMark] = [:]
+    /// The stored reminder lists and the defaults the marks are computed from; set by the app environment.
+    @ObservationIgnored var reminderMarkInputs: (() -> (overrides: [String: [ReminderOverride]], defaults: ReminderDefaults))?
     private(set) var sourceStates: [TaskSource: SourceState] = [:]
     private(set) var lastCompleted: TaskItem?
     /// Task to scroll to and mark briefly after "Aufgabe zeigen" (design §13.8 G3).
@@ -149,6 +154,20 @@ final class TaskListModel {
         for source in sourceStates.keys where !registered.contains(source) && !signedOutSources.contains(source) {
             sourceStates[source] = nil
         }
+        refreshReminderMarks()
+    }
+
+    /// Recomputes `reminderMarks` for the open tasks.
+    func refreshReminderMarks() {
+        guard let inputs = reminderMarkInputs?() else {
+            if !reminderMarks.isEmpty { reminderMarks = [:] }
+            return
+        }
+        var marks: [String: ReminderMark] = [:]
+        for item in items {
+            if let mark = ReminderMark.of(task: item, overrides: inputs.overrides, defaults: inputs.defaults) { marks[item.id.key] = mark }
+        }
+        if marks != reminderMarks { reminderMarks = marks }
     }
 
     private func load(_ provider: any TaskProvider, generation: Int) async {
@@ -241,7 +260,8 @@ final class TaskListModel {
             await onCompletedItem?(updated, now())
             await onCompletionChanged?(id, true)
         } else {
-            await settle(updated, provider: provider, announce: false)
+            // Done in the selected project only: the issue leaves the list with a capsule that says why.
+            await settle(updated, provider: provider, announce: true)
         }
     }
 
@@ -404,8 +424,8 @@ final class TaskListModel {
             items.removeAll { $0.id == item.id }
             // Completed in the editor ("Erledigt" or a Done status): same "Rückgängig" capsule as in the list.
             if previousCompletion == false { lastCompleted = item }
-        } else if let provider = provider(for: item.id.source), !provider.isListed(item) {
-            handOver(item, announce: true)
+        } else if let provider = provider(for: item.id.source), let reason = provider.unlistedReason(item) {
+            handOver(item, reason: reason, announce: true)
             if let hook = onHandedOver {
                 Task { await hook(item.id) }
             }
@@ -445,6 +465,24 @@ final class TaskListModel {
             await reload(only: [id.source])
             throw TaskWriteError.conflict(current: current)
         }
+    }
+
+    /// Applies an assignee change to a GitHub issue that is not in `items` (found by the online search). No version
+    /// check: the provider reads the issue fresh. The issue joins the list when it is listed afterwards (the user
+    /// took it over). `onHandedOver` is not called: an issue that was never in the lists has no blocks to plan away.
+    @discardableResult
+    func assignUnlisted(_ change: AssigneeChange, to id: TaskID) async throws -> TaskItem {
+        guard let provider = provider(for: id.source) else { throw TaskWriteError.accessDenied }
+        var edit = TaskEdit()
+        edit.assignees = .set(change)
+        let updated = try await provider.apply(edit, to: id, expectedVersion: nil)
+        nextGeneration(for: id.source)
+        if provider.isListed(updated), !updated.isCompleted {
+            replace(updated)
+        } else {
+            items.removeAll { $0.id == id }
+        }
+        return updated
     }
 
     func createReturning(_ draft: TaskDraft, in source: TaskSource) async throws -> TaskItem {
@@ -490,18 +528,19 @@ final class TaskListModel {
     /// to the user's lists. Returns whether the item is listed.
     @discardableResult
     private func settle(_ item: TaskItem, provider: any TaskProvider, announce: Bool) async -> Bool {
-        guard !provider.isListed(item) else {
+        guard let reason = provider.unlistedReason(item) else {
             replace(item)
             return true
         }
-        handOver(item, announce: announce)
+        handOver(item, reason: reason, announce: announce)
         await onHandedOver?(item.id)
         return false
     }
 
-    private func handOver(_ item: TaskItem, announce: Bool) {
+    /// Takes the item out of the list. The planned day and future time blocks go with it (`onHandedOver`).
+    private func handOver(_ item: TaskItem, reason: UnlistedReason, announce: Bool) {
         items.removeAll { $0.id == item.id }
-        if announce { lastHandedOver = HandedOverNotice(item: item) }
+        if announce { lastHandedOver = HandedOverNotice(item: item, reason: reason) }
     }
 
     /// Warning for people the source dropped silently. `created` names the new issue number first.
@@ -519,6 +558,7 @@ final class TaskListModel {
         } else {
             items.append(item)
         }
+        refreshReminderMarks()
     }
 
     static func message(for error: Error) -> String {

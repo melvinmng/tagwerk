@@ -59,6 +59,30 @@ public enum IntakeFormat {
         return String(localized: "\(number) g", bundle: .module)
     }
 
+    /// Row value of a further nutrient: "14 g", "14 / 30 g" against a goal, "–" when no meal knows it (never 0).
+    /// With missing values the sum is a lower bound: "mind. 14 g · 2 von 3 Mahlzeiten".
+    /// `isLimitGoal` writes the goal as an upper limit: "38 / max. 50 g".
+    public static func nutrient(_ nutrient: Nutrient, sum: NutrientSum, goal: Double? = nil, isLimitGoal: Bool = false,
+                                locale: Locale = .current) -> String {
+        guard let value = sum.value else { return "–" }
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.minimumFractionDigits = nutrient.fractionDigits
+        formatter.maximumFractionDigits = nutrient.fractionDigits
+        formatter.roundingMode = .halfUp
+        func number(_ amount: Double) -> String { formatter.string(from: NSNumber(value: amount)) ?? "\(amount)" }
+        let figures = goal.map { goal -> String in
+            let goalText = isLimitGoal ? String(localized: "max. \(number(goal))", bundle: .module) : number(goal)
+            return "\(number(value)) / \(goalText)"
+        } ?? number(value)
+        let text = String(localized: "\(figures) g", bundle: .module)
+        if sum.isComplete { return text }
+        let minimum = String(localized: "mind. \(text)", bundle: .module)
+        // The coverage is only worth saying when some, but not all, of at least two meals know the value.
+        guard sum.known >= 1, sum.total >= 2 else { return minimum }
+        return String(localized: "\(minimum) · \(sum.known) von \(sum.total) Mahlzeiten", bundle: .module)
+    }
+
     /// "noch ~990" while below the goal, "120 über Ziel" above it.
     public static func remaining(goal: Int, intake: DayIntake, locale: Locale = .current) -> Remaining {
         let difference = Double(goal) - intake.kcal

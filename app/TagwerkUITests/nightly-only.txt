@@ -1,0 +1,21 @@
+# UI tests that run only in the nightly and manual full runs, not in the pull request set.
+# One test class (or Class/testMethod) per line; empty lines and lines starting with # are ignored.
+# app/test-all.sh turns every entry into -skip-testing:TagwerkUITests/<entry> when TAGWERK_UI_TEST_SET=pr.
+# Rationale: AX5/dark variants of the recipe and settings screens mostly check clipped text and contrast, which
+# change rarely; the AX5/dark variant of the four core screens (AccessibilityAuditLargeTextUITests) stays in the
+# pull request set. Re-evaluate with the data from the nightly runs.
+
+AccessibilityAuditRecipesLargeTextUITests
+
+# The evening variant of the AX5 audit is a nightly-only check as well (introduced with the evening audit work).
+AccessibilityAuditEveningLargeTextUITests
+
+# The title of the plan header next to the bar buttons: the pull request set checks the rule with PlanHeaderLayoutTests (a render
+# test, no app launch); this test measures the real navigation bar and keeps the numbers of that render test honest.
+PlanHeaderLayoutUITests
+
+# Placement of the travel capsule in the grid needs the real layout; its contrast is checked by the render test (MarkerRenderContrastTests).
+TravelContrastUITests/testAttachmentSitsAboveItsEventInTheGrid
+
+# The collapse of overlapping entries needs the real grid; the decision by text size and width is checked by GridCollapseLayoutTests.
+PlanOverlapUITests/testOverlappingEntriesCollapseAtLargeText

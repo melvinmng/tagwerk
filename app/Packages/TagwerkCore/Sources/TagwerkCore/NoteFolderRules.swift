@@ -138,6 +138,37 @@ public enum NoteFolderRules {
         return Set(node.flattened.map(\.id))
     }
 
+    /// Folders whose notes never leave the device: every folder with a private role and all folders below one.
+    /// Folders of a reference cycle that holds a private folder count as private as well; the walk terminates (like `tree`).
+    public static func privateFolderIDs(in folders: [NoteFolderInfo]) -> Set<UUID> {
+        var result = Set<UUID>()
+        for folder in folders where folder.role?.isPrivate == true {
+            result.insert(folder.id)
+            result.formUnion(subtreeIDs(of: folder.id, in: folders))
+        }
+        // Absorbs folders whose chain of parents reaches a private folder even when `tree` cut the chain (cycles).
+        var changed = true
+        while changed {
+            changed = false
+            for folder in folders where !result.contains(folder.id) {
+                if let parentID = folder.parentID, result.contains(parentID) {
+                    result.insert(folder.id)
+                    changed = true
+                }
+            }
+        }
+        return result
+    }
+
+    /// Whether a note may be shown to the assistant: its kind is not private, it does not lie in a private folder and it is
+    /// not held back by the lock. `isLocked` means "locked and not unlocked right now" (`NoteProtection.holdsBack`): a locked
+    /// note is available to the assistant while the lock session is open, a private kind or folder never is.
+    public static func mayLeaveDevice(kind: NoteKind, folderID: UUID?, privateFolderIDs: Set<UUID>, isLocked: Bool = false) -> Bool {
+        guard !kind.isPrivate, !isLocked else { return false }
+        if let folderID, privateFolderIDs.contains(folderID) { return false }
+        return true
+    }
+
     /// Levels of the folder's own subtree, counting the folder itself (a folder without children has height 1).
     static func height(of id: UUID, in folders: [NoteFolderInfo]) -> Int {
         guard let node = tree(folders).flatMap(\.flattened).first(where: { $0.id == id }) else { return 0 }
@@ -233,8 +264,14 @@ public struct NoteSortKey: Sendable {
 
 extension NoteSortOrder {
     /// Pinned notes always come first. Dates sort newest first, titles alphabetically; ties fall back to the change date.
-    public func precedes(_ first: NoteSortKey, _ second: NoteSortKey) -> Bool {
+    /// `reversed` turns the order inside the pinned and the unpinned notes around (oldest first, "Z bis A"); pinned
+    /// notes stay on top.
+    public func precedes(_ first: NoteSortKey, _ second: NoteSortKey, reversed: Bool = false) -> Bool {
         if first.isPinned != second.isPinned { return first.isPinned }
+        return reversed ? ordered(second, first) : ordered(first, second)
+    }
+
+    private func ordered(_ first: NoteSortKey, _ second: NoteSortKey) -> Bool {
         switch self {
         case .modified:
             return first.updatedAt > second.updatedAt
@@ -245,6 +282,15 @@ extension NoteSortOrder {
             let order = first.title.localizedStandardCompare(second.title)
             if order != .orderedSame { return order == .orderedAscending }
             return first.updatedAt > second.updatedAt
+        }
+    }
+
+    /// The date a list sorted this way is grouped by; `nil` for the title order, which has no date groups.
+    public func groupingDate(of key: NoteSortKey) -> Date? {
+        switch self {
+        case .modified: key.updatedAt
+        case .created: key.createdAt
+        case .title: nil
         }
     }
 }

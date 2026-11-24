@@ -3,16 +3,25 @@ import Observation
 import os
 import TagwerkCore
 
-/// Keeps the repeating routine reminders in line with the settings (phase 7 design §8): every pending request with the
-/// routine prefix is removed and the wanted ones are added again, so a changed bedtime, checklist or switch needs no
-/// bookkeeping. Runs at app start, when the app becomes active and after each change in the routine settings.
+/// Keeps the routine reminders in line with the settings (phase 7 design §8): every pending request with the routine
+/// prefix is removed and the wanted ones are added again, so a changed bedtime, checklist or switch needs no bookkeeping.
+/// The evening reminders are dated single notifications for the next three routine days, so a point checked on an evening
+/// does not remind on it (#173); the morning start and the weekly planning repeat. Runs at app start, when the app becomes
+/// active, after each change in the routine settings, after unchecking a point and in the background refresh.
 @MainActor
 @Observable
 final class RoutineNotificationScheduler {
     @ObservationIgnored private let center: any NotificationCenterClient
     @ObservationIgnored private let store: RoutineStore
     @ObservationIgnored private let settings: AppSettings
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let locale: () -> Locale
+    /// Days with a completed Bible Study session inside the planned days (those get no reminder).
+    @ObservationIgnored private let bibleStudyCompletedDays: (ClosedRange<PlanDay>) -> Set<PlanDay>
+    /// "Weiter in Römer ab 3,27" for the body of the reminder; `nil` leaves it out. Called with the switch "Stelle in der
+    /// Mitteilung zeigen" and the locale.
+    @ObservationIgnored private let bibleStudyNextPassage: (Bool, Locale) -> String?
     @ObservationIgnored private let log = Logger(subsystem: "de.tagwerk", category: "routine-notifications")
     @ObservationIgnored private var queue: Task<Void, Never>?
 
@@ -20,20 +29,41 @@ final class RoutineNotificationScheduler {
     private(set) var authorization: NotificationAuthorization = .notDetermined
 
     init(center: any NotificationCenterClient, store: RoutineStore, settings: AppSettings,
-         locale: @escaping () -> Locale = { .current }) {
+         now: @escaping () -> Date = Date.init, calendar: Calendar = .tagwerk, locale: @escaping () -> Locale = { .current },
+         bibleStudyCompletedDays: @escaping (ClosedRange<PlanDay>) -> Set<PlanDay> = { _ in [] },
+         bibleStudyNextPassage: @escaping (Bool, Locale) -> String? = { _, _ in nil }) {
+        self.bibleStudyCompletedDays = bibleStudyCompletedDays
+        self.bibleStudyNextPassage = bibleStudyNextPassage
         self.center = center
         self.store = store
         self.settings = settings
+        self.now = now
+        self.calendar = calendar
         self.locale = locale
     }
 
     /// Removes every pending routine request, then adds the wanted ones when notifications are allowed. Calls queue up,
     /// so two quick changes never interleave their removals and additions.
     func reschedule() async {
+        await enqueue { await self.perform() }
+    }
+
+    /// Removes the reminder of one point for one routine day at once: the user just checked it, so it must not fire.
+    /// Needs no full run; unchecking runs `reschedule()`, which adds it again while its moment is ahead.
+    func itemChecked(_ id: UUID, on day: PlanDay) async {
+        await enqueue { await self.center.removePending([RoutineSchedule.eveningIdentifier(item: id, day: day)]) }
+    }
+
+    /// Removes the Bible Study reminder of one day at once ("Heute nicht", a completed session).
+    func removeBibleStudyReminder(on day: PlanDay) async {
+        await enqueue { await self.center.removePending([BibleStudyReminders.identifier(day: day)]) }
+    }
+
+    private func enqueue(_ work: @escaping @MainActor () async -> Void) async {
         let previous = queue
-        let next = Task { @MainActor [weak self] in
+        let next = Task { @MainActor in
             await previous?.value
-            await self?.perform()
+            await work()
         }
         queue = next
         await next.value
@@ -45,20 +75,39 @@ final class RoutineNotificationScheduler {
         if !existing.isEmpty { await center.removePending(existing) }
         guard authorization == .authorized else { return }
         let locale = locale()
-        var wanted = RoutineSchedule.eveningNotifications(items: store.checklist(), bedtimeMinutes: settings.bedtimeMinutes,
-                                                          enabled: settings.eveningRemindersEnabled, locale: locale)
+        let store = store
+        // Evening points first: the routines keep to their own 17 places next to the 44 of the task reminders.
+        let evening = RoutineSchedule.eveningNotifications(
+            items: store.checklist(), bedtimeMinutes: settings.bedtimeMinutes, enabled: settings.eveningRemindersEnabled,
+            checked: { store.day($0).checkedItemIDs }, now: now(), calendar: calendar, locale: locale)
+        var repeating: [RoutineNotification] = []
         if let morning = RoutineSchedule.morningNotification(enabled: settings.morningReminderEnabled,
                                                              minutes: settings.morningReminderMinutes, locale: locale) {
-            wanted.append(morning)
+            repeating.append(morning)
         }
         if let week = RoutineSchedule.weekPlanningNotification(enabled: settings.weekPlanningReminderEnabled,
                                                                weekday: settings.weekPlanningReminderWeekday,
                                                                minutes: settings.weekPlanningReminderMinutes, locale: locale) {
-            wanted.append(week)
+            repeating.append(week)
         }
-        // The routines keep to their own six places, next to the 50 of the task reminders.
-        wanted = Array(wanted.prefix(RoutineSchedule.maximumRoutineNotifications))
-        for notification in wanted {
+        // The routines keep to their 17 places in this order: the evening points (12), the morning start and the weekly planning,
+        // then Bible Study with what is left (3).
+        let eveningPlanned = Array(evening.prefix(RoutineSchedule.maximumEveningNotifications))
+        let today = PlanDay(date: now(), calendar: calendar)
+        let bible = BibleStudyReminders.notifications(
+            times: settings.bibleStudyReminderTimes, enabled: settings.bibleStudyReminderEnabled,
+            completedDays: bibleStudyCompletedDays(today...today.adding(days: RoutineSchedule.bibleStudyHorizonDays - 1, calendar: calendar)),
+            skippedDay: settings.bibleStudySkippedDayKey.flatMap { PlanDay(dayKey: $0) },
+            nextPassage: bibleStudyNextPassage(settings.bibleStudyReminderShowsPassage, locale), now: now(), calendar: calendar, locale: locale)
+        let bibleLimit = max(0, RoutineSchedule.maximumRoutineNotifications - eveningPlanned.count - repeating.count)
+        for notification in eveningPlanned + bible.prefix(bibleLimit) {
+            do {
+                try await center.addDated(notification)
+            } catch {
+                log.error("Adding a dated routine reminder failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        for notification in repeating {
             do {
                 try await center.addRepeating(notification)
             } catch {
