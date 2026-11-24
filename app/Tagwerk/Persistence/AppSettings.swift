@@ -336,6 +336,9 @@ final class AppSettings {
     var bodyHeightCm: Int? = nil
     var birthYear: Int? = nil
     var formulaSexRaw: String? = nil
+    /// The body fields whose typed value wins over Health (comma-separated `BodyField` raw values): the user changed them on purpose.
+    /// Without the marker a typed value is only the fallback for a silent Health. Optional, so existing stores migrate without a value.
+    var bodyOverridesRaw: String? = nil
     /// What Health delivered at the last reading of the group `bodyProfile`, in the same shape. A later silent answer keeps these.
     var healthBodyHeightCm: Int? = nil
     var healthBirthYear: Int? = nil
@@ -363,6 +366,12 @@ final class AppSettings {
             birthYear = newValue.birthYear
             formulaSexRaw = newValue.sex?.rawValue
         }
+    }
+
+    /// The body fields the user overrides on purpose.
+    var bodyOverrides: Set<BodyField> {
+        get { Set((bodyOverridesRaw ?? "").split(separator: ",").compactMap { BodyField(rawValue: String($0)) }) }
+        set { bodyOverridesRaw = newValue.isEmpty ? nil : newValue.map(\.rawValue).sorted().joined(separator: ",") }
     }
 
     /// The body values Health delivered at the last reading.

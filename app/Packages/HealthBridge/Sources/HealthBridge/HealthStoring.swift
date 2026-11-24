@@ -6,18 +6,26 @@ import Foundation
 /// ("not complete"), so the entry stays marked for a later retry. They throw only on real failures.
 public protocol HealthStoring: Sendable {
     func access() async -> HealthAccess
-    /// Shows the system sheet. Call only after a user tap.
+    /// Shows the one system sheet for everything the app needs: core types, steps, active energy, weight and height. Types answered
+    /// before are not shown again. Call only after a user tap.
     func requestAuthorization() async throws
     func save(_ meal: HealthMeal) async throws -> Bool
     func save(_ drink: HealthDrink) async throws -> Bool
     /// Writes the weight (and the body fat percentage, when given) of the group `body`; `false` when the weight may not be written.
     func save(_ weight: HealthWeight) async throws -> Bool
     func save(_ workout: HealthWorkout) async throws -> Bool
+    /// Writes the height as the one sample Tagwerk keeps in Health (a new value replaces the old one); `false` when the height may not
+    /// be written. Date of birth and biological sex cannot be written by apps at all: iOS offers them read-only.
+    func saveHeight(_ height: HealthHeight) async throws -> Bool
     /// Removes every sample of the entry, in the types of its kind. Types Tagwerk may not write count as done,
     /// because nothing of the entry can be stored there.
     func deleteEntry(id: UUID, kind: HealthEntryKind) async throws -> Bool
     /// Workouts of other sources in `interval`; Tagwerk's own are filtered out. Empty when reading is not allowed.
     func foreignWorkouts(in interval: DateInterval) async throws -> [ForeignWorkout]
+
+    /// Whether Tagwerk may write the weight or the height. iOS reports the write permission per type, so a refusal is visible
+    /// (unlike reading); a denied write is never silent.
+    func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess
 
     /// Whether the system sheet of `group` was shown; independent of `access()` and of the other groups.
     func groupAccess(_ group: HealthAccessGroup) async -> HealthGroupAccess

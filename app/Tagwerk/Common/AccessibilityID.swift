@@ -44,8 +44,10 @@ enum AccessibilityID {
         static let budgetLine = "capture.budgetLine"
         /// The "Aktiv" term of the budget line, which opens the breakdown.
         static let budgetActive = "capture.budgetActive"
-        /// "In Health erlauben" for the active energy.
+        /// "Erlauben" for the active energy in the settings.
         static let allowActiveEnergy = "capture.allowActiveEnergy"
+        /// The note "Aktivität nicht verbunden" under the budget line.
+        static let activeEnergyNotConnected = "capture.activeEnergyNotConnected"
         /// The sheet "Aktiv heute".
         static let breakdown = "capture.breakdown"
         /// The quick button "Gewicht", the number field of the weight sheet and its "Sichern" button.
@@ -69,6 +71,8 @@ enum AccessibilityID {
         static let heightField = "bodyProfile.heightField"
         static let birthYearField = "bodyProfile.birthYearField"
         static let sexPicker = "bodyProfile.sexPicker"
+        /// "Geburtsdatum und Geschlecht in Health ändern" (opens the Health app).
+        static let openHealthButton = "bodyProfile.openHealthButton"
         /// The sentence after a reading that delivered nothing.
         static let nothingDelivered = "bodyProfile.nothingDelivered"
     }

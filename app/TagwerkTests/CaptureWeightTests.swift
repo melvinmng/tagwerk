@@ -97,6 +97,43 @@ struct CaptureWeightTests {
         #expect(health.groupRequests(.body) == 1)
     }
 
+    /// #316: the one consent of the Health card covers the weight, so the first weight is written without another sheet.
+    @Test func weightAfterTheHealthCard_isWrittenWithoutASecondSheet() async {
+        let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
+        let model = make(health)
+        await model.reload()
+        await model.connectHealth()
+        #expect(model.weightWriteAccess == .allowed)
+        let entry = weight()
+        await model.saveWeight(entry, isNew: true)
+        #expect(health.groupRequests(.body) == 0)
+        #expect(health.weights.map(\.kilograms) == [82.1])
+        #expect(model.isInHealth(entry.id))
+    }
+
+    /// #316: a refused write permission is visible and the entry waits, instead of failing silently.
+    @Test func weightWithARefusedWritePermission_staysLocal_andTheStatusSaysSo() async {
+        let health = FakeHealthStore()
+        health.setGroupAccess(.asked, for: .body)
+        health.setWriteAccess(.denied, for: .weight)
+        health.incompleteWrites = true
+        let model = make(health)
+        let entry = weight()
+        await model.saveWeight(entry, isNew: true)
+        #expect(store.weight(entry.id) == entry, "the entry is kept in Tagwerk")
+        #expect(model.weightWriteAccess == .denied)
+        #expect(!model.isInHealth(entry.id), "it stays marked for a later retry")
+    }
+
+    @Test func weightWriteStatus_followsTheSheetOfTheBodyGroup() async {
+        let health = FakeHealthStore()
+        let model = make(health)
+        await model.reload()
+        #expect(model.weightWriteAccess == .notAsked)
+        await model.allowBodyAccess()
+        #expect(model.weightWriteAccess == .allowed)
+    }
+
     // MARK: Layout and row
 
     @Test func quickEntry_fourButtonsWrapIntoTwoRowsAtLargeText() {

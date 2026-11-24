@@ -1,3 +1,4 @@
+import HealthBridge
 import SwiftUI
 import TagwerkCore
 
@@ -13,11 +14,38 @@ struct CaptureSettingsView: View {
 /// The form of the settings; the goal editor lives here so that the sub page for the further goals edits the same plan.
 private struct CaptureSettingsForm: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.openURL) private var openURL
     @State private var editor: GoalPlanEditor
     @State private var showsLookupConsent = false
 
     init(goals: GoalStore) {
         _editor = State(initialValue: GoalPlanEditor(goals: goals))
+    }
+
+    /// One write permission of Health: iOS reports it per type, so a refusal is shown instead of staying silent.
+    @ViewBuilder
+    private func writeRow(_ title: LocalizedStringKey, access: HealthWriteAccess?, connected: Bool,
+                          request: @escaping () async -> Void) -> some View {
+        switch access {
+        case .allowed:
+            LabeledContent(title) { Text("erlaubt").foregroundStyle(.secondaryText) }
+        case .denied:
+            LabeledContent(title) {
+                Button("Nicht erlaubt · Health öffnen") {
+                    if let url = URL(string: "x-apple-health://") { openURL(url) }
+                }
+            }
+        case .notAsked:
+            LabeledContent(title) {
+                if connected {
+                    Button("Erlauben") { Task { await request() } }
+                } else {
+                    Text("noch nicht gefragt").foregroundStyle(.secondaryText)
+                }
+            }
+        case .unavailable, nil:
+            EmptyView()
+        }
     }
 
     private func goal<Value>(_ keyPath: WritableKeyPath<GoalPlan, Value>) -> Binding<Value> {
@@ -69,6 +97,29 @@ private struct CaptureSettingsForm: View {
             }
 
             Section {
+                LabeledContent("Aktive Energie lesen") {
+                    if capture.activeEnergyAccess == .notAsked {
+                        Button("Erlauben") { Task { await capture.allowActiveEnergy() } }
+                            .accessibilityIdentifier(AccessibilityID.Capture.allowActiveEnergy)
+                    } else if capture.activeEnergyAccess == .asked {
+                        Text("Angefragt").foregroundStyle(.secondaryText)
+                    }
+                }
+                writeRow("Gewicht schreiben", access: capture.weightWriteAccess, connected: capture.healthConnected) {
+                    await capture.allowBodyAccess()
+                }
+                writeRow("Größe schreiben", access: capture.heightWriteAccess, connected: capture.healthConnected) {
+                    await capture.allowHeightWriting()
+                    // A height typed before the permission existed goes to Health now.
+                    await environment.bodyProfile.writePendingHeight()
+                }
+            } header: {
+                Text("Apple Health")
+            } footer: {
+                Text("Hier steht, was Tagwerk in Health schreiben darf. „Nicht erlaubt“ ändert nur die Health-App, unter Profil › Apps › Tagwerk; solange es fehlt, bleibt der Eintrag in Tagwerk und wird nicht nach Health übertragen. Ob das Lesen erlaubt ist, zeigt iOS nicht an.")
+            }
+
+            Section {
                 Toggle("Gesättigte Fettsäuren", isOn: $settings.saturatedFatEnabled)
                 Toggle("Salz", isOn: $settings.saltEnabled)
                 Toggle("Einträge anderer Apps mitzählen", isOn: Binding(
@@ -91,20 +142,13 @@ private struct CaptureSettingsForm: View {
             Section {
                 Toggle("Körperfett erfassen", isOn: $settings.bodyFatEnabled)
                     .accessibilityIdentifier("bodyFatEnabled")
-                if capture.healthConnected, capture.bodyAccess == .notAsked {
-                    LabeledContent("Gewicht in Health") {
-                        Button("Erlauben") { Task { await capture.allowBodyAccess() } }
-                    }
-                } else if capture.bodyAccess == .asked {
-                    LabeledContent("Gewicht in Health") { Text("Angefragt").foregroundStyle(.secondaryText) }
-                }
             } header: {
                 Text("Gewicht")
             } footer: {
                 Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
             }
 
-            BodyProfileSection(store: environment.bodyProfile)
+            BodyProfileSection(store: environment.bodyProfile, heightWriteAccess: capture.heightWriteAccess)
 
             GoalPlanningSettingsSection()
 

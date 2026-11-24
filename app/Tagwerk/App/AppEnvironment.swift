@@ -352,8 +352,10 @@ final class AppEnvironment {
         assistant.hasGoalConsent = { settings.goalPlanningConsent }
         // Withdrawing the consent ends the goal session: the package is dropped and the history in memory is reduced to its stored form.
         assistant.watchGoalConsent { settings.goalPlanningConsent }
+        // Hosted tests wait for the neighbour read, so it never outlives the store of its test; the app lets it run behind the page.
+        let waitsForPrefetch = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil || UITestMode.isActive
         self.capture = CaptureModel(store: intake, mirror: mirror, health: healthStore, settings: settings, budgets: budgets,
-                                  now: { UITestMode.now() })
+                                  now: { UITestMode.now() }, waitsForPrefetch: waitsForPrefetch)
         // An adopted goal plan reaches the head of "Erfassen" and the widget at once, not with the next reload.
         assistant.goalTools?.onAdopted = { [capture] in Task { await capture.reload() } }
         let goalData = GoalDataBuilder(intake: intake, budgets: budgets, weights: capture.weights, health: healthStore,

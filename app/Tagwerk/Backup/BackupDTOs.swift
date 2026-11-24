@@ -1478,6 +1478,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var bodyHeightCm: Int?
     var birthYear: Int?
     var formulaSexRaw: String?
+    /// Optional, so a backup written before the editable body values still decodes; the fields whose typed value wins over Health.
+    var bodyOverridesRaw: String?
     /// Optional, so a backup written before the goal planning still decodes; a missing value restores the consent as off.
     var goalPlanningConsent: Bool?
     var showsRoutinesInPlan: Bool
@@ -1585,6 +1587,7 @@ struct AppSettingsBackup: Codable, Equatable {
         bodyHeightCm = record.bodyHeightCm
         birthYear = record.birthYear
         formulaSexRaw = record.formulaSexRaw
+        bodyOverridesRaw = record.bodyOverridesRaw
         goalPlanningConsent = record.goalPlanningConsent
         showsRoutinesInPlan = record.showsRoutinesInPlan
         noteSuggestionConsent = record.noteSuggestionConsent
@@ -1689,6 +1692,7 @@ struct AppSettingsBackup: Codable, Equatable {
         if let bodyHeightCm { record.bodyHeightCm = bodyHeightCm }
         if let birthYear { record.birthYear = birthYear }
         if let formulaSexRaw { record.formulaSexRaw = formulaSexRaw }
+        if let bodyOverridesRaw { record.bodyOverridesRaw = bodyOverridesRaw }
         // A file from before the goal planning never held this consent: it must not stay on from the device that is restored over.
         record.goalPlanningConsent = goalPlanningConsent ?? false
         record.showsRoutinesInPlan = showsRoutinesInPlan
