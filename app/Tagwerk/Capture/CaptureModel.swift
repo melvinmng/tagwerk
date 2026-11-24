@@ -106,6 +106,12 @@ final class CaptureModel {
     /// Health workouts and steps of the weeks around the shown day, read after each reload. A day change inside this
     /// window shows them at once, so the neighbour page and the page after it carry the same numbers.
     @ObservationIgnored private var healthCache: HealthCache?
+    /// The read of the neighbouring weeks runs after `reload()` has returned, so the day is on screen without waiting for it. A newer
+    /// reload cancels it.
+    @ObservationIgnored private var prefetch: Task<Void, Never>?
+    /// The neighbour pages built since the model last changed: the preview asks for them on every body evaluation, and each one is a
+    /// set of SwiftData fetches. Emptied by every change (`refreshLocal`) and by the arrival of the prefetch.
+    @ObservationIgnored private var pageCache: [PlanDay: CaptureDay] = [:]
 
     struct HealthCache {
         /// The weeks of the day before and the day after the shown day.
@@ -124,12 +130,16 @@ final class CaptureModel {
 
     /// Tests wait for each Health run, so no run outlives the test's store.
     @ObservationIgnored private let waitsForHealth: Bool
+    /// Whether `reload()` waits for the read of the neighbouring weeks; defaults to `waitsForHealth`.
+    @ObservationIgnored private let waitsForPrefetch: Bool
 
     /// `budgets` defaults to a service without stored plans and Health values: the single goals of the settings and the own
     /// entries stand in (previews, tests that do not care for the budget).
     init(store: IntakeStore, mirror: HealthMirror, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
-         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false) {
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, waitsForHealth: Bool = false,
+         waitsForPrefetch: Bool? = nil) {
         self.waitsForHealth = waitsForHealth
+        self.waitsForPrefetch = waitsForPrefetch ?? waitsForHealth
         self.store = store
         self.mirror = mirror
         self.health = health
@@ -216,33 +226,41 @@ final class CaptureModel {
         lastToday = today
         if refreshingLocalFirst { refreshLocal() }
         let requestedDay = day
-        let access = await health.access()
-        self.access = access
         let weekStart = IntakeRules.weekStart(containing: day.startDate(in: calendar), calendar: calendar)
         let weekEnd = PlanDay(date: weekStart, calendar: calendar).adding(days: 7, calendar: calendar).startDate(in: calendar)
         let week = DateInterval(start: weekStart, end: weekEnd)
-        var foreignOfWeek: [WorkoutValue] = []
-        if access.wasAsked {
-            let foreign = (try? await health.foreignWorkouts(in: week)) ?? []
-            foreignOfWeek = foreign.map(Self.workoutValue)
-        }
-        let stepsAccess = await health.stepsAccess()
+        // The statuses do not depend on each other: asked together instead of one HealthKit call after the other on the main actor.
+        let health = self.health
+        async let accessRead = health.access()
+        async let stepsAccessRead = health.stepsAccess()
+        async let activeEnergyRead = health.groupAccess(.activeEnergy)
+        async let furtherNutrientsRead = health.groupAccess(.moreNutrients)
+        async let foreignNutritionRead = health.groupAccess(.foreignNutrition)
+        async let bodyRead = health.groupAccess(.body)
+        async let weightWriteRead = health.writeAccess(for: .weight)
+        async let heightWriteRead = health.writeAccess(for: .height)
+        let access = await accessRead
+        let stepsAccess = await stepsAccessRead
+        // The reads that follow depend on the statuses; the workouts of the week and the steps of the day and of today go together.
+        async let foreignRead = foreignWorkouts(in: week, access: access)
+        async let stepsRead = readSteps(requestedDay: requestedDay, today: today, stepsAccess: stepsAccess)
+        self.access = access
         self.stepsAccess = stepsAccess
-        self.activeEnergyAccess = await health.groupAccess(.activeEnergy)
-        self.furtherNutrientsAccess = await health.groupAccess(.moreNutrients)
-        self.foreignNutritionAccess = await health.groupAccess(.foreignNutrition)
-        self.bodyAccess = await health.groupAccess(.body)
-        self.weightWriteAccess = await health.writeAccess(for: .weight)
-        self.heightWriteAccess = await health.writeAccess(for: .height)
+        self.activeEnergyAccess = await activeEnergyRead
+        self.furtherNutrientsAccess = await furtherNutrientsRead
+        self.foreignNutritionAccess = await foreignNutritionRead
+        self.bodyAccess = await bodyRead
+        self.weightWriteAccess = await weightWriteRead
+        self.heightWriteAccess = await heightWriteRead
         self.healthConnected = access.wasAsked
+        let foreignOfWeek = await foreignRead
+        let stepReads = await stepsRead
         var stepsOfDay: Int?
-        if stepsAccess == .asked {
+        if stepReads.asked {
             // A failed read (Health is locked while the phone is locked) keeps the last value instead of clearing it.
-            let readOfDay = await dailySteps(on: requestedDay)
-            stepsOfDay = readOfDay ?? (shownBefore == requestedDay ? stepsBefore : nil)
+            stepsOfDay = stepReads.day ?? (shownBefore == requestedDay ? stepsBefore : nil)
             // Today's count is current even when a later navigation discards the displayed day's result below.
-            let readOfToday = requestedDay == today ? readOfDay : await dailySteps(on: today)
-            let stepsOfToday = readOfToday ?? todayStepsBefore
+            let stepsOfToday = stepReads.today ?? todayStepsBefore
             todayStepsValue = stepsOfToday.map { DaySteps(day: today, count: $0) }
         } else {
             todayStepsValue = nil
@@ -256,7 +274,40 @@ final class CaptureModel {
         guard day == requestedDay else { return }
         refreshLocal(week: week)
         await refreshWeightOverview()
-        await prefetchNeighbourHealth()
+        prefetch?.cancel()
+        let run = Task { await prefetchNeighbourHealth() }
+        prefetch = run
+        // Tests wait for it; the app does not: the page is complete without the neighbours' Health numbers.
+        if waitsForPrefetch { await run.value }
+    }
+
+    /// Waits for the read of the neighbouring weeks that the last reload started (tests).
+    func waitForPrefetch() async {
+        await prefetch?.value
+    }
+
+    /// The Health workouts of the week as values; empty when Health was not asked or the read fails.
+    private func foreignWorkouts(in week: DateInterval, access: HealthAccess) async -> [WorkoutValue] {
+        guard access.wasAsked else { return [] }
+        return ((try? await health.foreignWorkouts(in: week)) ?? []).map(Self.workoutValue)
+    }
+
+    /// What the step reads of a reload brought. `day` and `today` are `.some(nil)` for "no statistics" and `nil` for a failed read.
+    private struct StepReads {
+        var asked: Bool
+        var day: Int??
+        var today: Int??
+    }
+
+    /// The steps of the shown day and of today, read together; nothing is read before the step sheet was shown. When the shown day
+    /// is today, one read serves both.
+    private func readSteps(requestedDay: PlanDay, today: PlanDay, stepsAccess: StepsAccess) async -> StepReads {
+        guard stepsAccess == .asked else { return StepReads(asked: false, day: nil, today: nil) }
+        async let dayRead = dailySteps(on: requestedDay)
+        async let otherRead: Int?? = requestedDay == today ? nil : dailySteps(on: today)
+        let readOfDay = await dayRead
+        let readOfToday = requestedDay == today ? readOfDay : await otherRead
+        return StepReads(asked: true, day: readOfDay, today: readOfToday)
     }
 
     /// The weight figures from own entries and, once the group "body" was asked, the measurements of other apps.
@@ -296,6 +347,9 @@ final class CaptureModel {
         guard !Task.isCancelled else { return }
         healthCache = HealthCache(interval: interval, foreign: foreign, steps: steps)
         await budgets.refreshHealth(in: interval)
+        guard !Task.isCancelled else { return }
+        // The neighbour pages built before this point lack these numbers.
+        pageCache.removeAll()
     }
 
     /// The step sum of one day: `.some(nil)` without statistics, `nil` when the read failed (errors are not logged:
@@ -308,6 +362,7 @@ final class CaptureModel {
     }
 
     private func refreshLocal(week: DateInterval? = nil) {
+        pageCache.removeAll()
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let weekInterval = week ?? {
@@ -336,6 +391,13 @@ final class CaptureModel {
     /// the Health workouts and the steps. Reads no Health and changes nothing.
     func page(for target: PlanDay) -> CaptureDay {
         if target == day { return current }
+        if let cached = pageCache[target] { return cached }
+        let page = buildPage(for: target)
+        pageCache[target] = page
+        return page
+    }
+
+    private func buildPage(for target: PlanDay) -> CaptureDay {
         let dayStart = target.startDate(in: calendar)
         let dayEnd = target.adding(days: 1, calendar: calendar).startDate(in: calendar)
         let weekStart = IntakeRules.weekStart(containing: dayStart, calendar: calendar)
