@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · #319 Strichcode-Scan für Lebensmittel (E6) · Mockups</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page-bg: #f5f5f7; --page-fg: #111; --page-muted: #555; --page-border: rgba(0,0,0,.14);
+    --bg: #f2f2f7; --card: #ffffff; --card2: #e5e5ea; --sep: #d1d1d6;
+    --text: #000000; --sub: rgba(60,60,67,.78); --dim: #3c3c43;
+    --accent: #005fcc; --green: #1f7a35; --green-fill: #34c759;
+    --orange: #a84400; --orange-fill: #ff9500; --red: #b91c1c; --purple: #7d3c9e;
+    --frame: #c7c7cc; --sheet: #f2f2f7; --row: #ffffff; --segon: #ffffff;
+    --glass: rgba(255,255,255,.82); --glassline: rgba(0,0,0,.08);
+    --badge-bg: rgba(0,95,204,.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #0c0c0e; --page-fg: #f2f2f7; --page-muted: #a1a1aa; --page-border: rgba(255,255,255,.16);
+      --bg: #000000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a;
+      --text: #ffffff; --sub: rgba(235,235,245,.60); --dim: #c7c7cc;
+      --accent: #0a84ff; --green: #30d158; --green-fill: #30d158;
+      --orange: #ff9f0a; --orange-fill: #ff9f0a; --red: #ff6961; --purple: #da8fff;
+      --frame: #2c2c2e; --sheet: #121214; --row: #1c1c1e; --segon: #636366;
+      --glass: rgba(44,44,46,.76); --glassline: rgba(255,255,255,.16);
+      --badge-bg: rgba(10,132,255,.20);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 20px; background: var(--page-bg); color: var(--page-fg); font: 14px/1.5 -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.3px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; padding-top: 14px; border-top: 1px solid var(--page-border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .lead { color: var(--page-muted); max-width: 960px; margin: 0 0 16px; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font: 700 11.5px system-ui; background: var(--badge-bg); color: var(--accent); }
+  .tag.rec { background: var(--green-fill); color: #000; }
+  .tag.alt { background: var(--card2); color: var(--text); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(393px, 1fr)); gap: 24px; align-items: start; }
+  .col-label { font: 600 13px system-ui; color: var(--page-muted); margin: 0 0 8px 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .col-label b { color: var(--page-fg); }
+  .note { font-size: 12.5px; color: var(--page-muted); margin: 8px 4px 0; max-width: 393px; }
+
+  .phone {
+    width: 393px; height: 852px; max-width: 100%;
+    background: var(--bg); color: var(--text);
+    border: 6px solid var(--frame); border-radius: 44px;
+    padding: 14px 14px 12px; display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    font: 15px/1.35 -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 2px 12px 10px; flex-shrink: 0; }
+  .nb { display: flex; justify-content: space-between; align-items: center; font: 600 16px system-ui; padding: 4px 4px 10px; flex-shrink: 0; }
+  .nb .act { color: var(--accent); font-weight: 400; font-size: 15px; min-width: 72px; }
+  .nb .act.r { text-align: right; font-weight: 600; }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--card); border-radius: 16px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 44px; border-bottom: 1px solid var(--sep); }
+  .row:last-child { border-bottom: 0; }
+  .row .t { flex: 1; min-width: 0; }
+  .row .s { display: block; font-size: 12.5px; color: var(--sub); margin-top: 2px; }
+  .row .v { color: var(--sub); font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+  .row .v b { color: var(--text); font-weight: 600; }
+  .row .ic { width: 24px; text-align: center; color: var(--accent); font-size: 17px; flex-shrink: 0; }
+  .row .ch { color: var(--sub); font-size: 14px; }
+  .row.action { color: var(--accent); font-weight: 500; }
+  .row.new { box-shadow: inset 3px 0 0 var(--orange-fill); }
+  .sh { font: 600 12px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin: 4px 14px -4px; }
+  .ft { font-size: 12px; color: var(--sub); margin: -4px 14px 2px; line-height: 1.4; }
+  .seg { display: flex; background: var(--card2); border-radius: 10px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 6px 4px; font-size: 13px; border-radius: 8px; color: var(--dim); }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .searchbox { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 10px 12px; min-height: 44px; color: var(--sub); }
+  .searchbox .scan-ico { margin-left: auto; width: 32px; height: 32px; border-radius: 8px; background: var(--badge-bg); color: var(--accent); display: grid; place-items: center; font-size: 16px; }
+  .btn { display: block; text-align: center; background: var(--accent); color: #fff; font: 600 15px system-ui; padding: 12px 14px; min-height: 44px; border-radius: 13px; }
+  .btn.sec { background: var(--card2); color: var(--accent); }
+  .btn.plain { background: transparent; color: var(--accent); font-weight: 500; padding: 8px; }
+  .viewfinder {
+    height: 310px; border-radius: 20px; position: relative; overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #3a3a3f 0%, #161618 75%);
+    display: flex; flex-direction: column; justify-content: space-between; padding: 14px; color: #fff;
+  }
+  .vf-top { display: flex; justify-content: space-between; align-items: center; }
+  .vf-pill { background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); border-radius: 99px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
+  .vf-torch { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.22); display: grid; place-items: center; font-size: 18px; }
+  .vf-frame {
+    margin: 0 auto; width: 248px; height: 118px; border-radius: 14px;
+    border: 2.5px solid #ffd60a; box-shadow: 0 0 0 999px rgba(0,0,0,.38);
+    display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .vf-bars { display: flex; gap: 3px; height: 56px; align-items: stretch; opacity: .7; }
+  .vf-bars i { display: block; background: #fff; }
+  .vf-laser { position: absolute; left: 10px; right: 10px; height: 2px; background: #ff453a; top: 50%; }
+  .vf-hint { text-align: center; font-size: 13px; color: rgba(255,255,255,.92); position: relative; z-index: 2; }
+  .banner { border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.4; }
+  .banner.warn { background: rgba(255,149,0,.14); color: var(--orange); }
+  .banner.ok { background: rgba(52,199,89,.14); color: var(--green); }
+  .banner.err { background: rgba(185,28,28,.12); color: var(--red); }
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 18px; gap: 10px; }
+  .empty .big-ico { font-size: 42px; color: var(--sub); }
+  .empty h3 { margin: 0; font-size: 18px; }
+  .empty p { margin: 0; font-size: 13.5px; color: var(--sub); max-width: 290px; }
+  .spinner { width: 20px; height: 20px; border: 2.5px solid var(--sep); border-top-color: var(--accent); border-radius: 50%; flex-shrink: 0; }
+  .input-mono { background: var(--card); border: 1px solid var(--sep); border-radius: 12px; padding: 11px 14px; font: 600 16px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 1px; color: var(--text); }
+</style>
+</head>
+<body>
+
+<h1>#319 · Strichcode-Scan für Lebensmittel (E6)</h1>
+<p class="lead">Aufbauend auf dem bereits gebauten Open-Food-Facts-Client (<code>ProductLookup.product(barcode:)</code>), <code>ProductPreviewView</code> und <code>FoodLookupConsentSheet</code>. Farben folgen <code>Colors.xcassets</code> und <code>TextTones.swift</code> (Hell &amp; Dunkel automatisch über <code>prefers-color-scheme</code>). Gelb/orange Seitenlinie markiert neue Elemente.</p>
+
+<h2>Variante A vs. B · Einstieg im Mahlzeitenblatt &amp; Lokaler Treffer</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag rec">Variante A · Empfehlung</span><b>Prominenter Einstieg in „Meine Lebensmittel“</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Essen</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="searchbox"><span>🔍</span><span>Suchen: Lebensmittel</span><span class="scan-ico" title="Strichcode scannen">⊞</span></div>
+        <div class="seg"><span>Zuletzt</span><span class="on">Meine Lebensmittel</span></div>
+        <div class="sh">Meine Lebensmittel</div>
+        <div class="card">
+          <div class="row"><div class="t">Skyr natur<span class="s">je 100 g · 62 kcal · 11 g Eiweiß</span></div><span class="ch">›</span></div>
+          <div class="row"><div class="t">Haferflocken kernig<span class="s">je 100 g · 372 kcal · 13,5 g Eiweiß</span></div><span class="ch">›</span></div>
+          <div class="row"><div class="t">Vollkornbrot<span class="s">je Stück (50 g) · 112 kcal</span></div><span class="ch">›</span></div>
+          <div class="row action new"><span class="ic">⊞</span><div class="t">Strichcode scannen</div></div>
+          <div class="row action"><span class="ic">📷</span><div class="t">Etikett fotografieren</div></div>
+          <div class="row action"><span class="ic">＋</span><div class="t">Neues Lebensmittel</div></div>
+        </div>
+        <div class="ft">Tippe auf ein Lebensmittel und gib die Menge ein. Wische nach links, um es zu bearbeiten oder zu löschen.</div>
+      </div>
+    </div>
+    <p class="note">Schnellzugriff über das Icon im Suchfeld <em>und</em> klare beschriftete Zeile „Strichcode scannen“ (44 pt, VoiceOver-sicher) direkt über „Etikett fotografieren“.</p>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag alt">Variante B</span><b>Nur als Aktionszeile am Listenende</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Essen</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="searchbox"><span>🔍</span><span>Suchen: Lebensmittel</span></div>
+        <div class="seg"><span>Zuletzt</span><span class="on">Meine Lebensmittel</span></div>
+        <div class="sh">Meine Lebensmittel</div>
+        <div class="card">
+          <div class="row"><div class="t">Skyr natur<span class="s">je 100 g · 62 kcal · 11 g Eiweiß</span></div><span class="ch">›</span></div>
+          <div class="row"><div class="t">Haferflocken kernig<span class="s">je 100 g · 372 kcal · 13,5 g Eiweiß</span></div><span class="ch">›</span></div>
+          <div class="row"><div class="t">Vollkornbrot<span class="s">je Stück (50 g) · 112 kcal</span></div><span class="ch">›</span></div>
+          <div class="row action"><span class="ic">＋</span><div class="t">Neues Lebensmittel</div></div>
+          <div class="row action"><span class="ic">📷</span><div class="t">Etikett fotografieren</div></div>
+          <div class="row action new"><span class="ic">⊞</span><div class="t">Strichcode scannen</div></div>
+        </div>
+        <div class="ft">Bei langer eigener Liste muss man bis ganz nach unten scrollen, um den Scanner zu erreichen.</div>
+      </div>
+    </div>
+    <p class="note">Minimaler Eingriff im Suchkopf, aber bei wachsender Liste „Meine Lebensmittel“ schlechter erreichbar.</p>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag rec">Variante A · Empfehlung</span><b>Lokaler Treffer (ohne Netzabruf)</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Strichcode</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="viewfinder" style="height:210px">
+          <div class="vf-top"><span class="vf-pill">EAN-13 · 4000000000001</span><span class="vf-torch">🔦</span></div>
+          <div class="vf-frame" style="height:82px; border-color: var(--green-fill)"><div class="vf-bars"><i style="width:2px"></i><i style="width:5px"></i><i style="width:2px"></i><i style="width:4px"></i><i style="width:1px"></i><i style="width:6px"></i><i style="width:2px"></i><i style="width:3px"></i><i style="width:5px"></i></div></div>
+          <div class="vf-hint">Erkannt</div>
+        </div>
+        <div class="banner ok"><b>Bereits in „Meine Lebensmittel“</b><br>Kein Online-Abruf nötig.</div>
+        <div class="card">
+          <div class="row"><div class="t"><b>Skyr natur</b><span class="s">Demomolkerei · je 100 g · 62 kcal · 11 g Eiweiß</span></div></div>
+          <div class="row"><div class="t">Strichcode</div><div class="v">4000000000001</div></div>
+        </div>
+        <span class="btn">Menge eingeben</span>
+        <span class="btn sec">Online neu abrufen</span>
+        <span class="btn plain">Anderen Strichcode scannen</span>
+      </div>
+    </div>
+    <p class="note">Prüft zuerst <code>FoodStore.food(barcode:)</code>. Funktioniert offline, ohne Einwilligung und verhindert doppelte Einträge.</p>
+  </div>
+
+</div>
+
+<h2>Hauptscreen &amp; Schlüsselzustände (Scanner, Laden, Online-Treffer, Nicht gefunden, Fehler &amp; Verweigert)</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag">Hauptscreen</span><b>Live-Scanner (VisionKit)</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Strichcode</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="viewfinder">
+          <div class="vf-top"><span class="vf-pill">Kamera aktiv</span><span class="vf-torch" title="Taschenlampe">🔦</span></div>
+          <div class="vf-frame">
+            <div class="vf-bars"><i style="width:3px"></i><i style="width:1px"></i><i style="width:5px"></i><i style="width:2px"></i><i style="width:4px"></i><i style="width:2px"></i><i style="width:6px"></i><i style="width:1px"></i><i style="width:3px"></i><i style="width:5px"></i><i style="width:2px"></i><i style="width:4px"></i></div>
+            <div class="vf-laser"></div>
+          </div>
+          <div class="vf-hint">Strichcode in den Rahmen halten</div>
+        </div>
+        <div class="card">
+          <div class="row action"><span class="ic">⌨️</span><div class="t">Nummer von Hand eingeben</div><span class="ch">›</span></div>
+        </div>
+        <div class="ft">Erkennung läuft auf dem iPhone. Erst bei einem unbekannten Strichcode fragt Tagwerk Open Food Facts ab – nur mit deiner Einwilligung.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Zustand: Laden &amp; Online-Treffer</span><b>Vorschau (<code>ProductPreviewView</code>)</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Zurück</span><span>Produkt</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="card">
+          <div class="row"><span class="spinner"></span><div class="t">Suche Produkt 4008400404127 …<span class="s">Open Food Facts · 1 Anfrage</span></div></div>
+        </div>
+        <div class="sh">Nach Antwort: Vorschau</div>
+        <div class="card">
+          <div class="row"><div class="t"><b>Haferdrink Barista</b><span class="s">Oatly · 1 l · Code 7394376616501</span></div></div>
+        </div>
+        <div class="sh">je 100 ml</div>
+        <div class="card">
+          <div class="row"><div class="t">Kalorien</div><div class="v"><b>59 kcal</b></div></div>
+          <div class="row"><div class="t">Eiweiß</div><div class="v"><b>1,0 g</b></div></div>
+          <div class="row"><div class="t">Kohlenhydrate</div><div class="v"><b>6,6 g</b></div></div>
+          <div class="row"><div class="t">Fett</div><div class="v"><b>3,0 g</b></div></div>
+          <div class="row"><div class="t">Ballaststoffe</div><div class="v">keine Angabe</div></div>
+        </div>
+        <div class="ft">Bitte mit der Verpackung vergleichen: Die Werte stammen aus einer offenen Datenbank und können fehlen oder falsch sein.</div>
+        <div class="card">
+          <div class="row action"><div class="t"><b>Als Lebensmittel speichern</b></div></div>
+          <div class="row action"><span class="ic">📷</span><div class="t">Stattdessen Etikett fotografieren</div></div>
+        </div>
+        <div class="ft">Daten: Open Food Facts (ODbL)</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Zustand: Nicht gefunden</span><b>Fallback zu Etikett-Foto / Manuell</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Strichcode</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="empty">
+          <div class="big-ico">🏷️</div>
+          <h3>Strichcode nicht gefunden</h3>
+          <p>Zu <b>4012345678901</b> gibt es keinen Eintrag bei Open Food Facts.</p>
+          <div style="width:100%; display:flex; flex-direction:column; gap:8px; margin-top:10px">
+            <span class="btn">Etikett fotografieren</span>
+            <span class="btn sec">Lebensmittel selbst anlegen</span>
+            <span class="btn plain">Erneut scannen</span>
+          </div>
+        </div>
+        <div class="ft" style="text-align:center">Beim eigenen Anlegen wird der Strichcode 4012345678901 direkt mitgespeichert.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Zustand: Fehler &amp; Zugriff verweigert</span><b>Kamera verweigert / Offline / Rate-Limit</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>Kein Netz</span></div>
+      <div class="nb"><span class="act">Abbrechen</span><span>Strichcode</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="card" style="padding:18px 16px; text-align:center">
+          <div style="font-size:34px; margin-bottom:6px">🚫📷</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:4px">Kamerazugriff benötigt</div>
+          <div style="font-size:13px; color:var(--sub); margin-bottom:12px">Erlaube Tagwerk den Kamerazugriff in den iOS-Einstellungen, um Strichcodes zu scannen.</div>
+          <span class="btn">Einstellungen öffnen</span>
+        </div>
+        <div class="sh">Manuelle Eingabe (Fallback)</div>
+        <div class="input-mono">4008400404127</div>
+        <span class="btn sec">Strichcode suchen</span>
+        <div class="banner warn"><b>Offline:</b> Keine Verbindung. Lokale Lebensmittel mit diesem Strichcode werden trotzdem gefunden.</div>
+        <div class="banner err"><b>Rate-Limit:</b> Bitte kurz warten, noch 18 s. Open Food Facts erlaubt nur wenige Anfragen pro Minute.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
