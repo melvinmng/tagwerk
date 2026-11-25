@@ -5,7 +5,7 @@ import XCTest
 final class AccessibilityAuditUITests: UITestCase {
     // A fixed time of day: the hour grid of "Planen" scrolls to the current time, so without it the audited part of the
     // grid (and with it the findings) would depend on the hour of the run.
-    override var extraLaunchArguments: [String] { AuditAllowlist.fixedClockArguments }
+    override var extraLaunchArguments: [String] { AuditAllowlist.fixedClockArguments + ["-TagwerkDemoFoodLookup"] }
 
     /// Runs the audit on the screen that is open now; findings that are not on the allowlist fail the test.
     private func audit(_ screen: String) throws {
@@ -46,6 +46,7 @@ final class AccessibilityAuditUITests: UITestCase {
         XCTAssertTrue(app.navigationBars["Alle Notizen"].waitForExistence(timeout: Self.timeout))
         try audit("Notizenliste")
 
+        try auditBarcodeScan(audit)
 
         tab("Planen")
         // The return key closes the keyboard, so its suggestion bar is not part of the audit.
@@ -56,6 +57,46 @@ final class AccessibilityAuditUITests: UITestCase {
 }
 
 extension UITestCase {
+    /// The barcode scan sheet in its two screens a user sees without a camera: the field for the digits, and the result of a code that is
+    /// not among the own foods (the consent is declined, so nothing is sent). Erfassen › Essen › Meine Lebensmittel › "Strichcode scannen".
+    /// Both sheets are closed again at the end, so the test can go on with another tab.
+    func auditBarcodeScan(_ audit: (String) throws -> Void) throws {
+        tab("Erfassen")
+        // In the large text sizes the buttons of the quick entry lie below the fold of the page: drag until "Essen" can be hit.
+        let meal = app.buttons.matching(NSPredicate(format: "label == %@", "Essen"))
+        var opened = false
+        for _ in 0..<12 where !opened {
+            if let button = meal.allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                button.tap()
+                opened = true
+            } else {
+                dragPage(towardsTop: false)
+            }
+        }
+        XCTAssertTrue(opened, "The button Essen is not reachable by scrolling")
+        selectSegment("Meine Lebensmittel")
+        let row = app.buttons[AccessibilityID.FoodLookup.scanRow].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row Strichcode scannen is missing")
+        dragUntilHittable(row)
+        row.tap()
+        let field = app.textFields[AccessibilityID.FoodLookup.manualField].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The scan sheet did not open")
+        try audit("Strichcode (Nummer eingeben)")
+
+        field.tap()
+        field.typeText("4012345678901")
+        tapButton(AccessibilityID.FoodLookup.manualSubmit)
+        tapButton("Nicht jetzt")
+        XCTAssertTrue(app.buttons[AccessibilityID.FoodLookup.scanCreateFood].firstMatch.waitForExistence(timeout: Self.timeout),
+                      "The result of the unknown code is missing")
+        try audit("Strichcode (nicht gefunden)")
+
+        // The upper sheet (scan) first, then the meal sheet below it; the covered "Abbrechen" is not hittable.
+        onScreen(label: "Abbrechen").tap()
+        waitUntilGone(app.buttons[AccessibilityID.FoodLookup.scanCreateFood].firstMatch)
+        onScreen(label: "Abbrechen").tap()
+    }
+
     /// One drag of a fixed length (no inertia) that moves the content of the page down (`towardsTop`) or up.
     func dragPage(towardsTop: Bool) {
         let from = towardsTop ? 0.35 : 0.7, to = towardsTop ? 0.65 : 0.4

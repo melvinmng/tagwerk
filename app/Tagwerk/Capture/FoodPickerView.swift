@@ -12,6 +12,10 @@ final class FoodPickerCoordinator {
     var edit: FoodEditSheet.Seed?
     /// The online search sheet (decision LM1d); opened by a tap on "Online suchen", never by typing.
     var onlineSearch: OnlineSearchRequest?
+    /// The barcode scan sheet.
+    var barcodeScan: BarcodeScanRequest?
+    /// What the scan sheet ended with; acted on in `scanSheetDismissed()`, because two sheets of one list never change at the same moment.
+    private var pendingScanOutcome: BarcodeScanOutcome?
     /// Counts changes of the list, so the list redraws after a save or a delete.
     private(set) var revision = 0
     /// Called with the item of a chosen food and amount.
@@ -26,6 +30,21 @@ final class FoodPickerCoordinator {
     func startNewFood(withLabelPhoto: Bool = false) { edit = FoodEditSheet.Seed(startsWithLabelPhoto: withLabelPhoto) }
 
     func startEditing(_ food: FoodValue) { edit = FoodEditSheet.Seed(food: food, isExisting: true) }
+
+    func startScanning() { barcodeScan = BarcodeScanRequest() }
+
+    /// The scan sheet reports how it ended and closes; the follow-up sheet opens after it is gone.
+    func finishScan(_ outcome: BarcodeScanOutcome) { pendingScanOutcome = outcome }
+
+    func scanSheetDismissed() {
+        guard let outcome = pendingScanOutcome else { return }
+        pendingScanOutcome = nil
+        switch outcome {
+        case .ownFood(let food): amountFood = food
+        case .newFood(let seed): edit = seed
+        case .foodSaved: listChanged()
+        }
+    }
 }
 
 extension View {
@@ -51,6 +70,9 @@ private struct FoodSheetsModifier: ViewModifier {
             }
             .sheet(item: $coordinator.onlineSearch) { request in
                 ProductSearchSheet(request: request) { coordinator.listChanged() }
+            }
+            .sheet(item: $coordinator.barcodeScan, onDismiss: { coordinator.scanSheetDismissed() }) { _ in
+                BarcodeScannerSheet { coordinator.finishScan($0) }
             }
     }
 }
@@ -98,6 +120,9 @@ struct FoodPickerSection: View {
             onlineSearchRow
             Button("Neues Lebensmittel", systemImage: "plus") { coordinator.startNewFood() }
                 .accessibilityIdentifier(AccessibilityID.Food.newButton)
+            // Always there: a food that is already stored is found without a connection and without the consent.
+            Button("Strichcode scannen", systemImage: "barcode.viewfinder") { coordinator.startScanning() }
+                .accessibilityIdentifier(AccessibilityID.FoodLookup.scanRow)
             if environment.ai.isSignedIn {
                 Button("Etikett fotografieren", systemImage: "camera") { coordinator.startNewFood(withLabelPhoto: true) }
             }
@@ -221,8 +246,17 @@ struct FoodPickerSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Suchen: Lebensmittel", text: $query)
-                        .accessibilityIdentifier(AccessibilityID.Food.searchField)
+                    HStack {
+                        TextField("Suchen: Lebensmittel", text: $query)
+                            .accessibilityIdentifier(AccessibilityID.Food.searchField)
+                        // A shortcut to the row "Strichcode scannen" below; the row is the one VoiceOver reads, so the icon is hidden from it.
+                        Button { coordinator.startScanning() } label: {
+                            Image(systemName: "barcode.viewfinder").frame(minWidth: 44, minHeight: 44)
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityHidden(true)
+                        .accessibilityIdentifier(AccessibilityID.FoodLookup.scanIcon)
+                    }
                 }
                 FoodPickerSection(query: query, coordinator: coordinator)
             }

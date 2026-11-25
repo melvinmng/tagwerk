@@ -60,7 +60,7 @@ enum AuditAllowlist {
     /// The screens with bar buttons, filter marks and quick entry buttons on Liquid Glass (collect runs of 2026-11-25).
     private static let glassButtonScreens = withLargeText([
         "Aufgaben", "Suche", "Erfassen", "Tagesabschluss", "Tagesabschluss (Abend)", "Einkauf › Rezept hinzufügen",
-        "Einkauf › Rezept hinzufügen (Notiz)", "Rezept anlegen (Eingabe)",
+        "Einkauf › Rezept hinzufügen (Notiz)", "Rezept anlegen (Eingabe)", "Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)",
     ]) + gridScreens
 
     private static let entries: [Entry] = [
@@ -341,6 +341,19 @@ enum AuditAllowlist {
             "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\": a long footer of the password page and the header and "
             + "footer of the list of safety copies, plain `Text` in a `Section` without a line limit, so they wrap. Not measured at AX5 for these "
             + "pages: device test list (Dynamic Type at the largest size on all four pages)."),
+
+        // MARK: Barcode scan sheet (#319)
+        Entry(auditType: .contrast, labels: ["Suchen", "Erneut scannen", "Selbst anlegen"],
+              screens: ["AX5/dark Strichcode (Nummer eingeben)", "AX5/dark Strichcode (nicht gefunden)"], reason:
+            "Button rows of the scan sheet in the accent tone on the grouped background, at AX5 in dark mode (\"Suchen\" of the digit entry, \"Erneut scannen\" and "
+            + "\"Selbst anlegen\" of the result): reported as \"nearly passed\" in 2 of 2 repetitions of a collect run on 2026-11-25, in no run at the default size. "
+            + "Same cause as the accent buttons of the other forms: the dark `AccentColor` stays as it is (decision D5, 2026-11-25). Headers and "
+            + "footers of the sheet are in `secondaryText` (D1) and were reported before that change, not after."),
+        Entry(auditType: .dynamicType, labels: ["Abbrechen", "Beim Anlegen wird der Strichcode mit dem Lebensmittel gespeichert\\."],
+              screens: ["Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)"], reason:
+            "The cancel button of the navigation bar (system control) and the footer of the result form, plain `Text` styles; the audit reports a "
+            + "partial lack of Dynamic Type support at the default size in 2 of 2 repetitions of a collect run on 2026-11-25, the same finding as for "
+            + "\"Abbrechen\" and the footers of the recipe screens above. At AX5 the sheet is audited for clipping and contrast, and both texts grow and wrap."),
 
         // MARK: Hit area
         Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], screens: ["Suche"], reason:
