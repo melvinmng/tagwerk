@@ -107,6 +107,45 @@ final class CaptureUITests: UITestCase {
         eventually("The confirmation did not disappear after undoing") { !confirmation.exists }
     }
 
+    /// C4: a week without a measurement keeps the weight section with a hint, and the section leads on to "Verlauf und Ziele".
+    func testWeekReview_withoutWeight_showsHintAndLinkToTrends() {
+        tab("Erfassen")
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        let hint = app.descendants(matching: .any).matching(identifier: AccessibilityID.WeekReview.noWeight).firstMatch
+        eventually("The hint for a week without a weight is missing") {
+            if !hint.isHittable { app.swipeUp() }
+            return hint.exists
+        }
+        let link = app.descendants(matching: .any).matching(identifier: AccessibilityID.WeekReview.trendLink).firstMatch
+        scrollTo(link)
+        link.tap()
+        XCTAssertTrue(app.navigationBars["Verlauf und Ziele"].waitForExistence(timeout: Self.timeout), "The trends page did not open")
+    }
+
+    /// C4: one measurement is not enough for a 7-day mean; the review names the latest measurement and says what is missing.
+    func testWeekReview_withOneWeight_showsLatestMeasurementAndMissingMean() {
+        tab("Erfassen")
+        let buttons = app.buttons.matching(identifier: AccessibilityID.Capture.quickWeight)
+        var button: XCUIElement?
+        eventually("The quick button for the weight is not on screen") {
+            button = buttons.allElementsBoundByIndex.first { $0.isHittable }
+            return button != nil
+        }
+        button?.tap()
+        XCTAssertTrue(app.navigationBars["Gewicht"].waitForExistence(timeout: Self.timeout), "The weight sheet did not open")
+        app.buttons[AccessibilityID.Capture.weightSave].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'kg erfasst'")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The confirmation with the weight is missing")
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        let latest = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Letzte Messung'")).firstMatch
+        eventually("The latest measurement is missing in the weight section") {
+            if !latest.exists { app.swipeUp() }
+            return latest.exists
+        }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Für ein 7-Tage-Mittel fehlen Messungen'"))
+            .firstMatch.exists, "The hint about the missing mean is missing")
+    }
+
     /// Decision LM1b and LM4b: a food with values per 100 g is created, chosen with a typed amount in grams, and its item is exact.
     func testAddOwnFood_withGrams_addsExactItem() {
         tab("Erfassen")

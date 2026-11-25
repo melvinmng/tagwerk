@@ -494,6 +494,46 @@
         }
       }
     },
+    "%lld Messungen in dieser Woche": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Messung in dieser Woche"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Messungen in dieser Woche"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld measurement this week"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld measurements this week"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Messungen.": {
       "localizations": {
         "en": {
@@ -2234,6 +2274,16 @@
         }
       }
     },
+    "Keine Messung in dieser Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No measurement this week"
+          }
+        }
+      }
+    },
     "Keine Messungen in diesem Zeitraum.": {
       "localizations": {
         "en": {
@@ -2320,6 +2370,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read"
+          }
+        }
+      }
+    },
+    "Letzte Messung %@ (%@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Letzte Messung %1$@ (%2$@)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest measurement %1$@ (%2$@)"
           }
         }
       }

@@ -24,6 +24,14 @@ final class AccessibilityAuditLargeTextUITests: UITestCase {
         waitFor("Wochenrückblick, Woche")
         try audit("Erfassen")
 
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Wochenrückblick"].waitForExistence(timeout: Self.timeout))
+        try audit("Wochenrückblick")
+        app.swipeUp()
+        waitUntilScreenIsStable()
+        try audit("Wochenrückblick (weiter unten)")
+        app.navigationBars.buttons.firstMatch.tap()
+
         openShoppingList()
         try audit("Einkaufsliste")
     }

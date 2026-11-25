@@ -1,4 +1,9 @@
 {
+  "%lld Messungen in dieser Woche": {
+    "one": "%lld measurement this week",
+    "other": "%lld measurements this week"
+  },
+  "7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.": "7-day mean at the end of the week; the trend compares it with the value four weeks earlier. Own entries and, where allowed, measurements from Health.",
   "Alle Vorschläge besprechen": "Discuss all suggestions",
   "Alles früher am Tag": "Everything earlier in the day",
   "Anhänge oder Links haben sich geändert. Sie müssen bleiben, wie sie sind.": "Attachments or links changed. They must stay as they are.",
@@ -32,11 +37,14 @@
   "In den Zutaten haben sich Mengen geändert. Mengen müssen bleiben, wie sie sind.": "Amounts in the ingredients changed. Amounts must stay as they are.",
   "Jede Zeile braucht einen Text und darf keinen Zeilenumbruch enthalten.": "Every line needs a text and must not contain a line break.",
   "Kategorie wählen": "Choose category",
+  "Kein Gewicht erfasst": "No weight recorded",
+  "Keine Messung in dieser Woche": "No measurement this week",
   "Keine neuen Kategorien": "No new categories",
   "Keine Verbindung zu ChatGPT.": "No connection to ChatGPT.",
   "Keine Fahrzeit für diesen Termin": "No travel time for this event",
   "Keine Änderung.": "No change.",
   "Kleinere Portion": "Smaller portion",
+  "Letzte Messung %@ (%@)": "Latest measurement %1$@ (%2$@)",
   "Markennamen lassen": "Keep brand names",
   "Maßeinheiten lassen": "Keep the units",
   "Melde dich in den Einstellungen mit ChatGPT an.": "Sign in with ChatGPT in Settings.",
@@ -91,6 +99,8 @@
   "Trainings": "Workouts",
   "Trainingskalorien": "Workout calories",
   "Treppensteigen": "Stair climbing",
+  "Verlauf und Ziele öffnen": "Open trends and goals",
+  "Veränderung zur Vorwoche": "Change from previous week",
   "Von dir geänderte Zeilen wurden überschrieben. „Rückgängig“ bringt sie zurück.": "Rows you changed were overwritten. “Undo” brings them back.",
   "von dir verschoben, bleibt": "moved by you, stays",
   "Vorschlag überarbeitet.": "Proposal revised.",

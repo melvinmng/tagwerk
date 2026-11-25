@@ -27,6 +27,15 @@ final class AccessibilityAuditUITests: UITestCase {
         tapButton("Abschließen")
         waitUntilGone(app.navigationBars["Tagesabschluss"])
 
+        // The weekly review: its head and, one page further down, the weight section (the demo data holds no weight, so the hint shows).
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Wochenrückblick"].waitForExistence(timeout: Self.timeout))
+        try audit("Wochenrückblick")
+        app.swipeUp()
+        waitUntilScreenIsStable()
+        try audit("Wochenrückblick (weiter unten)")
+        app.navigationBars.buttons.firstMatch.tap()
+
         openShoppingList()
         for item in ["Milch", "Brot"] {
             app.textFields["Artikel hinzufügen"].tap()

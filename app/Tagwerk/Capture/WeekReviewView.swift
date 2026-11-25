@@ -1,10 +1,12 @@
 import SwiftUI
 import TagwerkCore
 
-/// The weekly review (mockup R1a, R2a, ST1; provisional): calories per day with a goal line, water, training time,
-/// steps per day with a goal line, protein with an active goal and completed tasks.
+/// The weekly review (mockup R1a, R2a, ST1; provisional): calories per day with a goal line and the days within budget, the weight
+/// figures of the week, the macros and further nutrients against the goals, water, training time, steps per day with a goal line
+/// and completed tasks.
 struct WeekReviewView: View {
     @State var model: WeekReviewModel
+    @Environment(AppEnvironment.self) private var environment
     @State private var picking = false
     @State private var pendingSave: Task<Void, Never>?
 
@@ -44,10 +46,11 @@ struct WeekReviewView: View {
                 header
             }
             if let review = model.review {
-                if review.isEmpty {
+                if model.isWeekEmpty {
                     Section { Text("In dieser Woche wurde nichts erfasst.").foregroundStyle(.secondaryText) }
                 }
                 caloriesSection(review)
+                weightSection(review)
                 nutrientsSection(review)
                 Section {
                     Text(Self.waterText(review))
@@ -59,18 +62,14 @@ struct WeekReviewView: View {
                 if model.showsSteps {
                     stepsSection(review)
                 }
-                if let protein = review.averageProtein, let goal = review.goals.proteinGrams {
-                    Section {
-                        Text("Ø \(review.hasEstimate ? "~" : "")\(Int(protein.rounded())) g / \(goal) g an \(dayCount(review.daysWithMeals))")
-                    } header: { header("Eiweiß", review) }
-                }
                 Section {
                     Text("\(review.completedTasks) Aufgaben")
                 } header: { header("Erledigt", review) } footer: {
                     Text(WeekReviewModel.completedFooter(model.gitHub))
                 }
             }
-            GoalPlanningEntries(offer: .reviewOnly)
+            GoalPlanningEntries(offer: .reviewOnly,
+                                note: model.goalAge.map { IntakeFormat.goalsSince($0, calendar: model.calendar) })
             EffortReviewSection(model: model)
             // Phase 7: also in a week without any entry.
             WeekReflectionSections(model: model)
@@ -128,6 +127,10 @@ struct WeekReviewView: View {
                 Text("Keine Mahlzeiten erfasst").foregroundStyle(.secondaryText)
             } else if let average = review.averageKcal {
                 Text("Ø \(IntakeFormat.kcalNumber(average, estimated: review.hasEstimate)) kcal an \(dayCount(review.daysWithMeals))")
+                Text(IntakeFormat.weekBudgetDays(within: review.daysWithinBudget, of: review.daysWithMeals))
+                if let budget = review.averageBudgetKcal {
+                    Text(IntakeFormat.weekBudgetAverage(budget)).foregroundStyle(.secondaryText)
+                }
             }
             // Each day is measured against its own budget: the plan that held on it plus the activity it credited.
             GoalBars(days: review.days, values: review.days.map(\.kcal), goals: review.days.map { Double($0.goalKcal) },
@@ -148,12 +151,18 @@ struct WeekReviewView: View {
         }
     }
 
-    /// Fiber and sugar, and the optional nutrients that are switched on: the mean over the days that know the value (decision OR4b).
+    /// The macros and the further nutrients that are switched on in one group: the mean over the days that know the value, against
+    /// the goal where the goals of the week have one (decision OR4b). Carbohydrate and fat goals are the mean of the daily goals,
+    /// which grow with the credited activity.
     @ViewBuilder
     private func nutrientsSection(_ review: WeekReview) -> some View {
         let nutrients = model.settings.visibleNutrients
-        if nutrients.contains(where: { (review.nutrientDays[$0] ?? 0) > 0 }) {
+        let hasMacros = review.proteinDays + review.carbsDays + review.fatDays > 0
+        if hasMacros || nutrients.contains(where: { (review.nutrientDays[$0] ?? 0) > 0 }) {
             Section {
+                macroRow("Eiweiß", mean: review.averageProtein, days: review.proteinDays, goal: review.goals.proteinGrams, review: review)
+                macroRow("Kohlenhydrate", mean: review.averageCarbs, days: review.carbsDays, goal: review.averageGoalCarbs, review: review)
+                macroRow("Fett", mean: review.averageFat, days: review.fatDays, goal: review.averageGoalFat, review: review)
                 ForEach(nutrients, id: \.self) { nutrient in
                     LabeledContent(nutrient.displayName) {
                         Text(Self.nutrientText(nutrient, review: review)).monospacedDigit()
@@ -165,12 +174,71 @@ struct WeekReviewView: View {
         }
     }
 
-    /// "Ø 22 g an 3 Tagen", or "–" when no day knows the value (never 0).
+    private func macroRow(_ title: LocalizedStringKey, mean: Double?, days: Int, goal: Int?, review: WeekReview) -> some View {
+        LabeledContent(title) {
+            Text(IntakeFormat.weekMacro(mean: mean, days: days, goal: goal, estimated: review.hasEstimate)).monospacedDigit()
+        }
+    }
+
+    /// "Ø 22 / 30 g an 3 Tagen", or "–" when no day knows the value (never 0).
     static func nutrientText(_ nutrient: Nutrient, review: WeekReview) -> String {
-        guard let average = review.averageNutrients[nutrient], let days = review.nutrientDays[nutrient], days > 0 else { return "–" }
-        let value = average.formatted(.number.precision(.fractionLength(nutrient.fractionDigits)))
-        let dayCount = String(localized: "\(days) Tagen")
-        return String(localized: "Ø \(value) g an \(dayCount)")
+        let goal: Int? = switch nutrient {
+        case .fiber: review.goals.fiberGrams
+        case .sugar: review.goals.sugarLimitGrams
+        case .saturatedFat, .salt: nil
+        }
+        return IntakeFormat.weekNutrient(nutrient, mean: review.averageNutrients[nutrient], days: review.nutrientDays[nutrient] ?? 0,
+                                         goal: goal)
+    }
+
+    /// The weight of the week as compact figures (decision variant A): 7-day mean at the end of the week, change against the week
+    /// before, the trend of four weeks and the distance to the target, with the way to "Verlauf und Ziele". A week without a
+    /// measurement keeps the section with a hint. Signs are part of the text, never carried by colour alone.
+    @ViewBuilder
+    private func weightSection(_ review: WeekReview) -> some View {
+        if let weight = model.weekWeight {
+            let figures = weight.figures
+            Section {
+                if let mean = figures.mean {
+                    LabeledContent {
+                        Text(WeightFormat.kilograms(mean)).monospacedDigit().fontWeight(.semibold)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("7-Tage-Mittel")
+                            Text(WeightFormat.measurementsInWeek(figures.measurementCount)).font(.caption).foregroundStyle(.secondaryText)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    if let change = figures.change {
+                        LabeledContent("Veränderung zur Vorwoche") { Text(WeightFormat.change(change)).monospacedDigit() }
+                    }
+                    LabeledContent("Trend · 4 Wochen") {
+                        Text(figures.trendPerWeek.map { WeightFormat.changePerWeek($0) } ?? "–").monospacedDigit()
+                    }
+                } else if figures.measurementCount > 0, let latest = figures.latest, latest.day >= review.weekStart {
+                    Text(WeightFormat.latestLine(latest, calendar: model.calendar))
+                    Text("Für ein 7-Tage-Mittel fehlen Messungen: es braucht mindestens drei in sieben Tagen.")
+                        .font(.subheadline).foregroundStyle(.secondaryText)
+                } else {
+                    Text("Kein Gewicht erfasst")
+                        .foregroundStyle(.secondaryText)
+                        .accessibilityIdentifier(AccessibilityID.WeekReview.noWeight)
+                }
+                if let target = weight.targetKg {
+                    LabeledContent("Zielgewicht") {
+                        Text(WeightFormat.targetLine(targetKg: target, remaining: figures.remainingToTarget)).monospacedDigit()
+                    }
+                }
+                NavigationLink {
+                    TrendView(model: environment.makeTrendModel(), planning: { GoalPlanningEntries() })
+                } label: {
+                    Text("Verlauf und Ziele öffnen")
+                }
+                .accessibilityIdentifier(AccessibilityID.WeekReview.trendLink)
+            } header: { header("Gewicht", review) } footer: {
+                Text("7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.")
+            }
+        }
     }
 
     /// ST1: mean and goal days, seven bars with a goal line; days without a value are dashed, never 0.
