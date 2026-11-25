@@ -11305,6 +11305,26 @@
         }
       }
     },
+    "Einstellungen (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings (%lld)"
+          }
+        }
+      }
+    },
+    "Einstellungen durchsuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search settings"
+          }
+        }
+      }
+    },
     "Einstellungen öffnen": {
       "localizations": {
         "en": {

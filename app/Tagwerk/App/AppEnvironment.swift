@@ -136,8 +136,19 @@ final class AppEnvironment {
     }
     /// Pages on top of the settings (`SettingsDestination`); set by the UI test mode to open a settings page at launch.
     var settingsPath: [SettingsDestination] = []
+    /// UI test mode only: the picker sheet to show over the tabs (`-TagwerkUITestScreen`); always `nil` otherwise.
+    var uiTestPickerSheet: UITestScreen?
+    /// The row of the settings list to scroll to once the list is shown; the list resets it after scrolling.
+    var settingsScrollTarget: SettingsAnchor?
     private let gitHubCache: SwiftDataGitHubCache
     private let gitHubCatalogStore: SwiftDataGitHubCatalogStore
+    /// Shows a page or a row of the settings: used by the search. The caller closes what lies above the tabs.
+    func openSettings(_ target: SettingsTarget) {
+        settingsPath = target.path
+        settingsScrollTarget = target.anchor
+        requestedTab = 2
+    }
+
     /// Age after which the repository/project catalog is fetched again.
     static let catalogMaxAge: TimeInterval = 5 * 60
     @ObservationIgnored private var changeObservation: Task<Void, Never>?

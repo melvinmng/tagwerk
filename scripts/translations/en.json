@@ -3231,5 +3231,7 @@
   "Widget, Sperrbildschirm, Startbildschirm": "Widget, lock screen, home screen",
   "Wiegen, Morgen, Tagesstart": "Weigh in, morning, day start",
   "iCloud, Speicherort, Backup": "iCloud, location, backup",
-  "Übersetzen, Sprache": "Translate, language"
+  "Übersetzen, Sprache": "Translate, language",
+  "Einstellungen (%lld)": "Settings (%lld)",
+  "Einstellungen durchsuchen": "Search settings"
 }

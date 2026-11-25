@@ -12,15 +12,19 @@ struct SettingsView: View {
     @State private var accessRevision = 0
     @State private var healthAccess: HealthAccess = .notDetermined
     @State private var stepsAccess: StepsAccess = .asked
+    @State private var searchText = ""
 
     var body: some View {
         @Bindable var settings = environment.settings
         NavigationStack(path: Bindable(environment).settingsPath) {
+            ScrollViewReader { proxy in
             Form {
                 PlanningSettingsSection()
+                    .id(SettingsAnchor.planning)
 
                 Section {
                     DatePicker("Beginn", selection: time($settings.lunchStartMinutes), displayedComponents: .hourAndMinute)
+                        .id(SettingsAnchor.lunch)
                     ValueStepper("Dauer", value: $settings.lunchDurationMinutes, in: 0...180, step: 15, kind: .durationMinutes,
                                  unit: "min", display: ValueStepper.minutesText)
                 } header: {
@@ -31,6 +35,7 @@ struct SettingsView: View {
                 Section {
                     ValueStepper("Puffer", value: $settings.bufferMinutes, in: 0...60, step: 5, kind: .durationMinutes,
                                  unit: "min", display: ValueStepper.minutesText)
+                        .id(SettingsAnchor.buffer)
                 } footer: {
                     Text("Abstand zwischen Terminen und eingeplanten Aufgaben.")
                         .foregroundStyle(.secondaryText)
@@ -55,6 +60,7 @@ struct SettingsView: View {
                 }
 
                 GitHubSettingsSection()
+                    .id(SettingsAnchor.github)
 
                 Section {
                     NavigationLink(value: SettingsDestination.ai) {
@@ -98,6 +104,7 @@ struct SettingsView: View {
                                                                    subject: .task, locale: .current, calendar: .tagwerk))
                     }
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
+                        .id(SettingsAnchor.notifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
                     Toggle("Lokale Aufgaben", isOn: $settings.localTaskNotifications)
                     Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
@@ -116,6 +123,7 @@ struct SettingsView: View {
                     accessRow("Erinnerungen", state: environment.gateway.accessState) {
                         _ = try? await environment.gateway.requestAccess()
                     }
+                    .id(SettingsAnchor.access)
                     accessRow("Kalender", state: environment.gateway.calendarAccessState) {
                         _ = try? await environment.gateway.requestCalendarAccess()
                     }
@@ -136,6 +144,28 @@ struct SettingsView: View {
 
                 Section {
                     Button("Einrichtung erneut starten") { environment.restartSetup() }
+                        .id(SettingsAnchor.setup)
+                }
+            }
+            .accessibilityHidden(isShowingSearchResults)
+            .overlay {
+                if isShowingSearchResults {
+                    SettingsSearchResults(query: searchText) { hit in
+                        searchText = ""
+                        environment.openSettings(hit.target)
+                    }
+                }
+            }
+            .searchable(text: $searchText, prompt: "Einstellungen durchsuchen")
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: environment.settingsScrollTarget, initial: true) { _, anchor in
+                guard let anchor else { return }
+                // The list is laid out again after the search closes; scrolling right away misses the row.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    withAnimation { proxy.scrollTo(anchor, anchor: .top) }
+                    environment.settingsScrollTarget = nil
                 }
             }
             .navigationTitle("Einstellungen")
@@ -153,7 +183,12 @@ struct SettingsView: View {
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
             }
+            }
         }
+    }
+
+    private var isShowingSearchResults: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// The page of a destination. The pages with a choice of sources get their lists here, like the rows that lead to them.

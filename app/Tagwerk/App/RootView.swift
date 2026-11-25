@@ -107,6 +107,7 @@ struct RootView: View {
                     .accessibilityIdentifier(AccessibilityID.App.demoReady)
             }
         }
+        .uiTestPickerSheets()
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }
