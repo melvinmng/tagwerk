@@ -71,6 +71,10 @@
   "Rudern": "Rowing",
   "Rumpftraining": "Core training",
   "Schätzung überarbeitet.": "Estimate revised.",
+  "seit %lld Wochen": {
+    "one": "for %lld week",
+    "other": "for %lld weeks"
+  },
   "Senden gibt alle Vorschläge dieser Planung, deine Änderungen, deine Vorgaben und die Termine dieser Tage an ChatGPT.": "Send gives all suggestions of this planning, your changes, your rules and the appointments of these days to ChatGPT.",
   "Senden gibt Betreff, Absendername und Text der Mail, die Aufgabe mit deinen Änderungen und deine Nachricht an ChatGPT. Adressen gehen nicht mit.": "Send gives the subject, the sender’s name and the text of the mail, the task with your changes and your message to ChatGPT. Addresses are not sent.",
   "Senden gibt das Rezept (Text, Fotos oder der gelesene Text der Seite), die Zutaten mit deinen Änderungen und deine Nachricht an ChatGPT.": "Send gives the recipe (text, photos or the text read from the page), the ingredients with your changes and your message to ChatGPT.",
@@ -190,6 +194,7 @@
   "morgen": "tomorrow",
   "noch %@": "%@ left",
   "wahrscheinlich zwischen %@ und %@ kcal": "probably between %1$@ and %2$@ kcal",
+  "Ziele vom %@": "Goals since %@",
   "Zu allen Vorschlägen etwas sagen …": "Write something about all suggestions …",
   "Zu den Vorschlägen etwas sagen …": "Write something about the suggestions …",
   "Zu: %@": "About: %@",

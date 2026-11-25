@@ -337,4 +337,32 @@ struct WeekReviewTests {
         #expect(IntakeFormat.weekNutrient(.salt, mean: 5.4, days: 2, goal: nil, locale: german) == "Ø 5,4 g an 2 Tagen")
         #expect(IntakeFormat.weekNutrient(.sugar, mean: nil, days: 0, goal: 50, locale: german) == "–")
     }
+
+    // MARK: Age of the goals
+
+    @Test func goalAge_countsFullWeeksSinceValidFrom() {
+        let age = GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 1), on: PlanDay(year: 2026, month: 11, day: 22), calendar: calendar)
+        #expect(age.weeks == 3)
+        #expect(GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 1), on: PlanDay(year: 2026, month: 11, day: 21), calendar: calendar).weeks == 2)
+    }
+
+    @Test func goalAge_sameDayOrLaterValidFrom_isZeroWeeks() {
+        let same = GoalAge.make(validFrom: monday, on: monday, calendar: calendar)
+        #expect(same.weeks == 0)
+        let later = GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 20), on: monday, calendar: calendar)
+        #expect(later.weeks == 0)
+    }
+
+    @Test func goalAge_acrossTheClockChange_staysCalendarDays() {
+        // 25 Oct 2026 ends daylight-saving time in Berlin; four calendar weeks are still four weeks.
+        let age = GoalAge.make(validFrom: PlanDay(year: 2026, month: 10, day: 19), on: PlanDay(year: 2026, month: 11, day: 16), calendar: calendar)
+        #expect(age.weeks == 4)
+    }
+
+    @Test func goalsSince_text_namesTheDateAndTheWeeks() {
+        let first = PlanDay(year: 2026, month: 11, day: 1)
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 3), calendar: calendar, locale: german) == "Ziele vom 1. Nov. · seit 3 Wochen")
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 1), calendar: calendar, locale: german) == "Ziele vom 1. Nov. · seit 1 Woche")
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 0), calendar: calendar, locale: german) == "Ziele vom 1. Nov.")
+    }
 }

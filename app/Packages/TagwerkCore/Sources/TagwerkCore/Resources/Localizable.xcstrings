@@ -2910,6 +2910,16 @@
         }
       }
     },
+    "Ziele vom %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goals since %@"
+          }
+        }
+      }
+    },
     "Zielgewicht %@": {
       "localizations": {
         "en": {
@@ -3228,6 +3238,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "plus active without values"
+          }
+        }
+      }
+    },
+    "seit %lld Wochen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "seit %lld Woche"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "seit %lld Wochen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "for %lld week"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "for %lld weeks"
+                }
+              }
+            }
           }
         }
       }

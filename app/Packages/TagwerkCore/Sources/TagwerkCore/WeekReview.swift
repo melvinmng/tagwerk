@@ -196,7 +196,34 @@ public struct WeekReview: Sendable, Hashable {
     }
 }
 
+/// How long the goals of the review have held: the day they became valid and the full weeks since then.
+public struct GoalAge: Sendable, Hashable {
+    public var validFrom: PlanDay
+    public var weeks: Int
+
+    public init(validFrom: PlanDay, weeks: Int) {
+        self.validFrom = validFrom
+        self.weeks = weeks
+    }
+
+    /// Full calendar weeks from `validFrom` to `day`; a plan that starts on or after `day` has zero.
+    public static func make(validFrom: PlanDay, on day: PlanDay, calendar: Calendar) -> GoalAge {
+        let days = calendar.dateComponents([.day], from: validFrom.startDate(in: calendar), to: day.startDate(in: calendar)).day ?? 0
+        return GoalAge(validFrom: validFrom, weeks: max(0, days / 7))
+    }
+}
+
 extension IntakeFormat {
+    /// "Ziele vom 1. Nov. · seit 3 Wochen"; under a full week only the date.
+    public static func goalsSince(_ age: GoalAge, calendar: Calendar, locale: Locale = .current) -> String {
+        var style = Date.FormatStyle.dateTime.day().month(.abbreviated).locale(locale)
+        style.timeZone = calendar.timeZone
+        let date = age.validFrom.startDate(in: calendar).formatted(style)
+        let since = String(localized: "Ziele vom \(date)", bundle: .module)
+        guard age.weeks > 0 else { return since }
+        return since + " · " + String(localized: "seit \(age.weeks) Wochen", bundle: .module)
+    }
+
     /// "Im Budget an 4 von 5 Tagen": `total` is the number of days with a meal.
     public static func weekBudgetDays(within: Int, of total: Int) -> String {
         String(localized: "Im Budget an \(within) von \(total) Tagen", bundle: .module)
