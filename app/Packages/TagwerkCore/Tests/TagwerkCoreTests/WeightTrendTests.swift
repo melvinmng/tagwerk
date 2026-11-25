@@ -98,6 +98,118 @@ struct WeightTrendTests {
         let summary = WeightTrend.summary([:], today: today, targetKg: 78, calendar: calendar)
         #expect(summary == WeightTrend.Summary())
     }
+
+    // MARK: Week figures
+
+    /// Monday, 16 Nov 2026; the week ends on Sunday the 22nd.
+    private let monday = PlanDay(year: 2026, month: 11, day: 16)
+    /// A day after the shown week, so the week counts as past.
+    private let afterTheWeek = PlanDay(year: 2026, month: 11, day: 25)
+
+    /// Day values from `(offset from Monday, kg)`.
+    private func weekDays(_ pairs: [(Int, Double)]) -> [PlanDay: DayWeight] {
+        Dictionary(uniqueKeysWithValues: pairs.map { offset, kilograms in
+            let day = monday.adding(days: offset, calendar: calendar)
+            return (day, DayWeight(day: day, kilograms: kilograms))
+        })
+    }
+
+    @Test func weekFigures_meanAtWeekEnd_pastWeek() {
+        // The measurement of the following Tuesday (offset 8) must not move the mean of the shown week.
+        let days = weekDays([(0, 80), (2, 81), (4, 82), (8, 100)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(figures.referenceDay == PlanDay(year: 2026, month: 11, day: 22))
+        #expect(figures.mean == 81)
+    }
+
+    @Test func weekFigures_currentWeek_usesToday() {
+        let wednesday = PlanDay(year: 2026, month: 11, day: 18)
+        let days = weekDays([(0, 80), (1, 81), (2, 82), (3, 99)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: wednesday, targetKg: nil, calendar: calendar)
+        #expect(figures.referenceDay == wednesday)
+        // The value of Thursday lies after today and stays out.
+        #expect(figures.mean == 81)
+        #expect(figures.latest?.kilograms == 82)
+    }
+
+    @Test func weekFigures_fewerThanThreeValues_meanUnknownButLatestKnown() {
+        let days = weekDays([(1, 82.4), (3, 82.0)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: 78, calendar: calendar)
+        #expect(figures.mean == nil)
+        #expect(figures.change == nil)
+        #expect(figures.remainingToTarget == nil)
+        #expect(figures.latest?.kilograms == 82.0)
+        #expect(figures.latest?.day == monday.adding(days: 3, calendar: calendar))
+        #expect(figures.measurementCount == 2)
+    }
+
+    @Test func weekFigures_changeNeedsBothMeans() {
+        let thisWeekOnly = weekDays([(0, 80), (1, 81), (2, 82)])
+        let withoutPrevious = WeightTrend.weekFigures(thisWeekOnly, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(withoutPrevious.mean == 81)
+        #expect(withoutPrevious.previousMean == nil)
+        #expect(withoutPrevious.change == nil)
+
+        // The mean of the week before (offsets -7 to -1) is 82: the change is the difference of the two means.
+        let both = weekDays([(0, 80), (1, 81), (2, 82), (-7, 83), (-5, 82), (-3, 81)])
+        let figures = WeightTrend.weekFigures(both, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(figures.previousMean == 82)
+        #expect(figures.change == -1)
+    }
+
+    @Test func weekFigures_countsOnlyMeasurementsOfTheWeek() {
+        // Two values of the week before, three of the shown week, one of the week after: only the three count.
+        let days = weekDays([(-2, 83), (-1, 83), (0, 80), (3, 81), (6, 82), (7, 90)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(figures.measurementCount == 3)
+    }
+
+    @Test func weekFigures_currentWeek_countsUpToToday() {
+        let wednesday = PlanDay(year: 2026, month: 11, day: 18)
+        let days = weekDays([(0, 80), (2, 82), (4, 99)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: wednesday, targetKg: nil, calendar: calendar)
+        #expect(figures.measurementCount == 2)
+    }
+
+    @Test func weekFigures_remainingToTarget() {
+        let days = weekDays([(0, 80), (1, 81), (2, 82)])
+        let above = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: 78, calendar: calendar)
+        #expect(above.remainingToTarget == -3)
+        let below = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: 85, calendar: calendar)
+        #expect(below.remainingToTarget == 4)
+        let none = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(none.remainingToTarget == nil)
+    }
+
+    @Test func weekFigures_emptyWeek_isAllUnknown() {
+        let figures = WeightTrend.weekFigures([:], weekStart: monday, today: afterTheWeek, targetKg: 78, calendar: calendar)
+        #expect(figures.mean == nil)
+        #expect(figures.previousMean == nil)
+        #expect(figures.change == nil)
+        #expect(figures.trendPerWeek == nil)
+        #expect(figures.latest == nil)
+        #expect(figures.remainingToTarget == nil)
+        #expect(figures.measurementCount == 0)
+    }
+
+    @Test func weekFigures_trendIsTheTrendOfTheReferenceDay() {
+        // Mean 81 at the end of the week, 83 four weeks earlier: -0.5 kg per week, the same figure the trends page computes.
+        let days = weekDays([(0, 80), (2, 81), (4, 82), (-28, 82), (-27, 83), (-26, 84)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: afterTheWeek, targetKg: nil, calendar: calendar)
+        #expect(figures.trendPerWeek == -0.5)
+    }
+
+    @Test func weekFigures_currentWeek_agreesWithSummaryOfToday() {
+        // The weekly review and the trends page must show the same mean, trend and distance for the same day.
+        let wednesday = PlanDay(year: 2026, month: 11, day: 18)
+        let days = weekDays([(0, 80), (1, 81), (2, 82), (-28, 82), (-27, 83), (-26, 84)])
+        let figures = WeightTrend.weekFigures(days, weekStart: monday, today: wednesday, targetKg: 78, calendar: calendar)
+        let summary = WeightTrend.summary(days, today: wednesday, targetKg: 78, calendar: calendar)
+        #expect(figures.mean == summary.mean)
+        #expect(figures.trendPerWeek == summary.trendPerWeek)
+        #expect(figures.remainingToTarget == summary.remainingToTarget)
+        #expect(figures.latest == summary.latest)
+    }
 }
 
 struct GoalGuardConstantsTests {
