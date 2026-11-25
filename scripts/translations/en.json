@@ -3233,5 +3233,7 @@
   "iCloud, Speicherort, Backup": "iCloud, location, backup",
   "Übersetzen, Sprache": "Translate, language",
   "Einstellungen (%lld)": "Settings (%lld)",
-  "Einstellungen durchsuchen": "Search settings"
+  "Einstellungen durchsuchen": "Search settings",
+  "Einstellungen · %lld": "Settings · %lld",
+  "Einstellungen, %lld": "Settings, %lld"
 }

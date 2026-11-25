@@ -17,6 +17,7 @@ enum SearchTexts {
             case .pastEvents: return String(localized: "Vergangene Termine")
             case .notes: return String(localized: "Notizen")
             case .shopping: return String(localized: "Einkaufsliste")
+            case .settings: return String(localized: "Einstellungen")
             }
         }
         switch kind {
@@ -27,6 +28,7 @@ enum SearchTexts {
         case .pastEvents: return String(localized: "Vergangene Termine · \(count)")
         case .notes: return String(localized: "Notizen · \(count)")
         case .shopping: return String(localized: "Einkaufsliste · \(count)")
+        case .settings: return String(localized: "Einstellungen · \(count)")
         }
     }
 
@@ -41,6 +43,7 @@ enum SearchTexts {
         case .pastEvents: return String(localized: "Vergangene Termine, \(count)")
         case .notes: return String(localized: "Notizen, \(count)")
         case .shopping: return String(localized: "Einkaufsliste, \(count)")
+        case .settings: return String(localized: "Einstellungen, \(count)")
         }
     }
 

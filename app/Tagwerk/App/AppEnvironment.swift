@@ -935,6 +935,7 @@ final class AppEnvironment {
                                            isConcealed: { noteLock.isConcealed($0, privateFolderIDs: privateFolderIDs) })
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
+            settings: { SettingsSearchIndex.searchItems(for: $0) },
             searchOnline: searchOnline)
         if settings.shoppingListID != nil {
             // A failed write leaves the item on the list; the model reads the rows again either way.

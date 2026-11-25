@@ -11325,12 +11325,32 @@
         }
       }
     },
+    "Einstellungen · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings · %lld"
+          }
+        }
+      }
+    },
     "Einstellungen öffnen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "Einstellungen, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings, %lld"
           }
         }
       }

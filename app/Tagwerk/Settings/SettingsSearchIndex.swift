@@ -115,6 +115,16 @@ enum SettingsSearchIndex {
         }
     }
 
+    /// The hits for the global search, with the texts the search shows.
+    static func searchItems(for query: String, limit: Int? = nil) -> [SettingsSearchItem] {
+        hits(for: query, limit: limit).map { SettingsSearchItem(id: $0.id, title: $0.title, pathText: $0.pathText) }
+    }
+
+    /// Where the entry with this ID leads; `nil` for an ID that is not in the index.
+    static func target(forID id: String) -> SettingsTarget? {
+        entries.first { $0.id == id }?.target
+    }
+
     private static func keywordList(of entry: SettingsSearchEntry) -> [String] {
         guard let keywords = entry.keywords else { return [] }
         return String(localized: keywords).split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
