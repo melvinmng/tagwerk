@@ -308,8 +308,10 @@ enum AuditAllowlist {
             "\\d+ von \\d+ Artikeln · .*", "(?s)Mengen bleiben, wie sie sind\\..*", "Verwerfen", "Übernehmen",
         ], screens: recipeScreens + recipeScreensLargeText, reason: "The audit warns that these texts \"may be clipped at larger Dynamic Type sizes\". "
             + "Checked on the AX5 screenshots of these screens: headings, buttons, notes and footers wrap completely, some run past the lower edge "
-            + "of the scroll view (the audit counts that as clipped). The navigation title \"Rezept mit ChatGPT anlegen\" is truncated by the "
-            + "system bar (large title at AX sizes still cuts it): device test list, design decision in #188."),
+            + "of the scroll view (the audit counts that as clipped). The navigation title of the recipe input was \"Rezept mit ChatGPT anlegen\" and "
+            + "was truncated by the system bar; it is \"Rezept anlegen\" now (owner decision D6) and the finding is gone (2 of 2 repetitions "
+            + "before, 0 of 2 after, screen \"Rezept anlegen (Eingabe)\"). The pattern stays for the button of the same name in the list of "
+            + "\"Rezepte\" (default size and AX5/dark)."),
 
         // MARK: Data backup pages (DS1, DS3, DS4)
         Entry(auditType: .contrast, labels: [
