@@ -1448,6 +1448,8 @@ struct AppSettingsBackup: Codable, Equatable {
     var weekPlanningReminderEnabled: Bool?
     var weekPlanningReminderWeekday: Int?
     var weekPlanningReminderMinutes: Int?
+    /// Optional, so a backup written before the repository picker remembered its last choices still decodes.
+    var recentRepositories: [String]?
     /// Optional, so a backup written before the choice of the place of Bible Study still decodes; a missing value keeps the default.
     var bibleStudyOfferRaw: String?
     /// Optional, so a backup written before the reminder of Bible Study still decodes; a missing value keeps the default. The day
@@ -1568,6 +1570,7 @@ struct AppSettingsBackup: Codable, Equatable {
         weekPlanningReminderEnabled = record.weekPlanningReminderEnabled
         weekPlanningReminderWeekday = record.weekPlanningReminderWeekday
         weekPlanningReminderMinutes = record.weekPlanningReminderMinutes
+        recentRepositories = record.recentRepositories
         bibleStudyOfferRaw = record.bibleStudyOfferRaw
         bibleStudyReminderEnabled = record.bibleStudyReminderEnabled
         bibleStudyReminderTimesData = record.bibleStudyReminderTimesData
@@ -1673,6 +1676,7 @@ struct AppSettingsBackup: Codable, Equatable {
         if let weekPlanningReminderEnabled { record.weekPlanningReminderEnabled = weekPlanningReminderEnabled }
         if let weekPlanningReminderWeekday { record.weekPlanningReminderWeekday = weekPlanningReminderWeekday }
         if let weekPlanningReminderMinutes { record.weekPlanningReminderMinutes = weekPlanningReminderMinutes }
+        if let recentRepositories { record.recentRepositories = recentRepositories }
         if let bibleStudyOfferRaw { record.bibleStudyOfferRaw = bibleStudyOfferRaw }
         if let bibleStudyReminderEnabled { record.bibleStudyReminderEnabled = bibleStudyReminderEnabled }
         if let bibleStudyReminderTimesData { record.bibleStudyReminderTimesData = bibleStudyReminderTimesData }

@@ -133,6 +133,9 @@ final class AppSettings {
     var weekPlanningReminderEnabled: Bool = false
     var weekPlanningReminderWeekday: Int = 1
     var weekPlanningReminderMinutes: Int = 1080
+    /// Repositories chosen last for a new GitHub issue ("Zuletzt verwendet" of the repository picker), newest first, at most
+    /// `RecentChoices.storedLimit`. Only names; a repository that is no longer in the catalog is not shown.
+    var recentRepositories: [String]? = nil
     /// The day (`PlanDay.dayKey`) on which the card "Wochenplanung" in "Planen" was hidden or the planning was finished; the card
     /// stays away for the rest of that day (RO15b). Not part of the backup.
     var weekPlanningCardDismissedDayKey: String? = nil
