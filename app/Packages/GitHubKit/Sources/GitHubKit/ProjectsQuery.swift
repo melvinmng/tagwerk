@@ -35,7 +35,7 @@ enum ProjectsQuery {
       pageInfo { hasNextPage endCursor }
       nodes {
         id number title closed viewerCanUpdate
-        repositories(first: 20) { nodes { nameWithOwner } }
+        repositories(first: 100) { nodes { nameWithOwner } }
         \(fieldsSelection)
       }
     } } }

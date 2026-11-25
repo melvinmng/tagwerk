@@ -75,3 +75,9 @@ struct GitHubProjectPagingTests {
         #expect(transport.requests.count == 3)
     }
 }
+
+extension GitHubProjectPagingTests {
+    @Test func viewerProjects_readsUpToAHundredLinkedRepositoriesPerProject() {
+        #expect(ProjectsQuery.viewerProjects.contains("repositories(first: 100)"))
+    }
+}
