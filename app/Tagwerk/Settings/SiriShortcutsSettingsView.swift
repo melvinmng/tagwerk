@@ -11,6 +11,7 @@ struct SiriShortcutsSettingsView: View {
                 ShortcutsLink()
             } footer: {
                 Text("Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm.")
+                    .foregroundStyle(.secondaryText)
             }
 
             ForEach(SiriPhraseCatalog.groups) { group in
@@ -20,9 +21,10 @@ struct SiriShortcutsSettingsView: View {
                     }
                 } header: {
                     Text(group.title)
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     if group.id == SiriPhraseCatalog.groups.last?.id {
-                        Text("Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.")
+                        Text("Erkennt Siri einen Satz nicht, prüfe in der App „Kurzbefehle“, ob dort die Tagwerk-Kurzbefehle stehen, und probiere den Satz als Text über „Tippen für Siri“.").foregroundStyle(.secondaryText)
                     }
                 }
             }

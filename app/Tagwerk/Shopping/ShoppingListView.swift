@@ -276,6 +276,7 @@ struct ShoppingListView: View {
     private func sectionHeader(_ section: ShoppingSection) -> some View {
         HStack {
             Text(title(of: section.categoryID))
+                .foregroundStyle(.secondaryText)
             Spacer()
             if section.categoryID == nil, environment.ai.isSignedIn {
                 Button("✦ Sortieren") { startSorting() }

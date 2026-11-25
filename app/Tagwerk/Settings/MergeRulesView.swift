@@ -22,6 +22,7 @@ struct MergeRulesView: View {
                 }
             } footer: {
                 Text("Entstehen über „Künftig immer“ auf einer Vorschlagskarte. Nach dem Löschen fragt Tagwerk wieder.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Zusammenfassen-Regeln")

@@ -28,6 +28,7 @@ struct CalendarDiagnosticsView: View {
                 }
             } footer: {
                 Text("Termine der nächsten 7 Tage. „Zusammengefasst“: gleicher Termin wird über die Kopie aus einem anderen Kalender gezeigt.")
+                    .foregroundStyle(.secondaryText)
             }
             #if DEBUG
             identifierSection
@@ -51,7 +52,7 @@ struct CalendarDiagnosticsView: View {
     @ViewBuilder
     private var identifierSection: some View {
         ForEach(identifiers, id: \.calendarID) { sample in
-            Section(sample.calendarTitle) {
+            Section {
                 ForEach(sample.events) { event in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(event.start.formatted(date: .abbreviated, time: .shortened)).font(.caption.weight(.semibold))
@@ -59,6 +60,9 @@ struct CalendarDiagnosticsView: View {
                         Text(verbatim: "externalID: \(event.externalID ?? "–")").font(.caption2.monospaced()).textSelection(.enabled)
                     }
                 }
+            } header: {
+                Text(sample.calendarTitle)
+                    .foregroundStyle(.secondaryText)
             }
         }
     }

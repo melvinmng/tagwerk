@@ -33,13 +33,15 @@ struct BodyProfileSection: View {
             .accessibilityIdentifier(AccessibilityID.BodyProfile.openHealthButton)
         } header: {
             Text("Körper")
+                .foregroundStyle(.secondaryText)
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
                 if store.lastRead == .nothingDelivered {
                     Text("Health hat nichts geliefert. Entweder fehlt die Angabe in Health oder das Lesen ist nicht erlaubt; iOS teilt Tagwerk das nicht mit. Trage die Werte hier ein oder erlaube das Lesen in Health › Teilen › Apps › Tagwerk.")
+                        .foregroundStyle(.secondaryText)
                         .accessibilityIdentifier(AccessibilityID.BodyProfile.nothingDelivered)
                 }
-                Text("Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.")
+                Text("Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.").foregroundStyle(.secondaryText)
             }
         }
     }

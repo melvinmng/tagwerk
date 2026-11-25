@@ -11,6 +11,10 @@ are left out):
      line alike (a `Label` shares one style).
   2. `.foregroundStyle(...)` with `.red`, `.orange`, `.green` or `.purple` on a `Text(` or `Label(` of the same statement. Symbols,
      bars, dots and fills keep the system colour.
+  3. In the files of `SECTION_TONE_SCOPE` (the pages of decision D1: settings, recipes, Siri, backup, voice, evening sheet): a `Text(`
+     in a `header:` or `footer:` closure of a `Section` without `.foregroundStyle(...)`, and a `Section("Title")` / `Section(title)`
+     initialiser, whose header the system draws in its own grey (3.3:1 on the grouped background in the light appearance). Use
+     `Section { ... } header: { Text("Title").foregroundStyle(.secondaryText) }`.
 A line that carries the comment `// system-colour: <reason>` is exempt (the reason says why the system colour stays).
 
 Usage: scripts/check-colors.py [--report]
@@ -27,6 +31,18 @@ APP = ROOT / "app"
 TARGET_FOLDERS = [APP / "Tagwerk", APP / "TagwerkShare"]
 # Compiled into the widget as well (project.yml): the widget has no text tones.
 WIDGET_SHARED = [APP / "Tagwerk" / "Focus" / "Shared", APP / "Tagwerk" / "Controls" / "Shared", APP / "Tagwerk" / "App" / "Color+Hex.swift"]
+
+# The pages whose section headers and footers are in the tone `secondaryText` (decision D1 of the audit allowlist council, 2026-11-25).
+# Other screens still use the system grey for headers and footers; add them here when they are converted.
+SECTION_TONE_SCOPE = [
+    "Tagwerk/Settings/*.swift", "Tagwerk/Backup/*.swift", "Tagwerk/Voice/VoiceSettingsView.swift", "Tagwerk/Voice/VoiceChoiceView.swift",
+    "Tagwerk/Routines/EveningSheet.swift", "Tagwerk/Routines/NoteField.swift", "Tagwerk/Routines/TimeWithGodSection.swift",
+    "Tagwerk/Shopping/Recipe*.swift", "Tagwerk/Shopping/ShoppingTranslationSheets.swift", "Tagwerk/Shopping/ShoppingSettingsView.swift",
+    "Tagwerk/Shopping/ShoppingCategoriesView.swift", "Tagwerk/Notes/RecipeTranslationSheet.swift", "Tagwerk/Common/PreviewFollowUpSection.swift",
+]
+SECTION_CLOSURE = re.compile(r"\b(?:header|footer): \{")
+SECTION_TITLE_INITIALISER = re.compile(r"\bSection\((?:\"[^\"\n]*\"|[A-Za-z_][\w.]*)\) \{")
+TEXT_START = re.compile(r"(?<![\w.])Text\(")
 
 FOREGROUND = re.compile(r"\.foreground(?:Style|Color)\(")
 GREY = re.compile(r"(?<![\w.])(?:Color)?\.secondary(?![\w])")
@@ -83,12 +99,73 @@ def findings(path):
             yield index + 1, "system colour on text", line.strip()
 
 
+def balanced_end(text, start, opening, closing):
+    """Index of the bracket that closes `text[start]`; string literals (with interpolations) are skipped."""
+    depth, index = 0, start
+    while index < len(text):
+        char = text[index]
+        if char == '"':
+            index += 1
+            while index < len(text) and text[index] != '"':
+                if text[index] == "\\" and text[index + 1] == "(":
+                    index = balanced_end(text, index + 1, "(", ")")
+                elif text[index] == "\\":
+                    index += 1
+                index += 1
+        elif char == opening:
+            depth += 1
+        elif char == closing:
+            depth -= 1
+            if depth == 0:
+                return index
+        index += 1
+    return len(text) - 1
+
+
+def modifier_chain_end(text, index):
+    """End of the modifier chain (`.font(...)`, `.foregroundStyle(...)`, ...) that follows a call ending before `index`."""
+    while True:
+        match = re.match(r"\s*\.[a-zA-Z]+", text[index:])
+        if not match:
+            return index
+        index += match.end()
+        if index < len(text) and text[index] in "({":
+            closing = ")" if text[index] == "(" else "}"
+            index = balanced_end(text, index, text[index], closing) + 1
+
+
+def section_tone_findings(path):
+    """Headers and footers of a `Section` in the files of decision D1 that keep the system grey."""
+    text = path.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    line_of = lambda offset: text.count("\n", 0, offset) + 1
+    for match in SECTION_TITLE_INITIALISER.finditer(text):
+        number = line_of(match.start())
+        if not EXEMPT.search(lines[number - 1]):
+            yield number, "section title in the system grey (use `header:` with `.secondaryText`)", lines[number - 1].strip()
+    for match in SECTION_CLOSURE.finditer(text):
+        end = balanced_end(text, match.end() - 1, "{", "}")
+        body = text[match.end():end]
+        for call in TEXT_START.finditer(body):
+            start = match.end() + call.start()
+            call_end = balanced_end(text, start + 4, "(", ")") + 1
+            chain = text[call_end:modifier_chain_end(text, call_end)]
+            number = line_of(start)
+            if "foregroundStyle" in chain or "foregroundColor" in chain or EXEMPT.search(lines[number - 1]):
+                continue
+            yield number, "header or footer text in the system grey (add `.foregroundStyle(.secondaryText)`)", lines[number - 1].strip()
+
+
 def main(argv):
     report_only = "--report" in argv
     counts = Counter()
     problems = []
+    scoped = {path for pattern in SECTION_TONE_SCOPE for path in APP.glob(pattern)}
     for path in swift_files():
-        for number, kind, text in findings(path):
+        found = list(findings(path))
+        if path in scoped:
+            found += list(section_tone_findings(path))
+        for number, kind, text in found:
             counts[path.relative_to(APP).parts[1] if len(path.relative_to(APP).parts) > 2 else path.relative_to(APP).parts[0]] += 1
             problems.append(f"{path.relative_to(ROOT)}:{number}: {kind}: {text}")
     if report_only:

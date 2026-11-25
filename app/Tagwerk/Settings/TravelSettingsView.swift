@@ -17,6 +17,7 @@ struct TravelSettingsView: View {
                 NavigationLink("Mehr dazu") { TravelInfoView() }
             } footer: {
                 Text("Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.")
+                    .foregroundStyle(.secondaryText)
             }
             if settings.travelTimeEnabled {
                 if let address {
@@ -31,6 +32,7 @@ struct TravelSettingsView: View {
                     Toggle("Rückweg anzeigen", isOn: $settings.travelShowsReturn)
                 } footer: {
                     Text("Verkehrsmittel und Start lassen sich je Termin ändern.")
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -88,6 +90,7 @@ struct TravelSettingsView: View {
             statusRow(model)
         } header: {
             Text("Zuhause")
+                .foregroundStyle(.secondaryText)
         }
     }
 

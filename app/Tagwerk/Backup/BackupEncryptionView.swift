@@ -37,6 +37,7 @@ struct BackupEncryptionView: View {
                 }
             } footer: {
                 Text("Gilt für „Jetzt sichern“, die automatische Sicherung und Sicherheitskopien. Der Schlüssel liegt im Schlüsselbund dieses iPhones, damit automatisch gesichert werden kann. Auf einem neuen iPhone wirst du beim Wiederherstellen nach dem Passwort gefragt.")
+                    .foregroundStyle(.secondaryText)
             }
 
             if keyIsMissing {
@@ -51,6 +52,7 @@ struct BackupEncryptionView: View {
                     EmptyView()
                 } footer: {
                     Text("Ein neues Passwort gilt nur für neue Sicherungen. Ältere Dateien behalten das Passwort, mit dem sie geschrieben wurden.")
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -119,7 +121,7 @@ private struct PasswordSheet: View {
                     if let problem {
                         Text(problem).foregroundStyle(.redText)
                     } else {
-                        Text("Mindestens \(BackupCrypto.minimumPasswordLength) Zeichen. Notiere das Passwort an einem sicheren Ort: Tagwerk kennt es nicht und kann es nicht zurücksetzen.")
+                        Text("Mindestens \(BackupCrypto.minimumPasswordLength) Zeichen. Notiere das Passwort an einem sicheren Ort: Tagwerk kennt es nicht und kann es nicht zurücksetzen.").foregroundStyle(.secondaryText)
                     }
                 }
                 Section {

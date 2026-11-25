@@ -36,10 +36,13 @@ struct VoiceChoiceView: View {
             }
 
             ForEach(VoiceSection.grouped(voices)) { section in
-                Section(section.title) {
+                Section {
                     ForEach(section.voices) { voice in
                         voiceRow(voice)
                     }
+                } header: {
+                    Text(section.title)
+                        .foregroundStyle(.secondaryText)
                 }
             }
 
@@ -52,6 +55,7 @@ struct VoiceChoiceView: View {
                 }
             } footer: {
                 Text(footer)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Stimme \(languageName)")

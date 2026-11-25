@@ -36,8 +36,10 @@ struct GoalPlanView: View {
                 }
             } header: {
                 Text("Kohlenhydrate und Fett")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Diese Ziele gelten für einen Tag ohne angerechnete Aktivität. Mit angerechneter Aktivität wachsen Kohlenhydrate und Fett im Verhältnis ihrer Kalorien; Eiweiß und Ballaststoffe bleiben fest.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -55,8 +57,10 @@ struct GoalPlanView: View {
                 }
             } header: {
                 Text("Ballaststoffe und Zucker")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Ohne Ziel zeigt die Karte „Nährwerte“ nur den Wert. Zucker hat eine Obergrenze: Darüber wird der Balken orange.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -70,8 +74,10 @@ struct GoalPlanView: View {
                 }
             } header: {
                 Text("Gewicht")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Das Zielgewicht erscheint als gestrichelte Linie im Gewichtsverlauf, bei „Verlauf und Ziele“. Es ändert dein Tagesbudget nicht.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -87,8 +93,10 @@ struct GoalPlanView: View {
                 }
             } header: {
                 Text("Zielstände")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Eine Änderung gilt ab heute. Frühere Tage, auch im Wochenrückblick, rechnen mit dem Stand, der damals galt.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Weitere Ziele")

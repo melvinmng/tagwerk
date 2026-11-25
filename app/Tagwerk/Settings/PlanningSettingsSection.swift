@@ -40,8 +40,10 @@ struct PlanningSettingsSection: View {
             NavigationLink("Kalender-Diagnose") { CalendarDiagnosticsView(model: environment.planning) }
         } header: {
             Text("Planen")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Termine aus Deadline-Kalendern (z. B. Klausuren) gelten als wichtige Deadlines. Einzelne Termine aus anderen Kalendern lassen sich im Termin-Blatt als Deadline markieren; die Markierung liegt nur in Tagwerk auf diesem Gerät, der Kalender bleibt unverändert. Aufgaben ohne Aufwand zählen mit der Standarddauer. Gleiche Termine in mehreren Kalendern fasst Tagwerk erst nach deiner Zustimmung zusammen.")
+                .foregroundStyle(.secondaryText)
         }
         .task { calendars = environment.gateway.calendarAccessState == .fullAccess ? environment.gateway.calendars() : [] }
         .onChange(of: settings.deadlineCalendarIDs) { _, _ in Task { await environment.planning.reload() } }

@@ -81,6 +81,7 @@ struct ShoppingTranslationResultSheet: View {
                         ForEach(applicable) { change in row(change) }
                     } header: {
                         Text("\(selected.count) von \(applicable.count) Artikeln · \(ShoppingTranslationModel.languageName(language))")
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 if !blocked.isEmpty {
@@ -98,6 +99,7 @@ struct ShoppingTranslationResultSheet: View {
                         }
                     } header: {
                         Text("Bleibt unverändert")
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 if draft.hasFollowUp { followUpSection }

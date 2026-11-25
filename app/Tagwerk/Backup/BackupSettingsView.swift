@@ -109,8 +109,10 @@ struct BackupSettingsView: View {
             .tint(.primary)
         } header: {
             Text("Automatisch")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Andere Dateien im Ordner rührt Tagwerk nicht an. Gelöscht werden nur ältere Dateien mit dem Namen „Tagwerk-Sicherung-…“.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -132,8 +134,10 @@ struct BackupSettingsView: View {
             }
         } header: {
             Text("Inhalt")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text(contentFooter(encrypted: settings.backupEncryptionEnabled))
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -155,8 +159,10 @@ struct BackupSettingsView: View {
             }
         } header: {
             Text("Vor dem Wiederherstellen")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Vor jedem Wiederherstellen legt Tagwerk eine Kopie des bisherigen Stands an. Sie liegt verborgen im Sicherungsordner, sonst nur auf diesem iPhone.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
