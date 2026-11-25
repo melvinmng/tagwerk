@@ -54,13 +54,16 @@ struct ProductLookupTests {
         #expect(transport.requests.isEmpty)
     }
 
-    @Test func lookup_withoutContactAddress_sendsNothing() async {
+    @Test func lookup_withoutContactAddress_sendsWithTheProjectURL() async throws {
+        let fallback = "Tagwerk/9.9 (https://github.com/melvinmng/tagwerk)"
         for contact in [nil, "", "   ", "not an address", "a@b"] as [String?] {
-            let lookup = make(contact: contact)
-            await #expect(throws: ProductLookupError.noContact) { try await lookup.search("skyr", page: 1) }
-            await #expect(throws: ProductLookupError.noContact) { try await lookup.product(barcode: "4000000000001") }
+            transport.enqueue(RecordingTransport.oneHit)
+            let page = try await make(contact: contact).search("skyr \(contact ?? "nil")", page: 1)
+            #expect(page.candidates.map(\.name) == ["Demo Skyr"])
+            let request = try #require(transport.requests.last)
+            #expect(request.value(forHTTPHeaderField: "User-Agent") == fallback, "\(String(describing: contact))")
         }
-        #expect(transport.requests.isEmpty)
+        #expect(transport.requests.count == 5)
     }
 
     @Test func lookup_offline_sendsNothingAndReportsOffline() async {
@@ -71,10 +74,10 @@ struct ProductLookupTests {
         #expect(ProductLookupError.offline.message == "Keine Verbindung")
     }
 
-    @Test func lookup_gateOrder_consentBeforeContactBeforeOnline() async {
-        // Everything is missing: the first gate that stops the call is the one that is reported.
+    @Test func lookup_gateOrder_consentBeforeOnline() async {
+        // Everything is missing: the first gate that stops the call is the one that is reported. A missing contact address is no gate.
         await #expect(throws: ProductLookupError.noConsent) { try await make(consent: false, contact: nil, online: false).search("skyr", page: 1) }
-        await #expect(throws: ProductLookupError.noContact) { try await make(consent: true, contact: nil, online: false).search("skyr", page: 1) }
+        await #expect(throws: ProductLookupError.offline) { try await make(consent: true, contact: nil, online: false).search("skyr", page: 1) }
         await #expect(throws: ProductLookupError.offline) { try await make(consent: true, contact: "a@example.org", online: false).search("skyr", page: 1) }
         #expect(transport.requests.isEmpty)
     }
@@ -255,7 +258,7 @@ struct FoodLookupSettingsTests {
         settings = try AppSettings.current(in: container.mainContext)
     }
 
-    @Test func onlineSearch_isOffByDefault_withoutAnAddress() {
+    @Test func onlineSearch_isOffByDefault() {
         #expect(!settings.foodLookupConsent)
         #expect(settings.foodLookupContact == nil)
         #expect(!settings.isFoodLookupEnabled)
@@ -264,7 +267,7 @@ struct FoodLookupSettingsTests {
     @Test func contactAddress_neverPrefilled() {
         let model = FoodLookupConsentModel(settings: settings)
         #expect(model.contact == "", "the sheet starts empty: no address from the device, an account or the app")
-        #expect(!model.canAgree && !model.showsInvalidHint)
+        #expect(model.canAgree && !model.showsInvalidHint, "an empty field is allowed: the address is optional")
     }
 
     @Test func contactAddress_theSheetShowsOnlyWhatTheUserTypedEarlier() {
@@ -282,6 +285,22 @@ struct FoodLookupSettingsTests {
         #expect(settings.foodLookupContact == nil)
     }
 
+    @Test func agreeing_withoutAnAddress_switchesTheSearchOn() {
+        let model = FoodLookupConsentModel(settings: settings)
+        #expect(model.canAgree)
+        model.agree(settings: settings)
+        #expect(settings.foodLookupConsent && settings.foodLookupContact == nil)
+        #expect(settings.isFoodLookupEnabled)
+    }
+
+    @Test func agreeing_withAnEmptiedField_removesTheEarlierAddress() {
+        settings.foodLookupContact = "mine@example.org"
+        let model = FoodLookupConsentModel(settings: settings)
+        model.contact = "  "
+        model.agree(settings: settings)
+        #expect(settings.foodLookupConsent && settings.foodLookupContact == nil)
+    }
+
     @Test func agreeing_storesTheTrimmedAddress_andSwitchesTheSearchOn() {
         let model = FoodLookupConsentModel(settings: settings)
         model.contact = "  me@example.org "
@@ -291,12 +310,12 @@ struct FoodLookupSettingsTests {
         #expect(settings.isFoodLookupEnabled)
     }
 
-    @Test func contactAddress_cleared_switchesLookupOff() {
+    @Test func contactAddress_cleared_keepsTheSearchOn() {
         settings.agreeToFoodLookup(contact: "me@example.org")
         #expect(settings.isFoodLookupEnabled)
         #expect(settings.commitFoodLookupContact("  ") == .cleared)
         #expect(settings.foodLookupContact == nil)
-        #expect(!settings.foodLookupConsent && !settings.isFoodLookupEnabled)
+        #expect(settings.foodLookupConsent && settings.isFoodLookupEnabled, "the address is optional: clearing it does not revoke the consent")
     }
 
     @Test func contactAddress_changed_keepsTheSearchOn_andInvalidKeepsTheOldOne() {
