@@ -4248,6 +4248,16 @@
         }
       }
     },
+    "Abstand, Termine, Aufgaben, Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gap, events, tasks, minutes"
+          }
+        }
+      }
+    },
     "Adresse löschen": {
       "localizations": {
         "en": {
@@ -4364,6 +4374,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read active energy"
+          }
+        }
+      }
+    },
+    "Aktive Energie, Budget, Prozent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active energy, budget, percent"
           }
         }
       }
@@ -5340,6 +5360,16 @@
         }
       }
     },
+    "Anfahrt, Termine, Route": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commute, events, route"
+          }
+        }
+      }
+    },
     "Angaben unvollständig": {
       "localizations": {
         "en": {
@@ -5590,6 +5620,16 @@
         }
       }
     },
+    "Anmelden, Abmelden, Konto, Issues, Login": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in, sign out, account, issues, login"
+          }
+        }
+      }
+    },
     "Anmeldung bei ChatGPT und GitHub": {
       "localizations": {
         "en": {
@@ -5640,6 +5680,16 @@
         }
       }
     },
+    "Ansagen, Stimme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Announce, voice"
+          }
+        }
+      }
+    },
     "Ansicht": {
       "localizations": {
         "en": {
@@ -5676,6 +5726,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Answer"
+          }
+        }
+      }
+    },
+    "Antwort, Sprache, Vorlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply, language, read aloud"
           }
         }
       }
@@ -5867,6 +5927,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Working hours over · whole day %@"
+          }
+        }
+      }
+    },
+    "Arbeitszeit, Wochentage, Arbeitsbeginn, Feierabend, Wochenplan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working hours, weekdays, start of work, end of work, weekly schedule"
           }
         }
       }
@@ -6429,6 +6499,16 @@
         }
       }
     },
+    "Aufwand, Aufgaben ohne Aufwand, Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effort, tasks without effort, minutes"
+          }
+        }
+      }
+    },
     "Aus": {
       "localizations": {
         "en": {
@@ -6535,6 +6615,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Car"
+          }
+        }
+      }
+    },
+    "Auto, Fahrrad, Zu Fuß, Bahn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Car, bicycle, on foot, train"
           }
         }
       }
@@ -6731,6 +6821,16 @@
         }
       }
     },
+    "Backup, Sicherung, Passwort, Verschlüsseln, Wiederherstellen, Export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup, password, encrypt, restore, export"
+          }
+        }
+      }
+    },
     "Ballaststoff-Ziel": {
       "localizations": {
         "en": {
@@ -6858,6 +6958,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change start"
+          }
+        }
+      }
+    },
+    "Beginn, Ende, Freie Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start, end, days off"
           }
         }
       }
@@ -7012,6 +7122,36 @@
         }
       }
     },
+    "Benachrichtigungen, Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications, tasks"
+          }
+        }
+      }
+    },
+    "Benachrichtigungen, Aufgaben, Fristen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications, tasks, deadlines"
+          }
+        }
+      }
+    },
+    "Benachrichtigungen, Fristen, Klausuren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications, deadlines, exams"
+          }
+        }
+      }
+    },
     "Berechnet von Apple Karten. Tagwerk nutzt deinen Standort nicht.": {
       "localizations": {
         "en": {
@@ -7108,6 +7248,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove scope"
+          }
+        }
+      }
+    },
+    "Bibel, Andacht, Zeit mit Gott, Erinnerung, Tagebuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bible, devotion, time with God, reminder, journal"
           }
         }
       }
@@ -7666,6 +7816,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT is translating …"
+          }
+        }
+      }
+    },
+    "ChatGPT, Anmelden, Modell, Denkaufwand, Planungsvorgaben, Assistent, künstliche Intelligenz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT, sign in, model, reasoning effort, planning rules, assistant, artificial intelligence"
+          }
+        }
+      }
+    },
+    "ChatGPT, Version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT, version"
           }
         }
       }
@@ -8244,6 +8414,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Data: Open Food Facts (ODbL)"
+          }
+        }
+      }
+    },
+    "Datenschutz, Daten, ChatGPT, Privatsphäre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy, data, ChatGPT, data protection"
           }
         }
       }
@@ -10372,12 +10552,42 @@
         }
       }
     },
+    "Diktat, Deutsch, Englisch, Sprache, Rezepte, Sprachchat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation, German, English, language, recipes, voice chat"
+          }
+        }
+      }
+    },
     "Dokument scannen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Scan document"
+          }
+        }
+      }
+    },
+    "Doppelte Termine, Duplikate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate events, duplicates"
+          }
+        }
+      }
+    },
+    "Doppelte Termine, Duplikate, Zusammenfassen, Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate events, duplicates, merge, events"
           }
         }
       }
@@ -10875,6 +11085,16 @@
         }
       }
     },
+    "Einkauf, Kategorien, Rezepte, Übersetzen, Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping, categories, recipes, translate, sort"
+          }
+        }
+      }
+    },
     "Einkaufsliste": {
       "localizations": {
         "en": {
@@ -11061,6 +11281,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restart setup"
+          }
+        }
+      }
+    },
+    "Einrichtung, Willkommen, Neu starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup, welcome, restart"
           }
         }
       }
@@ -11509,6 +11739,16 @@
         }
       }
     },
+    "Erinnerungen, Benachrichtigungen, Standard, Vorlauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders, notifications, default, lead time"
+          }
+        }
+      }
+    },
     "Erinnerungen, lokale Aufgaben und geschlossene GitHub-Issues": {
       "localizations": {
         "en": {
@@ -11782,6 +12022,16 @@
         }
       }
     },
+    "Ernährung, Kalorien, Wasser, Schritte, Gewicht, Health, Ziele, Lebensmittel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition, calories, water, steps, weight, Health, goals, food"
+          }
+        }
+      }
+    },
     "Ernährungsziele": {
       "localizations": {
         "en": {
@@ -12010,6 +12260,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Export from Notion as “Markdown & CSV”."
+          }
+        }
+      }
+    },
+    "Face ID, Code, Sperre, Privat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID, passcode, lock, private"
           }
         }
       }
@@ -12555,6 +12815,16 @@
         }
       }
     },
+    "Foto, Schätzung, KI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo, estimate, AI"
+          }
+        }
+      }
+    },
     "Fotos auswählen": {
       "localizations": {
         "en": {
@@ -12661,6 +12931,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change due date"
+          }
+        }
+      }
+    },
+    "Fristen, Klausuren, Termine, Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadlines, exams, events, calendar"
           }
         }
       }
@@ -13191,6 +13471,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gedanken, Aufgabenvorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoughts, task suggestions"
           }
         }
       }
@@ -13867,6 +14157,16 @@
         }
       }
     },
+    "Gewicht, Körper, Waage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight, body, scale"
+          }
+        }
+      }
+    },
     "Gewohnheit": {
       "localizations": {
         "en": {
@@ -14336,6 +14636,16 @@
         }
       }
     },
+    "GitHub, Issues, Repositories, Aufgaben, Quellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub, issues, repositories, tasks, sources"
+          }
+        }
+      }
+    },
     "GitHub-Aufgaben sind nur lesbar, bis GitHub wieder antwortet.": {
       "localizations": {
         "en": {
@@ -14613,6 +14923,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Health"
+          }
+        }
+      }
+    },
+    "Health, Fremde Einträge, Ernährung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health, entries of other apps, nutrition"
+          }
+        }
+      }
+    },
+    "Health, Kalender, Erinnerungen, Benachrichtigungen, Berechtigungen, Erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health, calendar, reminders, notifications, permissions, allow"
           }
         }
       }
@@ -15218,6 +15548,16 @@
         }
       }
     },
+    "Import, Notion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import, Notion"
+          }
+        }
+      }
+    },
     "Importieren": {
       "localizations": {
         "en": {
@@ -15737,6 +16077,16 @@
         }
       }
     },
+    "KI, Einkauf, Übersetzen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI, shopping, translate"
+          }
+        }
+      }
+    },
     "KI-Wochenplan erstellen": {
       "localizations": {
         "en": {
@@ -15783,6 +16133,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create “Tagwerk” calendar"
+          }
+        }
+      }
+    },
+    "Kalender, Zeitblöcke, Tagwerk-Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar, time blocks, Tagwerk calendar"
           }
         }
       }
@@ -15854,6 +16214,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calories: %@ kcal"
+          }
+        }
+      }
+    },
+    "Kalorienziel, kcal, Energie, Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calorie goal, kcal, energy, budget"
           }
         }
       }
@@ -16917,6 +17287,16 @@
         }
       }
     },
+    "Kurzbefehle, Sprachbefehl, Shortcuts, Siri": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts, voice command, Siri"
+          }
+        }
+      }
+    },
     "Kurze Pause": {
       "localizations": {
         "en": {
@@ -17654,6 +18034,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mail to task"
+          }
+        }
+      }
+    },
+    "Mail, Teilen, Aufgabenvorschlag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail, share, task suggestion"
           }
         }
       }
@@ -19351,6 +19741,26 @@
         }
       }
     },
+    "Nicht stören, Fokus-Filter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do Not Disturb, Focus filter"
+          }
+        }
+      }
+    },
+    "Nicht stören, Stille, Nacht, Fokus-Filter, Benachrichtigungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do Not Disturb, quiet, night, Focus filter, notifications"
+          }
+        }
+      }
+    },
     "Nicht unterstützt": {
       "localizations": {
         "en": {
@@ -19934,6 +20344,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes, %lld"
+          }
+        }
+      }
+    },
+    "Notizen, Assistent, Zugriff": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes, assistant, access"
           }
         }
       }
@@ -20843,6 +21263,16 @@
         }
       }
     },
+    "Passwort, Verschlüsselung, Backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password, encryption, backup"
+          }
+        }
+      }
+    },
     "Pause": {
       "localizations": {
         "en": {
@@ -20917,6 +21347,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skip break"
+          }
+        }
+      }
+    },
+    "Pause, Mittag, Beginn, Dauer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break, noon, start, duration"
           }
         }
       }
@@ -21062,6 +21502,36 @@
         }
       }
     },
+    "Planen, Dauer, Messung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning, duration, measurement"
+          }
+        }
+      }
+    },
+    "Planen, Nächste Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning, next days"
+          }
+        }
+      }
+    },
+    "Planen, Überstunden, Fristen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning, overtime, deadlines"
+          }
+        }
+      }
+    },
     "Planung": {
       "localizations": {
         "en": {
@@ -21115,6 +21585,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pomodoro (rounds with breaks)"
+          }
+        }
+      }
+    },
+    "Pomodoro, Pause, Runden, Konzentration, Timer, Sammlung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomodoro, break, rounds, concentration, timer, collection"
           }
         }
       }
@@ -21380,8 +21860,28 @@
         }
       }
     },
+    "Protein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protein"
+          }
+        }
+      }
+    },
     "Prüfe …": {
       "shouldTranslate": false
+    },
+    "Prüfen, Fehler, Termine, Kalender, Problem": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check, error, events, calendar, problem"
+          }
+        }
+      }
     },
     "Puffer": {
       "localizations": {
@@ -21534,12 +22034,42 @@
         }
       }
     },
+    "Quellen, Erinnerungen, Listen, Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources, reminders, lists, tasks"
+          }
+        }
+      }
+    },
+    "Quellen, Termine, Kalender auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources, events, choose calendars"
+          }
+        }
+      }
+    },
     "Radfahren": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Cycling"
+          }
+        }
+      }
+    },
+    "Reasoning, Geschwindigkeit, Gründlichkeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning, speed, thoroughness"
           }
         }
       }
@@ -21888,6 +22418,16 @@
         }
       }
     },
+    "Routinen, Gewohnheit, Tracker, Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routines, habit, tracker, reminder"
+          }
+        }
+      }
+    },
     "Ruhezeit von %@ bis %@": {
       "localizations": {
         "de": {
@@ -21939,6 +22479,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rounds"
+          }
+        }
+      }
+    },
+    "Runden, Pause, Konzentration": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounds, break, concentration"
           }
         }
       }
@@ -22086,6 +22636,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turn on “Hold tasks and deadlines”."
+          }
+        }
+      }
+    },
+    "Schlaf, Schlafenszeit, Abendroutine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep, bedtime, evening routine"
+          }
+        }
+      }
+    },
+    "Schlaf, Schlafenszeit, Tagesstart, Tagesabschluss, Abend, Morgen, Gewohnheiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep, bedtime, day start, day wrap-up, evening, morning, habits"
           }
         }
       }
@@ -22259,6 +22829,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Step goal reached"
+          }
+        }
+      }
+    },
+    "Schrittziel, Gehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step goal, walking"
           }
         }
       }
@@ -23039,6 +23619,36 @@
         }
       }
     },
+    "Sortieren, Gruppieren, Notion, Sperre, Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort, group, Notion, lock, folders"
+          }
+        }
+      }
+    },
+    "Sortierung, Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting, shopping"
+          }
+        }
+      }
+    },
+    "Sortierung, Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting, list"
+          }
+        }
+      }
+    },
     "Spalte": {
       "localizations": {
         "en": {
@@ -23095,6 +23705,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lock"
+          }
+        }
+      }
+    },
+    "Sport, Workout, Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sports, workout, minutes"
           }
         }
       }
@@ -23172,6 +23792,16 @@
         }
       }
     },
+    "Sprache, Spracheingabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language, voice input"
+          }
+        }
+      }
+    },
     "Spracheingabe": {
       "localizations": {
         "en": {
@@ -23188,6 +23818,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voice input and read-aloud"
+          }
+        }
+      }
+    },
+    "Spracheingabe, Mikrofonzugriff": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice input, microphone access"
           }
         }
       }
@@ -23660,6 +24300,26 @@
         }
       }
     },
+    "Stimme, Mikrofon, Vorlesen, Sprachpaket, Sprechen, Diktieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice, microphone, read aloud, language pack, speak, dictate"
+          }
+        }
+      }
+    },
+    "Stimme, Sprachausgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice, speech output"
+          }
+        }
+      }
+    },
     "Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.": {
       "localizations": {
         "en": {
@@ -23696,6 +24356,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Street, city"
+          }
+        }
+      }
+    },
+    "Strichcode, Lebensmittel, Produktsuche, Einwilligung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode, food, product search, consent"
           }
         }
       }
@@ -23971,6 +24641,16 @@
         }
       }
     },
+    "Tagebuch, Privat, Backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal, private, backup"
+          }
+        }
+      }
+    },
     "Tagesabschluss": {
       "localizations": {
         "en": {
@@ -23997,6 +24677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evening wrap-up done"
+          }
+        }
+      }
+    },
+    "Tagesabschluss, Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day wrap-up, evening"
           }
         }
       }
@@ -24711,6 +25401,16 @@
         }
       }
     },
+    "Timer, Dauer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer, duration"
+          }
+        }
+      }
+    },
     "Tippe auf ein Lebensmittel und gib die Menge ein. Wische nach links, um es zu bearbeiten oder zu löschen.": {
       "localizations": {
         "en": {
@@ -24934,6 +25634,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drink"
+          }
+        }
+      }
+    },
+    "Trinken, Wasserziel, Liter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drinking, water goal, liters"
           }
         }
       }
@@ -25306,6 +26016,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transport and start can be changed per event."
+          }
+        }
+      }
+    },
+    "Verkehrsmittel, Rückweg, Zuhause, Auto, Fahrrad, Anfahrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transport, way back, home, car, bicycle, commute"
           }
         }
       }
@@ -26733,6 +27453,16 @@
         }
       }
     },
+    "Widget, Sperrbildschirm, Startbildschirm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget, lock screen, home screen"
+          }
+        }
+      }
+    },
     "Wie OpenAI die gesendeten Daten behandelt, richtet sich nach den Einstellungen deines ChatGPT-Kontos.": {
       "localizations": {
         "en": {
@@ -26890,6 +27620,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You set repeats, attendees and alerts in Apple’s event editor."
+          }
+        }
+      }
+    },
+    "Wiegen, Morgen, Tagesstart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weigh in, morning, day start"
           }
         }
       }
@@ -29223,6 +29963,16 @@
         }
       }
     },
+    "iCloud, Speicherort, Backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud, location, backup"
+          }
+        }
+      }
+    },
     "iOS meldet diese Hinweise selbst, auch in Apple Kalender. Ruhezeiten gelten dafür nicht.": {
       "localizations": {
         "en": {
@@ -30979,6 +31729,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Translate …"
+          }
+        }
+      }
+    },
+    "Übersetzen, Sprache": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate, language"
           }
         }
       }
