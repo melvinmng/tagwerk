@@ -151,7 +151,7 @@ public final class GitHubTaskProvider: TaskProvider {
             }
             if case .set(let change) = edit.assignees {
                 // The own login decides below whether the issue stays remembered.
-                if login == nil { login = try await api.viewerProjects().login }
+                if login == nil { login = try await api.viewerProjects(maxPages: 1).login }
                 guard AssigneeRules.applying(change, to: current.assignees).count <= AssigneeRules.maximum else {
                     throw Self.tooManyAssignees
                 }

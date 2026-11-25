@@ -29,12 +29,16 @@ enum ProjectsQuery {
       } } } } }
     """
 
+    /// One page of the viewer's open projects; the cursor is `null` for the first page.
     static let viewerProjects = """
-    query { viewer { login projectsV2(first: 20, query: "is:open") { nodes {
-      id number title closed viewerCanUpdate
-      repositories(first: 20) { nodes { nameWithOwner } }
-      \(fieldsSelection)
-    } } } }
+    query($cursor: String) { viewer { login projectsV2(first: 100, after: $cursor, query: "is:open") {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        id number title closed viewerCanUpdate
+        repositories(first: 20) { nodes { nameWithOwner } }
+        \(fieldsSelection)
+      }
+    } } }
     """
 
     /// Open issues assigned to the viewer with their project items. Reading from the issue side keeps
@@ -226,8 +230,13 @@ enum ProjectsQuery {
 
     struct ViewerData: Decodable {
         struct Viewer: Decodable {
+            struct Page: Decodable {
+                /// Absent in cached or hand-written responses: such a response is the only page.
+                let pageInfo: PageInfo?
+                let nodes: [ProjectNode]
+            }
             let login: String
-            let projectsV2: Nodes<ProjectNode>
+            let projectsV2: Page
         }
         let viewer: Viewer
     }

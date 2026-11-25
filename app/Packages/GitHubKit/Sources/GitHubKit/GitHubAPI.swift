@@ -27,7 +27,7 @@ public struct GitHubAPI: Sendable {
     // MARK: Reading
 
     public func viewerLogin() async throws -> String {
-        try await viewerProjects().login
+        try await viewerProjects(maxPages: 1).login
     }
 
     /// Open issues assigned to the viewer in open projects, and those projects: the viewer's own plus
@@ -152,10 +152,24 @@ public struct GitHubAPI: Sendable {
         return try await send(method: method, url: url, body: data)
     }
 
-    func viewerProjects() async throws -> (login: String, projects: [ProjectInfo]) {
-        let data: ProjectsQuery.ViewerData = try await query(ProjectsQuery.viewerProjects)
-        let projects = data.viewer.projectsV2.nodes.filter { !$0.closed }.map(\.info).sorted { $0.number < $1.number }
-        return (data.viewer.login, projects)
+    /// The viewer's open projects, all pages. `maxPages` only guards against a response that never ends; a failing
+    /// page fails the whole call, so a cached full list is never replaced by a silently truncated one.
+    func viewerProjects(maxPages: Int = 50) async throws -> (login: String, projects: [ProjectInfo]) {
+        var login = ""
+        var nodes: [ProjectsQuery.ProjectNode] = []
+        var cursor: String?
+        for _ in 0..<max(maxPages, 1) {
+            let data: ProjectsQuery.ViewerData = try await query(ProjectsQuery.viewerProjects,
+                                                                 variables: CursorVariables(cursor: cursor))
+            login = data.viewer.login
+            let page = data.viewer.projectsV2
+            nodes += page.nodes
+            // A page that claims a successor without a new cursor would repeat itself forever.
+            guard let info = page.pageInfo, info.hasNextPage, let next = info.endCursor, next != cursor else { break }
+            cursor = next
+        }
+        let projects = nodes.filter { !$0.closed }.map(\.info).sorted { $0.number < $1.number }
+        return (login, projects)
     }
 
     /// Adds authentication; after HTTP 401 refreshes the token once and retries.
