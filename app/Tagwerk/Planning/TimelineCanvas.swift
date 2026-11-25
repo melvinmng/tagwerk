@@ -20,6 +20,22 @@ enum DayEntry: Identifiable, Equatable {
     }
 }
 
+/// Rebuilds its content once a minute, so what depends on the clock (running entries, the "now" line) stays current. The
+/// preview of a neighbour page has no timer: it is not interactive and stands still for a moment (#310).
+struct MinuteTimeline<Content: View>: View {
+    @Environment(\.isPagePreview) private var isPreview
+    /// Gets the tick of the timer.
+    @ViewBuilder let content: (Date) -> Content
+
+    var body: some View {
+        if isPreview {
+            content(.now)
+        } else {
+            TimelineView(.everyMinute) { context in content(context.date) }
+        }
+    }
+}
+
 /// A finished change in the canvas, handed to the screen to write (and to ask for a series span first).
 struct CanvasCommit: Equatable {
     let entry: DayEntry
@@ -66,6 +82,9 @@ struct TimelineCanvas: View {
     /// When the hold selected an entry; the release of that hold must not count as a tap.
     @State private var selectedAt = Date.distantPast
     @State private var session: Session?
+    /// The entry whose resize grip is touched. A gesture state, so the system resets it when the touch ends or is
+    /// cancelled; a cancelled drag never calls `onEnded` and would leave `session` (and the scroll lock) set (#304).
+    @GestureState private var resizingEntryID: String?
     /// The hold-and-drag on an entry (UIKit recognizer, SR1 path B).
     @State private var hold = HoldMoveState()
     @State private var pending: [String: Range<Int>] = [:]
@@ -82,6 +101,36 @@ struct TimelineCanvas: View {
     }
 
     var body: some View {
+        // One timer for the whole canvas (none in the preview of a neighbour page): the entries, the groups and the "now" line
+        // are rebuilt once a minute, so a running entry changes its state on time (PL2b) without a timer per entry (#310).
+        MinuteTimeline { minute in grid(minute: minute) }
+            .frame(height: height(shownRange.count) + Self.lineInset)
+            .sensoryFeedback(.selection, trigger: snapLine)
+            .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
+            .onChange(of: plan) { _, _ in pending.removeAll() }
+            .sheet(item: $openGroup) { group in
+                CollapsedGroupList(rows: group.rows) { entry in
+                    // No sheet over a sheet: the list closes first, the entry opens afterwards.
+                    openGroup = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        onTap(entry)
+                    }
+                }
+            }
+            .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
+            .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
+            // Scrolling stops as soon as an entry is held, not only once it moves (SR1).
+            .onChange(of: hold.blocksScroll || session != nil) { _, dragging in isDragging = dragging }
+            // A resize that the system cancelled (no `onEnded`) is dropped here; the hold-and-drag has its own cancelled callback.
+            .onChange(of: resizingEntryID) { old, new in
+                if new == nil, let old, let current = session, current.id == old, current.mode != .move { session = nil }
+            }
+    }
+
+    /// The grid of one minute: `minute` is the tick of the timer, it makes the "now" line move.
+    @ViewBuilder
+    private func grid(minute: Date) -> some View {
         let shown = shownRange
         GeometryReader { geometry in
             let width = TimelineGridMetrics.entriesWidth(gridWidth: geometry.size.width, scaledLabelWidth: scaledLabelWidth)
@@ -137,7 +186,7 @@ struct TimelineCanvas: View {
                     let range = liveRange(entry)
                     let count = columnCount(index: index, ranges: layout, columns: columns)
                     let columnWidth = width / CGFloat(count)
-                    entryView(entry, range: range, columnWidth: columnWidth - 2)
+                    entryContent(entry, range: range, columnWidth: columnWidth - 2)
                         .frame(width: columnWidth - 2, height: max(18, height(range.count)))
                         .offset(x: labelWidth + TimelineGridMetrics.labelGap + CGFloat(columns[index]) * columnWidth, y: y(range.lowerBound, shown))
                         .zIndex(session?.id == entry.id ? 2 : (selectedID == entry.id ? 1 : 0))
@@ -178,29 +227,11 @@ struct TimelineCanvas: View {
                 if let preview = taskPreview {
                     previewBlock(preview, shown: shown, width: width)
                 }
-                NowLine(model: model, day: plan.day, shown: shown, labelWidth: labelWidth, width: geometry.size.width)
+                NowLine(model: model, minute: minute, day: plan.day, shown: shown, labelWidth: labelWidth, width: geometry.size.width)
                     .zIndex(3)
             }
             .coordinateSpace(.named("canvas"))
         }
-        .frame(height: height(shown.count) + Self.lineInset)
-        .sensoryFeedback(.selection, trigger: snapLine)
-        .sensoryFeedback(.impact(weight: .light), trigger: selectedID) { _, new in new != nil }
-        .onChange(of: plan) { _, _ in pending.removeAll() }
-        .sheet(item: $openGroup) { group in
-            CollapsedGroupList(rows: group.rows) { entry in
-                // No sheet over a sheet: the list closes first, the entry opens afterwards.
-                openGroup = nil
-                Task {
-                    try? await Task.sleep(for: .milliseconds(400))
-                    onTap(entry)
-                }
-            }
-        }
-        .sheet(item: $openSuggestion) { suggestion in SuggestionSheet(suggestion: suggestion) }
-        .sheet(item: $editingTask) { TaskEditorSheet(task: $0) }
-        // Scrolling stops as soon as an entry is held, not only once it moves (SR1).
-        .onChange(of: hold.blocksScroll || session != nil) { _, dragging in isDragging = dragging }
     }
 
     /// Visible hours: working time widened to every entry, with an hour of margin.
@@ -283,24 +314,17 @@ struct TimelineCanvas: View {
             return CollapsedGroupRow(entry: member, time: timeText(ranges[index]), title: style.title, suffix: style.suffix,
                                      color: style.isFree ? .secondary : style.color)
         }
-        return TimelineView(.everyMinute) { _ in
-            CollapsedGroupBlock(count: members.count, timeText: timeText(span), startText: clock(span.lowerBound),
-                                endText: clock(span.upperBound), titles: styles.map(\.title), hasDeadline: hasDeadline,
-                                isRunning: members.contains { runningRemaining($0) != nil },
-                                height: max(18, height(span.count))) {
-                openGroup = CollapsedGroup(rows: rows)
-            }
+        return CollapsedGroupBlock(count: members.count, timeText: timeText(span), startText: clock(span.lowerBound),
+                                   endText: clock(span.upperBound), titles: styles.map(\.title), hasDeadline: hasDeadline,
+                                   isRunning: members.contains { runningRemaining($0) != nil },
+                                   height: max(18, height(span.count))) {
+            openGroup = CollapsedGroup(rows: rows)
         }
         .frame(width: width - 2, height: max(18, height(span.count)))
         .offset(x: labelWidth + TimelineGridMetrics.labelGap, y: y(span.lowerBound, shown))
     }
 
     // MARK: Entries
-
-    /// An entry; the content is rebuilt every full minute, so a running entry changes its state on time (PL2b).
-    private func entryView(_ entry: DayEntry, range: Range<Int>, columnWidth: CGFloat) -> some View {
-        TimelineView(.everyMinute) { _ in entryContent(entry, range: range, columnWidth: columnWidth) }
-    }
 
     /// Minutes left when the entry is running now (a break and calendar events, also time blocks; never all-day).
     private func runningRemaining(_ entry: DayEntry) -> Int? {
@@ -416,6 +440,7 @@ struct TimelineCanvas: View {
             .contentShape(Rectangle())
             .frame(maxWidth: .infinity, alignment: alignment)
             .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("canvas"))
+                .updating($resizingEntryID) { _, state, _ in state = entry.id }
                 .onChanged { drag in
                     if session == nil { session = Session(id: entry.id, mode: mode, original: displayRange(entry), delta: 0) }
                     session?.delta = drag.translation.height

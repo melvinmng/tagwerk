@@ -2,20 +2,23 @@ import Foundation
 import GitHubKit
 import Network
 import Observation
+import OSLog
 import TagwerkCore
 
 /// Why the online search sent nothing, or what went wrong with a request.
 enum ProductLookupError: Error, Equatable {
     /// The user has not agreed.
     case noConsent
-    /// No valid contact address; the operator of Open Food Facts asks every client to name one.
-    case noContact
     case offline
     /// Fewer than `ProductSearchRules.minimumQueryLength` characters.
     case queryTooShort
     /// The local limit of requests per minute is used up; `wait` is the time until the next one may go out.
     case rateLimited(wait: TimeInterval)
-    /// The operator refused or is overloaded (HTTP 403, 429 or 5xx).
+    /// The operator refused the request (HTTP 403): a blocked network address or client, not a busy server.
+    case blocked
+    /// The operator's request limit is reached (HTTP 429).
+    case tooManyRequests
+    /// The operator is overloaded or down (HTTP 5xx, also its global limit, 503).
     case serverBusy
     /// A barcode that is not one.
     case invalidBarcode
@@ -25,10 +28,11 @@ enum ProductLookupError: Error, Equatable {
     var message: String {
         switch self {
         case .noConsent: String(localized: "Für die Online-Suche ist deine Einwilligung nötig.")
-        case .noContact: String(localized: "Für die Online-Suche fehlt deine Kontaktadresse.")
         case .offline: String(localized: "Keine Verbindung")
         case .queryTooShort: String(localized: "Gib mindestens \(ProductSearchRules.minimumQueryLength) Zeichen ein.")
         case .rateLimited(let wait): String(localized: "Bitte kurz warten, noch \(Int(wait)) s. Open Food Facts erlaubt nur wenige Anfragen pro Minute.")
+        case .blocked: String(localized: "Open Food Facts hat die Anfrage abgelehnt (Fehler 403). Das betrifft meist die Netzadresse oder die Kennung der App, nicht deine Eingabe. Versuch es später oder in einem anderen Netz noch einmal.")
+        case .tooManyRequests: String(localized: "Open Food Facts bekommt von deinem Anschluss gerade zu viele Anfragen. Warte etwa eine Minute und versuch es noch einmal.")
         case .serverBusy: String(localized: "Open Food Facts nimmt gerade keine Anfragen an. Versuch es später noch einmal.")
         case .invalidBarcode: String(localized: "Das ist kein gültiger Strichcode.")
         case .failed: String(localized: "Die Suche hat nicht geklappt. Versuch es noch einmal.")
@@ -49,8 +53,8 @@ protocol ProductLookingUp: AnyObject {
 
 /// The client of the online search.
 ///
-/// A request goes out only when, in this order: the user agreed (`consent`), a valid contact address exists, the device is online,
-/// the answer is not already in memory, and the local limit has a free slot. A call that stops at an earlier step uses no slot and
+/// A request goes out only when, in this order: the user agreed (`consent`), the device is online, the answer is not already in
+/// memory, and the local limit has a free slot. The contact address is optional; without a valid one the request names the project URL. A call that stops at an earlier step uses no slot and
 /// sends nothing. Answers stay in memory only; nothing is written to disk and no search words are logged.
 @MainActor
 final class ProductLookup: ProductLookingUp {
@@ -64,6 +68,7 @@ final class ProductLookup: ProductLookingUp {
     private var productLimiter = ProductSearchRules.makeProductLimiter()
     private var pages: [String: ProductPage] = [:]
     private var products: [String: ProductCandidate?] = [:]
+    private let logger = Logger(subsystem: "local.tagwerk", category: "openfoodfacts")
 
     init(transport: any HTTPTransport, hasConsent: @escaping () -> Bool, contact: @escaping () -> String?,
          isOnline: @escaping () -> Bool, version: @escaping () -> String, now: @escaping () -> Date = { Date() }) {
@@ -114,28 +119,42 @@ final class ProductLookup: ProductLookingUp {
 
     // MARK: Private
 
-    /// Consent, contact address and connection; the user agent on success.
+    /// Consent and connection; the user agent on success (the contact address when valid, otherwise the project URL).
     private func gate() throws -> String {
         guard hasConsent() else { throw ProductLookupError.noConsent }
-        guard let userAgent = ProductSearchRules.userAgent(version: version(), contact: contact()) else { throw ProductLookupError.noContact }
         guard isOnline() else { throw ProductLookupError.offline }
-        return userAgent
+        return ProductSearchRules.userAgent(version: version(), contact: contact())
     }
 
+    /// Sends the request. A refusal is told apart by its status and logged as the status alone: no search words, no barcode, no address.
     private func send(_ request: URLRequest) async throws -> Data {
         do {
             let (data, response) = try await transport.send(request)
-            switch response.statusCode {
-            case 200..<300: return data
-            case 403, 429, 500..<600: throw ProductLookupError.serverBusy
-            default: throw ProductLookupError.failed
+            if let error = Self.error(forStatus: response.statusCode) {
+                logger.error("Open Food Facts answered HTTP \(response.statusCode)")
+                throw error
             }
+            return data
         } catch let error as ProductLookupError {
             throw error
         } catch is CancellationError {
             throw CancellationError()
         } catch {
+            let nsError = error as NSError
+            logger.error("Open Food Facts request failed: \(nsError.domain, privacy: .public) \(nsError.code)")
             throw ProductLookupError.failed
+        }
+    }
+
+    /// The error of an HTTP status; `nil` for a success. 403 (refused), 429 (limit reached) and 5xx (operator down or overloaded)
+    /// are different problems with different remedies, so each has its own message.
+    static func error(forStatus status: Int) -> ProductLookupError? {
+        switch status {
+        case 200..<300: nil
+        case 403: .blocked
+        case 429: .tooManyRequests
+        case 500..<600: .serverBusy
+        default: .failed
         }
     }
 

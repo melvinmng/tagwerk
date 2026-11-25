@@ -31,6 +31,10 @@ final class BibleStudyStartModel {
         from = Self.start(of: store.suggestion(for: initial))
     }
 
+    /// The chips of the sheet: the chosen book always first, then the books read last (#308). A book that has no session yet, or one
+    /// picked from the full list, would be missing from `recentBooks`; without it the chosen book would not show on any chip.
+    var chipBooks: [BibleBook] { [book] + recentBooks.filter { $0 != book } }
+
     // MARK: Choice
 
     /// Takes the book and offers its next verse (or 1,1) as the start with an open end; the passage typed before is dropped.

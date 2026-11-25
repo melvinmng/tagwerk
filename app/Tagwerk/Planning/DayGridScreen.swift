@@ -26,7 +26,9 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var isDragging = false
     @State private var canvasFrame: CGRect = .zero
-    @State private var taskDrag: (task: TaskItem, location: CGPoint)?
+    /// The task dragged from the panel. A gesture state: the system resets it when the drag ends or is cancelled (for
+    /// example by a context menu or an interruption), so the scroll lock and the edge scrolling cannot get stuck (#304).
+    @GestureState private var taskDrag: (task: TaskItem, location: CGPoint)?
     @State private var selection: Set<String>?
     @State private var askingSeriesFree: Bool?
     @State private var pendingSeriesCommit: CanvasCommit?
@@ -41,8 +43,12 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     @State private var panelBodyHeight: CGFloat = 0
     @State private var scrollPosition = ScrollPosition()
     @State private var contentOffsetY: CGFloat = 0
-    /// -1 scrolls up, 1 down while a dragged task is near the edge of the visible grid.
-    @State private var edgeScroll = 0
+    /// -1 scrolls up, 1 down while a dragged task is near the edge of the visible grid; derived from the drag, so it
+    /// ends with it.
+    private var edgeScroll: Int {
+        guard let taskDrag else { return 0 }
+        return TaskGripDrag.edgeScrollDirection(atY: taskDrag.location.y, upperLimit: scrollFrame.minY, lowerLimit: dropLimitY)
+    }
     @State private var drops = 0
     /// The day whose grid is being aligned to the current time, until `nowAlignmentEnds` or the first touch scroll.
     /// The content above the grid can still grow while it loads, so the alignment repeats in that window only.
@@ -295,7 +301,10 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                     .opacity(dragging ? 0 : 1)
                 }
             }
-            .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+            // A solid fill instead of a material: the audit measures text on a material against the grid that scrolls behind it.
+            // The hairline keeps the edge of the panel visible on the grid.
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+            .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Color(.separator), lineWidth: 0.5) }
             // Moves sit at their task rows, so the panel opens when there are any (proposal §5).
             // Not in a preview: `panelExpanded` is shared by every page, a neighbour must not open the shown panel.
             .onChange(of: moveSuggestions.count) { _, count in if count > 0, !isPreview { panelExpanded = true } }
@@ -388,19 +397,26 @@ struct DayGridScreen<Summary: View, Header: View>: View {
 
     private func plainPanelRow(_ task: TaskItem, commit: Commit?, isOverdue: Bool) -> some View {
         HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title).font(.subheadline).lineLimit(2)
-                Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
+            // Mockup 6A: the title area opens the task and its menu; the grip beside it only drags. The grip is not
+            // inside the menu's region, so a drag cannot also count as the long press that opens the menu (#304).
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.title).font(.subheadline).lineLimit(2)
+                    Text(rowDetails(task, isOverdue: isOverdue)).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                if let progress = model.sessionProgress[task.id], toScheduleIDs.contains(task.id) {
+                    Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.greenText)
+                }
+                if let priority = task.priority {
+                    Text(priority.label).font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(priority == .p1 ? Color.red.opacity(0.25) : Color.secondary.opacity(0.2), in: Capsule())
+                }
             }
-            Spacer(minLength: 4)
-            if let progress = model.sessionProgress[task.id], toScheduleIDs.contains(task.id) {
-                Text("noch \(CapacityText.duration(progress.remaining))").font(.caption.weight(.semibold)).foregroundStyle(.greenText)
-            }
-            if let priority = task.priority {
-                Text(priority.label).font(.caption2.weight(.semibold))
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(priority == .p1 ? Color.red.opacity(0.25) : Color.secondary.opacity(0.2), in: Capsule())
-            }
+            .contentShape(Rectangle())
+            .onTapGesture { onPlanTask(task) }
+            .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
             if let commit {
                 Button(commitTitle) {
                     let day = plan.day
@@ -417,9 +433,6 @@ struct DayGridScreen<Summary: View, Header: View>: View {
         }
         .padding(.leading, 4)
         .opacity(taskDrag?.task.id == task.id ? 0.4 : 1)
-        .contentShape(Rectangle())
-        .onTapGesture { onPlanTask(task) }
-        .contextMenu { TaskContextMenu(item: task, actions: menuActions(task)) }
     }
 
     /// Effort (or reserved recurring effort) · due · ↻ · source.
@@ -449,17 +462,16 @@ struct DayGridScreen<Summary: View, Header: View>: View {
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
             .highPriorityGesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("screen"))
-                .onChanged { value in
-                    if taskDrag == nil, hypot(value.translation.width, value.translation.height) < 8 { return }
-                    taskDrag = (task, value.location)
-                    edgeScroll = edgeDirection(at: value.location)
+                .updating($taskDrag) { value, state, _ in
+                    // Not a drag yet (a tap on the grip): nothing is locked. A cancelled gesture never reaches
+                    // `onEnded`; the system resets `taskDrag` itself.
+                    guard TaskGripDrag.hasStarted(translation: value.translation) else { return }
+                    state = (task, value.location)
                 }
                 .onEnded { value in
-                    defer {
-                        taskDrag = nil
-                        edgeScroll = 0
-                    }
-                    guard taskDrag != nil, isDropZone(value.location) else { return }
+                    // `taskDrag` is a gesture state and may be reset already here, so the drop zone must not depend on it.
+                    guard TaskGripDrag.hasStarted(translation: value.translation),
+                          isDropZone(value.location, dragging: true) else { return }
                     let minutes = canvasMinutes(atY: value.location.y)
                     drops += 1
                     Task { await model.dropTask(key: task.id.key, atMinutes: minutes, on: plan.day) }
@@ -469,19 +481,17 @@ struct DayGridScreen<Summary: View, Header: View>: View {
     }
 
     /// Top of the panel while dragging (it has slid down to its header).
-    private var dropLimitY: CGFloat {
-        panelHeaderMinY + (taskDrag != nil && panelExpanded ? panelBodyHeight : 0)
+    private var dropLimitY: CGFloat { dropLimitY(dragging: taskDrag != nil) }
+
+    /// `dragging` is passed explicitly where the gesture state may already be reset (the end of the drag): a drag always
+    /// starts from an expanded panel, so the limit is the same as during the drag.
+    private func dropLimitY(dragging: Bool) -> CGFloat {
+        panelHeaderMinY + (dragging && panelExpanded ? panelBodyHeight : 0)
     }
 
     /// Only the visible part of the grid above the panel accepts a drop; the panel's header cancels.
-    private func isDropZone(_ point: CGPoint) -> Bool {
-        canvasFrame.contains(point) && scrollFrame.contains(point) && point.y < dropLimitY
-    }
-
-    private func edgeDirection(at point: CGPoint) -> Int {
-        if point.y > dropLimitY - 60 { return 1 }
-        if point.y < scrollFrame.minY + 60 { return -1 }
-        return 0
+    private func isDropZone(_ point: CGPoint, dragging: Bool = true) -> Bool {
+        canvasFrame.contains(point) && scrollFrame.contains(point) && point.y < dropLimitY(dragging: dragging)
     }
 
     private func canvasMinutes(atY y: CGFloat) -> Int {

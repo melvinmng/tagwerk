@@ -12,18 +12,22 @@ final class FoodLookupConsentModel {
         contact = settings.foodLookupContact ?? ""
     }
 
-    /// The agreement is possible only with a valid address.
-    var canAgree: Bool { ProductSearchRules.validContact(contact) != nil }
+    /// The agreement is possible with an empty field or a valid address; text that is not an address has to be corrected or removed.
+    var canAgree: Bool {
+        if case .invalid = ProductSearchRules.contactChange(entered: contact) { return false }
+        return true
+    }
 
     /// Something is typed that is not an address (shown as a hint; an empty field is no error).
-    var showsInvalidHint: Bool { !contact.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !canAgree }
+    var showsInvalidHint: Bool { !canAgree }
 
     func agree(settings: AppSettings) { settings.agreeToFoodLookup(contact: contact) }
 }
 
 /// The consent for the online search in Open Food Facts (decision LM1d, LM2b; built like `ShoppingSortConsentSheet`).
 ///
-/// "Einverstanden" is possible only with a contact address, because the operator asks every client to name one in each request.
+/// The contact address is optional: the operator asks every client to identify itself in each request, and without an address the
+/// app names its project URL. "Einverstanden" is possible with an empty field or a valid address.
 struct FoodLookupConsentSheet: View {
     /// `true` when the sheet comes from the tap on "Online suchen": the button then says that a search follows.
     var startsSearch = false
@@ -39,14 +43,14 @@ struct FoodLookupConsentSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Für die Online-Suche sendet Tagwerk dein Suchwort an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.")
-                    point("paperplane", "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und die Kontaktadresse, die du unten einträgst.")
+                    point("paperplane", "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.")
                     point("eye.slash", "**Nicht gesendet werden:** Mengen, Mahlzeiten, Ziele, Gewicht, Daten aus Health und ein Konto.")
                     point("hand.tap", "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst, nie beim Tippen im Suchfeld.")
                     point("exclamationmark.circle", "**Wer sucht, verrät, was er isst oder kaufen will.** Open Food Facts speichert IP-Adressen und Protokolle bis zu 3 Jahre. Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.")
 
                     if let model {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Kontaktadresse für Open Food Facts").font(.subheadline).fontWeight(.semibold)
+                            Text("Kontaktadresse für Open Food Facts (optional)").font(.subheadline).fontWeight(.semibold)
                             TextField("E-Mail-Adresse", text: Bindable(model).contact)
                                 .textFieldStyle(.roundedBorder)
                                 .keyboardType(.emailAddress)
@@ -60,7 +64,7 @@ struct FoodLookupConsentSheet: View {
                             if model.showsInvalidHint {
                                 Text("Das ist keine gültige E-Mail-Adresse.").font(.footnote).foregroundStyle(.orangeText)
                             }
-                            Text("Open Food Facts verlangt, dass jede App in jeder Anfrage eine Kontaktadresse nennt, damit der Betreiber sich bei Problemen melden kann. Er sieht diese Adresse bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.")
+                            Text("Open Food Facts bittet jede App, sich in jeder Anfrage zu nennen, damit der Betreiber sich bei Problemen melden kann. Das geht ohne Adresse: Dann nennt Tagwerk den Link zu seinem Projekt (github.com/melvinmng/tagwerk). Eine eingetragene Adresse sieht der Betreiber bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.")
                                 .font(.footnote).foregroundStyle(.secondaryText)
                         }
                         VStack(spacing: 10) {
@@ -103,9 +107,9 @@ struct FoodLookupConsentSheet: View {
     }
 }
 
-/// The contact address in the settings: shown while the online search is on. It takes over what is typed when the field is left or
-/// submitted. A valid address replaces the stored one, an empty field removes it and switches the search off, anything else keeps the
-/// stored address and says so.
+/// The optional contact address in the settings: shown while the online search is on. It takes over what is typed when the field is
+/// left or submitted. A valid address replaces the stored one, an empty field removes it (the search stays on and names the project
+/// URL), anything else keeps the stored address and says so.
 struct FoodLookupContactField: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var text = ""

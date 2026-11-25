@@ -24,6 +24,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _bodyProfile = HealthBodyProfile.empty
     private var _nutritionSamples: [FakeNutritionSample] = []
     private var _weights: [HealthWeight] = []
+    private var _heights: [HealthHeight] = []
     private var _foreignWeights: [ForeignWeight] = []
     private var _activeEnergy: [DailyActiveEnergy] = []
     private var _activeEnergyReads: [DateInterval] = []
@@ -36,6 +37,11 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _nutritionReads: [DateInterval] = []
     var failWrites = false
     var incompleteWrites = false
+    /// The system sheet throws, like HealthKit when the request fails.
+    var failRequests = false
+    /// Write permissions per type; "not asked" until a sheet covered the type (see `requestAuthorization()`).
+    private var _writeAccess: [HealthWriteTarget: HealthWriteAccess] = [:]
+
     /// Step reads throw, like HealthKit while the device is locked.
     var failStepReads = false
     /// Active energy and foreign nutrition reads throw, like HealthKit while the device is locked.
@@ -86,13 +92,28 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
 
     func access() async -> HealthAccess { currentAccess }
 
-    /// Like the real store, the Health card's request covers the step type too.
+    /// Like the real store, the one consent sheet covers the core group, steps, the active energy, the weight and the height.
+    /// It suspends once, so concurrent callers can interleave in tests.
     func requestAuthorization() async throws {
+        lock.withLock { _authorizationRequests += 1 }
+        await Task.yield()
+        if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
-            _authorizationRequests += 1
             if _access == .notDetermined { _access = .authorized }
             if _stepsAccess == .notAsked { _stepsAccess = .asked }
+            for group in [HealthAccessGroup.activeEnergy, .body, .height] where (_groupAccess[group] ?? .notAsked) == .notAsked {
+                _groupAccess[group] = .asked
+            }
+            for target in HealthWriteTarget.allCases where (_writeAccess[target] ?? .notAsked) == .notAsked {
+                _writeAccess[target] = .allowed
+            }
         }
+    }
+
+    func writeAccess(for target: HealthWriteTarget) async -> HealthWriteAccess { lock.withLock { _writeAccess[target] ?? .notAsked } }
+
+    func setWriteAccess(_ access: HealthWriteAccess, for target: HealthWriteTarget) {
+        lock.withLock { _writeAccess[target] = access }
     }
 
     private func write(_ apply: () -> Void) async throws -> Bool {
@@ -111,6 +132,13 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
     func save(_ drink: HealthDrink) async throws -> Bool { try await write { _drinks.append(drink) } }
     func save(_ workout: HealthWorkout) async throws -> Bool { try await write { _workouts.append(workout) } }
+    /// The height replaces the one written before, like the fixed sync identifier in Health; without the permission nothing is written.
+    func saveHeight(_ height: HealthHeight) async throws -> Bool {
+        guard await writeAccess(for: .height) == .allowed else { return false }
+        return try await write { _heights = [height] }
+    }
+    /// The one height sample Tagwerk keeps in Health.
+    var heights: [HealthHeight] { lock.withLock { _heights } }
     /// A weight is written only into the group `body`; without its sheet shown the fake reports "not complete", like the real store.
     func save(_ weight: HealthWeight) async throws -> Bool {
         guard await groupAccess(.body) == .asked else { return false }
@@ -190,13 +218,22 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     func groupRequests(_ group: HealthAccessGroup) -> Int { lock.withLock { _groupRequests[group] ?? 0 } }
 
     func requestAuthorization(for group: HealthAccessGroup) async throws {
+        await Task.yield()
+        if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
             _groupRequests[group, default: 0] += 1
             if (_groupAccess[group] ?? .notAsked) == .notAsked { _groupAccess[group] = .asked }
+            switch group {
+            case .body: if (_writeAccess[.weight] ?? .notAsked) == .notAsked { _writeAccess[.weight] = .allowed }
+            case .height: if (_writeAccess[.height] ?? .notAsked) == .notAsked { _writeAccess[.height] = .allowed }
+            default: break
+            }
         }
     }
 
     func requestStepsAuthorization() async throws {
+        await Task.yield()
+        if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
             _stepsAuthorizationRequests += 1
             if _stepsAccess == .notAsked { _stepsAccess = .asked }

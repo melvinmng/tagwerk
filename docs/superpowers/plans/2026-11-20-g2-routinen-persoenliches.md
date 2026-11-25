@@ -37,7 +37,7 @@
 | **RO** Routinen | `feat/g2-routines` | RO1–RO8 | `Routines/MorningSheet.swift`, `EveningSheet.swift`, `NoteField.swift`, **`Routines/TimeWithGodSection.swift`**, `RoutinesModel.swift`, `RoutineSettingsView.swift`, `WeekReflectionSections.swift`, `LeftoverSheet.swift`, `WeekPlanningSheet.swift`, `WeekPlanningModel.swift`, **`Routines/WeekPlanningCard.swift`**, `Planning/DayView.swift`, `TagwerkCore/RoutineSchedule.swift`, **`TagwerkCore/LeftoverPreview.swift`**, **`TagwerkCore/BibleStudyOffer.swift`**, `Persistence/AppSettings.swift`, `Backup/BackupDTOs.swift` |
 | **BS** Bible Study | `feat/g2-bible-study` | BS1–BS8 | **`TagwerkCore/BibleVerseCounts.swift`** (+ **`Resources/schlachter2000-verses.json`**), **`TagwerkCore/BiblePassage.swift`**, **`TagwerkCore/BibleStudyReminders.swift`**, **`TagwerkCore/BibleStudyHabitTime.swift`**, `TagwerkCore/BibleBooks.swift` (`BibleStudyTemplate`), `TagwerkCore/NotificationBudget.swift`, `TagwerkCore/RoutineSchedule.swift`, `TagwerkCore/AppRoute.swift`, `Notes/BibleStudySessionRecord.swift`, `Notes/NoteStore+BibleStudy.swift`, `Notes/BibleStudyStartSheet.swift`, **`Notes/BibleBookPicker.swift`**, **`Notes/BibleSessionBar.swift`**, `Notes/NoteEditorView.swift` (ein Modifier), `Notes/NoteEditorView+Menu.swift`, `Notes/NotesListView.swift` (Zeile offener Sitzungen), **`Routines/BibleStudySettingsView.swift`**, `Routines/RoutineSettingsView.swift`, `Routines/RoutineNotificationScheduler.swift`, `Notifications/NotificationCenterClient.swift`, Mitteilungs-Delegate, `App/AppEnvironment.swift`, `App/RootView.swift`, `Persistence/AppSettings.swift`, `Backup/BackupDTOs.swift`, **`docs/research/2026-11-20-schlachter-2000-verszahlen.md`** |
 | **GW** Gewohnheiten | `feat/g2-habits` | GW1–GW3 | `TagwerkCore/HabitRules.swift`, `HabitSuggestions.swift`, `Routines/HabitsModel.swift`, `HabitsSection.swift`, `HabitText.swift`, `HabitSheet.swift`, **`Routines/HabitMarkerTint.swift`**, `Persistence/AppSettings.swift`, `Assets.xcassets` |
-| **DS** Datensicherung | `feat/g2-backup` | DS0–DS4 | **`TagwerkCore/BackupStatus.swift`**, **`TagwerkCore/BackupCrypto.swift`**, `TagwerkCore/BackupRules.swift`, `Backup/BackupService.swift`, **`Backup/BackupKeyStore.swift`**, `Backup/BackupSettingsView.swift`, **`Backup/BackupCoverageView.swift`**, **`Backup/BackupEncryptionView.swift`**, **`Backup/RestoreComparisonSheet.swift`**, `Backup/BackupDocument.swift`, `Backup/BackupDTOs.swift`, `Persistence/AppSettings.swift`, `project.yml`; nur bei bestandenem DS0: **`Backup/SafetyCopyStore.swift`**, **`Backup/SafetyCopiesView.swift`**, `Tagwerk.entitlements` |
+| **DS** Datensicherung | `feat/g2-backup` | DS1–DS4 | **`TagwerkCore/BackupStatus.swift`**, **`TagwerkCore/BackupCrypto.swift`**, `TagwerkCore/BackupRules.swift`, `Backup/BackupService.swift`, **`Backup/BackupKeyStore.swift`**, `Backup/BackupSettingsView.swift`, **`Backup/BackupCoverageView.swift`**, **`Backup/BackupEncryptionView.swift`**, **`Backup/RestoreComparisonSheet.swift`**, `Backup/BackupDocument.swift`, `Backup/BackupDTOs.swift`, `Persistence/AppSettings.swift`, `project.yml`, **`Backup/SafetyCopyStore.swift`**, **`Backup/SafetyCopiesView.swift`** |
 | **EK** Einkauf und Rezept | `feat/g2-shopping-recipe` | EK1–EK3 | `Shopping/ShoppingListView.swift`, `Shopping/RecipeSheets.swift`, `Shopping/ShoppingModel.swift`, **`TagwerkCore/ShoppingQuantity.swift`** |
 | **TB** Notion-Import | `feat/g2-notion-import` | TB1–TB2 | `Notes/NotionImportView.swift`, `NotionImportModel.swift`, `Notes/NotesListView.swift` (Zeile im leeren Ordner), `Settings/NotesSettingsView.swift` |
 
@@ -605,15 +605,9 @@ Regeln: Tipp auf Zustand 2 zeigt für drei Sekunden unter der Liste „Automatis
 
 ## Strang DS: Datensicherung
 
-### Task DS0: Machbarkeit „Sicherheitskopien in iCloud“ (DS7c) – zuerst, mit Entscheidungsregel
+### Task DS0: entfällt (DS7c ohne iCloud-Container, Entscheidung vom 21.11.2026)
 
-Die Entscheidung lautet: DS7c nur, wenn die verborgenen Sicherheitskopien auch im iCloud-Container der App liegen können; sonst bleibt alles wie heute. Dieser Task baut nichts Dauerhaftes; er liefert ein Ja oder Nein.
-
-**Files:** keine dauerhaften. Ergebnis als Abschnitt „DS0“ im Pull Request von DS1 und als Kommentar der Hauptsitzung in #188.
-
-- [ ] **Step 1: Konto.** Feststellen, mit welchem Team signiert wird (`~/Library/Application Support/Tagwerk/config`, `DEVELOPMENT_TEAM`; Xcode › Signing & Capabilities). **Regel A:** Ist es ein kostenloses „Personal Team“ und lässt sich die Fähigkeit „iCloud“ (iCloud Documents mit Container `iCloud.$(TAGWERK_BUNDLE_ID)`) im Ziel nicht hinzufügen oder schlägt die Signatur danach fehl, ist das Ergebnis **Nein**. Nichts wird eingecheckt.
-- [ ] **Step 2: Nur wenn Step 1 gelingt, Versuch auf einem Wegwerf-Branch:** Berechtigung eintragen, App auf dem Gerät des Nutzers starten und prüfen: (a) `FileManager.default.url(forUbiquityContainerIdentifier: nil)` liefert auf dem Gerät einen Pfad; (b) eine Datei in einem Unterordner **außerhalb** von `Documents` des Containers (zum Beispiel `Sicherheitskopien/`) erscheint **nicht** in der Dateien-App; (c) ihr Status wird innerhalb von zehn Minuten im WLAN „hochgeladen“ (`URLResourceKey.ubiquitousItemIsUploadedKey`); (d) nach Löschen und Neuinstallieren der App ist die Datei über `NSMetadataQuery` wieder auffindbar und ladbar; (e) mit ausgeschaltetem iCloud Drive liefert (a) `nil` und die App läuft weiter; (f) `scripts/install-dev.sh` und die stündliche Installation signieren weiter ohne Handgriff.
-- [ ] **Step 3: Entscheidung.** **Ja** nur, wenn (a) bis (f) alle erfüllt sind. In jedem anderen Fall **Nein**: DS4 entfällt vollständig, Sicherheitskopien bleiben in `Dokumente/Sicherungen`, sichtbar und ohne Löschregel (heutiges Verhalten); nur die Verschlüsselung aus DS3 gilt auch für sie. Das Ergebnis mit den Beobachtungen zu jedem Punkt geht an den Nutzer.
+Der Nutzer hat DS7c so festgelegt: Die Sicherheitskopien liegen **verborgen im selbst gewählten Sicherungsordner** (zum Beispiel in iCloud Drive), in einem Unterordner `.Sicherheitskopien`. Dateien-App und Finder blenden Ordner mit führendem Punkt aus. Dafür braucht es **keine** iCloud-Berechtigung und keinen eigenen Container; der Zugriff läuft über das vorhandene Security-Scoped Bookmark des Sicherungsordners (`BackupSettingsView`/`BackupService`). Ist kein Sicherungsordner gewählt oder ist er nicht erreichbar, bleibt alles wie heute (`Dokumente/Sicherungen`, sichtbar, ohne Löschregel). Ein Machbarkeitstest entfällt; DS4 wird immer gebaut.
 
 ### Task DS1: Seite mit Statuskarte, Unterseite „Was wird gesichert?“ (DS1b)
 
@@ -730,11 +724,11 @@ Regeln:
 - [ ] **Step 2–4:** rot, umsetzen, `ALL`. Die Laufzeit der Schlüsselableitung auf dem Gerät messen (Ziel unter einer Sekunde; sonst Iterationszahl im Pull Request begründet senken, nicht unter 310.000).
 - [ ] **Step 5:** Commit `feat: encrypt backups with an optional password`.
 
-### Task DS4: Sicherheitskopien verborgen, begrenzt, mit Liste in der App (DS7c) – **nur bei „Ja“ aus DS0**
+### Task DS4: Sicherheitskopien verborgen im Sicherungsordner, begrenzt, mit Liste in der App (DS7c)
 
 **Files:**
 - Create: `Backup/SafetyCopyStore.swift`, `Backup/SafetyCopiesView.swift`
-- Modify: `Tagwerk.entitlements`, `project.yml` (iCloud Documents, Container), `Backup/BackupService.swift:135–149`, `Backup/BackupSettingsView.swift`, `TagwerkCore/BackupRules.swift`, Kataloge
+- Modify: `Backup/BackupService.swift:135–149` (keine Änderung an Entitlements oder `project.yml`), `Backup/BackupSettingsView.swift`, `TagwerkCore/BackupRules.swift`, Kataloge
 - Test: neu `app/TagwerkTests/SafetyCopyStoreTests.swift`, `BackupRulesTests.swift`
 
 **Interfaces:**
@@ -747,10 +741,11 @@ public static let safetyCopyRetentionDays = 30
 public static func safetyCopiesToDelete(names: [String], now: Date, calendar: Calendar) -> [String]
 
 // Backup/SafetyCopyStore.swift
-struct SafetyCopy: Identifiable, Equatable { let id: String; let createdAt: Date; let bytes: Int; let daysLeft: Int; let isInCloud: Bool }
+struct SafetyCopy: Identifiable, Equatable { let id: String; let createdAt: Date; let bytes: Int; let daysLeft: Int; let isInBackupFolder: Bool }
 @MainActor final class SafetyCopyStore {
-    /// `cloudDirectory` is nil while iCloud is off; copies then stay in Application Support only.
-    init(localDirectory: URL, cloudDirectory: URL?, now: @escaping () -> Date, calendar: Calendar)
+    /// `hiddenDirectory` is `<backup folder>/.Sicherheitskopien`, resolved from the backup folder bookmark;
+    /// nil without a reachable backup folder, then copies keep today's behaviour in `localDirectory`.
+    init(localDirectory: URL, hiddenDirectory: URL?, now: @escaping () -> Date, calendar: Calendar)
     func write(_ data: Data) throws -> SafetyCopy
     func list() -> [SafetyCopy]
     func data(of copy: SafetyCopy) throws -> Data
@@ -761,7 +756,7 @@ struct SafetyCopy: Identifiable, Equatable { let id: String; let createdAt: Date
 }
 ```
 
-Regeln: Ablage in `Application Support/Sicherheitskopien` und, wenn verfügbar, zusätzlich im iCloud-Container außerhalb von `Documents`; die letzten 3 bleiben, höchstens 30 Tage. Die Liste zeigt Datum, Größe, „noch N Tage“ und je Kopie „Diesen Stand zurückholen“ (führt über das Vergleichsblatt aus DS2), „Als Datei sichern“ (Teilen), „Löschen“. Sie enthalten immer auch Tagebuch und Bible Study und sind mit DS3 verschlüsselt. Ohne iCloud (ausgeschaltet, nicht angemeldet) sagt die Seite: „iCloud ist aus. Die Kopien liegen nur auf diesem iPhone.“ Die Meldungen nach dem Wiederherstellen nennen statt des Ordners „Sicherungen“ die Liste in der App.
+Regeln: Ablage im verborgenen Unterordner `.Sicherheitskopien` des gewählten Sicherungsordners; ohne erreichbaren Sicherungsordner wie heute in `Dokumente/Sicherungen`. Vorhandene Kopien aus `Dokumente/Sicherungen` werden einmal übernommen, sobald ein Sicherungsordner erreichbar ist; die letzten 3 bleiben, höchstens 30 Tage. Die Liste zeigt Datum, Größe, „noch N Tage“ und je Kopie „Diesen Stand zurückholen“ (führt über das Vergleichsblatt aus DS2), „Als Datei sichern“ (Teilen), „Löschen“. Sie enthalten immer auch Tagebuch und Bible Study und sind mit DS3 verschlüsselt. Ohne erreichbaren Sicherungsordner sagt die Seite: „Kein Sicherungsordner gewählt. Die Kopien liegen nur auf diesem iPhone.“ Die Meldungen nach dem Wiederherstellen nennen statt des Ordners „Sicherungen“ die Liste in der App.
 
 - [ ] **Step 1: Tests.** `safetyCopiesToDelete_keepsNewestThree`, `safetyCopiesToDelete_dropsOlderThanThirtyDays`, `write_storesLocallyAndInCloudDirectory` (mit zwei Temp-Ordnern), `write_withoutCloud_storesLocallyOnly`, `list_mergesBothPlacesWithoutDuplicates`, `prune_removesFromBoth`, `adoptLegacyCopies_movesAndCleansUp`.
 - [ ] **Step 2–4:** rot, umsetzen, `ALL`; danach Gerätetest (Z1). Commit `feat: keep safety copies hidden, limited and in iCloud`.

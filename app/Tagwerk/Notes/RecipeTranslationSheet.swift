@@ -85,8 +85,10 @@ struct RecipeTranslationSheet: View {
                 }
             } header: {
                 Text("Übersetzen nach")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Tagwerk sendet den Text dieser Notiz an ChatGPT. Du siehst die Übersetzung, bevor sich etwas ändert.")
+                    .foregroundStyle(.secondaryText)
             }
             if case .failed(let message) = model.phase {
                 Section { Text(message).foregroundStyle(.redText) }
@@ -97,7 +99,7 @@ struct RecipeTranslationSheet: View {
                 }
                 .disabled(!environment.ai.isSignedIn)
             } footer: {
-                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI") }
+                if !environment.ai.isSignedIn { Text("Anmeldung unter Einstellungen › KI").foregroundStyle(.secondaryText) }
             }
         }
     }

@@ -71,7 +71,7 @@ class RecipeScreensAuditCase: UITestCase {
         openNotes()
         openRecipesFolder()
         tapButton("Rezept mit ChatGPT anlegen")
-        XCTAssertTrue(app.navigationBars["Rezept mit ChatGPT anlegen"].waitForExistence(timeout: Self.timeout))
+        XCTAssertTrue(app.navigationBars["Rezept anlegen"].waitForExistence(timeout: Self.timeout))
         try audit("Rezept anlegen (Eingabe)")
         let editor = app.textViews.firstMatch
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "Recipe text field missing")

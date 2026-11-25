@@ -26,9 +26,10 @@ struct SafetyCopiesView: View {
                     row(copy, service: service)
                 }
             } header: {
-                Text(headerText).textCase(nil)
+                Text(headerText).foregroundStyle(.secondaryText).textCase(nil)
             } footer: {
                 Text(locationText)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Sicherheitskopien")

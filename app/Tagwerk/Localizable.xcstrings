@@ -1027,32 +1027,12 @@
         }
       }
     },
-    "%@ · aus Health": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · from Health"
-          }
-        }
-      }
-    },
     "%@ · diktiert": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · dictated"
-          }
-        }
-      }
-    },
-    "%@ · eingetragen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · entered"
           }
         }
       }
@@ -1135,6 +1115,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use %@"
+          }
+        }
+      }
+    },
+    "%@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
           }
         }
       }
@@ -2461,16 +2451,6 @@
         }
       }
     },
-    "%lld cm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld cm"
-          }
-        }
-      }
-    },
     "%lld eigene Erinnerungen": {
       "localizations": {
         "en": {
@@ -3352,11 +3332,22 @@
       }
     },
     "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und die Kontaktadresse, die du unten einträgst.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and the contact address you enter below."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and, if you enter one below, your contact address, otherwise the link to the Tagwerk project."
           }
         }
       }
@@ -4367,6 +4358,16 @@
         }
       }
     },
+    "Aktive Energie lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read active energy"
+          }
+        }
+      }
+    },
     "Aktivität": {
       "localizations": {
         "en": {
@@ -4387,22 +4388,12 @@
         }
       }
     },
-    "Aktivität in Health erlauben": {
+    "Aktivität nicht verbunden. Erlauben unter Einstellungen › Erfassen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow activity in Health"
-          }
-        }
-      }
-    },
-    "Aktivität in Health erlauben %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow activity in Health %@"
+            "value": "Activity is not connected. Allow it under Settings › Capture."
           }
         }
       }
@@ -4932,6 +4923,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everyday activity is the rest of the activity from Health without the workouts above."
+          }
+        }
+      }
+    },
+    "Als Aufgabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As task"
           }
         }
       }
@@ -5746,6 +5747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Reminders"
+          }
+        }
+      }
+    },
+    "Apple Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health"
           }
         }
       }
@@ -7716,6 +7727,7 @@
       }
     },
     "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7732,6 +7744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and the contact address go to the operator, never amounts, meals, goals or data from Health. Without a contact address no request goes out; if you empty the field, the search switches off. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images. A product you take over appears in “My foods” with a note about its source."
+          }
+        }
+      }
+    },
+    "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and, if you enter one, the contact address go to the operator, never amounts, meals, goals or data from Health. The contact address is optional; without it Tagwerk names the link to its project. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images (CC BY-SA 3.0). A product you take over appears in “My foods” with a note about its source."
           }
         }
       }
@@ -9924,6 +9946,16 @@
         }
       }
     },
+    "Die gewählte Stimme ist nicht mehr auf dem iPhone. Tagwerk liest mit der besten geladenen Stimme.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chosen voice is no longer on this iPhone. Tagwerk reads with the best downloaded voice."
+          }
+        }
+      }
+    },
     "Die Übersetzung passt nicht zur Liste. Versuch es noch einmal.": {
       "localizations": {
         "en": {
@@ -11780,6 +11812,16 @@
         }
       }
     },
+    "Erweitert · geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enhanced · downloaded"
+          }
+        }
+      }
+    },
     "Es bleibt ein Vorschlag, bis du ihn übernimmst.": {
       "localizations": {
         "en": {
@@ -12869,6 +12911,7 @@
       }
     },
     "Für die Online-Suche fehlt deine Kontaktadresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -13091,6 +13134,16 @@
         }
       }
     },
+    "Geburtsdatum und Geschlecht in Health ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change date of birth and sex in Health"
+          }
+        }
+      }
+    },
     "Geburtsjahr": {
       "localizations": {
         "en": {
@@ -13108,6 +13161,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thoughts"
+          }
+        }
+      }
+    },
+    "Gefunden: %lld · zuletzt geprüft %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found: %lld · last checked %@"
           }
         }
       }
@@ -13744,22 +13807,22 @@
         }
       }
     },
-    "Gewicht in Health": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weight in Health"
-          }
-        }
-      }
-    },
     "Gewicht je Stück": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Weight per piece"
+          }
+        }
+      }
+    },
+    "Gewicht schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write weight"
           }
         }
       }
@@ -13886,6 +13949,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Habits, routines and reflections"
+          }
+        }
+      }
+    },
+    "Gewählte Stimme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen voice"
           }
         }
       }
@@ -14343,12 +14416,22 @@
         }
       }
     },
-    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Was Health liefert, gilt; die Felder sind der Ersatz.": {
+    "Größe schreiben": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Height, age and sex are only used on this iPhone: Tagwerk uses them to check goal proposals. Only the height in whole centimetres, the year of birth and the sex of the formula are stored, never the date of birth. What Health delivers counts; the fields are the fallback."
+            "value": "Write height"
+          }
+        }
+      }
+    },
+    "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height, age and sex are only calculated on this iPhone: Tagwerk uses them to check goal suggestions. Stored are the height in whole centimetres, the birth year and the sex of the formula, never the date of birth. Tagwerk writes the height to Health. Only the Health app can change date of birth and sex; iOS does not allow apps to: if you enter something different here, Tagwerk calculates with it and Health stays unchanged. Clear the field to use the value from Health again."
           }
         }
       }
@@ -14620,6 +14703,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meals you’ve logged before appear here."
+          }
+        }
+      }
+    },
+    "Hier steht, was Tagwerk in Health schreiben darf. „Nicht erlaubt“ ändert nur die Health-App, unter Profil › Apps › Tagwerk; solange es fehlt, bleibt der Eintrag in Tagwerk und wird nicht nach Health übertragen. Ob das Lesen erlaubt ist, zeigt iOS nicht an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shows what Tagwerk may write to Health. A refusal can only be changed in the Health app under Profile › Apps › Tagwerk; until then the entry stays in Tagwerk and is not transferred to Health. iOS does not show whether reading is allowed."
           }
         }
       }
@@ -16586,11 +16679,22 @@
       }
     },
     "Kontaktadresse für Open Food Facts": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Contact address for Open Food Facts"
+          }
+        }
+      }
+    },
+    "Kontaktadresse für Open Food Facts (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact address for Open Food Facts (optional)"
           }
         }
       }
@@ -19125,6 +19229,16 @@
         }
       }
     },
+    "Nicht erlaubt · Health öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not allowed · Open Health"
+          }
+        }
+      }
+    },
     "Nicht gesichert": {
       "localizations": {
         "en": {
@@ -19162,6 +19276,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not now"
+          }
+        }
+      }
+    },
+    "Nicht mehr geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer downloaded"
           }
         }
       }
@@ -19302,6 +19426,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove nobody"
+          }
+        }
+      }
+    },
+    "Nimmt die beste geladene Stimme des iPhones": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses the best voice on this iPhone"
+          }
+        }
+      }
+    },
+    "Nimmt die beste geladene Stimme: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses the best downloaded voice: %@"
           }
         }
       }
@@ -20396,6 +20540,36 @@
         }
       }
     },
+    "Open Food Facts bekommt von deinem Anschluss gerade zu viele Anfragen. Warte etwa eine Minute und versuch es noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts is receiving too many requests from your connection. Wait about a minute and try again."
+          }
+        }
+      }
+    },
+    "Open Food Facts bittet jede App, sich in jeder Anfrage zu nennen, damit der Betreiber sich bei Problemen melden kann. Das geht ohne Adresse: Dann nennt Tagwerk den Link zu seinem Projekt (github.com/melvinmng/tagwerk). Eine eingetragene Adresse sieht der Betreiber bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts asks every app to identify itself in each request, so the operator can reach out if there are problems. That works without an address: Tagwerk then names the link to its project (github.com/melvinmng/tagwerk). The operator sees an address you enter with every request. Tagwerk does not enter an address itself and takes none from the device or an account; you can choose an address of your own for this purpose."
+          }
+        }
+      }
+    },
+    "Open Food Facts hat die Anfrage abgelehnt (Fehler 403). Das betrifft meist die Netzadresse oder die Kennung der App, nicht deine Eingabe. Versuch es später oder in einem anderen Netz noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts refused the request (error 403). This usually concerns the network address or the app's identification, not your input. Try again later or on a different network."
+          }
+        }
+      }
+    },
     "Open Food Facts nimmt gerade keine Anfragen an. Versuch es später noch einmal.": {
       "localizations": {
         "en": {
@@ -20407,6 +20581,7 @@
       }
     },
     "Open Food Facts verlangt, dass jede App in jeder Anfrage eine Kontaktadresse nennt, damit der Betreiber sich bei Problemen melden kann. Er sieht diese Adresse bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -20963,6 +21138,16 @@
         }
       }
     },
+    "Premium · geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium · downloaded"
+          }
+        }
+      }
+    },
     "Priorität": {
       "localizations": {
         "en": {
@@ -21005,6 +21190,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lock private folders"
+          }
+        }
+      }
+    },
+    "Probe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample"
+          }
+        }
+      }
+    },
+    "Probe %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample %@"
+          }
+        }
+      }
+    },
+    "Probe Automatisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample Automatic"
+          }
+        }
+      }
+    },
+    "Probe beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop sample"
           }
         }
       }
@@ -21344,6 +21569,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ left"
+          }
+        }
+      }
+    },
+    "Rezept anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create recipe"
           }
         }
       }
@@ -23324,6 +23559,26 @@
         }
       }
     },
+    "Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can download voices under iOS Settings › Accessibility › Spoken Content › Voices."
+          }
+        }
+      }
+    },
+    "Stimmen werden geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading voices …"
+          }
+        }
+      }
+    },
     "Stopp": {
       "localizations": {
         "en": {
@@ -23919,12 +24174,12 @@
         }
       }
     },
-    "Tagwerk speichert Mahlzeiten, Wasser und Trainings zusätzlich in Health und zeigt deine Schritte sowie Trainings der Apple Watch und anderer Apps. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
+    "Tagwerk speichert Mahlzeiten, Wasser, Trainings, Gewicht und Größe zusätzlich in Health und liest Schritte, aktive Energie, Gewicht sowie Trainings der Apple Watch und anderer Apps. iOS fragt einmal nach allem. Deine Einträge bleiben auch ohne Health in Tagwerk.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk also saves meals, water and workouts to Health and shows your steps and workouts from Apple Watch and other apps. Your entries stay in Tagwerk even without Health."
+            "value": "Tagwerk also saves meals, water, workouts, weight and height to Health and reads steps, active energy, weight and workouts from Apple Watch and other apps. iOS asks once for everything. Your entries stay in Tagwerk even without Health."
           }
         }
       }
@@ -25463,12 +25718,12 @@
         }
       }
     },
-    "Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": {
+    "Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read-aloud uses the voices on this iPhone. You can download better voices under iOS Settings › Accessibility › Spoken Content › Voices. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”."
+            "value": "Read-aloud uses the voices on this iPhone. You choose the voice for each language on its own page, with a sample. When your iPhone is silenced, Tagwerk only reads aloud when you tap “Read aloud”."
           }
         }
       }
@@ -26140,6 +26395,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Weitere Stimmen laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download more voices"
           }
         }
       }
@@ -28302,6 +28567,16 @@
         }
       }
     },
+    "aus Health": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from Health"
+          }
+        }
+      }
+    },
     "ausgewählt": {
       "localizations": {
         "en": {
@@ -28455,6 +28730,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "logged"
+          }
+        }
+      }
+    },
+    "eingetragen · Health sagt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · Health says %@"
+          }
+        }
+      }
+    },
+    "eingetragen · nicht nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · not written to Health"
+          }
+        }
+      }
+    },
+    "eingetragen · wird nach Health geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered · written to Health"
           }
         }
       }
@@ -29390,6 +29695,16 @@
         }
       }
     },
+    "noch nicht gefragt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not asked yet"
+          }
+        }
+      }
+    },
     "nur Dankbarkeit": {
       "localizations": {
         "en": {
@@ -29538,6 +29853,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "since %@"
+          }
+        }
+      }
+    },
+    "seit %@ · tippen zum Weiterschreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "since %@ · tap to keep writing"
           }
         }
       }

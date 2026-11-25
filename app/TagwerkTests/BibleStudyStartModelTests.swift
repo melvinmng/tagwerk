@@ -69,6 +69,27 @@ struct BibleStudyStartModelTests {
         #expect(model.from == reference(1, 1))
     }
 
+    // MARK: Chips (#308)
+
+    @Test func chipBooks_withoutSessions_showTheChosenBook() {
+        let model = model()
+        #expect(model.chipBooks == [model.book])
+        model.select(john)
+        #expect(model.chipBooks == [john], "a picked book without a session is the first chip, not missing")
+    }
+
+    @Test func chipBooks_putTheChosenBookFirstAndKeepTheRecentOnes() {
+        let luke = BibleBooks.book(number: 42)!
+        session(john, BiblePassage(start: reference(1, 1), end: reference(1, 18)), day: "2026-11-10")
+        session(romans, BiblePassage(start: reference(3, 1), end: reference(3, 20)), day: "2026-11-17")
+        let model = model()
+        #expect(model.chipBooks == [romans, john])
+        model.select(luke)
+        #expect(model.chipBooks == [luke, romans, john])
+        model.select(john)
+        #expect(model.chipBooks == [john, romans], "a recent book moves to the front and is not listed twice")
+    }
+
     @Test func hint_namesLastPassageAndDate() {
         session(romans, BiblePassage(start: reference(3, 1), end: reference(3, 20)), day: "2026-11-17")
         #expect(model().hint == "Weiter nach 3,1–20 vom 17.11.")

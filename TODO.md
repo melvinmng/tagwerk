@@ -103,7 +103,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#108](https://github.com/melvinmng/tagwerk/issues/108) Sprache: Mikrofon in Chat und Vorschlagsblatt {status: Done; prio: P2 (High); aufwand: 6h; epic: #103}
 - [x] [#109](https://github.com/melvinmng/tagwerk/issues/109) Sprache: Einstellungen und Sprache der KI-Antworten {status: Done; prio: P2 (High); aufwand: 3h; epic: #103}
 - [x] [#110](https://github.com/melvinmng/tagwerk/issues/110) Sprache: Sprechmodus {status: Done; prio: P2 (High); aufwand: 8h; epic: #103}
-- [ ] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: In review; prio: P3 (Medium)}
+- [x] [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden {status: Done; prio: P3 (Medium)}
 - [ ] [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden {status: Backlog; prio: P4 (Low)}
 - [x] [#118](https://github.com/melvinmng/tagwerk/issues/118) KI: Termine anlegen, ändern und löschen {status: Done; prio: P2 (High); aufwand: 4h; epic: #2}
 - [x] [#120](https://github.com/melvinmng/tagwerk/issues/120) Sprechmodus: Vorschläge per Stimme annehmen, ablehnen und korrigieren {status: Done; prio: P2 (High); aufwand: 5h; epic: #103}
@@ -138,7 +138,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#168](https://github.com/melvinmng/tagwerk/issues/168) Fahrzeit zwischen Terminen berücksichtigen {status: Done; prio: P3 (Medium)}
 - [x] [#169](https://github.com/melvinmng/tagwerk/issues/169) Ruhezeiten für Benachrichtigungen {status: Done; prio: P3 (Medium)}
 - [ ] [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken {status: Backlog; prio: P4 (Low)}
-- [ ] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Ready; prio: P3 (Medium)}
+- [x] [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen {status: Done; prio: P3 (Medium)}
 - [x] [#175](https://github.com/melvinmng/tagwerk/issues/175) Gerätetests der Suche {status: Done; prio: P3 (Medium)}
 - [x] [#177](https://github.com/melvinmng/tagwerk/issues/177) Tagesabschluss: Tastatur der Gedanken-Notiz lässt sich nicht schließen {status: Done; prio: P3 (Medium)}
 - [x] [#178](https://github.com/melvinmng/tagwerk/issues/178) Siri-Kurzbefehle der Einkaufsliste werden nicht erkannt {status: Done; prio: P4 (Low)}
@@ -147,7 +147,7 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#182](https://github.com/melvinmng/tagwerk/issues/182) Tagebuch mit Gott aus Notion übernehmen {status: Done; prio: P3 (Medium); epic: #113}
 - [x] [#184](https://github.com/melvinmng/tagwerk/issues/184) Tastatur überall in der App per Tipp auf eine leere Fläche schließen {status: Done; prio: P3 (Medium)}
 - [x] [#186](https://github.com/melvinmng/tagwerk/issues/186) Bible Study in Tagwerk: Ablauf und Struktur aus Notion übernehmen {status: Done; prio: P3 (Medium)}
-- [ ] [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung {status: Backlog; prio: P3 (Medium)}
+- [x] [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung {status: Done; prio: P3 (Medium)}
 - [x] [#200](https://github.com/melvinmng/tagwerk/issues/200) test {status: Done; prio: P4 (Low); fällig: 2026-11-19}
 - [x] [#214](https://github.com/melvinmng/tagwerk/issues/214) Rezepte als Notizen mit Zutaten und Anleitung {status: Done; prio: P3 (Medium); epic: #113}
 - [x] [#215](https://github.com/melvinmng/tagwerk/issues/215) Portionszahl beim Rezept-Import {status: Done; prio: P3 (Medium); epic: #113}
@@ -156,10 +156,30 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [x] [#218](https://github.com/melvinmng/tagwerk/issues/218) Zahlenfelder auch per Eingabe statt nur mit Plus und Minus {status: Done; prio: P3 (Medium)}
 - [x] [#225](https://github.com/melvinmng/tagwerk/issues/225) Chat mit ChatGPT: Markdown und HTML richtig darstellen {status: Done; prio: P3 (Medium)}
 - [x] [#226](https://github.com/melvinmng/tagwerk/issues/226) Bevorzugte Sprache für den Sprachchat mit ChatGPT {status: Done; prio: P3 (Medium)}
-- [ ] [#232](https://github.com/melvinmng/tagwerk/issues/232) Rezept nachträglich übersetzen {status: Ready; prio: P3 (Medium); epic: #113}
-- [ ] [#233](https://github.com/melvinmng/tagwerk/issues/233) Notizen mit ChatGPT durchgehen, überarbeiten, anlegen und löschen {status: Ready; prio: P3 (Medium); epic: #113}
+- [x] [#232](https://github.com/melvinmng/tagwerk/issues/232) Rezept nachträglich übersetzen {status: Done; prio: P3 (Medium); epic: #113}
+- [x] [#233](https://github.com/melvinmng/tagwerk/issues/233) Notizen mit ChatGPT durchgehen, überarbeiten, anlegen und löschen {status: Done; prio: P3 (Medium); epic: #113}
 - [ ] [#236](https://github.com/melvinmng/tagwerk/issues/236) App-Sperre im Fokus-Modus {status: Blocked; prio: P4 (Low)}
 - [ ] [#239](https://github.com/melvinmng/tagwerk/issues/239) Bible Study: Leseplan {status: Backlog; prio: P4 (Low)}
+- [x] [#304](https://github.com/melvinmng/tagwerk/issues/304) Planen: Ziehen einer Aufgabe öffnet das Kontextmenü und friert die App ein {status: Done; prio: P1 (Very High)}
+- [x] [#305](https://github.com/melvinmng/tagwerk/issues/305) Bible Study: laufende Sitzung wirft beim Schreiben aus der Notiz {status: Done; prio: P1 (Very High)}
+- [x] [#306](https://github.com/melvinmng/tagwerk/issues/306) Bible Study: Startblatt mit „Heute nicht“ und „Starten“ nicht auffindbar {status: Done; prio: P2 (High)}
+- [x] [#307](https://github.com/melvinmng/tagwerk/issues/307) Bible Study: langes Drücken auf eine Checkbox erzeugt keine Aufgabe {status: Done; prio: P2 (High)}
+- [x] [#308](https://github.com/melvinmng/tagwerk/issues/308) Bible Study: Buchauswahl zeigt oben immer „Others“ {status: Done; prio: P2 (High)}
+- [x] [#309](https://github.com/melvinmng/tagwerk/issues/309) Sprache: heruntergeladene Stimmen wieder auswählbar machen {status: Done; prio: P2 (High)}
+- [x] [#310](https://github.com/melvinmng/tagwerk/issues/310) Leistung: App läuft nicht mehr flüssig {status: Done; prio: P2 (High)}
+- [x] [#311](https://github.com/melvinmng/tagwerk/issues/311) Release-Build bricht beim Linken ab (ProposalRevision.State) {status: Done; prio: P2 (High)}
+- [x] [#312](https://github.com/melvinmng/tagwerk/issues/312) Fokus: Nachholer geht verloren, wenn er während eines zweiten Fokus fällig wird {status: Done; prio: P3 (Medium)}
+- [ ] [#313](https://github.com/melvinmng/tagwerk/issues/313) Offene Gerätetests: Bible-Study-Erinnerungen, gelernte Zeit, Etikett-Foto, Notion-Import {status: Ready; prio: P3 (Medium)}
+- [x] [#314](https://github.com/melvinmng/tagwerk/issues/314) Health: Einwilligung wird doppelt und endlos abgefragt {status: Done; prio: P1 (Very High); epic: #254}
+- [x] [#315](https://github.com/melvinmng/tagwerk/issues/315) Open Food Facts: Suche meldet „not accepting requests right now“ {status: Done; prio: P2 (High); epic: #254}
+- [x] [#316](https://github.com/melvinmng/tagwerk/issues/316) Gewicht in Health zurückschreiben {status: Done; prio: P2 (High); epic: #254}
+- [x] [#317](https://github.com/melvinmng/tagwerk/issues/317) Geburtsjahr, Größe und Geschlecht in der App ändern und nach Health schreiben {status: Done; prio: P2 (High); epic: #254}
+- [x] [#318](https://github.com/melvinmng/tagwerk/issues/318) Erfassen: Nährwerte über „Verlauf und Ziele“ anzeigen {status: Done; prio: P3 (Medium); epic: #254}
+- [ ] [#319](https://github.com/melvinmng/tagwerk/issues/319) Strichcode-Scan für Lebensmittel (E6) {status: Ready; prio: P3 (Medium); epic: #254}
+- [ ] [#320](https://github.com/melvinmng/tagwerk/issues/320) Wochenrückblick: Zahlen zu Gewicht und Ernährung (C4) {status: Ready; prio: P3 (Medium); epic: #254}
+- [ ] [#254](https://github.com/melvinmng/tagwerk/issues/254) Ernährung, Gewicht und Ziele mit ChatGPT {status: In progress}
+- [ ] [#331](https://github.com/melvinmng/tagwerk/issues/331) Suchfunktion für Einstellungen und repositories/projects (v. a. auch bei der Erstellung von issues) hinzufügen oder diese in der bisherigen Suche integrieren {status: Ready; prio: P3 (Medium)}
+- [ ] [#332](https://github.com/melvinmng/tagwerk/issues/332) Projektfortschritt: Übersicht über alle Projekte und detaillierte Verlaufs- und Trendanalyse pro Projekt {status: Ready; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -168,19 +188,20 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 
 _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeugt. Nicht von Hand bearbeiten; Aufgaben oben unter den Personen pflegen._
 
-### Backlog (4)
+### Backlog (3)
 - [#115](https://github.com/melvinmng/tagwerk/issues/115) Phase 6: Jira als Aufgabenquelle anbinden · @melvinmng · Prio P4 (Low)
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
-- [#188](https://github.com/melvinmng/tagwerk/issues/188) Designrunde nach der technischen Umsetzung: Tastatur, Siri, GitHub-Status, Ruhezeiten, Notizen, Tagebuch, Bible Study, Gewohnheiten, Datensicherung · @melvinmng · Prio P3 (Medium)
 - [#239](https://github.com/melvinmng/tagwerk/issues/239) Bible Study: Leseplan · @melvinmng · Prio P4 (Low)
 
-### Bereit (3)
-- [#173](https://github.com/melvinmng/tagwerk/issues/173) Designrunde zu PR #172: Befunde der Sichtprüfung und offene Entscheidungen · @melvinmng · Prio P3 (Medium)
-- [#232](https://github.com/melvinmng/tagwerk/issues/232) Rezept nachträglich übersetzen · @melvinmng · Prio P3 (Medium)
-- [#233](https://github.com/melvinmng/tagwerk/issues/233) Notizen mit ChatGPT durchgehen, überarbeiten, anlegen und löschen · @melvinmng · Prio P3 (Medium)
+### Bereit (5)
+- [#313](https://github.com/melvinmng/tagwerk/issues/313) Offene Gerätetests: Bible-Study-Erinnerungen, gelernte Zeit, Etikett-Foto, Notion-Import · @melvinmng · Prio P3 (Medium)
+- [#319](https://github.com/melvinmng/tagwerk/issues/319) Strichcode-Scan für Lebensmittel (E6) · @melvinmng · Prio P3 (Medium)
+- [#320](https://github.com/melvinmng/tagwerk/issues/320) Wochenrückblick: Zahlen zu Gewicht und Ernährung (C4) · @melvinmng · Prio P3 (Medium)
+- [#331](https://github.com/melvinmng/tagwerk/issues/331) Suchfunktion für Einstellungen und repositories/projects (v. a. auch bei der Erstellung von issues) hinzufügen oder diese in der bisherigen Suche integrieren · @melvinmng · Prio P3 (Medium)
+- [#332](https://github.com/melvinmng/tagwerk/issues/332) Projektfortschritt: Übersicht über alle Projekte und detaillierte Verlaufs- und Trendanalyse pro Projekt · @melvinmng · Prio P3 (Medium)
 
-### In Prüfung (1)
-- [#113](https://github.com/melvinmng/tagwerk/issues/113) Phase 5: Einkaufsliste und Notizen einbinden · @melvinmng · Prio P3 (Medium)
+### In Arbeit (1)
+- [#254](https://github.com/melvinmng/tagwerk/issues/254) Ernährung, Gewicht und Ziele mit ChatGPT · @melvinmng
 
 ### Blockiert (1)
 - [#236](https://github.com/melvinmng/tagwerk/issues/236) App-Sperre im Fokus-Modus · @melvinmng · Prio P4 (Low)
@@ -188,14 +209,14 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 ### Nicht zugeordnet (0)
 
 ### Zuletzt erledigt (10)
-- [#167](https://github.com/melvinmng/tagwerk/issues/167) Steuerelemente im Kontrollzentrum und auf der Aktionstaste · @melvinmng
-- [#161](https://github.com/melvinmng/tagwerk/issues/161) Fokus-Modus: Timer, Pomodoro, App-Sperre und Belohnung · @melvinmng
-- [#162](https://github.com/melvinmng/tagwerk/issues/162) Ist-Aufwand gegen Schätzung auswerten · @melvinmng
-- [#231](https://github.com/melvinmng/tagwerk/issues/231) Rezept-Import mit mehreren Bildern · @melvinmng
-- [#217](https://github.com/melvinmng/tagwerk/issues/217) Geteilter Text aus Safari: Adresse der Seite verlinken · @melvinmng
-- [#226](https://github.com/melvinmng/tagwerk/issues/226) Bevorzugte Sprache für den Sprachchat mit ChatGPT · @melvinmng
-- [#225](https://github.com/melvinmng/tagwerk/issues/225) Chat mit ChatGPT: Markdown und HTML richtig darstellen · @melvinmng
-- [#218](https://github.com/melvinmng/tagwerk/issues/218) Zahlenfelder auch per Eingabe statt nur mit Plus und Minus · @melvinmng
-- [#216](https://github.com/melvinmng/tagwerk/issues/216) Rezept-Zutaten in die Sprache der App übersetzen · @melvinmng
-- [#215](https://github.com/melvinmng/tagwerk/issues/215) Portionszahl beim Rezept-Import · @melvinmng
+- [#315](https://github.com/melvinmng/tagwerk/issues/315) Open Food Facts: Suche meldet „not accepting requests right now“ · @melvinmng
+- [#310](https://github.com/melvinmng/tagwerk/issues/310) Leistung: App läuft nicht mehr flüssig · @melvinmng
+- [#305](https://github.com/melvinmng/tagwerk/issues/305) Bible Study: laufende Sitzung wirft beim Schreiben aus der Notiz · @melvinmng
+- [#309](https://github.com/melvinmng/tagwerk/issues/309) Sprache: heruntergeladene Stimmen wieder auswählbar machen · @melvinmng
+- [#318](https://github.com/melvinmng/tagwerk/issues/318) Erfassen: Nährwerte über „Verlauf und Ziele“ anzeigen · @melvinmng
+- [#317](https://github.com/melvinmng/tagwerk/issues/317) Geburtsjahr, Größe und Geschlecht in der App ändern und nach Health schreiben · @melvinmng
+- [#316](https://github.com/melvinmng/tagwerk/issues/316) Gewicht in Health zurückschreiben · @melvinmng
+- [#314](https://github.com/melvinmng/tagwerk/issues/314) Health: Einwilligung wird doppelt und endlos abgefragt · @melvinmng
+- [#306](https://github.com/melvinmng/tagwerk/issues/306) Bible Study: Startblatt mit „Heute nicht“ und „Starten“ nicht auffindbar · @melvinmng
+- [#308](https://github.com/melvinmng/tagwerk/issues/308) Bible Study: Buchauswahl zeigt oben immer „Others“ · @melvinmng
 <!-- t3gh:end -->

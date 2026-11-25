@@ -70,8 +70,9 @@ final class HabitUITests: UITestCase {
         // The hint appears under the list: scroll the row up first, so that there is room below it on the screen.
         app.swipeUp()
         waitUntilScreenIsStable()
-        // The check mark is the button of the row, at its left edge; the middle of the row opens nothing.
-        hittableButton("Tag abschließen").coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+        // The check mark is the button of the row, at its left edge; the middle of the row opens nothing. The mark image is
+        // tapped itself: a fixed offset into the row (8 % of its width) landed just left of it.
+        hittableButton("Tag abschließen").images["checkmark.circle.fill"].tap()
         let hint = app.staticTexts["Automatisch erfüllt durch den Tagesabschluss. Lässt sich nicht abwählen."]
         XCTAssertTrue(hint.waitForExistence(timeout: Self.timeout), "The hint did not show")
         XCTAssertTrue(stateValue(of: hittableButton("Tag abschließen")).hasPrefix("automatisch erfüllt"), "The check must stay")

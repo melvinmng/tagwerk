@@ -55,6 +55,7 @@ struct ShoppingCategoriesView: View {
                 .deleteDisabled(true)
             } footer: {
                 Text("Die Zahl nennt die offenen Artikel. Tippe auf einen Namen, um ihn zu ändern.")
+                    .foregroundStyle(.secondaryText)
             }
             Section {
                 HStack {

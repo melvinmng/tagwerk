@@ -40,8 +40,8 @@ struct PreviewFollowUpSection<Item: Identifiable & Equatable & Sendable>: View w
         } header: {
             if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles").foregroundStyle(Color.secondaryText) }
         } footer: {
-            // The footer of the section, not a row: the system footer style passes the contrast audit at the largest text size.
-            if availability != .hidden { footer }
+            // The footer of the section, not a row, in the tone of the other secondary texts (the system grey is too light in the light appearance).
+            if availability != .hidden { footer.foregroundStyle(.secondaryText) }
         }
     }
 }

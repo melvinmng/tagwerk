@@ -22,7 +22,7 @@ final class FoodLookupUITests: UITestCase {
         XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.FoodLookup.results].exists, "A search started while typing")
         row.tap()
 
-        // The consent comes first, and "Einverstanden" needs an address.
+        // The consent comes first; the contact address is optional, so "Einverstanden" works without one.
         let contact = app.textFields[AccessibilityID.FoodLookup.contactField].firstMatch
         XCTAssertTrue(contact.waitForExistence(timeout: Self.timeout), "The consent sheet did not open")
         // An empty field reports no value (older systems reported the placeholder as the value); the placeholder is a separate property.
@@ -30,7 +30,7 @@ final class FoodLookupUITests: UITestCase {
         XCTAssertTrue(typed.isEmpty || typed == "E-Mail-Adresse", "The field must start empty (only the placeholder shows): \(typed)")
         XCTAssertEqual(contact.placeholderValue, "E-Mail-Adresse", "The placeholder of the field is missing")
         let agree = app.buttons[AccessibilityID.FoodLookup.agreeButton].firstMatch
-        XCTAssertFalse(agree.isEnabled, "Agreeing must need an address")
+        XCTAssertTrue(agree.isEnabled, "Agreeing must not need an address")
         XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.FoodLookup.results].exists, "Results appeared before the consent")
         contact.tap()
         contact.typeText("ui-test@example.org\n")

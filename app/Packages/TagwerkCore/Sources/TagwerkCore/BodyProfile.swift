@@ -52,7 +52,8 @@ public struct BodyValue<Value: Sendable & Hashable>: Sendable, Hashable {
 }
 
 /// The body profile as the app uses it: per field the value of Health where Health delivered one, else the typed value, else
-/// "missing" (decision PV4b; Health wins, the typed value is only the fallback).
+/// "missing" (decision PV4b; Health wins, the typed value is only the fallback). A field the user changed on purpose is an
+/// override (decision 4A, #317): its typed value wins over Health, because iOS does not let apps write birth date and sex.
 public struct BodyProfile: Sendable, Hashable {
     public var height: BodyValue<Int>
     public var birthYear: BodyValue<Int>
@@ -66,14 +67,18 @@ public struct BodyProfile: Sendable, Hashable {
     /// The years a birth year may have, for the input field of `year`.
     public static func birthYearRange(currentYear: Int) -> ClosedRange<Int> { oldestBirthYear...max(oldestBirthYear, currentYear) }
 
-    public static func resolved(health: BodyProfileValues, typed: BodyProfileValues) -> BodyProfile {
-        func pick<Value: Sendable & Hashable>(_ fromHealth: Value?, _ fromUser: Value?) -> BodyValue<Value> {
+    /// `overridden` names the fields whose typed value wins over Health. A typed value without that marker stays a fallback, so a
+    /// value typed while Health was silent never resurfaces once Health delivers.
+    public static func resolved(health: BodyProfileValues, typed: BodyProfileValues, overridden: Set<BodyField> = []) -> BodyProfile {
+        func pick<Value: Sendable & Hashable>(_ field: BodyField, _ fromHealth: Value?, _ fromUser: Value?) -> BodyValue<Value> {
+            if overridden.contains(field), let fromUser { return BodyValue(value: fromUser, source: .typed) }
             if let fromHealth { return BodyValue(value: fromHealth, source: .health) }
             if let fromUser { return BodyValue(value: fromUser, source: .typed) }
             return BodyValue(value: nil, source: .missing)
         }
-        return BodyProfile(height: pick(health.heightCm, typed.heightCm), birthYear: pick(health.birthYear, typed.birthYear),
-                           sex: pick(health.sex, typed.sex))
+        return BodyProfile(height: pick(.height, health.heightCm, typed.heightCm),
+                           birthYear: pick(.birthYear, health.birthYear, typed.birthYear),
+                           sex: pick(.sex, health.sex, typed.sex))
     }
 
     /// The fields without a value, in the order of `BodyField.allCases`.

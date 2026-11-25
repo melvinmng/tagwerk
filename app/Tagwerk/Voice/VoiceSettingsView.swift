@@ -45,6 +45,7 @@ enum VoiceAvailability {
 /// languages themselves are on `LanguageSettingsView`.
 struct VoiceSettingsView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model = VoiceSettingsModel()
 
     var body: some View {
@@ -58,8 +59,10 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Spracheingabe")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -67,8 +70,8 @@ struct VoiceSettingsView: View {
                     ForEach(ReadAloudPolicy.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
                 Toggle("Änderungen ansagen", isOn: $settings.voiceAnnounceActions)
-                voicePicker(.german, selection: $settings.voiceGermanVoiceID)
-                voicePicker(.english, selection: $settings.voiceEnglishVoiceID)
+                voiceLink(.german, selection: $settings.voiceGermanVoiceID)
+                voiceLink(.english, selection: $settings.voiceEnglishVoiceID)
                 VStack(alignment: .leading) {
                     Text("Tempo")
                     Slider(value: $settings.voiceRate, in: 0.3...0.65) {
@@ -89,8 +92,9 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Vorlesen")
+                    .foregroundStyle(.secondaryText)
             } footer: {
-                Text("Vorgelesen wird mit den Stimmen dieses iPhones. Bessere Stimmen lädst du unter iOS-Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
+                Text("Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
                     .foregroundStyle(.secondaryText)
             }
 
@@ -103,13 +107,23 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Sprechmodus")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Spracheingabe und Vorlesen")
-        .task { await model.refresh() }
+        .task { await refresh() }
+        // Voices are downloaded in the iOS settings: the list is read again when the user comes back.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await refresh() } }
+        }
         .onDisappear { environment.voiceOutput.stop() }
+    }
+
+    private func refresh() async {
+        await model.refresh(storedVoiceIDs: environment.settings.storedVoiceIDs)
     }
 
     @ViewBuilder
@@ -128,12 +142,33 @@ struct VoiceSettingsView: View {
         }
     }
 
-    private func voicePicker(_ language: VoiceLanguage, selection: Binding<String?>) -> some View {
-        Picker("Stimme \(LanguageSettingsText.name(language))", selection: selection) {
-            Text("Automatisch").tag(String?.none)
-            ForEach(model.voices[language] ?? []) { voice in
-                Text(voice.qualityLabel.map { "\(voice.name) (\($0))" } ?? voice.name).tag(Optional(voice.id))
-            }
+    private func voiceLink(_ language: VoiceLanguage, selection: Binding<String?>) -> some View {
+        NavigationLink {
+            VoiceChoiceView(language: language, selection: selection, model: model)
+        } label: {
+            LabeledContent("Stimme \(LanguageSettingsText.name(language))", value: model.selectionTitle(for: language, selectedID: selection.wrappedValue))
         }
+    }
+}
+
+extension VoiceSettingsModel {
+    /// The value shown next to the row "Stimme …": the voice, "Automatisch", or, until the list is there, a neutral name for the stored one.
+    func selectionTitle(for language: VoiceLanguage, selectedID: String?) -> String {
+        switch selection(for: language, selectedID: selectedID) {
+        case .automatic: String(localized: "Automatisch")
+        case .pending: String(localized: "Gewählte Stimme")
+        case .voice(let voice): voice.qualityLabel.map { "\(voice.name) (\($0))" } ?? voice.name
+        case .missing: String(localized: "Nicht mehr geladen")
+        }
+    }
+}
+
+extension AppSettings {
+    /// The voices chosen in the settings, one per language; "Automatisch" has no entry.
+    var storedVoiceIDs: [VoiceLanguage: String] {
+        var stored: [VoiceLanguage: String] = [:]
+        if let voiceGermanVoiceID { stored[.german] = voiceGermanVoiceID }
+        if let voiceEnglishVoiceID { stored[.english] = voiceEnglishVoiceID }
+        return stored
     }
 }

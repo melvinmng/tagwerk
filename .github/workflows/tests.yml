@@ -1,10 +1,29 @@
 name: Tests
 
-# Runs the local test script (app/test-all.sh) on a GitHub-hosted macOS runner. CI is the gate before a merge; locally
+# Runs the local test script (app/test-all.sh) on GitHub-hosted macOS runners. CI is the gate before a merge; locally
 # only the fast stages and the UI test classes a change touches are run (see README, "Tests auf GitHub Actions").
-# Two parallel jobs:
-#   fast  package tests, app unit tests and String Catalog check (UI tests skipped)
-#   ui    UI tests including the accessibility audits (the slow stage)
+# Jobs (the names in quotes are the required checks of main, see "Required checks" below):
+#   changes         decides from the changed files which of the jobs below run (scripts/ci-changes.py)
+#   fast            package tests, app unit tests and String Catalog check (UI tests skipped)
+#   ui              UI tests including the accessibility audits (the slow stage), split into UI_SHARD_COUNT shards: one job
+#                   "UI shard (n/N)" per shard, all from the same build (scripts/ui-test-shards.py balances the test classes by
+#                   their measured durations, app/TagwerkUITests/ui-test-durations.txt)
+#   scripts         "Script tests": the tests of the helper scripts (scripts/run-script-tests.sh), no build, a few minutes
+#   gate-fast       "Tests (fast)": cheap Linux job that is green when the jobs fast and scripts are green or were skipped
+#   gate-ui         "Tests (ui)": the same for the UI shards
+# Required checks: main requires exactly "Tests (fast)" and "Tests (ui)" (branch protection, enforce_admins). Those names belong
+# to the gate jobs, which run on every pull request (if: always()), whatever the worker jobs did. A worker job that is skipped
+# (job-level `if` false) reports "Success" for a required check, and a job that is skipped because a job it needs failed would
+# look the same, so the gate fails unless the result of every needed job is "success", or "skipped" for a job that was not meant
+# to run (needs.changes.outputs.run_*), and the changes job itself succeeded. Sources:
+#   https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks
+#     ("Handling skipped but required checks": a job skipped by a conditional reports Success; a job that depends on a failed job is
+#      skipped and may not block merging; use always() with needs for required checks that depend on other jobs)
+#   https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax (jobs.<job_id>.needs: a failed or skipped
+#     needed job skips the job unless its `if` uses always(); needs.<job_id>.result is success, failure, cancelled or skipped)
+#   https://docs.github.com/en/actions/reference/workflows-and-actions/contexts (context availability: jobs.<job_id>.if has no
+#     matrix context, so the shard jobs are skipped as a whole and the matrix itself comes from the changes job with fromJSON;
+#     jobs.<job_id>.name has the matrix and needs contexts)
 # Triggers:
 #   pull_request       reduced UI test set (TAGWERK_UI_TEST_SET=pr, see app/TagwerkUITests/nightly-only.txt) with one
 #                      retry per failed UI test (the failed tests run once more, alone, in a second xcodebuild call; a test
@@ -13,20 +32,36 @@ name: Tests
 #                      set, no retries
 #   workflow_dispatch  full UI test set, no retries, for any branch
 #   push to main       build only, no tests: refreshes the build caches after every merge (see "Build cache" below)
+# What runs for a pull request (scripts/ci-changes.py, tested by scripts/tests/test_ci_changes.py):
+#   documentation only (docs/**, *.md, TODO.md)     nothing; the gates still start and finish green
+#   app/**, .github/**, scripts of the test run     fast, ui, script tests (the scripts of the test run are test-env.sh,
+#                                                   ui-hang-sampler.py, ui-test-log.py, ui-test-shards.py, ui-watchdog.py,
+#                                                   ci-restore-mtimes.py, ci-collect-artifacts.sh)
+#   scripts of the String Catalog stage only        fast and script tests, no UI tests (check-strings.py, check-colors.py, ...)
+#   other scripts/**                                script tests only
+#   any other path                                  everything (the safe default)
+# The filter lives in the "changes" job and not in on.paths, because a workflow that is never triggered would leave a required
+# check pending forever.
 # Judging a pull request run: the run tests the merge of the branch into main as GitHub computes it, but a branch that is behind
 # main lacks the fixes that main already has (the recipe audit findings of one night came from branches that did not contain the
 # confirmation pass of main). Merge main into the branch before a failure counts as the branch's own; the "Changes" summary
 # of a pull request run says how far the branch is behind main.
-# Hangs: when the app stops answering during the UI tests, app/test-all.sh writes a stack sample of the app process
-# (hang-*.txt) into the log folder that the failure artifact contains.
-# A pull request that changes only documentation (docs/**, *.md, TODO.md) runs no tests: the jobs below still start
-# and finish green, so the checks stay usable as required status checks. The filter lives in the "changes" job and
-# not in on.paths, because a workflow that is never triggered would leave a required check pending forever.
+# Hangs (pull request 303, run 45362527642: two UI jobs stayed silent for 100 minutes after "build succeeded"): every xcodebuild
+# call runs under scripts/ui-watchdog.py (see app/test-all.sh). The job log shows the test progress and a heartbeat; a call that
+# writes nothing for TAGWERK_UI_SILENCE_SECONDS (UI test run, 600 s) or TAGWERK_STAGE_SILENCE_SECONDS (builds and other calls, 900 s),
+# or exceeds its run time limit (TAGWERK_UI_MAX_SECONDS, TAGWERK_STAGE_MAX_SECONDS), is stopped after diagnostics were written
+# (watchdog-*/ in the log folder: ps, simctl, samples of the app, the runner, xcodebuild and testmanagerd, the simulator log).
+# The simulator boot has its own limit (TAGWERK_BOOT_TIMEOUT_SECONDS). The hang sampler (hang-*.txt) stays as it was.
+# Artifacts: after the test step, "Stop leftover processes and pack the logs" stops what a timeout or a cancel left running
+# (xcodebuild, runner, sampler; they kept writing while the artifact was zipped, which broke the upload of a hung run) and packs
+# the log folder and the result bundles into one tar.gz. It is uploaded when the job failed or was cancelled (a timeout counts as
+# failed), and also when the run produced hang diagnostics.
 # Build cache: a cold build takes about 34 minutes (ui) and 37 minutes (fast), so DerivedData is cached per job
 # (restore always, save only for runs on main, see the cache steps below) and the sources get the modification time of
 # their last commit, which lets Xcode skip everything that did not change. Pull requests restore the cache that main
-# saved and build only the difference.
-# Cache refresh on merge: every push to main (a merged pull request) runs the same two jobs in build-only mode
+# saved and build only the difference. All UI shards build the same thing and share one cache (key "derived-ui-..."); only
+# shard 1 saves it.
+# Cache refresh on merge: every push to main (a merged pull request) runs the jobs fast and ui (one shard) in build-only mode
 # (TAGWERK_BUILD_ONLY=1 in app/test-all.sh: xcodebuild build-for-testing instead of xcodebuild test, same schemes,
 # destination and DerivedData folders) and saves the cache, so a pull request starts from a cache that is at most one
 # merge old instead of one from the last nightly run. No test runs there; the nightly run stays the full test run.
@@ -34,14 +69,21 @@ name: Tests
 # the sources, and therefore the cache, are unchanged by them.
 # Time zone: the jobs run in Europe/Berlin like the developer machines, because the tests expect German dates and the
 # runners use UTC.
-# Durations (first run, cold build, runner xcode-27 with 3 cores and 7 GB RAM) and the timeouts derived from them:
-#   fast  37 min in total: packages 4.5 + 5.4 + 5.0 + 3.7 + 6.5 min (almost only compiling), app scheme about 10 min
-#         -> job 55 min, test step 45 min
-#   ui    54 min in total: about 34 min cold build (app and UI test runner), then 20.5 min of UI tests (27 tests, full
-#         set, no retries); the pull request set is smaller, but may run retries
-#         -> pull request: job 80 min, test step 70 min; nightly and manual (full set): job 90 min, test step 80 min
-# The job limit is 10 minutes above the step limit, so the log and artifact upload and the cache save still run when
-# the test step hits its limit. A run with a warm cache needs well below these limits; they must also fit a cold run.
+# Durations and the timeouts derived from them (runner xcode-27 with 3 cores and 7 GB RAM):
+#   fast  37 min in total (first run, cold build): packages 4.5 + 5.4 + 5.0 + 3.7 + 6.5 min (almost only compiling), app scheme
+#         about 10 min -> job 55 min, test step 45 min
+#   ui    before the split one job needed 60 to 100 minutes with a warm cache (pull request set: 88 tests, 4619 s of test time in
+#         run 45193805665, build 76 s; the 100 minutes were a hang). With UI_SHARD_COUNT = 3 each shard runs about 1970 s of tests
+#         (about 33 min, see scripts/ui-test-shards.py plan 3 --set pr; run 45456069245 measured 5900 s in total) after its own
+#         build (76 s warm, about 34 min cold). Two shards (about 2950 s each) came too close to the 3600 s watchdog limit on a
+#         slow runner, where the simulator boot alone took close to 5 minutes
+#         -> pull request: job 95 min, test step 85 min; nightly and manual: job 105 min, test step 95 min; a cold run (34 + 39 min)
+#            fits
+#   scripts  about 1 minute of tests plus the runner start -> job 15 min
+# The job limit is 10 minutes above the step limit, so the artifact upload and the cache save still run when the test step hits
+# its limit. The watchdog run time limits are set here, well below the step limits (UI test call 3600 s, about 33 min expected;
+# build or other call 2700 s, fast job 1800 s); they are off by default for local runs. A cold UI run (build up to 2700 s plus tests)
+# can reach the step limit before a single call reaches its own limit; the silence limits still apply there. A run with a warm cache needs well below these limits; they must also fit a cold run.
 # No secrets are used: everything runs in the iOS Simulator without code signing, with demo data only.
 
 on:
@@ -83,19 +125,25 @@ env:
   SIMULATOR_RUNTIME: iOS 27.2
   XCODEGEN_VERSION: 2.46.0
   XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+  # Number of UI test shards (one macOS job each). The shards are balanced by app/TagwerkUITests/ui-test-durations.txt.
+  UI_SHARD_COUNT: "3"
 
 jobs:
   changes:
     name: Changes
-    # Decides whether the macOS jobs run any tests. A cheap Linux runner, so no macOS slot is used for the decision.
+    # Decides which jobs run. A cheap Linux runner, so no macOS slot is used for the decision.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       actions: read
     outputs:
-      run_tests: ${{ steps.decide.outputs.run_tests }}
+      run_fast: ${{ steps.decide.outputs.run_fast }}
+      run_ui: ${{ steps.decide.outputs.run_ui }}
+      run_scripts: ${{ steps.decide.outputs.run_scripts }}
       reason: ${{ steps.decide.outputs.reason }}
+      ui_shards: ${{ steps.decide.outputs.ui_shards }}
+      ui_shard_total: ${{ steps.decide.outputs.ui_shard_total }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
@@ -104,7 +152,7 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
-      - name: Decide whether tests are needed
+      - name: Decide which jobs run
         id: decide
         env:
           GH_TOKEN: ${{ github.token }}
@@ -116,8 +164,9 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           set -euo pipefail
-          run_tests=true
-          reason="Tests run."
+          changed_files=""
+          nightly_skipped=false
+          nightly_reason=""
 
           case "$EVENT_NAME" in
             schedule)
@@ -126,41 +175,36 @@ jobs:
               last_sha=$(gh api "repos/$REPOSITORY/actions/workflows/tests.yml/runs?event=schedule&status=success&branch=$REF_NAME&per_page=1" \
                 --jq '.workflow_runs[0].head_sha // ""')
               if [[ "$last_sha" == "$CURRENT_SHA" ]]; then
-                run_tests=false
-                reason="Nightly run skipped: no new commits on $REF_NAME since the last successful nightly run ($CURRENT_SHA)."
+                nightly_skipped=true
+                nightly_reason="Nightly run skipped: no new commits on $REF_NAME since the last successful nightly run ($CURRENT_SHA)."
               else
-                reason="Nightly run: $REF_NAME has new commits (last successful nightly run: ${last_sha:-none})."
+                nightly_reason="Nightly run: $REF_NAME has new commits (last successful nightly run: ${last_sha:-none}). Full UI test set."
               fi
-              ;;
-            push)
-              # Documentation-only pushes never get here (paths-ignore on the trigger). The jobs below build only.
-              reason="Push to $REF_NAME: build only, refreshes the build caches. No tests run."
               ;;
             pull_request)
               # --no-renames lists both paths of a rename, so moving a file out of a code folder is never "docs only".
               changed_files=$(git diff --name-only --no-renames HEAD^1 HEAD)
               echo "Changed files:"
               echo "$changed_files"
-              only_docs=true
-              count=0
-              while IFS= read -r changed_file; do
-                [[ -n "$changed_file" ]] || continue
-                count=$((count + 1))
-                case "$changed_file" in
-                  # TODO.md is covered by *.md.
-                  docs/*|*.md) ;;
-                  *) only_docs=false ;;
-                esac
-              done <<<"$changed_files"
-              if [[ "$only_docs" == "true" && "$count" -gt 0 ]]; then
-                run_tests=false
-                reason="Tests skipped: the pull request changes only documentation ($count files: docs/**, *.md, TODO.md)."
-              fi
-              ;;
-            *)
-              reason="Manual run: full UI test set."
               ;;
           esac
+
+          if [[ "$nightly_skipped" == "true" ]]; then
+            run_fast=false run_ui=false run_scripts=false reason="$nightly_reason"
+          else
+            # scripts/ci-changes.py classifies the changed files (see its header and scripts/tests/test_ci_changes.py).
+            decision=$(printf '%s\n' "$changed_files" | python3 -I scripts/ci-changes.py "$EVENT_NAME")
+            echo "$decision"
+            while IFS='=' read -r key value; do
+              case "$key" in
+                run_fast) run_fast="$value" ;;
+                run_ui) run_ui="$value" ;;
+                run_scripts) run_scripts="$value" ;;
+                reason) reason="$value" ;;
+              esac
+            done <<<"$decision"
+            [[ -z "$nightly_reason" ]] || reason="$nightly_reason"
+          fi
 
           # A pull request branch that is behind its base lacks the fixes the base already has: say so, so that a red run of such a
           # branch is not judged before the base is merged into it. Informational only; a failed lookup changes nothing.
@@ -171,24 +215,44 @@ jobs:
             fi
           fi
 
+          # A push only refreshes the build cache, which one shard does (all shards build the same thing).
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            ui_shards="[1]"
+            ui_shard_total=1
+          else
+            ui_shards=$(python3 -I -c 'import json, os; print(json.dumps(list(range(1, int(os.environ["UI_SHARD_COUNT"]) + 1))))')
+            ui_shard_total="$UI_SHARD_COUNT"
+          fi
+
           echo "$reason"
           {
-            echo "run_tests=$run_tests"
+            echo "run_fast=$run_fast"
+            echo "run_ui=$run_ui"
+            echo "run_scripts=$run_scripts"
             echo "reason=$reason"
+            echo "ui_shards=$ui_shards"
+            echo "ui_shard_total=$ui_shard_total"
           } >> "$GITHUB_OUTPUT"
-          echo "### Changes" >> "$GITHUB_STEP_SUMMARY"
-          echo "$reason" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Changes"
+            echo "$reason"
+            echo
+            echo "| Job | Runs |"
+            echo "|---|---|"
+            echo "| Fast tests | $run_fast |"
+            echo "| UI tests ($ui_shard_total shard(s)) | $run_ui |"
+            echo "| Script tests | $run_scripts |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
-  tests:
-    # A push to main only builds; its name says so. Pull requests, nightly and manual runs keep the name "Tests (...)".
-    name: ${{ github.event_name == 'push' && format('Build cache ({0})', matrix.name) || format('Tests ({0})', matrix.name) }}
+  fast:
+    # A push to main only builds; its name says so.
+    name: ${{ github.event_name == 'push' && 'Build cache (fast)' || 'Fast tests' }}
     needs: changes
+    if: ${{ needs.changes.outputs.run_fast == 'true' }}
     # Xcode-based runner image: macOS 27, Xcode 27.x, Apple silicon only (3 cores, 7 GB RAM on public repositories).
     runs-on: xcode-27
-    # Limits from the measured cold run, see the header. The nightly and manual runs use the full UI test set and have
-    # their own, higher limits (the fast job is not affected by the test set, so both values are equal there). The
-    # build-only run after a merge has no test time, so its limit only has to cover a cold build.
-    timeout-minutes: ${{ github.event_name == 'push' && matrix.job_timeout_build || github.event_name == 'pull_request' && matrix.job_timeout || matrix.job_timeout_full }}
+    # Limits from the measured cold run, see the header. The job limit is 10 minutes above the step limit.
+    timeout-minutes: 55
     env:
       # The simulator follows the time zone of the host. TZ sets it for the build and for xcodebuild; TEST_RUNNER_TZ
       # is passed (without the prefix) to the test runner process, which xcodebuild does not give other variables.
@@ -196,126 +260,20 @@ jobs:
       TEST_RUNNER_TZ: Europe/Berlin
       # Build only (build-for-testing, no tests) for pushes to main, see "Cache refresh on merge" in the header.
       TAGWERK_BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: fast
-            skip_ui_tests: "1"
-            only_ui_tests: ""
-            job_timeout: 55
-            job_timeout_full: 55
-            job_timeout_build: 55
-            step_timeout: 45
-            step_timeout_full: 45
-            step_timeout_build: 45
-          - name: ui
-            skip_ui_tests: ""
-            only_ui_tests: "1"
-            job_timeout: 110
-            job_timeout_full: 120
-            job_timeout_build: 55
-            step_timeout: 100
-            step_timeout_full: 110
-            step_timeout_build: 45
-
-    # Without tests to run (documentation-only pull request, nightly run without new commits) every step except the
-    # summary below is skipped and the job still ends green, so "Tests (fast)" and "Tests (ui)" always report a result.
     steps:
-      - name: Report skipped tests
-        if: needs.changes.outputs.run_tests != 'true'
-        env:
-          REASON: ${{ needs.changes.outputs.reason }}
-        run: |
-          echo "### Tests (${{ matrix.name }})" >> "$GITHUB_STEP_SUMMARY"
-          echo "$REASON" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Check out the repository
-        if: needs.changes.outputs.run_tests == 'true'
         uses: actions/checkout@v7
         with:
           # The full history (about 8 MB) is needed to restore the modification times of the sources.
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Restore the modification times of the sources
-        if: needs.changes.outputs.run_tests == 'true'
-        # Every checked-out file would otherwise get the current time and be compiled again, cached or not.
-        run: /usr/bin/python3 -I scripts/ci-restore-mtimes.py
-
-      - name: Select Xcode and verify the toolchain
-        id: toolchain
-        if: needs.changes.outputs.run_tests == 'true'
-        run: |
-          set -euo pipefail
-          developer_dir="$XCODE_APP/Contents/Developer"
-          if [[ ! -d "$developer_dir" ]]; then
-            echo "::error::$XCODE_APP is not installed on this runner image. Installed Xcode versions:"
-            ls -d /Applications/Xcode*.app
-            exit 1
-          fi
-          sudo xcode-select --switch "$developer_dir"
-          # The test scripts export DEVELOPER_DIR from TAGWERK_DEVELOPER_DIR; the rest of the job uses DEVELOPER_DIR.
-          {
-            echo "TAGWERK_DEVELOPER_DIR=$developer_dir"
-            echo "DEVELOPER_DIR=$developer_dir"
-          } >> "$GITHUB_ENV"
-          export DEVELOPER_DIR="$developer_dir"
-
-          # Output is captured before grep: with pipefail, grep -q closing the pipe early could fail the step.
-          xcode_version=$(xcodebuild -version)
-          echo "$xcode_version"
-          if ! grep -q "Build version $XCODE_BUILD_VERSION" <<<"$xcode_version"; then
-            echo "::error::Expected Xcode build $XCODE_BUILD_VERSION (27.2). The runner image has changed."
-            exit 1
-          fi
-          runtimes=$(xcrun simctl list runtimes)
-          echo "$runtimes"
-          if ! grep -q "$SIMULATOR_RUNTIME " <<<"$runtimes"; then
-            echo "::error::The $SIMULATOR_RUNTIME simulator runtime is not installed on this runner image."
-            exit 1
-          fi
-          device_types=$(xcrun simctl list devicetypes)
-          if ! grep -q "iPhone 18 Pro (" <<<"$device_types"; then
-            echo "::error::The iPhone 18 Pro device type is not available."
-            exit 1
-          fi
-          df -h /
-
-          # The cache key contains the runner image version, so a new image does not reuse an older build.
-          echo "image_version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-          # The app build folder is fixed, so the cached folder does not depend on the checkout key that
-          # scripts/test-env.sh derives from the checkout path. The package stages build in the default
-          # DerivedData folder (xcodebuild is called there without -derivedDataPath).
-          echo "TAGWERK_TEST_DERIVED_DATA=$HOME/Library/Developer/Tagwerk/DerivedData-ci" >> "$GITHUB_ENV"
-
-      - name: Set the time zone
-        if: needs.changes.outputs.run_tests == 'true'
-        # TZ and TEST_RUNNER_TZ (job environment) cover the build and the test runner. Setting the system time zone as
-        # well is best effort and also covers processes that do not inherit the environment (the app in the UI tests).
-        run: |
-          sudo systemsetup -settimezone "$TZ" || echo "::warning::Could not set the system time zone; only TZ and TEST_RUNNER_TZ apply."
-          echo "System time zone: $(readlink /etc/localtime || echo unknown), TZ=$TZ, now: $(date)"
-
-      - name: Install XcodeGen ${{ env.XCODEGEN_VERSION }}
-        if: needs.changes.outputs.run_tests == 'true'
-        run: |
-          set -euo pipefail
-          archive="$RUNNER_TEMP/xcodegen.zip"
-          install_dir="$RUNNER_TEMP/xcodegen-$XCODEGEN_VERSION"
-          curl --fail --silent --show-error --location \
-            --output "$archive" \
-            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
-          echo "$XCODEGEN_SHA256  $archive" | shasum -a 256 --check -
-          mkdir -p "$install_dir"
-          unzip -q "$archive" -d "$install_dir"
-          # The binary reads its setting presets from ../share/xcodegen, so the unpacked layout stays intact.
-          echo "$install_dir/xcodegen/bin" >> "$GITHUB_PATH"
-          "$install_dir/xcodegen/bin/xcodegen" --version
+      - name: Prepare the toolchain
+        id: prepare
+        uses: ./.github/actions/prepare-xcode-job
 
       - name: Restore the build cache
         id: build_cache
-        if: needs.changes.outputs.run_tests == 'true'
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -323,40 +281,32 @@ jobs:
             ~/Library/Developer/Xcode/DerivedData
           # Exact key: toolchain, image, manifests and commit; it never exists for a new commit, so the restore keys
           # below pick the newest cache that main saved: same manifests first, then same image, then same Xcode.
-          key: derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+          key: derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
           restore-keys: |
-            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
-            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-
-            derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-
+            derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
+            derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-
+            derived-fast-${{ env.XCODE_BUILD_VERSION }}-
 
-      - name: ${{ github.event_name == 'push' && format('Build stages, no tests ({0})', matrix.name) || format('Run test stages ({0})', matrix.name) }}
+      - name: ${{ github.event_name == 'push' && 'Build stages, no tests (fast)' || 'Run test stages (fast)' }}
         id: tests
-        if: needs.changes.outputs.run_tests == 'true'
         # Limits the test step below the job timeout, so the artifact upload still runs when the tests hang.
-        timeout-minutes: ${{ github.event_name == 'push' && matrix.step_timeout_build || github.event_name == 'pull_request' && matrix.step_timeout || matrix.step_timeout_full }}
+        timeout-minutes: 45
         env:
-          # The matrix picks the stages for both modes: fast = packages and app scheme, ui = UI test scheme (app and UI test
-          # runner). With TAGWERK_BUILD_ONLY (job environment) the stages are built, not tested.
-          TAGWERK_SKIP_UI_TESTS: ${{ matrix.skip_ui_tests }}
-          TAGWERK_ONLY_UI_TESTS: ${{ matrix.only_ui_tests }}
-          # Pull requests run the reduced UI test set with one retry per failed UI test (the unit stages never retry).
-          # Nightly and manual runs run every UI test once, so wobbling tests stay visible (0 = no retry; the script
-          # retries by default when the variable is not set, which is the local behaviour).
-          TAGWERK_UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
-          TAGWERK_UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          # fast = packages and app scheme. With TAGWERK_BUILD_ONLY (job environment) the stages are built, not tested.
+          TAGWERK_SKIP_UI_TESTS: "1"
           TAGWERK_TEST_LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
           TAGWERK_TEST_RESULTS_DIR: ${{ runner.temp }}/tagwerk-test-results
+          # Watchdog limits per xcodebuild call (see the header): well below the step limit.
+          TAGWERK_STAGE_SILENCE_SECONDS: "900"
+          TAGWERK_STAGE_MAX_SECONDS: "1800"
         run: app/test-all.sh
 
       - name: Write job summary
-        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' }}
+        if: ${{ !cancelled() }}
         env:
-          JOB_NAME: ${{ matrix.name }}
+          JOB_NAME: fast
           JOB_STATUS: ${{ job.status }}
           BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
-          UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
-          UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-          RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
           LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
           CACHE_MATCHED_KEY: ${{ steps.build_cache.outputs.cache-matched-key }}
         run: |
@@ -365,7 +315,7 @@ jobs:
               echo "### Build cache ($JOB_NAME)"
               echo "Result: $JOB_STATUS (build only, no tests were run)"
             else
-              echo "### Tests ($JOB_NAME)"
+              echo "### Fast tests"
               echo "Result: $JOB_STATUS"
             fi
             # Shows whether the build cache pays off: which cache was restored and how many compile steps still ran.
@@ -382,9 +332,160 @@ jobs:
               compile_steps=$(grep -cE '^(SwiftCompile|CompileSwift|CompileC|SwiftDriver) ' "$log" || true)
               echo "- $(basename "$log" .log): $compile_steps compile steps"
             done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Runs after a timeout or a cancel as well. Without this step the processes of a hung test run keep writing into the log
+      # folder, and the upload of the folder failed with a zip error (run 45362527642).
+      - name: Stop leftover processes and pack the logs
+        id: pack
+        if: ${{ always() }}
+        continue-on-error: true
+        run: scripts/ci-collect-artifacts.sh "$RUNNER_TEMP/tagwerk-test-diagnostics.tar.gz" "$RUNNER_TEMP/tagwerk-test-logs" "$RUNNER_TEMP/tagwerk-test-results"
+
+      - name: Upload test logs and result bundles
+        if: ${{ failure() || cancelled() || steps.pack.outputs.diagnostics == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-failure-fast
+          path: ${{ runner.temp }}/tagwerk-test-diagnostics.tar.gz
+          # The file is a tar.gz already; zipping it again only costs time.
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+
+      # Only runs on main (pushes after a merge, nightly and manual runs) write the cache. A cache written by a pull
+      # request is only visible to that pull request, and every push would add another multi-gigabyte entry to the
+      # 10 GB limit of the repository, so pull requests only restore the newest cache of main. The cache is also saved
+      # after failed tests: the build state is valid, and the job would otherwise never save while a test fails.
+      # A build-only run saves the cache with the same key scheme as the test runs (the key has no event or mode part), so
+      # pull requests restore it like any other cache of main; the newest one wins.
+      - name: Shrink the build cache
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        run: |
+          # The index and the logs are not needed to build; they only take space.
+          for folder in "$HOME/Library/Developer/Tagwerk/DerivedData-ci" "$HOME/Library/Developer/Xcode/DerivedData"; do
+            [[ -d "$folder" ]] || continue
+            rm -rf "${folder:?}"/Index.noindex "${folder:?}"/*/Index.noindex "${folder:?}"/Logs "${folder:?}"/*/Logs
+            echo "${folder/#$HOME/~}: $(du -sh "$folder" | cut -f1)"
+          done
+
+      - name: Save the build cache
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/Library/Developer/Tagwerk/DerivedData-ci
+            ~/Library/Developer/Xcode/DerivedData
+          key: derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+
+  ui:
+    # A push to main only builds (one job, it refreshes the cache); pull requests, nightly and manual runs run the shards.
+    name: ${{ github.event_name == 'push' && 'Build cache (ui)' || format('UI shard ({0}/{1})', matrix.shard, needs.changes.outputs.ui_shard_total) }}
+    needs: changes
+    # The matrix context does not exist at job level, so a skipped UI test run skips all shard jobs; the gate "Tests (ui)" reports it.
+    if: ${{ needs.changes.outputs.run_ui == 'true' }}
+    runs-on: xcode-27
+    # Limits from the measured runs, see the header. The nightly and manual runs use the full UI test set and have their own,
+    # higher limits. The build-only run after a merge has no test time, so its limit only has to cover a cold build.
+    timeout-minutes: ${{ github.event_name == 'push' && 55 || github.event_name == 'pull_request' && 95 || 105 }}
+    env:
+      TZ: Europe/Berlin
+      TEST_RUNNER_TZ: Europe/Berlin
+      TAGWERK_BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # [1] for a push, [1, 2, ..., UI_SHARD_COUNT] otherwise; computed by the changes job.
+        shard: ${{ fromJSON(needs.changes.outputs.ui_shards) }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare the toolchain
+        id: prepare
+        uses: ./.github/actions/prepare-xcode-job
+
+      - name: Restore the build cache
+        id: build_cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/Library/Developer/Tagwerk/DerivedData-ci
+            ~/Library/Developer/Xcode/DerivedData
+          # All shards build the same schemes and share this cache; the keys are the ones of the single UI job before the split.
+          key: derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+          restore-keys: |
+            derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
+            derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-
+            derived-ui-${{ env.XCODE_BUILD_VERSION }}-
+
+      - name: ${{ github.event_name == 'push' && 'Build stages, no tests (ui)' || format('Run test stages (ui shard {0}/{1})', matrix.shard, needs.changes.outputs.ui_shard_total) }}
+        id: tests
+        # Limits the test step below the job timeout, so the artifact upload still runs when the tests hang.
+        timeout-minutes: ${{ github.event_name == 'push' && 45 || github.event_name == 'pull_request' && 85 || 95 }}
+        env:
+          # ui = UI test scheme (app and UI test runner). With TAGWERK_BUILD_ONLY (job environment) it is built, not tested.
+          TAGWERK_ONLY_UI_TESTS: "1"
+          # Shard I of N of the UI test classes (ignored by a build-only run).
+          TAGWERK_UI_SHARD: ${{ matrix.shard }}/${{ needs.changes.outputs.ui_shard_total }}
+          # Pull requests run the reduced UI test set with one retry per failed UI test (the unit stages never retry).
+          # Nightly and manual runs run every UI test once, so wobbling tests stay visible (0 = no retry; the script
+          # retries by default when the variable is not set, which is the local behaviour).
+          TAGWERK_UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+          TAGWERK_UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          TAGWERK_TEST_LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
+          TAGWERK_TEST_RESULTS_DIR: ${{ runner.temp }}/tagwerk-test-results
+          # Watchdog limits per xcodebuild call (see the header): a UI test call needs about 39 minutes per shard, a cold build 34.
+          TAGWERK_UI_SILENCE_SECONDS: "600"
+          TAGWERK_UI_MAX_SECONDS: "3600"
+          TAGWERK_STAGE_SILENCE_SECONDS: "900"
+          TAGWERK_STAGE_MAX_SECONDS: "2700"
+        run: app/test-all.sh
+
+      - name: Write job summary
+        if: ${{ !cancelled() }}
+        env:
+          JOB_NAME: ui shard ${{ matrix.shard }}/${{ needs.changes.outputs.ui_shard_total }}
+          JOB_STATUS: ${{ job.status }}
+          BUILD_ONLY: ${{ github.event_name == 'push' && '1' || '' }}
+          UI_TEST_SET: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+          UI_TEST_RETRIES: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          RETRIED_LIST: ${{ runner.temp }}/tagwerk-test-logs/retried-ui-tests.md
+          LOG_DIR: ${{ runner.temp }}/tagwerk-test-logs
+          CACHE_MATCHED_KEY: ${{ steps.build_cache.outputs.cache-matched-key }}
+        run: |
+          {
+            if [[ -n "$BUILD_ONLY" ]]; then
+              echo "### Build cache (ui)"
+              echo "Result: $JOB_STATUS (build only, no tests were run)"
+            else
+              echo "### $JOB_NAME"
+              echo "Result: $JOB_STATUS"
+            fi
+            # Shows whether the build cache pays off: which cache was restored and how many compile steps still ran.
             echo
-            if [[ "$JOB_NAME" == "ui" && -z "$BUILD_ONLY" ]]; then
+            echo "Build cache restored: ${CACHE_MATCHED_KEY:-none (cold build)}"
+            for folder in "$HOME/Library/Developer/Tagwerk/DerivedData-ci" "$HOME/Library/Developer/Xcode/DerivedData"; do
+              if [[ -d "$folder" ]]; then
+                echo "- ${folder/#$HOME/~}: $(du -sh "$folder" | cut -f1)"
+              fi
+            done
+            for log in "$LOG_DIR"/*.log; do
+              [[ -f "$log" ]] || continue
+              compile_steps=$(grep -cE '^(SwiftCompile|CompileSwift|CompileC|SwiftDriver) ' "$log" || true)
+              echo "- $(basename "$log" .log): $compile_steps compile steps"
+            done
+            echo
+            if [[ -z "$BUILD_ONLY" ]]; then
               echo "UI test set: $UI_TEST_SET, retries: $([[ "$UI_TEST_RETRIES" == "1" ]] && echo "failed tests once more" || echo none)"
+              # The duration of this shard: input for app/TagwerkUITests/ui-test-durations.txt (compare the shards).
+              if [[ -f "$LOG_DIR/app-UI-tests.log" ]]; then
+                echo
+                echo "Test run of this shard: $(grep -E 'Executed [0-9]+ tests?, with' "$LOG_DIR/app-UI-tests.log" | tail -n 1 | sed -E 's/^[[:space:]]+//' || true)"
+              fi
               if [[ -f "$RETRIED_LIST" ]]; then
                 echo
                 echo '```'
@@ -394,45 +495,175 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Stop leftover processes and pack the logs
+        id: pack
+        if: ${{ always() }}
+        continue-on-error: true
+        run: scripts/ci-collect-artifacts.sh "$RUNNER_TEMP/tagwerk-test-diagnostics.tar.gz" "$RUNNER_TEMP/tagwerk-test-logs" "$RUNNER_TEMP/tagwerk-test-results"
+
       - name: Upload test logs and result bundles
-        if: ${{ failure() && needs.changes.outputs.run_tests == 'true' }}
+        if: ${{ failure() || cancelled() || steps.pack.outputs.diagnostics == 'true' }}
         uses: actions/upload-artifact@v7
         with:
-          name: test-failure-${{ matrix.name }}
-          path: |
-            ${{ runner.temp }}/tagwerk-test-logs
-            ${{ runner.temp }}/tagwerk-test-results
+          name: test-failure-ui-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/tagwerk-test-diagnostics.tar.gz
+          compression-level: 0
           if-no-files-found: warn
           retention-days: 7
 
-      # Only runs on main (pushes after a merge, nightly and manual runs) write the cache. A cache written by a pull
-      # request is only visible to that pull request, and every push would add another multi-gigabyte entry to the
-      # 10 GB limit of the repository, so pull requests only restore the newest cache of main. The cache is also saved
-      # after failed tests: the build state is valid, and the UI job would otherwise never save while an audit fails.
-      # A build-only run saves the cache with the same key scheme as the test runs (the key has no event or mode part), so
-      # pull requests restore it like any other cache of main; the newest one wins.
+      # See the cache steps of the job "fast". All shards restore the same cache, so only shard 1 saves it (a second save of the
+      # same key would only report that the entry exists).
       - name: Shrink the build cache
-        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        if: ${{ !cancelled() && matrix.shard == 1 && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
         run: |
-          # The index and the logs are not needed to build; they only take space.
           for folder in "$HOME/Library/Developer/Tagwerk/DerivedData-ci" "$HOME/Library/Developer/Xcode/DerivedData"; do
             [[ -d "$folder" ]] || continue
-            rm -rf "$folder"/Index.noindex "$folder"/*/Index.noindex "$folder"/Logs "$folder"/*/Logs
+            rm -rf "${folder:?}"/Index.noindex "${folder:?}"/*/Index.noindex "${folder:?}"/Logs "${folder:?}"/*/Logs
             echo "${folder/#$HOME/~}: $(du -sh "$folder" | cut -f1)"
           done
 
       - name: Save the build cache
-        if: ${{ !cancelled() && needs.changes.outputs.run_tests == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        if: ${{ !cancelled() && matrix.shard == 1 && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
         uses: actions/cache/save@v6
         with:
           path: |
             ~/Library/Developer/Tagwerk/DerivedData-ci
             ~/Library/Developer/Xcode/DerivedData
-          key: derived-${{ matrix.name }}-${{ env.XCODE_BUILD_VERSION }}-${{ steps.toolchain.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+          key: derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-${{ github.sha }}
+
+  scripts:
+    name: Script tests
+    needs: changes
+    if: ${{ needs.changes.outputs.run_scripts == 'true' }}
+    # macOS: the tests use zsh, BSD tools and xcrun xcstringstool. No build, no simulator.
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch "$XCODE_APP/Contents/Developer"
+
+      - name: Run the script tests
+        timeout-minutes: 10
+        run: scripts/run-script-tests.sh
+
+  gate-fast:
+    # The required check "Tests (fast)". It runs whatever the jobs it needs did (a push to main has no required checks).
+    name: Tests (fast)
+    needs: [changes, fast, scripts]
+    if: ${{ always() && github.event_name != 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          REASON: ${{ needs.changes.outputs.reason }}
+          FAST_RUNS: ${{ needs.changes.outputs.run_fast }}
+          FAST_RESULT: ${{ needs.fast.result }}
+          SCRIPTS_RUNS: ${{ needs.changes.outputs.run_scripts }}
+          SCRIPTS_RESULT: ${{ needs.scripts.result }}
+        run: |
+          failed=0
+          # Green only when the decision was made and every job that was meant to run succeeded. A job that was meant to run but
+          # is "skipped" (a failed need, a cancelled run) is not green: GitHub reports such a skip as success to a required check.
+          check() { # name runs result
+            if [[ "$2" == "true" && "$3" != "success" ]]; then
+              echo "::error::$1 should have run, result: $3"
+              failed=1
+            elif [[ "$2" != "true" && "$3" != "skipped" && "$3" != "success" ]]; then
+              echo "::error::$1 was not meant to run, result: $3"
+              failed=1
+            fi
+            echo "$1: runs=$2, result=$3"
+          }
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+            echo "::error::The job Changes did not succeed (result: $CHANGES_RESULT), so nothing is known about the tests."
+            failed=1
+          fi
+          check "Fast tests" "$FAST_RUNS" "$FAST_RESULT"
+          check "Script tests" "$SCRIPTS_RUNS" "$SCRIPTS_RESULT"
+          {
+            echo "### Tests (fast)"
+            echo "$REASON"
+            echo
+            echo "- Fast tests: runs=$FAST_RUNS, result=$FAST_RESULT"
+            echo "- Script tests: runs=$SCRIPTS_RUNS, result=$SCRIPTS_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$failed"
+
+  gate-ui:
+    # The required check "Tests (ui)": green when every UI shard is green, or none was meant to run.
+    name: Tests (ui)
+    needs: [changes, ui]
+    if: ${{ always() && github.event_name != 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check the results
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          REASON: ${{ needs.changes.outputs.reason }}
+          UI_RUNS: ${{ needs.changes.outputs.run_ui }}
+          UI_RESULT: ${{ needs.ui.result }}
+          SHARDS: ${{ needs.changes.outputs.ui_shard_total }}
+        run: |
+          failed=0
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+            echo "::error::The job Changes did not succeed (result: $CHANGES_RESULT), so nothing is known about the tests."
+            failed=1
+          fi
+          # The result of a matrix job is "success" only when every shard succeeded.
+          if [[ "$UI_RUNS" == "true" && "$UI_RESULT" != "success" ]]; then
+            echo "::error::The UI shards should have run, result: $UI_RESULT (see the jobs \"UI shard (n/$SHARDS)\")"
+            failed=1
+          elif [[ "$UI_RUNS" != "true" && "$UI_RESULT" != "skipped" && "$UI_RESULT" != "success" ]]; then
+            echo "::error::The UI shards were not meant to run, result: $UI_RESULT"
+            failed=1
+          fi
+          # Second look at the shard jobs themselves: the result of a matrix job as a whole is not documented in detail, so the gate
+          # also counts the finished "UI shard (n/N)" jobs of this run and wants every one of them to be a success.
+          if [[ "$UI_RUNS" == "true" ]]; then
+            if shard_jobs=$(gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" \
+                --jq '.jobs[] | select(.name | startswith("UI shard (")) | "\(.name)\t\(.conclusion)"' 2>&1); then
+              echo "$shard_jobs"
+              shard_count=$(grep -c . <<<"$shard_jobs" || true)
+              unsuccessful=$(grep -vc $'\tsuccess$' <<<"$shard_jobs" || true)
+              if [[ "$shard_count" != "$SHARDS" ]]; then
+                echo "::error::Expected $SHARDS UI shard jobs in this run, found $shard_count"
+                failed=1
+              fi
+              if [[ "$unsuccessful" != "0" ]]; then
+                echo "::error::$unsuccessful UI shard job(s) did not succeed"
+                failed=1
+              fi
+            else
+              echo "::warning::The shard jobs could not be listed ($shard_jobs); the gate relies on the result of the matrix job."
+            fi
+          fi
+          {
+            echo "### Tests (ui)"
+            echo "$REASON"
+            echo
+            echo "- UI shards ($SHARDS): runs=$UI_RUNS, result=$UI_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "UI shards: runs=$UI_RUNS, result=$UI_RESULT"
+          exit "$failed"
 
   prune-caches:
     name: Prune build caches
-    needs: tests
+    needs: [fast, ui]
     # Keeps the newest two build caches per job on main. Eviction by the 10 GB limit removes the least recently used
     # entries anyway; this keeps the list short and avoids evicting a cache that pull requests still restore.
     # Separate job on a Linux runner, because deleting caches needs the actions: write permission, which the job

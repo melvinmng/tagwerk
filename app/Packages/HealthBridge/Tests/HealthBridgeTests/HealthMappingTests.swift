@@ -158,6 +158,86 @@ struct HealthMappingTests {
     }
 }
 
+struct HeightMappingTests {
+    @Test func heightSample_usesOneFixedSyncIdentifier_withAGrowingVersion() {
+        let first = HealthMapping.heightMetadata(date: Date(timeIntervalSince1970: 1_800_000_000))
+        let later = HealthMapping.heightMetadata(date: Date(timeIntervalSince1970: 1_800_000_600))
+        #expect(first[HKMetadataKeySyncIdentifier] as? String == HealthMapping.heightSyncIdentifier)
+        #expect(later[HKMetadataKeySyncIdentifier] as? String == HealthMapping.heightSyncIdentifier)
+        let firstVersion = first[HKMetadataKeySyncVersion] as? Int ?? 0
+        let laterVersion = later[HKMetadataKeySyncVersion] as? Int ?? 0
+        #expect(laterVersion > firstVersion, "a later edit replaces the earlier sample in Health")
+    }
+
+    @Test func heightSample_isMarkedAsOwnAndUserEntered() {
+        let metadata = HealthMapping.heightMetadata(date: .now)
+        #expect(metadata[HealthMapping.markerKey] as? Int == 1)
+        #expect(metadata[HKMetadataKeyWasUserEntered] as? Bool == true)
+        #expect(HealthMapping.isOwn(metadata: metadata, sourceBundleID: "other", ownBundleID: nil))
+    }
+}
+
+struct HealthRequestStatusTests {
+    @Test func shouldRequest_isNotAsked_unnecessary_isAsked() {
+        #expect(!HealthMapping.isAsked(.shouldRequest, shareStatuses: []))
+        #expect(!HealthMapping.isAsked(.shouldRequest, shareStatuses: [.sharingAuthorized]))
+        #expect(HealthMapping.isAsked(.unnecessary, shareStatuses: []))
+        #expect(HealthMapping.isAsked(.unnecessary, shareStatuses: [.notDetermined]))
+    }
+
+    @Test func unknown_readOnlyGroup_countsAsAsked() {
+        // No write type tells more: an unknown answer never brings the button back.
+        #expect(HealthMapping.isAsked(.unknown, shareStatuses: []))
+    }
+
+    @Test func unknown_withAnsweredWriteType_countsAsAsked() {
+        #expect(HealthMapping.isAsked(.unknown, shareStatuses: [.notDetermined, .sharingAuthorized]))
+        #expect(HealthMapping.isAsked(.unknown, shareStatuses: [.sharingDenied, .sharingDenied]))
+    }
+
+    @Test func unknown_withoutAnyAnsweredWriteType_countsAsNotAsked() {
+        // Nothing was ever answered, so the sheet is still due; this keeps a never-asked user from seeing "denied".
+        #expect(!HealthMapping.isAsked(.unknown, shareStatuses: [.notDetermined, .notDetermined]))
+    }
+
+    @Test func access_unknownStatus_ofAnAskedUser_neverBecomesNotDetermined() {
+        let granted = Dictionary(uniqueKeysWithValues: HealthShareKind.allCases.map { ($0, HKAuthorizationStatus.sharingAuthorized) })
+        #expect(HealthMapping.access(status: .unknown, shareStatuses: granted) == .authorized)
+        var partial = granted
+        partial[.water] = .sharingDenied
+        #expect(HealthMapping.access(status: .unknown, shareStatuses: partial) == .partial([.water]))
+        let refused = Dictionary(uniqueKeysWithValues: HealthShareKind.allCases.map { ($0, HKAuthorizationStatus.sharingDenied) })
+        #expect(HealthMapping.access(status: .unknown, shareStatuses: refused) == .denied)
+    }
+
+    @Test func access_unknownStatus_ofANeverAskedUser_staysNotDetermined() {
+        let fresh = Dictionary(uniqueKeysWithValues: HealthShareKind.allCases.map { ($0, HKAuthorizationStatus.notDetermined) })
+        #expect(HealthMapping.access(status: .unknown, shareStatuses: fresh) == .notDetermined)
+        #expect(HealthMapping.access(status: .shouldRequest, shareStatuses: fresh) == .notDetermined)
+    }
+
+    @Test func access_unnecessary_usesTheWriteStatuses() {
+        var statuses = Dictionary(uniqueKeysWithValues: HealthShareKind.allCases.map { ($0, HKAuthorizationStatus.sharingAuthorized) })
+        #expect(HealthMapping.access(status: .unnecessary, shareStatuses: statuses) == .authorized)
+        statuses[.workouts] = .sharingDenied
+        #expect(HealthMapping.access(status: .unnecessary, shareStatuses: statuses) == .partial([.workouts]))
+    }
+
+    @Test func group_andSteps_useTheSameRule() {
+        #expect(HealthMapping.groupAccess(.unknown, shareStatuses: [.notDetermined]) == .notAsked)
+        #expect(HealthMapping.groupAccess(.unknown, shareStatuses: [.sharingAuthorized]) == .asked)
+        #expect(HealthMapping.groupAccess(.unknown) == .asked)
+        #expect(HealthMapping.stepsAccess(.unknown) == .asked)
+        #expect(HealthMapping.stepsAccess(.shouldRequest) == .notAsked)
+    }
+
+    @Test func writeAccess_mapsTheAuthorizationStatus() {
+        #expect(HealthMapping.writeAccess(.sharingAuthorized) == .allowed)
+        #expect(HealthMapping.writeAccess(.sharingDenied) == .denied)
+        #expect(HealthMapping.writeAccess(.notDetermined) == .notAsked)
+    }
+}
+
 struct HealthAccessGroupTests {
     private func identifiers(_ types: Set<HKSampleType>) -> Set<String> { Set(types.map(\.identifier)) }
     private func identifiers(_ types: Set<HKObjectType>) -> Set<String> { Set(types.map(\.identifier)) }
@@ -185,11 +265,36 @@ struct HealthAccessGroupTests {
 
     @Test func writeGroups_disjointFromCoreShareTypes() {
         let core = identifiers(HealthKitStore.shareTypes)
-        for group in [HealthAccessGroup.moreNutrients, .body] {
+        for group in [HealthAccessGroup.moreNutrients, .body, .height] {
             let types = identifiers(HealthKitStore.shareTypes(of: group))
             #expect(!types.isEmpty)
             #expect(types.isDisjoint(with: core), "\(group) must not share a type with the core group")
         }
+    }
+
+    @Test func height_hasItsOwnShareGroup_soTheBodyStatusStaysAsItWas() {
+        // Height must not join the group `body`: that would put the status of everyone who already allowed the weight back to
+        // "should request" and stop mirroring weights.
+        #expect(identifiers(HealthKitStore.shareTypes(of: .body)) == [
+            HKQuantityTypeIdentifier.bodyMass.rawValue, HKQuantityTypeIdentifier.bodyFatPercentage.rawValue])
+        #expect(identifiers(HealthKitStore.shareTypes(of: .height)) == [HKQuantityTypeIdentifier.height.rawValue])
+        #expect(HealthKitStore.readTypes(of: .height).isEmpty)
+    }
+
+    @Test func consentSheet_asksForEverythingTheAppNeedsAtOnce() {
+        let share = identifiers(HealthKitStore.consentShareTypes)
+        let read = identifiers(HealthKitStore.consentReadTypes)
+        // The core group and the groups the Health card used to leave to separate prompts.
+        #expect(share.isSuperset(of: identifiers(HealthKitStore.shareTypes)))
+        #expect(share.isSuperset(of: identifiers(HealthKitStore.shareTypes(of: .body))))
+        #expect(share.isSuperset(of: identifiers(HealthKitStore.shareTypes(of: .height))))
+        #expect(read.isSuperset(of: identifiers(HealthKitStore.connectReadTypes)))
+        #expect(read.isSuperset(of: identifiers(HealthKitStore.readTypes(of: .activeEnergy))))
+        #expect(read.isSuperset(of: identifiers(HealthKitStore.readTypes(of: .body))))
+        // Optional extras stay behind their own switches in the settings.
+        #expect(read.isDisjoint(with: identifiers(HealthKitStore.readTypes(of: .foreignNutrition))))
+        #expect(read.isDisjoint(with: identifiers(HealthKitStore.readTypes(of: .bodyProfile))))
+        #expect(share.isDisjoint(with: identifiers(HealthKitStore.shareTypes(of: .moreNutrients))))
     }
 
     @Test func foreignNutrition_readOnly_doesNotChangeShareStatus() {
@@ -198,6 +303,7 @@ struct HealthAccessGroupTests {
         #expect(HealthKitStore.shareTypes(of: .activeEnergy).isEmpty)
         #expect(HealthKitStore.shareTypes(of: .bodyProfile).isEmpty)
         #expect(!HealthKitStore.readTypes(of: .foreignNutrition).isEmpty)
+        #expect(HealthKitStore.readTypes(of: .height).isEmpty)
     }
 
     @Test func readTypes_neverJoinTheCoreOrStepGroups() {

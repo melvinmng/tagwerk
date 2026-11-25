@@ -21,11 +21,12 @@ struct GoalPlanningSettingsSection: View {
                 .accessibilityIdentifier(AccessibilityID.GoalPlanning.consentSwitch)
         } header: {
             Text("Zielplanung")
+                .foregroundStyle(.secondaryText)
         } footer: {
             if environment.ai.isSignedIn {
-                Text("Zum Planen deiner Ziele sendet Tagwerk auf dein Tippen die Angaben, die du vor jedem Gespräch auswählst, an ChatGPT (OpenAI): Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine werden nie gesendet. Ausschalten beendet ein laufendes Gespräch. Tagwerk gibt keine medizinische Beratung.")
+                Text("Zum Planen deiner Ziele sendet Tagwerk auf dein Tippen die Angaben, die du vor jedem Gespräch auswählst, an ChatGPT (OpenAI): Größe, Alter, Geschlecht, Gewicht, Durchschnittswerte der letzten Wochen und deine geltenden Ziele. Einzelne Mahlzeiten, Fotos, Notizen, Aufgaben und Termine werden nie gesendet. Ausschalten beendet ein laufendes Gespräch. Tagwerk gibt keine medizinische Beratung.").foregroundStyle(.secondaryText)
             } else {
-                Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Ziele planen zu lassen.")
+                Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Ziele planen zu lassen.").foregroundStyle(.secondaryText)
             }
         }
     }

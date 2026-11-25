@@ -40,28 +40,35 @@ struct FocusSettingsView: View {
                 }
             } footer: {
                 Text("Mit Pomodoro wechseln sich Fokus und Pause ab, nach der letzten Runde folgt die lange Pause. Ohne Pomodoro läuft eine einzelne Fokuszeit. Ein Zeitblock ohne Pomodoro setzt die Fokuszeit auf seine Restlänge.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
                 Toggle("Dauer beim Start fragen", isOn: $settings.focusAsksDurationAtStart)
             } footer: {
                 Text("Vor dem Start erscheint ein Blatt, in dem du die Dauer wählst. Siri, das Kontrollzentrum und Kurzbefehle starten immer ohne Blatt mit den Werten von oben.")
+                    .foregroundStyle(.secondaryText)
             }
 
-            Section("Sammlung") {
+            Section {
                 NavigationLink {
                     FocusCollectionView()
                 } label: {
                     LabeledContent("Sammlung ansehen", value: FocusTimerText.collectionSummary(collectionSummary))
                 }
+            } header: {
+                Text("Sammlung")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
                 Toggle("Erfahrungswerte in der Planung nutzen", isOn: $settings.effortHistoryInPlanning)
             } header: {
                 Text("Planung")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Tagwerk misst den Aufwand beim Abhaken aus den Zeitblöcken der Aufgabe. Fokus-Timer-Zeit zählt nur, soweit sie außerhalb dieser Blöcke liegt, ohne Zeitblock zählt sie allein. Die Messwerte bleiben auf dem iPhone. Ist der Schalter an, geht bei der KI-Planung je Aufgabe nur eine erwartete Dauer in Minuten mit, keine Labels und keine Statistik.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Fokus-Timer")

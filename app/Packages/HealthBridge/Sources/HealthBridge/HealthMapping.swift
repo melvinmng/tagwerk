@@ -57,6 +57,19 @@ public enum HealthMapping {
         "tagwerk.\(kind.rawValue).\(id.uuidString)" + (part.map { ".\($0)" } ?? "")
     }
 
+    /// Sync identifier of the height Tagwerk wrote: one fixed identifier, so a new value replaces the old sample and repeated edits
+    /// never pile up in Health.
+    public static let heightSyncIdentifier = "tagwerk.height"
+    /// The entry id of the height sample: the height is not an entry of the log, so it carries a fixed id for the marker.
+    static let heightEntryID = UUID(uuidString: "6D3A1C2E-0000-4000-8000-0000000000A1")!
+
+    /// Metadata of the height sample. Health replaces a sample of the same sync identifier only for a higher version, so the version
+    /// is the time of the edit in milliseconds, so two edits within a second still replace each other.
+    static func heightMetadata(date: Date) -> [String: Any] {
+        metadata(syncIdentifier: heightSyncIdentifier, entryID: heightEntryID, version: Int(date.timeIntervalSince1970 * 1000),
+                 estimated: false, userEntered: true)
+    }
+
     /// Metadata of one sample. Created and consumed locally; never crosses a concurrency boundary.
     static func metadata(syncIdentifier: String, entryID: UUID, version: Int, estimated: Bool,
                          userEntered: Bool) -> [String: Any] {
@@ -332,6 +345,27 @@ public enum HealthMapping {
         return metadata?[markerKey] != nil
     }
 
+    /// Whether the system sheet was shown for a set of types: the one rule behind the core access, the groups and the steps.
+    ///
+    /// `unnecessary` is asked and `shouldRequest` is not. `unknown` (HealthKit could not tell, e.g. while the phone is locked)
+    /// must not flip an answered state back to "not asked", which made the consent card reappear after every answer. It counts as
+    /// asked, unless the set has write types and none of them was ever answered: then nothing was asked yet.
+    static func isAsked(_ status: HKAuthorizationRequestStatus, shareStatuses: [HKAuthorizationStatus]) -> Bool {
+        switch status {
+        case .shouldRequest: false
+        case .unnecessary: true
+        case .unknown: shareStatuses.isEmpty || shareStatuses.contains { $0 != .notDetermined }
+        @unknown default: true
+        }
+    }
+
+    /// The access row state from the request status and the write status of every core type.
+    static func access(status: HKAuthorizationRequestStatus, shareStatuses: [HealthShareKind: HKAuthorizationStatus]) -> HealthAccess {
+        let asked = isAsked(status, shareStatuses: Array(shareStatuses.values))
+        let denied = Set(shareStatuses.filter { $0.value != .sharingAuthorized }.keys)
+        return access(shouldRequest: !asked, denied: denied)
+    }
+
     /// The access row state from the request status and the share types that are not authorized.
     static func access(shouldRequest: Bool, denied: Set<HealthShareKind>) -> HealthAccess {
         if shouldRequest { return .notDetermined }
@@ -341,13 +375,23 @@ public enum HealthMapping {
     }
 
     /// A group counts as asked once iOS would no longer show its sheet; an unknown status does not bring the button back.
-    static func groupAccess(_ status: HKAuthorizationRequestStatus) -> HealthGroupAccess {
-        status == .shouldRequest ? .notAsked : .asked
+    static func groupAccess(_ status: HKAuthorizationRequestStatus, shareStatuses: [HKAuthorizationStatus] = []) -> HealthGroupAccess {
+        isAsked(status, shareStatuses: shareStatuses) ? .asked : .notAsked
     }
 
     /// Steps count as asked once iOS would no longer show the sheet; an unknown status does not bring the button back.
     static func stepsAccess(_ status: HKAuthorizationRequestStatus) -> StepsAccess {
-        status == .shouldRequest ? .notAsked : .asked
+        isAsked(status, shareStatuses: []) ? .asked : .notAsked
+    }
+
+    /// The write permission of one type from its authorization status.
+    static func writeAccess(_ status: HKAuthorizationStatus) -> HealthWriteAccess {
+        switch status {
+        case .sharingAuthorized: .allowed
+        case .sharingDenied: .denied
+        case .notDetermined: .notAsked
+        @unknown default: .notAsked
+        }
     }
 
     /// Day sums of the active energy; days without statistics are dropped (no value, not 0).

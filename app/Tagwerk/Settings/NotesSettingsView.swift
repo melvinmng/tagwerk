@@ -22,14 +22,17 @@ struct NotesSettingsView: View {
                     .disabled(settings.noteSortOrder == .title)
             } footer: {
                 Text("Angeheftete Notizen stehen immer oben. Die Wahl gilt für alle Ordner. Die Tagesstart- und Tagesabschluss-Einträge und das Dream Log bleiben nach Tag sortiert.")
+                    .foregroundStyle(.secondaryText)
             }
             lockSection
             Section {
                 Button("Aus Notion importieren") { isImporting = true }
             } header: {
                 Text("Import")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Liest einen entpackten Notion-Export. Nichts davon verlässt dein iPhone.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Notizen")
@@ -71,14 +74,15 @@ struct NotesSettingsView: View {
             .accessibilityIdentifier("notes.lock.list")
         } header: {
             Text("Sperre")
+                .foregroundStyle(.secondaryText)
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
                 if !lock.canAuthenticate {
-                    Text("Richte zuerst einen Code für dein iPhone ein.")
+                    Text("Richte zuerst einen Code für dein iPhone ein.").foregroundStyle(.secondaryText)
                 } else {
-                    Text("Gilt für gesperrte Notizen und private Ordner.")
+                    Text("Gilt für gesperrte Notizen und private Ordner.").foregroundStyle(.secondaryText)
                 }
-                Text("Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: \(privateFolderList).")
+                Text("Einmal entsperren öffnet alles Gesperrte, bis du Tagwerk verlässt. Private Ordner: \(privateFolderList).").foregroundStyle(.secondaryText)
             }
         }
         Section {
@@ -87,6 +91,7 @@ struct NotesSettingsView: View {
             Label("Verschlüsselt nicht: Datenbank und Sicherung enthalten gesperrte Notizen im Klartext.", systemImage: "lock.open")
         } header: {
             Text("Was die Sperre tut")
+                .foregroundStyle(.secondaryText)
         }
     }
 

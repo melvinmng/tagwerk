@@ -104,7 +104,7 @@ struct FollowUpBar<Exchange: View>: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Bezug entfernen")
         }
-        .foregroundStyle(.purple)
+        .foregroundStyle(.purpleText)
         .padding(.horizontal, 10).padding(.vertical, 4)
         .background(Color.purple.opacity(0.15), in: Capsule())
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -115,8 +115,7 @@ struct FollowUpBar<Exchange: View>: View {
             HStack(spacing: 8) {
                 ForEach(quickReplies, id: \.self) { reply in
                     Button(reply) { send(reply) }
-                        .buttonStyle(.bordered)
-                        .tint(.purple)
+                        .buttonStyle(FollowUpChipButtonStyle())
                         .disabled(!FollowUpAvailability.canSend(availability, text: reply, isSending: isSending))
                 }
             }
@@ -169,6 +168,22 @@ struct FollowUpBar<Exchange: View>: View {
         text = ""
         isFocused.wrappedValue = false
         onSend(message)
+    }
+}
+
+/// The quick-reply chip of the follow-up bar: text in `purpleText` on a 15 % tint of the system purple. The system style
+/// `.bordered` with `.tint(.purple)` draws the text in the system purple, which is too light on its own tint in the light appearance.
+private struct FollowUpChipButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.purpleText)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 34)
+            .background(Color.purple.opacity(0.15), in: Capsule())
+            .opacity(isEnabled ? (configuration.isPressed ? 0.6 : 1) : 0.4)
+            .contentShape(Capsule())
     }
 }
 

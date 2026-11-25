@@ -106,11 +106,13 @@ public enum FocusQuiet {
     }
 
     /// The state without a start older than `maximumAge` and without a catch-up whose moment has passed: that catch-up
-    /// fired already, and it must not widen the catch-up of a later Focus.
+    /// fired already, and it must not widen the catch-up of a later Focus. While a Focus is active nothing fires (the
+    /// notification run plans no catch-up then), so a moment that passes meanwhile did not deliver anything: the catch-up
+    /// stays and is planned anew once that Focus has ended.
     public static func dropping(staleIn state: State, now: Date) -> State {
         var next = state
         if let since = next.since, now.timeIntervalSince(since) >= maximumAge { next.since = nil }
-        if let at = next.catchUpAt, at <= now {
+        if next.since == nil, let at = next.catchUpAt, at <= now {
             next.catchUpFrom = nil
             next.catchUpAt = nil
             next.catchUpUntil = nil

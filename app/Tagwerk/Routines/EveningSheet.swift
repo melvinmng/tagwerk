@@ -47,8 +47,10 @@ struct EveningSheet: View {
                     }
                 } header: {
                     Text("Heute")
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     Text(RoutinesModel.reviewFooter(review?.gitHub ?? .notConnected, isToday: day == model.today))
+                        .foregroundStyle(.secondaryText)
                 }
 
                 leftoverSection
@@ -70,9 +72,10 @@ struct EveningSheet: View {
                     }
                 } header: {
                     Text("Abend-Checkliste · Schlafzeit \(DateText.time(minutes: model.settings.bedtimeMinutes, calendar: model.calendar))")
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     if !items.isEmpty {
-                        Text("\(Image(systemName: "bell")) erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.")
+                        Text("\(Image(systemName: "bell")) erinnert zur Uhrzeit. Die Zeiten folgen der Schlafzeit. Höchstens vier Punkte erinnern.").foregroundStyle(.secondaryText)
                     }
                 }
 
@@ -158,6 +161,7 @@ struct EveningSheet: View {
                 LeftoverLine(count: model.planning.leftFromToday.count) { isMovingLeftovers = true }
             } header: {
                 Text("Unerledigt von heute")
+                    .foregroundStyle(.secondaryText)
             }
         }
         if let report = leftoverReport {
@@ -251,7 +255,7 @@ struct RoutinesSection: View {
     let day: PlanDay
 
     var body: some View {
-        Section("Routinen") {
+        Section {
             Button { model.openStart(day) } label: {
                 HStack {
                     Label("Tagesstart", systemImage: "sun.max")
@@ -270,6 +274,9 @@ struct RoutinesSection: View {
                 }
             }
             .tint(.primary)
+        } header: {
+            Text("Routinen")
+                .foregroundStyle(.secondaryText)
         }
     }
 }

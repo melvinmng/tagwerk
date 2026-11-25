@@ -30,6 +30,14 @@ struct BibleStudyStartSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                // The same answer as "Heute nicht" of the reminder: today's reminder goes and does not come back (#306).
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Heute nicht") {
+                        Task { await environment.skipBibleStudyToday() }
+                        dismiss()
+                    }
+                    .accessibilityIdentifier("bibleStudy.skipToday")
+                }
             }
             .onAppear {
                 if model == nil { model = BibleStudyStartModel(store: store, calendar: environment.planning.calendar, locale: locale) }
@@ -80,7 +88,7 @@ struct BibleStudyStartSheet: View {
     private func chips(_ model: BibleStudyStartModel) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(model.recentBooks) { book in
+                ForEach(model.chipBooks) { book in
                     chip(book.name(locale: locale), isSelected: book == model.book) { select(book, in: model) }
                 }
                 Button { isPickingBook = true } label: {

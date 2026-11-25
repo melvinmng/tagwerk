@@ -62,8 +62,10 @@ struct RecipeNoteSection: View {
             Button { showsOthers = true } label: { Label("Andere Notiz wählen …", systemImage: "note.text") }
         } header: {
             Text("Notiz")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Eine Notiz mit den Abschnitten „Zutaten“ und „Zubereitung“ liest Tagwerk auf dem iPhone. Jede andere Notiz liest ChatGPT, nachdem du „Zutaten holen“ getippt hast.")
+                .foregroundStyle(.secondaryText)
         }
     }
 

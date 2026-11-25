@@ -358,8 +358,8 @@ struct RecipeInputView: View {
             let signIn = !readsLocally && !environment.ai.isSignedIn
             if hint || signIn {
                 VStack(alignment: .leading, spacing: 6) {
-                    if hint { Text("Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.") }
-                    if signIn { Text("Anmeldung unter Einstellungen › KI") }
+                    if hint { Text("Beides legt auf Wunsch eine Notiz im Ordner „Rezepte“ an.").foregroundStyle(.secondaryText) }
+                    if signIn { Text("Anmeldung unter Einstellungen › KI").foregroundStyle(.secondaryText) }
                 }
             }
         }
@@ -423,8 +423,10 @@ struct RecipeInputView: View {
                 .keyboardDoneButton()
         } header: {
             Text("Rezepttext")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Füge die Zutatenliste oder das ganze Rezept ein. Es werden höchstens \(RecipeText.maximumLength) Zeichen gelesen.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -459,11 +461,12 @@ struct RecipeInputView: View {
             }
         } header: {
             Text("Fotos des Rezepts")
+                .foregroundStyle(.secondaryText)
         } footer: {
             if showsPhotoLimit || RecipePhotos.remainingSlots(current: photos.count) == 0 {
-                Text("Höchstens \(RecipePhotos.maximumCount) Fotos pro Rezept.")
+                Text("Höchstens \(RecipePhotos.maximumCount) Fotos pro Rezept.").foregroundStyle(.secondaryText)
             } else {
-                Text("Zum Beispiel die Seiten aus einem Kochbuch oder mehrere Screenshots: bis zu \(RecipePhotos.maximumCount) Fotos, die zusammen als ein Rezept gelesen werden. Die Fotos werden verkleinert und nicht gespeichert.")
+                Text("Zum Beispiel die Seiten aus einem Kochbuch oder mehrere Screenshots: bis zu \(RecipePhotos.maximumCount) Fotos, die zusammen als ein Rezept gelesen werden. Die Fotos werden verkleinert und nicht gespeichert.").foregroundStyle(.secondaryText)
             }
         }
     }
@@ -487,11 +490,12 @@ struct RecipeInputView: View {
             }
         } header: {
             Text("Link zum Rezept")
+                .foregroundStyle(.secondaryText)
         } footer: {
             if choice != nil {
-                Text("Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.")
+                Text("Tagwerk lädt die Seite erst beim Tippen auf einen der Knöpfe und sendet nur den gelesenen Text, nicht die Adresse.").foregroundStyle(.secondaryText)
             } else {
-                Text("Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.")
+                Text("Tagwerk lädt die Seite erst, wenn du „Rezept holen“ tippst, und sendet nur den gelesenen Text, nicht die Adresse.").foregroundStyle(.secondaryText)
             }
         }
     }
@@ -741,6 +745,7 @@ struct RecipeResultView: View {
                     ForEach(fresh, id: \.0.id) { row, candidate in self.row(row, candidate) }
                 } header: {
                     Text(Self.newHeader(count: fresh.count))
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     if listed.isEmpty { categoryFooter }
                 }
@@ -750,6 +755,7 @@ struct RecipeResultView: View {
                     ForEach(listed, id: \.0.id) { row, candidate in self.row(row, candidate) }
                 } header: {
                     Text(Self.listedHeader(count: listed.count))
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     categoryFooter
                 }
@@ -760,6 +766,7 @@ struct RecipeResultView: View {
                     Toggle("Auch als Rezept-Notiz sichern", isOn: $savesNote)
                 } footer: {
                     Text("Legt eine Notiz im Ordner „Rezepte“ an, mit den Zutaten in den Mengen des Rezepts.")
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -807,6 +814,7 @@ struct RecipeResultView: View {
                          start: Self.startServings, in: Self.servingsRange)
         } header: {
             Text(Self.servingsHeader(recipeServings: result.servings))
+                .foregroundStyle(.secondaryText)
         } footer: {
             if baseServings == nil {
                 Text("Im Rezept steht keine Portionszahl.").foregroundStyle(.redText)
@@ -835,12 +843,12 @@ struct RecipeResultView: View {
 
     @ViewBuilder private var categoryFooter: some View {
         if result.readLocally {
-            Text("Die Kategorien kommen aus deiner Einkaufsliste.")
+            Text("Die Kategorien kommen aus deiner Einkaufsliste.").foregroundStyle(.secondaryText)
             if result.keepsNoteLanguage, let noteLanguage = result.noteLanguage {
-                Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.")
+                Text("Die Zutaten stehen in der Sprache der Notiz (\(LanguageSettingsText.name(noteLanguage))). Neue Artikel aus dieser Notiz kommen so auf die Liste. Über „•••“ › „Artikel übersetzen …“ kannst du sie danach übersetzen.").foregroundStyle(.secondaryText)
             }
         } else {
-            Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.")
+            Text("Die Kategorien kommen von ChatGPT und lassen sich später in der Liste ändern.").foregroundStyle(.secondaryText)
         }
     }
 

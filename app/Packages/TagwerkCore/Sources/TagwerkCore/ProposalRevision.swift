@@ -36,7 +36,9 @@ public struct ProposalRevision<Item: Identifiable & Equatable & Sendable>: Senda
     private var proposals: [Item.ID: Item] = [:]
     private var undoState: State?
 
-    private struct State: Sendable {
+    /// `@usableFromInline` instead of `private`: the optimizer specializes this generic type in the app module, and a
+    /// private nested type has no metadata accessor outside this module, so the Release build failed to link (#311).
+    @usableFromInline struct State: Sendable {
         var items: [Item]
         var marks: [Item.ID: ProposalMark]
         var proposals: [Item.ID: Item]
