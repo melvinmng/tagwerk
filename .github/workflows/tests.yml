@@ -73,14 +73,15 @@ name: Tests
 #   fast  37 min in total (first run, cold build): packages 4.5 + 5.4 + 5.0 + 3.7 + 6.5 min (almost only compiling), app scheme
 #         about 10 min -> job 55 min, test step 45 min
 #   ui    before the split one job needed 60 to 100 minutes with a warm cache (pull request set: 88 tests, 4619 s of test time in
-#         run 45193805665, build 76 s; the 100 minutes were a hang). With UI_SHARD_COUNT = 2 each shard runs about 2350 s of tests
-#         (about 39 min, see scripts/ui-test-shards.py plan 2 --set pr) after its own build (76 s warm, about 34 min cold); the
-#         full set (nightly, manual) is about 2800 s per shard
+#         run 45193805665, build 76 s; the 100 minutes were a hang). With UI_SHARD_COUNT = 3 each shard runs about 1970 s of tests
+#         (about 33 min, see scripts/ui-test-shards.py plan 3 --set pr; run 45456069245 measured 5900 s in total) after its own
+#         build (76 s warm, about 34 min cold). Two shards (about 2950 s each) came too close to the 3600 s watchdog limit on a
+#         slow runner, where the simulator boot alone took close to 5 minutes
 #         -> pull request: job 95 min, test step 85 min; nightly and manual: job 105 min, test step 95 min; a cold run (34 + 39 min)
 #            fits
 #   scripts  about 1 minute of tests plus the runner start -> job 15 min
 # The job limit is 10 minutes above the step limit, so the artifact upload and the cache save still run when the test step hits
-# its limit. The watchdog run time limits are set here, well below the step limits (UI test call 3600 s, about 39 min expected;
+# its limit. The watchdog run time limits are set here, well below the step limits (UI test call 3600 s, about 33 min expected;
 # build or other call 2700 s, fast job 1800 s); they are off by default for local runs. A cold UI run (build up to 2700 s plus tests)
 # can reach the step limit before a single call reaches its own limit; the silence limits still apply there. A run with a warm cache needs well below these limits; they must also fit a cold run.
 # No secrets are used: everything runs in the iOS Simulator without code signing, with demo data only.
@@ -125,7 +126,7 @@ env:
   XCODEGEN_VERSION: 2.46.0
   XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
   # Number of UI test shards (one macOS job each). The shards are balanced by app/TagwerkUITests/ui-test-durations.txt.
-  UI_SHARD_COUNT: "2"
+  UI_SHARD_COUNT: "3"
 
 jobs:
   changes:

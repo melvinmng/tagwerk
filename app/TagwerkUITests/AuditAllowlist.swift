@@ -233,8 +233,9 @@ enum AuditAllowlist {
             "Footer of the wrap-up in the AX5 run of the evening sheet. Checked on the frame of the finding: 370 × 217 pt, completely inside the "
             + "screen (874 pt high), so the text wraps and nothing is cut; the audit reports its generic warning \"may be clipped at larger "
             + "Dynamic Type sizes\". Stays on the device test list (large text)."),
-        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+"], reason:
-            "Steps value of \"Erfassen\" in the largest text size: single-line summary cell. Layout for AX sizes is a "
+        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+", "[\\d,]+ l / [\\d,]+ l"], reason:
+            "Steps and water values of \"Erfassen\" in the largest text size: single-line summary cells of the same tile row (the water "
+            + "value was first reported on 25.11.2026 at frame 152.7 × 44 pt, right above the tab bar). Layout for AX sizes is a "
             + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
             + "accessibility sizes (`PageTitleLabel`), so it needs no entry; its weekday changes every day."),
         Entry(auditType: .textClipped, labels: [""], elementType: .textField, reason:

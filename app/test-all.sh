@@ -62,7 +62,7 @@
 #   TAGWERK_STAGE_SILENCE_SECONDS  the same silence limit for builds and the other test calls (default 900)
 #   TAGWERK_STAGE_MAX_SECONDS      run time limit of one build or other test call (default 0 = off; CI sets 1800 to 2700)
 #   TAGWERK_HEARTBEAT_SECONDS      interval of the heartbeat line (default 300)
-#   TAGWERK_BOOT_TIMEOUT_SECONDS   limit for the boot of the simulator before the UI tests (default 300, see scripts/test-env.sh)
+#   TAGWERK_BOOT_TIMEOUT_SECONDS   limit for the boot of the simulator before the UI tests (default 600, see scripts/test-env.sh)
 
 set -euo pipefail
 
