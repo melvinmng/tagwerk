@@ -173,9 +173,10 @@ struct CaptureModelTests {
         async let energy: Void = model.allowActiveEnergy()
         async let steps: Void = model.connectSteps()
         _ = await (connect, energy, steps)
-        #expect(health.authorizationRequests == 1)
-        #expect(health.groupRequests(.activeEnergy) == 0, "the budget line never opens a second sheet")
-        #expect(health.stepsAuthorizationRequests == 0)
+        // The child tasks of `async let` start in any order, so whichever request comes first opens its sheet; the other two are
+        // dropped while it is open. Exactly one sheet in total is the rule, not which one.
+        let sheets = health.authorizationRequests + health.groupRequests(.activeEnergy) + health.stepsAuthorizationRequests
+        #expect(sheets == 1, "only one Health sheet opens at a time")
     }
 
     @Test func whileTheCardShows_stepsTileOffersNoSecondPrompt() async {

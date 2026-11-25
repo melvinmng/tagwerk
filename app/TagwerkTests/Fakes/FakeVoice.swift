@@ -21,6 +21,10 @@ final class FakeSpeaker: SpeechSpeaking {
 
     func voices(for language: VoiceLanguage) -> [SpokenVoice] { installed.filter { $0.language == language } }
 
+    /// Identifiers the system knows although the list does not show them.
+    var known: Set<String> = []
+    func voiceExists(_ id: String) -> Bool { known.contains(id) }
+
     func emit(_ event: SpeakerEvent) { onEvent?(event) }
 }
 
