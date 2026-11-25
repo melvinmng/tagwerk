@@ -316,7 +316,7 @@ struct NoteField: View {
             }
         } footer: {
             if isDreamLog {
-                Text("Bleibt auf diesem iPhone, geht nie an ChatGPT.")
+                Text("Bleibt auf diesem iPhone, geht nie an ChatGPT.").foregroundStyle(.secondaryText)
             }
         }
         if let card = model.changeCard { changeCard(card) }
@@ -362,12 +362,13 @@ struct NoteField: View {
             Button { creatingTask = true } label: { Label("Als Aufgabe anlegen", systemImage: "plus.circle") }
         } header: {
             Text("Willst du etwas ändern?")
+                .foregroundStyle(.secondaryText)
         } footer: {
             switch card.footer {
             case .privacy:
-                Text("„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.")
+                Text("„Vorschläge holen“ sendet diese Notiz mit deinen Aufgaben und Terminen der nächsten 7 Tage an ChatGPT. Nichts wird ohne deine Bestätigung geändert.").foregroundStyle(.secondaryText)
             case .signInHint:
-                Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.")
+                Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Vorschläge zu holen.").foregroundStyle(.secondaryText)
             case .none:
                 EmptyView()
             }
@@ -410,6 +411,7 @@ struct NoteField: View {
                 }
             } header: {
                 Text("\(suggestions.cards.count) Vorschläge aus der Notiz")
+                    .foregroundStyle(.secondaryText)
             }
             if suggestions.openCount > 0 { followUpSection(suggestions) }
         }
@@ -433,7 +435,7 @@ struct NoteField: View {
                 }
             }
         } header: {
-            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles") }
+            if availability != .hidden { Label("Mit ChatGPT besprechen", systemImage: "sparkles").foregroundStyle(.secondaryText) }
         }
     }
 
@@ -502,7 +504,7 @@ struct FolderSectionHeader: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: symbol).foregroundStyle(NoteFolderTint.color(for: role)).accessibilityHidden(true)
-            Text(title)
+            Text(title).foregroundStyle(.secondaryText)
         }
     }
 }

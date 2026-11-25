@@ -27,8 +27,10 @@ struct GitHubSettingsSection: View {
             }
         } header: {
             Text("GitHub")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Die Anmeldung erneuert sich automatisch. Ohne Nutzung läuft sie nach etwa 6 Monaten ab. Vollständig widerrufen: github.com → Settings → Applications → Authorized OAuth Apps.")
+                .foregroundStyle(.secondaryText)
         }
         .task { if loginModel == nil { loginModel = environment.makeGitHubLoginModel() } }
         .onChange(of: settings.selectedProjectIDs) { _, _ in

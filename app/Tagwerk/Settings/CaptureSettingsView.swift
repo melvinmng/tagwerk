@@ -79,8 +79,10 @@ private struct CaptureSettingsForm: View {
                 }
             } header: {
                 Text("Ziele")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Die Vorgaben sind Platzhalter, keine Empfehlung. Trag deine eigenen Ziele ein. Eine Änderung gilt ab heute; frühere Tage behalten ihr Ziel. Das Kalorienziel ist das Grundziel für einen Tag ohne angerechnete Aktivität. Zur Trainingszeit zählen Trainings aus Tagwerk und aus Health. Schritte liest Tagwerk aus Health; 0 blendet ein Ziel aus.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -92,8 +94,10 @@ private struct CaptureSettingsForm: View {
                 .accessibilityIdentifier("activityCredit")
             } header: {
                 Text("Aktivität")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Ein Teil der Aktivitätsenergie aus Health erhöht dein Tagesbudget. Geräte schätzen sie eher zu hoch, deshalb zählt voreingestellt die Hälfte. Das Kalorienziel gilt für einen Tag ohne angerechnete Aktivität.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -115,8 +119,10 @@ private struct CaptureSettingsForm: View {
                 }
             } header: {
                 Text("Apple Health")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Hier steht, was Tagwerk in Health schreiben darf. „Nicht erlaubt“ ändert nur die Health-App, unter Profil › Apps › Tagwerk; solange es fehlt, bleibt der Eintrag in Tagwerk und wird nicht nach Health übertragen. Ob das Lesen erlaubt ist, zeigt iOS nicht an.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -135,8 +141,10 @@ private struct CaptureSettingsForm: View {
                 }
             } header: {
                 Text("Nährwerte")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Ballaststoffe und Zucker sind immer dabei; gesättigte Fettsäuren und Salz erscheinen im Mahlzeitenblatt und in der Karte „Nährwerte“, wenn du sie einschaltest. Tagwerk liest für „Einträge anderer Apps mitzählen“ Ernährungseinträge aus Health, die nicht von Tagwerk stammen. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Einträge. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Ob Health das Schreiben der weiteren Nährwerte erlaubt, steht an derselben Stelle.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -144,8 +152,10 @@ private struct CaptureSettingsForm: View {
                     .accessibilityIdentifier("bodyFatEnabled")
             } header: {
                 Text("Gewicht")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Tagwerk schreibt dein Gewicht nach Health und liest Messungen anderer Apps, zum Beispiel einer Waage. iOS teilt Tagwerk nicht mit, ob du das Lesen erlaubt hast; ohne Erlaubnis sieht es so aus, als gäbe es keine fremden Messungen. Prüfen kannst du es in Health › Teilen › Apps › Tagwerk. Der Körperfettanteil ist ein zweites Feld im Gewichtsblatt und eine zweite Linie im Verlauf.")
+                    .foregroundStyle(.secondaryText)
             }
 
             BodyProfileSection(store: environment.bodyProfile, heightWriteAccess: capture.heightWriteAccess)
@@ -162,8 +172,10 @@ private struct CaptureSettingsForm: View {
                     .accessibilityIdentifier("drinkPresetsReset")
             } header: {
                 Text("Trinkportionen")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Die drei Schnellknöpfe im Tab „Erfassen“ tragen diese Mengen ein, in dieser Reihenfolge.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -171,11 +183,12 @@ private struct CaptureSettingsForm: View {
                     .disabled(!environment.ai.isSignedIn)
             } header: {
                 Text("Schätzung")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 if environment.ai.isSignedIn {
-                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ tippst oder ein Foto für ein Etikett aufnimmst oder auswählst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.")
+                    Text("Zum Schätzen sendet Tagwerk nur Text und Foto der jeweiligen Mahlzeit an ChatGPT (OpenAI), zum Lesen eines Etiketts nur dessen Foto, und nur, wenn du auf „Schätzen“ tippst oder ein Foto für ein Etikett aufnimmst oder auswählst. Daten aus Health, Ziele und frühere Einträge werden nie gesendet. Ausgeschaltet trägst du Werte selbst ein.").foregroundStyle(.secondaryText)
                 } else {
-                    Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.")
+                    Text("Melde dich unter Einstellungen › KI bei ChatGPT an, um Mahlzeiten schätzen zu lassen.").foregroundStyle(.secondaryText)
                 }
             }
 
@@ -193,8 +206,10 @@ private struct CaptureSettingsForm: View {
                 Link("Daten: Open Food Facts (ODbL)", destination: Self.openFoodFactsURL)
             } header: {
                 Text("Online-Suche")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -202,8 +217,10 @@ private struct CaptureSettingsForm: View {
                 Toggle("Ernährung im Widget zeigen", isOn: $settings.widgetShowsNutrition)
             } header: {
                 Text("Anzeige")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("„In Planen anzeigen“ zeigt Kalorien, Wasser und Schritte von heute unter dem Datum im Tab „Planen“, sobald du etwas erfasst hast. Ist „Ernährung im Widget zeigen“ aus, stehen die Werte und die Schritte nicht im Widget. Auf dem Sperrbildschirm erscheinen sie nie.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Erfassen")

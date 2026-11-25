@@ -22,11 +22,13 @@ struct AISettingsView: View {
                 Toggle("Mails von ChatGPT zusammenfassen", isOn: Bindable(environment.settings).mailSummaryConsent)
             } footer: {
                 Text("Aus einer geteilten Mail macht Tagwerk auf dein Tippen einen Aufgabenvorschlag. Gesendet werden nur Betreff, Absendername und Text.")
+                    .foregroundStyle(.secondaryText)
             }
             Section {
                 Toggle("Notizen mit ChatGPT", isOn: Bindable(environment.settings).noteAssistantConsent)
             } footer: {
                 Text("Der Assistent findet Notizen über seine Suche (Titel und ein kurzer Ausschnitt), liest bei Bedarf die ganze Notiz und kann Notizen ändern, anlegen und löschen; jede Änderung bestätigst du einzeln. Gelesene Notiztexte werden nicht im Verlauf gespeichert, die Antworten des Assistenten schon. Tagebuch mit Gott, Bible Study und Dream Log bleiben immer auf dem iPhone.")
+                    .foregroundStyle(.secondaryText)
             }
             Section {
                 NavigationLink("Datenschutzhinweis") { AIPrivacyView() }
@@ -81,9 +83,10 @@ struct AISettingsView: View {
             }
         } header: {
             Text("Konto")
+                .foregroundStyle(.secondaryText)
         } footer: {
             if !ai.isSignedIn {
-                Text("\(AIStatusMessage.privacyNotice)\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.")
+                Text("\(AIStatusMessage.privacyNotice)\n\nDie Anmeldung öffnet eine Seite von ChatGPT und kehrt danach von selbst zu Tagwerk zurück. Planen mit KI und der Assistent brauchen sie; alles andere läuft ohne.").foregroundStyle(.secondaryText)
             }
         }
     }
@@ -122,12 +125,13 @@ struct AISettingsView: View {
                 .disabled(isLoadingModels)
         } header: {
             HStack {
-                Text("Modell")
+                Text("Modell").foregroundStyle(.secondaryText)
                 Spacer()
-                if let note = listNote { Text(note).textCase(nil) }
+                if let note = listNote { Text(note).foregroundStyle(.secondaryText).textCase(nil) }
             }
         } footer: {
             Text("Gilt für Planen und Assistent. Ist das gewählte Modell nicht mehr verfügbar, wechselt Tagwerk auf „Automatisch“ und sagt es beim nächsten Aufruf.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -152,8 +156,10 @@ struct AISettingsView: View {
             }
         } header: {
             Text("Planen mit KI")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Längere Tage erscheinen immer nur als Vorschlag; erst dein ✓ ändert die Arbeitszeit des Tages.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -179,8 +185,10 @@ struct AISettingsView: View {
             .labelsHidden()
         } header: {
             Text("Denkaufwand")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Gilt für Planen und Assistent. Höher denkt länger und gründlicher, braucht aber mehr Zeit und Kontingent.")
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -273,8 +281,10 @@ struct PlanningRulesSection: View {
             }
         } header: {
             Text("Planungsvorgaben · \(rules.count) von \(AppSettings.maximumPlanningRules)")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Vorgaben gehen bei jeder Planung als Text an ChatGPT. Tagwerk prüft nicht, ob das Ergebnis sie einhält. Feste Zeiten für alles gehören in die Arbeitszeit.")
+                .foregroundStyle(.secondaryText)
         }
         .alert(editingIndex == nil ? "Neue Vorgabe" : "Vorgabe", isPresented: Binding(get: { draft != nil }, set: { if !$0 { draft = nil } })) {
             TextField("z. B. Mails nicht nach 18 Uhr einplanen", text: Binding(get: { draft ?? "" }, set: { draft = $0 }))

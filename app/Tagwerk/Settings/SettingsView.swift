@@ -19,10 +19,13 @@ struct SettingsView: View {
             Form {
                 PlanningSettingsSection()
 
-                Section("Mittagspause") {
+                Section {
                     DatePicker("Beginn", selection: time($settings.lunchStartMinutes), displayedComponents: .hourAndMinute)
                     ValueStepper("Dauer", value: $settings.lunchDurationMinutes, in: 0...180, step: 15, kind: .durationMinutes,
                                  unit: "min", display: ValueStepper.minutesText)
+                } header: {
+                    Text("Mittagspause")
+                        .foregroundStyle(.secondaryText)
                 }
 
                 Section {
@@ -30,9 +33,10 @@ struct SettingsView: View {
                                  unit: "min", display: ValueStepper.minutesText)
                 } footer: {
                     Text("Abstand zwischen Terminen und eingeplanten Aufgaben.")
+                        .foregroundStyle(.secondaryText)
                 }
 
-                Section("Quellen") {
+                Section {
                     NavigationLink {
                         SourceSelectionView(title: "Kalender", items: calendars,
                                             defaultSelection: CalendarSelection.defaultSelected(calendars),
@@ -56,6 +60,9 @@ struct SettingsView: View {
                     } label: {
                         LabeledContent("Einkaufsliste", value: shoppingListSummary)
                     }
+                } header: {
+                    Text("Quellen")
+                        .foregroundStyle(.secondaryText)
                 }
 
                 GitHubSettingsSection()
@@ -130,8 +137,10 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Benachrichtigungen")
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     Text(notificationFooter)
+                        .foregroundStyle(.secondaryText)
                 }
 
                 Section {
@@ -149,8 +158,10 @@ struct SettingsView: View {
                     stepsRow
                 } header: {
                     Text("Zugriff")
+                        .foregroundStyle(.secondaryText)
                 } footer: {
                     Text(healthFooter)
+                        .foregroundStyle(.secondaryText)
                 }
                 .id(accessRevision)
 

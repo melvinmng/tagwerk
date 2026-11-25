@@ -37,6 +37,7 @@ struct LanguageSettingsView: View {
                 .accessibilityAddTraits(.isLink)
             } footer: {
                 Text("Die Sprache der Oberfläche stellst du in den iOS-Einstellungen ein.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -59,16 +60,20 @@ struct LanguageSettingsView: View {
                 }
             } header: {
                 Text("Inhalte")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Beim Diktieren und in der Einkaufsliste wechselst du die Sprache auch direkt am Feld. Rezepte übersetzt ChatGPT in die gewählte Sprache; die Artikel der Einkaufsliste entstehen in der Sprache der Einkaufsliste.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
                 NavigationLink("Spracheingabe und Vorlesen") { VoiceSettingsView() }
             } header: {
                 Text("Stimme")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Mikrofon, Sprachpakete, Stimmen, Tempo und Sprechmodus.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Sprachen")

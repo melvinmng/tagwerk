@@ -34,6 +34,7 @@ struct TimeWithGodSection: View {
         } footer: {
             Text(showsJournal && showsBibleStudy ? "Beides bleibt auf deinem iPhone und geht nie an ChatGPT."
                                                  : "Bleibt auf deinem iPhone und geht nie an ChatGPT.")
+                .foregroundStyle(.secondaryText)
         }
     }
 

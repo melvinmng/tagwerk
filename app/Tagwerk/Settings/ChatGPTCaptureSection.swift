@@ -23,8 +23,10 @@ struct ChatGPTCaptureSection: View {
             if let status { Text(status).font(.footnote).foregroundStyle(.secondaryText) }
         } header: {
             Text("Debug")
+                .foregroundStyle(.secondaryText)
         } footer: {
             Text("Nur für die Entwicklung: Der Mitschnitt schickt eine Testanfrage ohne persönliche Daten an OpenAI.")
+                .foregroundStyle(.secondaryText)
         }
     }
 

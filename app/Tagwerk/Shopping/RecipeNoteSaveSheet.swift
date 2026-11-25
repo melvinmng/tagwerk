@@ -92,21 +92,27 @@ struct RecipeNoteSaveView: View {
 
     var body: some View {
         List {
-            Section("Titel") {
+            Section {
                 if dynamicTypeSize.isAccessibilitySize {
                     // A single line cuts a long title at accessibility sizes.
                     TextField("Titel", text: $title, axis: .vertical).lineLimit(1...5)
                 } else {
                     TextField("Titel", text: $title)
                 }
+            } header: {
+                Text("Titel")
+                    .foregroundStyle(.secondaryText)
             }
             Section {
                 ValueStepper("Portionen", value: $servings, start: RecipeResultView.startServings, in: RecipeResultView.servingsRange)
             } footer: {
-                if servings == nil { Text("Im Rezept steht keine Portionszahl. Du kannst sie später in der Notiz ergänzen.") }
+                if servings == nil { Text("Im Rezept steht keine Portionszahl. Du kannst sie später in der Notiz ergänzen.").foregroundStyle(.secondaryText) }
             }
-            Section("Zutaten") {
+            Section {
                 ForEach(Array(lines.enumerated()), id: \.offset) { Text($0.element) }
+            } header: {
+                Text("Zutaten")
+                    .foregroundStyle(.secondaryText)
             }
             if draft.hasFollowUp {
                 PreviewFollowUpSection(
@@ -120,14 +126,18 @@ struct RecipeNoteSaveView: View {
                     focusLabel: { String(localized: "Zu: \($0.candidate.listName)") }, onSend: { message in Task { await draft.send(message) } })
             }
             if !draft.result.steps.isEmpty {
-                Section("Zubereitung") {
+                Section {
                     ForEach(Array(draft.result.steps.enumerated()), id: \.offset) { index, step in
                         Text("\(index + 1). \(step)")
                     }
+                } header: {
+                    Text("Zubereitung")
+                        .foregroundStyle(.secondaryText)
                 }
             }
             Section {} footer: {
                 Text("Das Rezept wird als Notiz im Ordner „Rezepte“ gespeichert. Die Einkaufsliste bleibt unverändert.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Rezept speichern")

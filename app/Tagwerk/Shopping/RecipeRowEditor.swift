@@ -30,12 +30,15 @@ struct RecipeRowEditor: View {
                 Section {
                     TextField("Name", text: $name)
                 }
-                Section("Kategorie") {
+                Section {
                     Picker("Kategorie", selection: $category) {
                         ForEach(Self.choices(categories, current: row.candidate.category), id: \.self) { Text($0).tag($0) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
+                } header: {
+                    Text("Kategorie")
+                        .foregroundStyle(.secondaryText)
                 }
             }
             .scrollDismissesKeyboard(.interactively)

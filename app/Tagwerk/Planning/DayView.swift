@@ -130,7 +130,8 @@ struct DayView: View {
                         Button { sheetEntry = .event(event, plan.links[event.id]) } label: {
                             Text(event.title).font(.subheadline).lineLimit(1)
                                 .padding(.horizontal, 10).padding(.vertical, 5)
-                                .background(.thinMaterial, in: Capsule())
+                                // A solid fill instead of a material: the audit measures text on a material against whatever scrolls behind it.
+                                .background(Color(.secondarySystemGroupedBackground), in: Capsule())
                         }
                         .buttonStyle(.plain)
                         .contextMenu { eventMenu(event, taskID: plan.links[event.id]) }
@@ -278,7 +279,8 @@ struct CapacityCard: View {
             }
         }
         .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        // A solid fill instead of a material: the audit measures text on a material against whatever scrolls behind it.
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
     }
 
     /// "🛏 Tagesabschluss · Schlafzeit 23:00 · Checkliste 0 von 3 ›", independent of "Morgen planen"; after "Abschließen"

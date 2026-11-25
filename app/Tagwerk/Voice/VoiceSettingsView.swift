@@ -59,8 +59,10 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Spracheingabe")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Tagwerk wandelt Sprache auf dem iPhone in Text um. Der Ton verlässt das Gerät nicht. An ChatGPT geht nur der Text, den du sendest.")
+                    .foregroundStyle(.secondaryText)
             }
 
             Section {
@@ -90,6 +92,7 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Vorlesen")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Vorgelesen wird mit den Stimmen dieses iPhones. Die Stimme wählst du je Sprache auf einer eigenen Seite, mit Hörprobe. Bei stummem iPhone liest Tagwerk nur vor, wenn du „Vorlesen“ antippst.")
                     .foregroundStyle(.secondaryText)
@@ -104,8 +107,10 @@ struct VoiceSettingsView: View {
                 }
             } header: {
                 Text("Sprechmodus")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Im Chat startet der Knopf rechts neben dem leeren Feld den Sprechmodus. Tagwerk sendet nach der Pause, liest die Antwort vor und hört danach wieder zu. Änderungen führt es erst aus, wenn du sie bestätigst. „Änderungen ansagen“ gilt auch hier.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Spracheingabe und Vorlesen")

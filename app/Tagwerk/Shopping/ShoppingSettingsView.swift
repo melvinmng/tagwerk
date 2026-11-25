@@ -25,28 +25,33 @@ struct ShoppingSettingsView: View {
                 }
             } header: {
                 Text("Liste")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    if !hasAccess { Text("Tagwerk hat keinen Zugriff auf Erinnerungen.") }
-                    Text("Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.")
+                    if !hasAccess { Text("Tagwerk hat keinen Zugriff auf Erinnerungen.").foregroundStyle(.secondaryText) }
+                    Text("Die gewählte Liste erscheint als Einkaufsliste. Ihre Einträge stehen nicht mehr unter „Aufgaben“, werden nicht eingeplant, zählen nicht im Wochenrückblick und lösen keine Tagwerk-Mitteilungen aus. In der App „Erinnerungen“ ändert sich nichts.").foregroundStyle(.secondaryText)
                 }
             }
-            Section("Kategorien") {
+            Section {
                 NavigationLink {
                     ShoppingCategoriesView(store: environment.shoppingCategories, model: environment.shopping)
                 } label: {
                     LabeledContent("Kategorien verwalten", value: "\(environment.shoppingCategories.categories().count)")
                 }
+            } header: {
+                Text("Kategorien")
+                    .foregroundStyle(.secondaryText)
             }
             Section {
                 Toggle("Mit ChatGPT sortieren und übersetzen", isOn: $settings.hasShoppingSortConsent)
                 Toggle("Rezepte mit ChatGPT lesen und übersetzen", isOn: $settings.shoppingRecipeConsent)
             } header: {
                 Text("ChatGPT")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Sendet auf dein Tippen die Namen der offenen Artikel an ChatGPT, beim Sortieren auch die Namen deiner Kategorien. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.")
-                    Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. „Übersetzen …“ in einer Rezept-Notiz sendet auf dein Tippen den Text dieser Notiz, ohne Anhänge. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.")
+                    Text("Sendet auf dein Tippen die Namen der offenen Artikel an ChatGPT, beim Sortieren auch die Namen deiner Kategorien. Fragst du den Assistenten nach der Einkaufsliste, gehen die Artikelnamen ebenfalls an ChatGPT.").foregroundStyle(.secondaryText)
+                    Text("„Rezept hinzufügen“ sendet auf dein Tippen den Rezepttext oder die Fotos und die Namen deiner Kategorien, „Rezept mit ChatGPT anlegen“ nur den Rezepttext oder die Fotos. Bei einem Link geht nur der gelesene Text der Seite weg, nicht die Adresse. Eine Rezept-Notiz mit Zutaten und Zubereitung liest Tagwerk auf dem iPhone. „Übersetzen …“ in einer Rezept-Notiz sendet auf dein Tippen den Text dieser Notiz, ohne Anhänge. Schaltest du das aus, fragt Tagwerk beim nächsten Rezept erneut.").foregroundStyle(.secondaryText)
                 }
             }
         }

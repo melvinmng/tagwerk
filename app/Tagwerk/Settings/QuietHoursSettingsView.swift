@@ -32,7 +32,7 @@ struct QuietHoursSettingsView: View {
                 }
             } footer: {
                 if settings.quietHoursEnabled, settings.quietHoursStartsAtBedtime {
-                    Text("Die Zielschlafzeit stellst du unter Routinen ein.")
+                    Text("Die Zielschlafzeit stellst du unter Routinen ein.").foregroundStyle(.secondaryText)
                 }
             }
 
@@ -41,10 +41,13 @@ struct QuietHoursSettingsView: View {
                     QuietHoursBar(window: window)
                     Text("In dieser Zeit hält Tagwerk Mitteilungen zurück. Sie kommen um \(DateText.time(minutes: window.endMinutes, calendar: .tagwerk)), nichts entfällt.")
                 }
-                Section("Wird zurückgehalten") {
+                Section {
                     Text("Aufgaben und Deadline-Termine")
+                } header: {
+                    Text("Wird zurückgehalten")
+                        .foregroundStyle(.secondaryText)
                 }
-                Section("Kommt immer") {
+                Section {
                     Text("Routinen (Tagesstart, Abend-Checkliste)")
                     Text("Fokus-Timer: Phasenende")
                     LabeledContent {
@@ -57,6 +60,9 @@ struct QuietHoursSettingsView: View {
                     } label: {
                         Text("Hinweise aus Kalender und Erinnerungen")
                     }
+                } header: {
+                    Text("Kommt immer")
+                        .foregroundStyle(.secondaryText)
                 }
             }
 
@@ -69,8 +75,10 @@ struct QuietHoursSettingsView: View {
                 }
             } header: {
                 Text("Fokus-Filter")
+                    .foregroundStyle(.secondaryText)
             } footer: {
                 Text("Hält Mitteilungen auch während eines iOS-Fokus zurück, zum Beispiel „Arbeiten“.")
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle("Ruhezeiten")

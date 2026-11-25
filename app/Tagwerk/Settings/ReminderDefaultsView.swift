@@ -22,6 +22,7 @@ struct ReminderDefaultsView: View {
                     }
                 } footer: {
                     Text("Gilt für alles ohne eigene Erinnerungen. Für Kalendertermine nur beim Anlegen in Tagwerk.")
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -55,6 +56,7 @@ struct ReminderDefaultsKindPage: View {
                 }
             } footer: {
                 Text(Self.footer(for: kind))
+                    .foregroundStyle(.secondaryText)
             }
         }
         .navigationTitle(ReminderDefaultsModel.kindTitle(kind))

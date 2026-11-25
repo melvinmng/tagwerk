@@ -301,7 +301,10 @@ struct DayGridScreen<Summary: View, Header: View>: View {
                     .opacity(dragging ? 0 : 1)
                 }
             }
-            .background(.bar, in: RoundedRectangle(cornerRadius: 16))
+            // A solid fill instead of a material: the audit measures text on a material against the grid that scrolls behind it.
+            // The hairline keeps the edge of the panel visible on the grid.
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+            .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Color(.separator), lineWidth: 0.5) }
             // Moves sit at their task rows, so the panel opens when there are any (proposal §5).
             // Not in a preview: `panelExpanded` is shared by every page, a neighbour must not open the shown panel.
             .onChange(of: moveSuggestions.count) { _, count in if count > 0, !isPreview { panelExpanded = true } }
