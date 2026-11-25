@@ -640,6 +640,46 @@
         }
       }
     },
+    "%lld Tagen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tagen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Termine": {
       "localizations": {
         "de": {
@@ -2026,6 +2066,22 @@
         }
       }
     },
+    "Im Budget an %lld von %lld Tagen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Im Budget an %1$lld von %2$lld Tagen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Within budget on %1$lld of %2$lld days"
+          }
+        }
+      }
+    },
     "Immer": {
       "localizations": {
         "en": {
@@ -3212,12 +3268,70 @@
         }
       }
     },
+    "Ø %@ an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ø %1$@ an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %1$@ on %2$@"
+          }
+        }
+      }
+    },
+    "Ø %@ g / %lld g an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ø %1$@ g / %2$lld g an %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %1$@ g / %2$lld g on %3$@"
+          }
+        }
+      }
+    },
+    "Ø %@ g an %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ø %1$@ g an %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. %1$@ g on %2$@"
+          }
+        }
+      }
+    },
     "Ø %@ pro Tag": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Avg. %@ per day"
+          }
+        }
+      }
+    },
+    "Ø Budget %@ kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avg. budget %@ kcal"
           }
         }
       }

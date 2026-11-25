@@ -214,15 +214,17 @@ struct WeekReviewModelTests {
         #expect(model.weekStart == PlanDay(year: 2026, month: 11, day: 16))
     }
 
-    @Test func proteinOnlyWithGoal() async {
+    @Test func proteinMean_isKnownWithoutGoal_goalComesFromTheSettings() async {
         let item = MealItem(name: "x", amount: "1", kcalMin: 500, kcal: 500, kcalMax: 500, protein: 40, carbs: 0, fat: 0, isEstimated: false)
         store.addMeal(MealValue(id: UUID(), date: now, kind: .lunch, title: "x", items: [item], origin: .manual), estimatedAt: nil)
         let model = make(FakeHealthStore())
         await model.reload()
-        #expect(model.review?.averageProtein == nil)
+        #expect(model.review?.averageProtein == 40)
+        #expect(model.review?.goals.proteinGrams == nil)
         settings.proteinGoalEnabled = true
         await model.reload()
         #expect(model.review?.averageProtein == 40)
+        #expect(model.review?.goals.proteinGrams != nil)
     }
 
     // MARK: Budget, goal plans and stored Health values (nutrition plan, C4)
