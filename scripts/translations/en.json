@@ -2016,6 +2016,7 @@
   "Im Rezept steht keine Portionszahl. Du kannst sie später in der Notiz ergänzen.": "The recipe doesn’t state a number of servings. You can add it to the note later.",
   "Keine Notizen vorhanden.": "No notes.",
   "Legt eine Notiz im Ordner „Rezepte“ an, mit den Zutaten in den Mengen des Rezepts.": "Creates a note in the “Recipes” folder, with the ingredients in the amounts of the recipe.",
+  "Rezept anlegen": "Create recipe",
   "Rezept für": "Recipe for",
   "Rezept holen": "Get recipe",
   "Rezept mit ChatGPT anlegen": "Create recipe with ChatGPT",
