@@ -3140,5 +3140,20 @@
   "eingetragen · wird nach Health geschrieben": "entered · written to Health",
   "eingetragen · nicht nach Health geschrieben": "entered · not written to Health",
   "Geburtsdatum und Geschlecht in Health ändern": "Change date of birth and sex in Health",
-  "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.": "Height, age and sex are only calculated on this iPhone: Tagwerk uses them to check goal suggestions. Stored are the height in whole centimetres, the birth year and the sex of the formula, never the date of birth. Tagwerk writes the height to Health. Only the Health app can change date of birth and sex; iOS does not allow apps to: if you enter something different here, Tagwerk calculates with it and Health stays unchanged. Clear the field to use the value from Health again."
+  "Größe, Alter und Geschlecht rechnen nur auf diesem iPhone: Tagwerk prüft damit Zielvorschläge. Gespeichert werden die Größe in ganzen Zentimetern, das Geburtsjahr und das Geschlecht der Formel, nie das Geburtsdatum. Die Größe schreibt Tagwerk nach Health. Geburtsdatum und Geschlecht kann nur die Health-App ändern, iOS erlaubt Apps das nicht: trägst du hier etwas anderes ein, rechnet Tagwerk damit und Health bleibt unverändert. Leere das Feld, damit wieder der Wert aus Health gilt.": "Height, age and sex are only calculated on this iPhone: Tagwerk uses them to check goal suggestions. Stored are the height in whole centimetres, the birth year and the sex of the formula, never the date of birth. Tagwerk writes the height to Health. Only the Health app can change date of birth and sex; iOS does not allow apps to: if you enter something different here, Tagwerk calculates with it and Health stays unchanged. Clear the field to use the value from Health again.",
+  "Alle Projekte (%@)": "All projects (%@)",
+  "Alle Repositories (%@)": "All repositories (%@)",
+  "Das Issue erscheint nur auf GitHub.": "The issue appears on GitHub only.",
+  "Mit dem Repository verknüpft": "Linked to the repository",
+  "Projekt suchen": "Search project",
+  "Projekte (%lld)": "Projects (%lld)",
+  "Repositories werden geladen …": "Loading repositories …",
+  "Repository suchen": "Search repository",
+  "Repository wählen": "Choose repository",
+  "Status: %@": "Status: %@",
+  "Verknüpft mit %@": "Linked to %@",
+  "Weitere Projekte (%@)": "More projects (%@)",
+  "Zuletzt verwendet": "Recently used",
+  "Öffnet die Auswahl mit Suche": "Opens the choice with search",
+  "Öffnet die Mehrfachauswahl mit Suche": "Opens the multiple choice with search"
 }

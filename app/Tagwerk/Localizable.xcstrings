@@ -4706,6 +4706,26 @@
         }
       }
     },
+    "Alle Projekte (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All projects (%@)"
+          }
+        }
+      }
+    },
+    "Alle Repositories (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All repositories (%@)"
+          }
+        }
+      }
+    },
     "Alle Sätze stehen dort bereit, auch für Aktionstaste und Home-Bildschirm.": {
       "localizations": {
         "en": {
@@ -7904,6 +7924,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The base goal is below the hard limit of %@ kcal and cannot be adopted."
+          }
+        }
+      }
+    },
+    "Das Issue erscheint nur auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The issue appears on GitHub only."
           }
         }
       }
@@ -17749,6 +17779,7 @@
       }
     },
     "Mehrere möglich": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -18439,6 +18470,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "With your ChatGPT account, Tagwerk can plan your day, week and month, and the assistant can change tasks for you."
+          }
+        }
+      }
+    },
+    "Mit dem Repository verknüpft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked to the repository"
           }
         }
       }
@@ -21299,12 +21340,32 @@
         }
       }
     },
+    "Projekt suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search project"
+          }
+        }
+      }
+    },
     "Projekte": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Projects"
+          }
+        }
+      }
+    },
+    "Projekte (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects (%lld)"
           }
         }
       }
@@ -21533,6 +21594,16 @@
         }
       }
     },
+    "Repositories werden geladen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading repositories …"
+          }
+        }
+      }
+    },
     "Repository": {
       "localizations": {
         "en": {
@@ -21549,6 +21620,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Repository missing"
+          }
+        }
+      }
+    },
+    "Repository suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search repository"
+          }
+        }
+      }
+    },
+    "Repository wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose repository"
           }
         }
       }
@@ -23458,6 +23549,16 @@
         }
       }
     },
+    "Status: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: %@"
+          }
+        }
+      }
+    },
     "Steht unverschlüsselt in der Sicherung": {
       "localizations": {
         "en": {
@@ -25209,6 +25310,16 @@
         }
       }
     },
+    "Verknüpft mit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked to %@"
+          }
+        }
+      }
+    },
     "Verknüpfung lösen": {
       "localizations": {
         "en": {
@@ -26395,6 +26506,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "More options …"
+          }
+        }
+      }
+    },
+    "Weitere Projekte (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More projects (%@)"
           }
         }
       }
@@ -27878,6 +27999,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent and frequent"
+          }
+        }
+      }
+    },
+    "Zuletzt verwendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently used"
           }
         }
       }
@@ -30588,6 +30719,16 @@
         }
       }
     },
+    "Öffnet die Auswahl mit Suche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the choice with search"
+          }
+        }
+      }
+    },
     "Öffnet die Auswahl, wohin das Unerledigte soll": {
       "localizations": {
         "en": {
@@ -30614,6 +30755,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the shopping list."
+          }
+        }
+      }
+    },
+    "Öffnet die Mehrfachauswahl mit Suche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the multiple choice with search"
           }
         }
       }

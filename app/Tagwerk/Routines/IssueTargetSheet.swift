@@ -48,6 +48,9 @@ final class IssueTargetSheetModel {
         }
     }
 
+    /// Projects linked to the chosen repository: offered first in the project picker.
+    var linkedProjectIDs: Set<String> { repository.map { Set(catalog.projectIDs(linkedTo: $0)) } ?? [] }
+
     /// A repository is chosen; projects and people are optional.
     var canApply: Bool { repository != nil }
 
@@ -122,12 +125,9 @@ struct IssueTargetSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Repository", selection: $model.repository) {
-                        Text("Wählen …").tag(String?.none)
-                        ForEach(model.catalog.repositories, id: \.self) { Text($0).tag(Optional($0)) }
-                    }
-                    ProjectSelectionRow(projects: model.catalog.projects.map { (id: $0.id, title: $0.title) },
-                                        selection: $model.projectIDs, edited: $model.projectsEdited)
+                    RepositoryChoiceRow(repositories: model.catalog.repositories, selection: $model.repository)
+                    ProjectChoiceRow(projects: model.catalog.projects, linkedProjectIDs: model.linkedProjectIDs,
+                                     linkedRepository: model.repository, selection: $model.projectIDs, edited: $model.projectsEdited)
                     AssigneeSelectionRow(candidates: model.assigneeCandidates, me: model.me, load: model.assigneeLoad,
                                          selection: Binding(get: { model.assignees }, set: { model.choose($0) }),
                                          isEnabled: model.repository != nil, showsDefaultMe: !model.assigneesChosen)
