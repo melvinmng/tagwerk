@@ -49,6 +49,20 @@ enum AuditAllowlist {
         "Einstellungen › Datensicherung › Verschlüsselung", "Einstellungen › Datensicherung › Sicherheitskopien",
     ]
 
+    /// A screen name and its name in the large text run (AX5, dark mode).
+    private static func withLargeText(_ screens: [String]) -> [String] { screens + screens.map { "AX5/dark " + $0 } }
+    /// The screens on which the secondary texts of the first contrast entry were reported (collect runs of 2026-11-25), with
+    /// "Erfassen" for its patterns of the capture page; restricting the entry keeps new grey texts on other pages visible.
+    private static let secondaryTextScreens = withLargeText([
+        "Aufgaben", "Notizenliste", "Rezepte", "Suche", "Einkaufsliste", "Einkaufsliste › Karte „übersetzen“", "Erfassen",
+        "Tagesabschluss", "Tagesabschluss (Abend)",
+    ]) + gridScreens
+    /// The screens with bar buttons, filter marks and quick entry buttons on Liquid Glass (collect runs of 2026-11-25).
+    private static let glassButtonScreens = withLargeText([
+        "Aufgaben", "Suche", "Erfassen", "Tagesabschluss", "Tagesabschluss (Abend)", "Einkauf › Rezept hinzufügen",
+        "Einkauf › Rezept hinzufügen (Notiz)", "Rezept anlegen (Eingabe)",
+    ]) + gridScreens
+
     private static let entries: [Entry] = [
         // MARK: Contrast (every group needs a colour decision, section "Designpunkte für #188")
         Entry(auditType: .contrast, labels: [
@@ -66,7 +80,7 @@ enum AuditAllowlist {
             "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
             "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
             "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*",
-        ], reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
+        ], screens: secondaryTextScreens, reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
             + "counts, section headers, hour labels. Strand K cut the findings of this group from 279 to 102 in three repetitions each "
             + "(measured with `--collect-all`, see docs/superpowers/reports/2026-11-21-g3-contrast-measurements.md); these patterns were still reported "
             + "in at least one repetition after the change. The audit measures the rendered small text, and 78 % is the value the calculation "
@@ -85,7 +99,7 @@ enum AuditAllowlist {
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "Derselbe Termin\\?", "1 überfällig", "Abgabe Kurzbericht", "Pretest vorbereiten",
             "Deadlines", "in 3 Tagen", "P1",
             "\\d+:\\d+–\\d+:\\d+ · .*", "Tagesabschluss", "morgen", "Klausur Statistik", "Anmeldung Abschlussarbeit", "\\d+ h \\d+ noch frei",
-        ], reason: "Text on tinted cards (red deadline card, pink suggestion card), on the translucent bar of the day view and on the capacity line and "
+        ], screens: gridScreens + ["Aufgaben", "AX5/dark Aufgaben"], reason: "Text on tinted cards (red deadline card, pink suggestion card), on the translucent bar of the day view and on the capacity line and "
             + "the \"Tagesabschluss\" line of the day card (#268; \"9:00–18:00 · 1 h Pause · …\"), in the tones "
             + "`redText`, `orangeText`, `purpleText` or `secondaryText`. Part of the overdue/deadline texts pass since strand K "
             + "(default size and AX5: 65 findings before, 26 after in three repetitions each, measured before the day card of #268 existed). The tint of the card changes with the content behind the translucent bar, so the "
@@ -102,7 +116,7 @@ enum AuditAllowlist {
             + "(same group as the other texts on the translucent bar, #188)."),
         Entry(auditType: .contrast, labels: [
             "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte", "Essen", "Trinken", "Training",
-        ], reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
+        ], screens: glassButtonScreens, reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
             + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
             + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
             + "system style (#188, \"Schrift auf Liquid Glass\")."
@@ -118,12 +132,14 @@ enum AuditAllowlist {
             + "\"Schrift auf Liquid Glass\")."),
         Entry(auditType: .contrast, labels: [
             "Morgen planen", "30 min zu viel", "Arbeitszeit vorbei · .*", "[A-Z][a-z]\\. \\d+\\. [A-Za-zä]+\\. · .* frei · \\d+ von heute übrig",
-            "Unerledigtes verschieben · \\d+ Aufgaben?", "Klausur Statistik", "Anmeldung Abschlussarbeit", "Tagesabschluss",
+            "Unerledigtes verschieben · \\d+ Aufgaben?",
         ], screens: eveningPlanScreens, reason:
             "Texts of the capacity card of today after the end of work (\"Arbeitszeit vorbei\", the next planning day, the leftover row, the "
             + "\"Tagesabschluss\" line). The card has a solid `secondarySystemGroupedBackground` since D4 (2026-11-25; it was `.thinMaterial`), which "
             + "did not remove the group: the next planning day line (\"Do. 26. Nov. · … frei · 1 von heute übrig\"), the leftover row and \"Morgen "
             + "planen\" were still reported after the change (two runs; before the change: one run), so the material was not the (only) cause. "
+            + "\"Klausur Statistik\", \"Anmeldung Abschlussarbeit\" and \"Tagesabschluss\" were struck: the entry of the tinted cards above "
+            + "lists them as well and is matched first on the same screens, so they could never match here. "
             + "The patterns that no finding matched before or after the change stay until the list is pruned: earlier runs reported them in "
             + "some repetitions and not in others."),
 
@@ -159,13 +175,6 @@ enum AuditAllowlist {
             + "tint is the colour code of the grid (break, appointment without calendar colour), and the audit still reports its title in "
             + "default size (6 findings before, 4 after, three repetitions each). Contrast on tint is a design question (#188)."),
 
-        Entry(auditType: .contrast, labels: ["\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d"], screens: ["AX5/dark Planen"], reason:
-            "Headline of the block that collapses overlapping entries of the hour grid (BF1c, `CollapsedGroupBlock`): "
-            + "primary text on grey at 24 %, the same tint as the entries above. The audit reports the headline in the "
-            + "AX5 run (the demo seminar, its copy and the deadline overlap in the morning); the rendered image of the block measures "
-            + "16.5:1 in light and 15.9:1 in dark mode (`MarkerRenderContrastTests.collapsedBlock_renderedContrast`), so the finding is "
-            + "the measurement of the audit on the translucent fill, not a lack of contrast."),
-
         // MARK: Dynamic Type
         Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)", "Planen (Abend)"], reason:
             "Hour labels and entries of the hour grid of \"Planen\": the grid is time-proportional (fixed height per hour), so its texts are "
@@ -173,7 +182,7 @@ enum AuditAllowlist {
             + "proportional, visibility at large sizes is decided in #188; the full text is in the accessibility label of each entry."),
         Entry(auditType: .dynamicType, labels: [
             "HEUTE · KW \\d+", "[A-Z][a-z]\\. \\d+\\. [A-Z][a-zä]+\\.", "[A-Z][a-zäöü]+, \\d+\\. [A-Z][a-zä]+\\.?", "Auswählen",
-        ], reason:
+        ], screens: ["Aufgaben"] + gridScreens, reason:
             "The date title in the bar of \"Planen\" is fixed in size on purpose (a toolbar item gets no width; it shows the longest form that "
             + "fits next to the bar buttons, measured in the font of the title, see PlanHeaderText.displayedTitle, PL16b; the full form "
             + "\"Samstag, 21. Nov.\" is the same element as the shorter ones that were listed here before); \"Auswählen\" is a system bar button. "
@@ -190,22 +199,13 @@ enum AuditAllowlist {
             + "support for single-line `.subheadline` texts from run to run, as for the evening sheet above. Stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
-        ], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
+        ], screens: ["Suche", "Aufgaben"], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "
             + "support. Not reproduced by eye in the large text run (no clipping there); stays on the device test list."),
 
         Entry(auditType: .dynamicType, labels: ["DE", "EN"], screens: ["Einkaufsliste", "Einkaufsliste › Karte „übersetzen“"], reason:
             "Language mark of the shopping list (\"DE\"/\"EN\" in the input field): a capsule with a text style (caption2), like the priority "
             + "capsule above; the audit reports a partial lack of support. The mark keeps its 44 pt hit area and has a full VoiceOver label "
             + "(\"Sprache der Einkaufsliste …\"); not reported in the large text run. Stays on the device test list (large text)."),
-
-        Entry(auditType: .dynamicType, labels: [
-            "Automatisch", "Wie gesprochen", "Nie",
-        ], screens: ["Einstellungen › Sprachen", "Einstellungen › KI › Sprache"], reason:
-            "Current value of a menu-style `Picker` row (\"Stimme Deutsch\": Automatisch, \"Sprachchat-Antwort\": Wie gesprochen, "
-            + "\"Antworten vorlesen\": Nie). The system draws the value as a `UILabel` inside its own menu button; "
-            + "the app only supplies the selection and the option texts, so there is no font or frame of ours to change. The audit names "
-            + "\"this UILabel\" and reports different values from run to run on the same code. The row titles next to them are SwiftUI texts "
-            + "and are not on this entry."),
 
         Entry(auditType: .dynamicType, labels: [
             "Britisches Englisch", "Markennamen lassen", "Ohne Gewürze", "Mengen runden", "Fehlt etwas\\?",
@@ -221,16 +221,11 @@ enum AuditAllowlist {
             + "scroll row (`FollowUpBar`, shared with the quick replies of \"Tag planen\"). The row scrolls sideways, so a chip wider than the "
             + "screen is reached by swiping and its text is complete; the audit reports the chip at the edge of the visible area. Large text is "
             + "checked on the device (large text test list)."),
-        Entry(auditType: .textClipped, labels: gridCellLabels, screens: gridScreens, reason:
-            "Title and time of the entries in the hour grid of \"Planen\": the grid is time-proportional with a fixed height per hour, and "
-            + "overlapping events share the width (up to four columns). Short or narrow entries cut their text by design; the full text is "
-            + "in the accessibility label of the entry. Plan g3-uitests-a11y (\"Das Raster in Planen bleibt zeitproportional\"), visibility "
-            + "in #188."),
         Entry(auditType: .textClipped, labels: [
             "Mit ChatGPT planen: in Einstellungen › KI anmelden", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet",
             "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "Wochenrückblick", "Punkte in den Einstellungen anlegen",
             "Ältere Termine durchsuchen · vor .*",
-        ], reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
+        ], screens: withLargeText(["Aufgaben", "Suche", "Erfassen", "Tagesabschluss"]) + eveningSheetScreens + gridScreens, reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
         Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: eveningPlanScreens + eveningSheetScreens, reason:
             "Row \"Unerledigtes verschieben\" (`LeftoverLine`): the text wraps (`fixedSize(horizontal: false, vertical: true)`) and the row is at least "
@@ -348,9 +343,11 @@ enum AuditAllowlist {
             + "pages: device test list (Dynamic Type at the largest size on all four pages)."),
 
         // MARK: Hit area
-        Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], reason:
-            "The clear button of the search field is a 17 pt glyph inside the 44 pt high field; a bigger frame would shift the field text. "
-            + "Design question, together with the check circle of the lists (#188)."),
+        Entry(auditType: .hitRegion, labels: ["Eingabe löschen"], screens: ["Suche"], reason:
+            "The clear button of the search field (`SearchSheet`) has a 44 × 44 pt frame around its 17 pt glyph, but the audit still "
+            + "reports its hit region on \"Suche\" (3 of 3 repetitions of the collect run on 2026-11-25, after the frame was added). Why the "
+            + "audit measures less than the frame is not known; the button sits inside the 44 pt high field. Design question, "
+            + "together with the check circle of the lists (#188)."),
     ]
 
     /// Runs the audit on the open screen and fails the test for every finding that is not on the allowlist.

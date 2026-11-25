@@ -178,6 +178,8 @@ GitHub-Konto: @melvinmng · bestätigt zuweisbar · geprüft 2026-11-17 · ich
 - [ ] [#319](https://github.com/melvinmng/tagwerk/issues/319) Strichcode-Scan für Lebensmittel (E6) {status: Ready; prio: P3 (Medium); epic: #254}
 - [ ] [#320](https://github.com/melvinmng/tagwerk/issues/320) Wochenrückblick: Zahlen zu Gewicht und Ernährung (C4) {status: Ready; prio: P3 (Medium); epic: #254}
 - [ ] [#254](https://github.com/melvinmng/tagwerk/issues/254) Ernährung, Gewicht und Ziele mit ChatGPT {status: In progress}
+- [ ] [#331](https://github.com/melvinmng/tagwerk/issues/331) Suchfunktion für Einstellungen und repositories/projects (v. a. auch bei der Erstellung von issues) hinzufügen oder diese in der bisherigen Suche integrieren {status: Ready; prio: P3 (Medium)}
+- [ ] [#332](https://github.com/melvinmng/tagwerk/issues/332) Projektfortschritt: Übersicht über alle Projekte und detaillierte Verlaufs- und Trendanalyse pro Projekt {status: Ready; prio: P3 (Medium)}
 
 ## Notizen
 
@@ -191,10 +193,12 @@ _Automatisch aus [Tagwerk](https://github.com/users/melvinmng/projects/17) erzeu
 - [#170](https://github.com/melvinmng/tagwerk/issues/170) Apple Watch: Komplikation „Als Nächstes“ und Abhaken · @melvinmng · Prio P4 (Low)
 - [#239](https://github.com/melvinmng/tagwerk/issues/239) Bible Study: Leseplan · @melvinmng · Prio P4 (Low)
 
-### Bereit (3)
+### Bereit (5)
 - [#313](https://github.com/melvinmng/tagwerk/issues/313) Offene Gerätetests: Bible-Study-Erinnerungen, gelernte Zeit, Etikett-Foto, Notion-Import · @melvinmng · Prio P3 (Medium)
 - [#319](https://github.com/melvinmng/tagwerk/issues/319) Strichcode-Scan für Lebensmittel (E6) · @melvinmng · Prio P3 (Medium)
 - [#320](https://github.com/melvinmng/tagwerk/issues/320) Wochenrückblick: Zahlen zu Gewicht und Ernährung (C4) · @melvinmng · Prio P3 (Medium)
+- [#331](https://github.com/melvinmng/tagwerk/issues/331) Suchfunktion für Einstellungen und repositories/projects (v. a. auch bei der Erstellung von issues) hinzufügen oder diese in der bisherigen Suche integrieren · @melvinmng · Prio P3 (Medium)
+- [#332](https://github.com/melvinmng/tagwerk/issues/332) Projektfortschritt: Übersicht über alle Projekte und detaillierte Verlaufs- und Trendanalyse pro Projekt · @melvinmng · Prio P3 (Medium)
 
 ### In Arbeit (1)
 - [#254](https://github.com/melvinmng/tagwerk/issues/254) Ernährung, Gewicht und Ziele mit ChatGPT · @melvinmng
