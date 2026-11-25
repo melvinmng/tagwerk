@@ -95,14 +95,23 @@ struct ProductSearchRulesTests {
         #expect(ProductSearchRules.userAgent(version: "1.2.3", contact: " test@example.org ") == "Tagwerk/1.2.3 (test@example.org)")
     }
 
-    @Test func userAgent_needsAValidAddress() {
-        #expect(ProductSearchRules.userAgent(version: "1.0", contact: nil) == nil)
-        #expect(ProductSearchRules.userAgent(version: "1.0", contact: "") == nil)
-        #expect(ProductSearchRules.userAgent(version: "1.0", contact: "no address") == nil)
+    @Test func userAgent_withoutAValidAddress_namesTheProjectURL() {
+        let fallback = "Tagwerk/1.0 (https://github.com/melvinmng/tagwerk)"
+        #expect(ProductSearchRules.projectURL == "https://github.com/melvinmng/tagwerk")
+        for contact in [nil, "", "   ", "no address", "a@b", "a@example.org\r\nX-Evil: 1"] as [String?] {
+            #expect(ProductSearchRules.userAgent(version: "1.0", contact: contact) == fallback, "\(String(describing: contact))")
+        }
+    }
+
+    @Test func userAgent_aValidAddressTakesPrecedenceOverTheProjectURL() {
+        let agent = ProductSearchRules.userAgent(version: "1.0", contact: "me@example.org")
+        #expect(agent == "Tagwerk/1.0 (me@example.org)")
+        #expect(!agent.contains("github.com"))
     }
 
     @Test func userAgent_versionCannotSmuggleCharacters() {
         #expect(ProductSearchRules.userAgent(version: "1.0 (x)\r\nEvil: 1", contact: "t@example.org") == "Tagwerk/1.0xEvil1 (t@example.org)")
         #expect(ProductSearchRules.userAgent(version: "", contact: "t@example.org") == "Tagwerk/0 (t@example.org)")
+        #expect(ProductSearchRules.userAgent(version: "1.0\r\nEvil: 1", contact: nil) == "Tagwerk/1.0Evil1 (https://github.com/melvinmng/tagwerk)")
     }
 }

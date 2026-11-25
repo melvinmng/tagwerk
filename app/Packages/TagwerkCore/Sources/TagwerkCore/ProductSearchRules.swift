@@ -35,8 +35,8 @@ public struct RequestLimiter: Sendable, Equatable {
     }
 }
 
-/// The rules of the online search in Open Food Facts: the request limits of the operator, the contact address in the request header
-/// and the mapping of a product to a food.
+/// The rules of the online search in Open Food Facts: the request limits of the operator, the identification in the request header
+/// (the optional contact address of the user, otherwise the project URL) and the mapping of a product to a food.
 public enum ProductSearchRules {
     /// Searches per minute and user (operator's rule: 10 search requests per minute).
     public static let searchLimit = 10
@@ -51,6 +51,9 @@ public enum ProductSearchRules {
     public static func makeProductLimiter() -> RequestLimiter { RequestLimiter(limit: productLimit, window: window) }
 
     // MARK: Contact address
+
+    /// The project page that identifies the app in the request header when the user has not given a contact address.
+    public static let projectURL = "https://github.com/melvinmng/tagwerk"
 
     /// What the user entered as the contact address, trimmed; `nil` when it is empty or not a plain e-mail address.
     ///
@@ -67,7 +70,7 @@ public enum ProductSearchRules {
 
     /// What happens to the stored address when the user commits the field.
     public enum ContactChange: Sendable, Equatable {
-        /// The field is empty: the address is removed and the online search switches off.
+        /// The field is empty: the address is removed; the requests then name the project URL instead.
         case cleared
         /// A valid address: stored (trimmed).
         case accepted(String)
@@ -82,10 +85,10 @@ public enum ProductSearchRules {
         return .invalid
     }
 
-    /// `Tagwerk/<version> (<contact>)`; `nil` without a valid address, so no request can be built without one.
-    public static func userAgent(version: String, contact: String?) -> String? {
-        guard let contact = validContact(contact) else { return nil }
+    /// `Tagwerk/<version> (<contact>)` with a valid contact address, otherwise `Tagwerk/<version> (<projectURL>)`. The contact address
+    /// is optional: the operator asks every client to identify itself, and the project URL does that when the user gives no address.
+    public static func userAgent(version: String, contact: String?) -> String {
         let cleanVersion = version.filter { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "-") }
-        return "Tagwerk/\(cleanVersion.isEmpty ? "0" : cleanVersion) (\(contact))"
+        return "Tagwerk/\(cleanVersion.isEmpty ? "0" : cleanVersion) (\(validContact(contact) ?? projectURL))"
     }
 }

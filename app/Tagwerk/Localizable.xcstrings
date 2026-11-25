@@ -3332,11 +3332,22 @@
       }
     },
     "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und die Kontaktadresse, die du unten einträgst.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and the contact address you enter below."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and, if you enter one below, your contact address, otherwise the link to the Tagwerk project."
           }
         }
       }
@@ -7716,6 +7727,7 @@
       }
     },
     "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7732,6 +7744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and the contact address go to the operator, never amounts, meals, goals or data from Health. Without a contact address no request goes out; if you empty the field, the search switches off. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images. A product you take over appears in “My foods” with a note about its source."
+          }
+        }
+      }
+    },
+    "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets you search packaged foods by name in Open Food Facts, only when you tap. The search word, your IP address and, if you enter one, the contact address go to the operator, never amounts, meals, goals or data from Health. The contact address is optional; without it Tagwerk names the link to its project. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images (CC BY-SA 3.0). A product you take over appears in “My foods” with a note about its source."
           }
         }
       }
@@ -12889,6 +12911,7 @@
       }
     },
     "Für die Online-Suche fehlt deine Kontaktadresse.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -16656,11 +16679,22 @@
       }
     },
     "Kontaktadresse für Open Food Facts": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Contact address for Open Food Facts"
+          }
+        }
+      }
+    },
+    "Kontaktadresse für Open Food Facts (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact address for Open Food Facts (optional)"
           }
         }
       }
@@ -20516,6 +20550,16 @@
         }
       }
     },
+    "Open Food Facts bittet jede App, sich in jeder Anfrage zu nennen, damit der Betreiber sich bei Problemen melden kann. Das geht ohne Adresse: Dann nennt Tagwerk den Link zu seinem Projekt (github.com/melvinmng/tagwerk). Eine eingetragene Adresse sieht der Betreiber bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts asks every app to identify itself in each request, so the operator can reach out if there are problems. That works without an address: Tagwerk then names the link to its project (github.com/melvinmng/tagwerk). The operator sees an address you enter with every request. Tagwerk does not enter an address itself and takes none from the device or an account; you can choose an address of your own for this purpose."
+          }
+        }
+      }
+    },
     "Open Food Facts hat die Anfrage abgelehnt (Fehler 403). Das betrifft meist die Netzadresse oder die Kennung der App, nicht deine Eingabe. Versuch es später oder in einem anderen Netz noch einmal.": {
       "localizations": {
         "en": {
@@ -20537,6 +20581,7 @@
       }
     },
     "Open Food Facts verlangt, dass jede App in jeder Anfrage eine Kontaktadresse nennt, damit der Betreiber sich bei Problemen melden kann. Er sieht diese Adresse bei jeder Anfrage. Tagwerk trägt selbst keine Adresse ein und übernimmt keine aus dem Gerät oder aus einem Konto; du kannst eine eigene Adresse für diesen Zweck wählen.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

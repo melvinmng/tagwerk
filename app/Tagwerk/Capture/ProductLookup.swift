@@ -9,8 +9,6 @@ import TagwerkCore
 enum ProductLookupError: Error, Equatable {
     /// The user has not agreed.
     case noConsent
-    /// No valid contact address; the operator of Open Food Facts asks every client to name one.
-    case noContact
     case offline
     /// Fewer than `ProductSearchRules.minimumQueryLength` characters.
     case queryTooShort
@@ -30,7 +28,6 @@ enum ProductLookupError: Error, Equatable {
     var message: String {
         switch self {
         case .noConsent: String(localized: "Für die Online-Suche ist deine Einwilligung nötig.")
-        case .noContact: String(localized: "Für die Online-Suche fehlt deine Kontaktadresse.")
         case .offline: String(localized: "Keine Verbindung")
         case .queryTooShort: String(localized: "Gib mindestens \(ProductSearchRules.minimumQueryLength) Zeichen ein.")
         case .rateLimited(let wait): String(localized: "Bitte kurz warten, noch \(Int(wait)) s. Open Food Facts erlaubt nur wenige Anfragen pro Minute.")
@@ -56,8 +53,8 @@ protocol ProductLookingUp: AnyObject {
 
 /// The client of the online search.
 ///
-/// A request goes out only when, in this order: the user agreed (`consent`), a valid contact address exists, the device is online,
-/// the answer is not already in memory, and the local limit has a free slot. A call that stops at an earlier step uses no slot and
+/// A request goes out only when, in this order: the user agreed (`consent`), the device is online, the answer is not already in
+/// memory, and the local limit has a free slot. The contact address is optional; without a valid one the request names the project URL. A call that stops at an earlier step uses no slot and
 /// sends nothing. Answers stay in memory only; nothing is written to disk and no search words are logged.
 @MainActor
 final class ProductLookup: ProductLookingUp {
@@ -122,12 +119,11 @@ final class ProductLookup: ProductLookingUp {
 
     // MARK: Private
 
-    /// Consent, contact address and connection; the user agent on success.
+    /// Consent and connection; the user agent on success (the contact address when valid, otherwise the project URL).
     private func gate() throws -> String {
         guard hasConsent() else { throw ProductLookupError.noConsent }
-        guard let userAgent = ProductSearchRules.userAgent(version: version(), contact: contact()) else { throw ProductLookupError.noContact }
         guard isOnline() else { throw ProductLookupError.offline }
-        return userAgent
+        return ProductSearchRules.userAgent(version: version(), contact: contact())
     }
 
     /// Sends the request. A refusal is told apart by its status and logged as the status alone: no search words, no barcode, no address.

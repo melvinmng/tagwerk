@@ -183,7 +183,7 @@ private struct CaptureSettingsForm: View {
                 Toggle("Online-Suche in Open Food Facts", isOn: Binding(
                     get: { settings.isFoodLookupEnabled },
                     set: { enabled in
-                        // Switching on asks for the consent and the contact address again; switching off keeps the address.
+                        // Switching on asks for the consent (and the optional contact address) again; switching off keeps the address.
                         if enabled { showsLookupConsent = true } else { settings.foodLookupConsent = false }
                     }))
                     .accessibilityIdentifier(AccessibilityID.FoodLookup.toggle)
@@ -194,7 +194,7 @@ private struct CaptureSettingsForm: View {
             } header: {
                 Text("Online-Suche")
             } footer: {
-                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
+                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
             }
 
             Section {
