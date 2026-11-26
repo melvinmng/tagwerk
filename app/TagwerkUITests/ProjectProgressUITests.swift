@@ -1,0 +1,117 @@
+import XCTest
+
+/// The project progress (#332): the overview in "Aufgaben" and the page of one project. The UI test mode serves fixed projects
+/// (`ProjectProgressSources.demo`): "Beispiel-Projekt" (GitHub), "Privat & Haushalt" and "Studium" (reminder lists) and "Lokal";
+/// "Studium" has had no movement for three weeks.
+final class ProjectProgressUITests: UITestCase {
+    private func openOverview(file: StaticString = #filePath, line: UInt = #line) {
+        tab("Aufgaben", file: file, line: line)
+        let entry = app.buttons[AccessibilityID.ProjectProgress.entryRow].firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The row Projektfortschritt is missing", file: file, line: line)
+        entry.tap()
+        XCTAssertTrue(app.navigationBars["Projektfortschritt"].waitForExistence(timeout: Self.timeout),
+                      "The overview did not open", file: file, line: line)
+    }
+
+    private func row(_ title: String) -> XCUIElement {
+        app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row(title)].firstMatch
+    }
+
+    private func openProject(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        let project = row(title)
+        XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The project \(title) is missing", file: file, line: line)
+        project.tap()
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: Self.timeout), "The page of \(title) did not open",
+                      file: file, line: line)
+    }
+
+    func testOverviewOpensFromTasksAndListsEverySource() {
+        openOverview()
+        for title in ["Beispiel-Projekt", "Privat & Haushalt", "Studium", "Lokal"] {
+            XCTAssertTrue(row(title).waitForExistence(timeout: Self.timeout), "The project \(title) is not listed")
+        }
+    }
+
+    func testSourceFilterNarrowsTheList() {
+        openOverview()
+        XCTAssertTrue(row("Beispiel-Projekt").waitForExistence(timeout: Self.timeout))
+        selectSegment("Erinnerungen")
+        XCTAssertTrue(row("Studium").waitForExistence(timeout: Self.timeout), "A reminder list vanished with the filter Erinnerungen")
+        waitUntilGone(row("Beispiel-Projekt"))
+        XCTAssertFalse(row("Lokal").exists, "The local tasks must not show under Erinnerungen")
+        selectSegment("GitHub")
+        XCTAssertTrue(row("Beispiel-Projekt").waitForExistence(timeout: Self.timeout))
+        waitUntilGone(row("Studium"))
+        selectSegment("Alle")
+        XCTAssertTrue(row("Studium").waitForExistence(timeout: Self.timeout))
+    }
+
+    func testProjectWithoutMovementIsMarkedAsResting() {
+        openOverview()
+        let studies = row("Studium")
+        XCTAssertTrue(studies.waitForExistence(timeout: Self.timeout))
+        XCTAssertTrue(studies.label.contains("ruht seit"), "The resting project does not say so: \(studies.label)")
+        XCTAssertFalse(row("Beispiel-Projekt").label.contains("ruht"), "An active project is marked as resting")
+    }
+
+    func testProjectPageShowsChartCountsAndOpenItems() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
+                      "The weekly chart is missing")
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.figures].firstMatch.exists, "The figures are missing")
+        // The blocked issue and the overdue one are open items of the demo project.
+        waitFor("App-Sperre im Fokus-Modus")
+        XCTAssertTrue(app.staticTexts["Blockiert"].firstMatch.exists || app.staticTexts["BLOCKIERT"].firstMatch.exists,
+                      "The group of blocked items is missing")
+    }
+
+    func testPeriodPickerChangesThePeriod() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        waitFor("in den letzten 4 Wochen", timeout: Self.timeout)
+        selectSegment("3 Monate")
+        waitFor("in den letzten 3 Monaten", timeout: Self.timeout)
+        selectSegment("1 Jahr")
+        waitFor("im letzten Jahr", timeout: Self.timeout)
+    }
+
+    func testFreePeriodOffersTwoDates() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        selectSegment("Frei")
+        XCTAssertTrue(app.datePickers.firstMatch.waitForExistence(timeout: Self.timeout), "The free period has no date pickers")
+        XCTAssertGreaterThanOrEqual(app.datePickers.count, 2)
+    }
+
+    func testProjectPageOfAReminderListHasItsFootnote() {
+        openOverview()
+        openProject("Studium")
+        waitFor("Gelöschte Erinnerungen fehlen im Verlauf", timeout: Self.timeout)
+    }
+}
+
+extension UITestCase {
+    /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
+    func auditProjectProgress(_ audit: (String) throws -> Void) throws {
+        tab("Aufgaben")
+        let entry = app.buttons[AccessibilityID.ProjectProgress.entryRow].firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The row Projektfortschritt is missing")
+        dragUntilHittable(entry)
+        entry.tap()
+        XCTAssertTrue(app.navigationBars["Projektfortschritt"].waitForExistence(timeout: Self.timeout), "The overview did not open")
+        let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
+        XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The demo project is missing")
+        waitUntilScreenIsStable()
+        try audit("Projektfortschritt")
+        dragUntilHittable(project)
+        project.tap()
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
+                      "The page of the project did not open")
+        waitUntilScreenIsStable()
+        try audit("Projektseite")
+        // Back to "Aufgaben": the next audit starts from the list.
+        app.navigationBars.buttons.firstMatch.tap()
+        app.navigationBars.buttons.firstMatch.tap()
+    }
+}

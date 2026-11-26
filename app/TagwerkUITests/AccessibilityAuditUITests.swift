@@ -62,6 +62,8 @@ final class AccessibilityAuditUITests: UITestCase {
 
         try auditBarcodeScan(audit)
 
+        try auditProjectProgress(audit)
+
         tab("Planen")
         // The return key closes the keyboard, so its suggestion bar is not part of the audit.
         openSearch(typing: "Pretest\n")

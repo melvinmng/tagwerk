@@ -34,6 +34,8 @@ NoteLockUITests 185
 NotesUITests 166
 NowMarkerUITests 26
 PlanUITests 148
+# est. new class (seven tests, overview and page of the project progress)
+ProjectProgressUITests 150
 RoutineUITests 260
 SearchUITests 114
 SettingsNavigationUITests 39
