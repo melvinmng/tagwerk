@@ -14,6 +14,8 @@ struct SearchSources {
     var completedTasks: @MainActor () async -> [CompletedTask]
     var notes: @MainActor () -> [NoteSearchItem] = { [] }
     var shopping: @MainActor () -> [ShoppingSearchItem] = { [] }
+    /// The hits in the settings for a search text, best first (the index of the settings matches titles and keywords).
+    var settings: @MainActor (String) -> [SettingsSearchItem] = { _ in [] }
     /// Checks a shopping item off; `nil` while no shopping list is set up.
     var checkOffShopping: (@MainActor (String) async -> Void)?
     /// GitHub issue search for one text; `nil` while GitHub is not connected.
@@ -258,7 +260,8 @@ final class SearchModel {
         }
         let input = SearchInput(events: eventState == .loaded ? loadedEvents : nil, calendarNames: sources.calendarNames(),
                                 openTasks: sources.openTasks(), completed: completedLoaded ? completed : [], online: online,
-                                notes: sources.notes(), shopping: sources.shopping())
+                                notes: sources.notes(), shopping: sources.shopping(),
+                                settings: filter == .all ? sources.settings(query.text) : [])
         results = SearchResults.make(query: query, filter: filter, includeCompleted: includeCompleted, input: input,
                                      now: now(), calendar: calendar)
     }

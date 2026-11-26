@@ -151,7 +151,7 @@ public final class GitHubTaskProvider: TaskProvider {
             }
             if case .set(let change) = edit.assignees {
                 // The own login decides below whether the issue stays remembered.
-                if login == nil { login = try await api.viewerProjects().login }
+                if login == nil { login = try await api.viewerProjects(maxPages: 1).login }
                 guard AssigneeRules.applying(change, to: current.assignees).count <= AssigneeRules.maximum else {
                     throw Self.tooManyAssignees
                 }
@@ -294,7 +294,7 @@ public final class GitHubTaskProvider: TaskProvider {
         let stored = catalogStore?.load()
         if let stored, now().timeIntervalSince(stored.fetchedAt) < maxAge { return stored }
         do {
-            async let repositories = api.ownedRepositories()
+            async let repositories = api.accessibleRepositories()
             async let viewer = api.viewerProjects()
             let fetched = try await repositories
             // Assignable people are loaded per repository on demand; a reload keeps them for repositories that remain.
@@ -359,7 +359,7 @@ public final class GitHubTaskProvider: TaskProvider {
     /// Repositories offered when creating an issue.
     public func repositories() async throws -> [String] {
         do {
-            return try await api.ownedRepositories()
+            return try await api.accessibleRepositories()
         } catch {
             throw Self.taskError(error)
         }

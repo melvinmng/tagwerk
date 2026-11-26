@@ -43,8 +43,9 @@ import Testing
     }
 
     @Test func sectionsFollowSpecOrderAndDropEmptyOnes() {
-        #expect(make(full()).sections.map(\.kind) == SearchSectionKind.allCases)
         var input = full()
+        input.settings = [SettingsSearchItem(id: "s", title: "Erfassen", pathText: "")]
+        #expect(make(input).sections.map(\.kind) == SearchSectionKind.allCases)
         input.completed = []
         #expect(!make(input).sections.map(\.kind).contains(.completedTasks))
     }
@@ -63,6 +64,45 @@ import Testing
             let kinds = make(full(), filter: filter).sections.map(\.kind)
             #expect(!kinds.contains(.notes) && !kinds.contains(.shopping))
         }
+    }
+
+    private func settings(_ count: Int) -> [SettingsSearchItem] {
+        (1...count).map { SettingsSearchItem(id: "s\($0)", title: "Einstellung \($0)", pathText: "Erfassen") }
+    }
+
+    @Test func settingsOnlyUnderAll() {
+        var input = full()
+        input.settings = settings(2)
+        #expect(make(input, filter: .all).sections.map(\.kind).contains(.settings))
+        for filter in [SearchFilter.events, .tasks] {
+            #expect(!make(input, filter: filter).sections.map(\.kind).contains(.settings))
+        }
+    }
+
+    @Test func settingsAreTheLastSection() {
+        var input = full()
+        input.settings = settings(1)
+        #expect(make(input).sections.last?.kind == .settings)
+    }
+
+    @Test func settingsAreCappedAtFiveInGivenOrder() {
+        var input = SearchInput()
+        input.settings = settings(8)
+        let section = make(input).sections.first { $0.kind == .settings }!
+        let ids = section.rows.compactMap { row -> String? in if case .setting(let item) = row { item.id } else { nil } }
+        #expect(ids == ["s1", "s2", "s3", "s4", "s5"])
+        #expect(SearchResults.settingsLimit == 5)
+    }
+
+    @Test func settingsAreNotFilteredAgain() {
+        // The caller matched the settings with its own index (titles and keywords); the text of the query need not occur in a title.
+        var input = SearchInput()
+        input.settings = [SettingsSearchItem(id: "k", title: "Kalorien (Grundziel)", pathText: "Erfassen")]
+        #expect(make(input, "ernährung").sections.first?.kind == .settings)
+    }
+
+    @Test func noSettingsMeansNoSection() {
+        #expect(!make(full()).sections.map(\.kind).contains(.settings))
     }
 
     @Test func completedOnlyWithSwitch() {

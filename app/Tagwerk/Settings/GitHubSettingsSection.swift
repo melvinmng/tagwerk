@@ -12,11 +12,7 @@ struct GitHubSettingsSection: View {
         Section {
             if environment.isGitHubActive {
                 LabeledContent("Angemeldet als", value: environment.gitHub.login ?? "…")
-                NavigationLink {
-                    SourceSelectionView(title: "Projekte", items: projectItems,
-                                        defaultSelection: environment.gitHub.defaultSelectedProjectIDs,
-                                        selection: $settings.selectedProjectIDs)
-                } label: {
+                NavigationLink(value: SettingsDestination.githubProjects) {
                     LabeledContent("Projekte", value: projectSummary)
                 }
                 Button("Abmelden", role: .destructive) {
@@ -38,15 +34,27 @@ struct GitHubSettingsSection: View {
         }
     }
 
-    private var projectItems: [ListInfo] {
-        environment.gitHub.projects.map { ListInfo(id: $0.id, title: $0.title, colorHex: nil, kind: .other) }
-    }
-
     private var projectSummary: String {
         let all = environment.gitHub.projects
         guard !all.isEmpty else { return "–" }
         let selected = environment.settings.selectedProjectIDs.map(Set.init) ?? environment.gitHub.defaultSelectedProjectIDs
         let count = selected.intersection(all.map(\.id)).count
         return String(localized: "\(count) von \(all.count)")
+    }
+}
+
+/// The page "Projekte" of the GitHub settings: which projects the task lists show.
+struct GitHubProjectsPage: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        @Bindable var settings = environment.settings
+        SourceSelectionView(title: "Projekte", items: projectItems,
+                            defaultSelection: environment.gitHub.defaultSelectedProjectIDs,
+                            selection: $settings.selectedProjectIDs)
+    }
+
+    private var projectItems: [ListInfo] {
+        environment.gitHub.projects.map { ListInfo(id: $0.id, title: $0.title, colorHex: nil, kind: .other) }
     }
 }

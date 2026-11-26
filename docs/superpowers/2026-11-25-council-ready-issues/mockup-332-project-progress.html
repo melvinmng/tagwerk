@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · #332 Projektfortschritt: Übersicht &amp; Trend pro Projekt · Mockups</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page-bg: #f5f5f7; --page-fg: #111; --page-muted: #555; --page-border: rgba(0,0,0,.14);
+    --bg: #f2f2f7; --card: #ffffff; --card2: #e5e5ea; --sep: #d1d1d6;
+    --text: #000000; --sub: rgba(60,60,67,.78); --dim: #3c3c43;
+    --accent: #005fcc; --green: #1f7a35; --green-fill: #34c759;
+    --orange: #a84400; --orange-fill: #ff9500; --red: #b91c1c; --purple: #7d3c9e;
+    --frame: #c7c7cc; --segon: #ffffff; --badge-bg: rgba(0,95,204,.12);
+    --glass: rgba(255,255,255,.82); --glassline: rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #0c0c0e; --page-fg: #f2f2f7; --page-muted: #a1a1aa; --page-border: rgba(255,255,255,.16);
+      --bg: #000000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a;
+      --text: #ffffff; --sub: rgba(235,235,245,.60); --dim: #c7c7cc;
+      --accent: #0a84ff; --green: #30d158; --green-fill: #30d158;
+      --orange: #ff9f0a; --orange-fill: #ff9f0a; --red: #ff6961; --purple: #da8fff;
+      --frame: #2c2c2e; --segon: #636366; --badge-bg: rgba(10,132,255,.20);
+      --glass: rgba(44,44,46,.76); --glassline: rgba(255,255,255,.16);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 20px; background: var(--page-bg); color: var(--page-fg); font: 14px/1.5 -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.3px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; padding-top: 14px; border-top: 1px solid var(--page-border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .lead { color: var(--page-muted); max-width: 980px; margin: 0 0 16px; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font: 700 11.5px system-ui; background: var(--badge-bg); color: var(--accent); }
+  .tag.rec { background: var(--green-fill); color: #000; }
+  .tag.alt { background: var(--card2); color: var(--text); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(393px, 1fr)); gap: 24px; align-items: start; }
+  .col-label { font: 600 13px system-ui; color: var(--page-muted); margin: 0 0 8px 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .col-label b { color: var(--page-fg); }
+  .note { font-size: 12.5px; color: var(--page-muted); margin: 8px 4px 0; max-width: 393px; }
+
+  .phone {
+    width: 393px; height: 852px; max-width: 100%;
+    background: var(--bg); color: var(--text);
+    border: 6px solid var(--frame); border-radius: 44px;
+    padding: 14px 14px 12px; display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    font: 14px/1.35 -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 2px 12px 8px; flex-shrink: 0; }
+  .nb { display: flex; justify-content: space-between; align-items: center; font: 600 16px system-ui; padding: 2px 4px 8px; flex-shrink: 0; }
+  .nb .act { color: var(--accent); font-weight: 400; font-size: 15px; min-width: 76px; }
+  .nb .act.r { text-align: right; }
+  .big-title { font: 800 28px system-ui; letter-spacing: -.4px; padding: 0 4px 6px; display: flex; justify-content: space-between; align-items: center; }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: var(--card); border-radius: 16px; overflow: hidden; }
+  .card.new, .row.new { box-shadow: inset 3px 0 0 var(--orange-fill); }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; min-height: 44px; border-bottom: 1px solid var(--sep); }
+  .row:last-child { border-bottom: 0; }
+  .row .t { flex: 1; min-width: 0; }
+  .row .s { display: block; font-size: 12px; color: var(--sub); margin-top: 1px; }
+  .row .v { font-size: 13px; color: var(--sub); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .row .v b { color: var(--text); }
+  .row .ic { width: 24px; text-align: center; color: var(--accent); font-size: 16px; flex-shrink: 0; }
+  .row .ch { color: var(--sub); font-size: 14px; }
+  .sh { display: flex; justify-content: space-between; font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin: 4px 12px -4px; }
+  .ft { font-size: 11.5px; color: var(--sub); margin: -3px 12px 2px; line-height: 1.38; }
+  .chips { display: flex; gap: 6px; flex-wrap: nowrap; overflow: hidden; }
+  .chip { padding: 5px 11px; border-radius: 99px; font: 500 12.5px system-ui; background: var(--card2); color: var(--dim); white-space: nowrap; }
+  .chip.on { background: var(--badge-bg); color: var(--accent); font-weight: 600; }
+  .seg { display: flex; background: var(--card2); border-radius: 10px; padding: 2px; }
+  .seg span { flex: 1; text-align: center; padding: 5px 2px; font-size: 12.5px; border-radius: 8px; color: var(--dim); }
+  .seg span.on { background: var(--segon); color: var(--text); font-weight: 600; }
+  .kpi-row { display: flex; gap: 8px; }
+  .kpi { flex: 1; background: var(--card); border-radius: 14px; padding: 9px 10px; }
+  .kpi small { display: block; font-size: 11px; color: var(--sub); }
+  .kpi b { font: 700 17px system-ui; font-variant-numeric: tabular-nums; }
+  .kpi.ok b { color: var(--green); }
+  .kpi.warn b { color: var(--orange); }
+  .proj { padding: 11px 14px; border-bottom: 1px solid var(--sep); }
+  .proj:last-child { border-bottom: 0; }
+  .proj-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .proj-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .src-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .trend { font: 600 11.5px system-ui; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .trend.up { background: rgba(52,199,89,.16); color: var(--green); }
+  .trend.flat { background: var(--card2); color: var(--sub); }
+  .trend.stall { background: rgba(255,149,0,.16); color: var(--orange); }
+  .trend.grow { background: rgba(185,28,28,.14); color: var(--red); }
+  .pg { height: 6px; border-radius: 99px; background: var(--card2); margin: 7px 0 5px; overflow: hidden; }
+  .pg i { display: block; height: 100%; border-radius: 99px; background: var(--green-fill); }
+  .pg.warn i { background: var(--orange-fill); }
+  .proj-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); font-variant-numeric: tabular-nums; }
+  .chart-box { background: var(--card); border-radius: 16px; padding: 11px 12px 8px; }
+  .chart-box svg { width: 100%; height: 126px; display: block; }
+  .legend { display: flex; gap: 12px; font-size: 11px; color: var(--sub); margin-top: 4px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+  .legend i.ln { height: 2px; border-radius: 0; vertical-align: 3px; }
+  .dot-ev { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tb { margin-top: auto; display: flex; border-radius: 99px; padding: 5px; font-size: 10px; color: var(--dim); text-align: center; background: var(--glass); border: 1px solid var(--glassline); }
+  .tb span { flex: 1; padding: 4px 0 3px; border-radius: 99px; }
+  .tb .on { color: var(--accent); background: rgba(128,128,128,.16); font-weight: 600; }
+  .ico { font-size: 16px; display: block; line-height: 18px; }
+  .banner { border-radius: 14px; padding: 10px 12px; font-size: 12.5px; line-height: 1.4; background: rgba(255,149,0,.14); color: var(--orange); }
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 8px; color: var(--sub); }
+  .empty b { color: var(--text); font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>#332 · Projektfortschritt: Übersicht &amp; Verlaufs-/Trendanalyse pro Projekt</h1>
+<p class="lead">Zwei Ebenen: (1) Globale Übersicht aller Projekte mit Stand, Trend und letzter Bewegung; (2) Detaillierte Projektansicht mit Zeitraum-Auswahl, Swift-Charts-Verlauf, eingeplanter vs. investierter Zeit, Blockern/Fristen und Aktivitätsverlauf. Gelb/orange Seitenlinie markiert neue Bereiche.</p>
+
+<h2>Ebene 1 · Einstieg (Variante A vs. B) &amp; Globale Übersicht</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag rec">Variante A · Empfehlung</span><b>Einstieg in <code>TasksEntrySection</code> (Tab „Aufgaben“)</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="big-title"><span>Aufgaben</span><span style="font-size:17px; color:var(--accent)">🔍 ＋</span></div>
+      <div class="scr">
+        <div class="seg"><span class="on">Alle</span><span>GitHub</span><span>Erinnerungen</span><span>Lokal</span></div>
+        <div class="card">
+          <div class="row"><span class="ic">🛒</span><div class="t"><b>Einkaufsliste</b><span class="s">Hafermilch, Skyr, Bananen</span></div><div class="v">3 offen</div><span class="ch">›</span></div>
+          <div class="row"><span class="ic">📝</span><div class="t"><b>Notizen</b><span class="s">Zuletzt: Wochenreflexion</span></div><div class="v">42</div><span class="ch">›</span></div>
+          <div class="row"><span class="ic">📖</span><div class="t"><b>Bible Study</b><span class="s">Zuletzt: Römer 8</span></div><span class="ch">›</span></div>
+          <div class="row new"><span class="ic">📈</span><div class="t"><b>Projektfortschritt</b><span class="s">5 Projekte · 2 aktiv, 1 ruht</span></div><span class="ch">›</span></div>
+        </div>
+        <div class="sh"><span>Heute · 3</span></div>
+        <div class="card">
+          <div class="row"><div class="t">#319 Strichcode-Scan für Lebensmittel<span class="s">Tagwerk · Ready · P3</span></div></div>
+          <div class="row"><div class="t">#320 Wochenrückblick Gewicht &amp; Ernährung<span class="s">Tagwerk · Ready · P3</span></div></div>
+        </div>
+        <div class="tb">
+          <span><i class="ico">📅</i>Planen</span>
+          <span class="on"><i class="ico">☑️</i>Aufgaben</span>
+          <span><i class="ico">➕</i>Erfassen</span>
+          <span><i class="ico">⚙️</i>Einstellungen</span>
+        </div>
+      </div>
+    </div>
+    <p class="note">Kein 5. Tab nötig; konsistent mit Einkaufsliste, Notizen und Bible Study. In <b>Variante B</b> läge der Einstieg stattdessen als Karte im Tab „Planen“ (Wochenkopf / Wochenrückblick).</p>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag rec">Ebene 1 · Global</span><b>Alle Projekte auf einen Blick (Variante A: alle Quellen)</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Aufgaben</span><span>Projektfortschritt</span><span class="act r">Sortieren ▾</span></div>
+      <div class="scr">
+        <div class="kpi-row">
+          <div class="kpi ok"><small>Erledigt (7 T)</small><b>14</b></div>
+          <div class="kpi"><small>Neu (7 T)</small><b>9</b></div>
+          <div class="kpi warn"><small>Ruhend</small><b>1</b></div>
+        </div>
+        <div class="chips">
+          <span class="chip on">Alle (5)</span>
+          <span class="chip">GitHub (2)</span>
+          <span class="chip">Erinnerungen (2)</span>
+          <span class="chip">Lokal (1)</span>
+        </div>
+        <div class="sh"><span>Zuletzt bewegt</span><span>4 Wochen</span></div>
+        <div class="card new">
+          <div class="proj">
+            <div class="proj-top">
+              <span class="proj-name"><i class="src-dot" style="background:var(--accent)"></i>Tagwerk</span>
+              <span class="trend up">↑ geht voran</span>
+            </div>
+            <div class="pg"><i style="width:74%"></i></div>
+            <div class="proj-meta"><span>28 erledigt · 10 offen</span><span>Heute · 1 Blocker</span></div>
+          </div>
+          <div class="proj">
+            <div class="proj-top">
+              <span class="proj-name"><i class="src-dot" style="background:var(--purple)"></i>Studium &amp; Klausuren</span>
+              <span class="trend grow">↓ +4 offen</span>
+            </div>
+            <div class="pg warn"><i style="width:38%"></i></div>
+            <div class="proj-meta"><span>6 erledigt · 14 offen</span><span>Vor 2 Tagen · 2 Fristen</span></div>
+          </div>
+          <div class="proj">
+            <div class="proj-top">
+              <span class="proj-name"><i class="src-dot" style="background:var(--green-fill)"></i>Privat &amp; Haushalt</span>
+              <span class="trend flat">→ stabil</span>
+            </div>
+            <div class="pg"><i style="width:65%"></i></div>
+            <div class="proj-meta"><span>11 erledigt · 6 offen</span><span>Vor 5 Tagen</span></div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Länger liegen geblieben (&gt; 14 Tage)</span></div>
+        <div class="card new">
+          <div class="proj">
+            <div class="proj-top">
+              <span class="proj-name"><i class="src-dot" style="background:var(--orange-fill)"></i>Homelab 2026</span>
+              <span class="trend stall">⏸ ruht · 21 T</span>
+            </div>
+            <div class="pg warn"><i style="width:20%"></i></div>
+            <div class="proj-meta"><span>0 erledigt · 8 offen</span><span>Zuletzt 4. Nov</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">In <b>Variante B</b> entfällt die Filter-Leiste und es werden ausschließlich GitHub-Projekte &amp; Repositories angezeigt.</p>
+  </div>
+
+</div>
+
+<h2>Ebene 2 · Detaillierte Projektansicht &amp; Randzustände</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag">Ebene 2 · Detail (1/2)</span><b>Trend-Chart &amp; Zeitvergleich</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Projekte</span><span>Tagwerk</span><span class="act r">GitHub</span></div>
+      <div class="scr">
+        <div class="seg"><span class="on">4 Wochen</span><span>3 Monate</span><span>1 Jahr</span><span>Frei</span></div>
+        <div class="kpi-row">
+          <div class="kpi ok"><small>Erledigt</small><b>28</b></div>
+          <div class="kpi"><small>Neu</small><b>19</b></div>
+          <div class="kpi"><small>Offen</small><b>10</b></div>
+        </div>
+
+        <div class="chart-box">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px">
+            <b style="font-size:14px">Verlauf pro Woche</b>
+            <span class="trend up">↑ −9 offen</span>
+          </div>
+          <svg viewBox="0 0 336 126" aria-label="Trenddiagramm Tagwerk">
+            <line x1="0" y1="26" x2="336" y2="26" stroke="var(--sep)" stroke-width="1"/>
+            <line x1="0" y1="62" x2="336" y2="62" stroke="var(--sep)" stroke-width="1"/>
+            <line x1="0" y1="98" x2="336" y2="98" stroke="var(--sep)" stroke-width="1"/>
+            <!-- KW 45 -->
+            <rect x="20" y="54" width="18" height="44" rx="4" fill="var(--green-fill)"/>
+            <rect x="42" y="42" width="18" height="56" rx="4" fill="var(--accent)" opacity=".75"/>
+            <text x="30" y="116" fill="var(--sub)" font-size="10">KW 45</text>
+            <!-- KW 46 -->
+            <rect x="102" y="46" width="18" height="52" rx="4" fill="var(--green-fill)"/>
+            <rect x="124" y="64" width="18" height="34" rx="4" fill="var(--accent)" opacity=".75"/>
+            <text x="112" y="116" fill="var(--sub)" font-size="10">KW 46</text>
+            <!-- KW 47 -->
+            <rect x="184" y="34" width="18" height="64" rx="4" fill="var(--green-fill)"/>
+            <rect x="206" y="58" width="18" height="40" rx="4" fill="var(--accent)" opacity=".75"/>
+            <text x="194" y="116" fill="var(--sub)" font-size="10">KW 47</text>
+            <!-- KW 48 -->
+            <rect x="266" y="40" width="18" height="58" rx="4" fill="var(--green-fill)"/>
+            <rect x="288" y="72" width="18" height="26" rx="4" fill="var(--accent)" opacity=".75"/>
+            <text x="276" y="116" fill="var(--sub)" font-size="10">KW 48</text>
+            <!-- Offener Bestand Linie -->
+            <polyline fill="none" stroke="var(--orange-fill)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="40,28 122,40 204,56 286,70"/>
+            <circle cx="40" cy="28" r="3.5" fill="var(--orange-fill)"/>
+            <circle cx="122" cy="40" r="3.5" fill="var(--orange-fill)"/>
+            <circle cx="204" cy="56" r="3.5" fill="var(--orange-fill)"/>
+            <circle cx="286" cy="70" r="3.5" fill="var(--orange-fill)"/>
+          </svg>
+          <div class="legend">
+            <span><i style="background:var(--green-fill)"></i>Erledigt</span>
+            <span><i style="background:var(--accent)"></i>Neu</span>
+            <span><i class="ln" style="background:var(--orange-fill)"></i>Offener Bestand</span>
+          </div>
+        </div>
+
+        <div class="sh"><span>Zeit (4 Wochen)</span></div>
+        <div class="card">
+          <div class="row"><div class="t">Eingeplant (Zeitblöcke)</div><div class="v"><b>18 h 30 min</b></div></div>
+          <div class="row"><div class="t">Investiert (Fokus &amp; Ist)</div><div class="v"><b>16 h 15 min</b></div></div>
+          <div class="row"><div class="t">Offene Schätzungen</div><div class="v"><b>~12 h</b> (6 Aufgaben)</div></div>
+        </div>
+
+        <div class="sh"><span>Blocker &amp; Fristen (2)</span></div>
+        <div class="card">
+          <div class="row"><span class="dot-ev" style="background:var(--red)"></span><div class="t">#236 App-Sperre im Fokus-Modus<span class="s">Blockiert · P4</span></div><span class="ch">›</span></div>
+          <div class="row"><span class="dot-ev" style="background:var(--orange-fill)"></span><div class="t">#254 Ernährung, Gewicht und Ziele<span class="s">Epic · 5/7 erledigt</span></div><span class="ch">›</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Ebene 2 · Detail (2/2)</span><b>Verlauf der letzten Schritte</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Projekte</span><span>Tagwerk</span><span class="act r">GitHub</span></div>
+      <div class="scr">
+        <div class="sh"><span>Letzte Schritte · Heute</span></div>
+        <div class="card new">
+          <div class="row">
+            <span class="dot-ev" style="background:var(--green-fill)"></span>
+            <div class="t"><b>Erledigt:</b> #315 Open Food Facts Suche<span class="s">13:45 · geschlossen (completed)</span></div>
+          </div>
+          <div class="row">
+            <span class="dot-ev" style="background:var(--accent)"></span>
+            <div class="t"><b>Angelegt:</b> #332 Projektfortschritt<span class="s">12:10 · Status Ready</span></div>
+          </div>
+          <div class="row">
+            <span class="dot-ev" style="background:var(--purple)"></span>
+            <div class="t"><b>Status geändert:</b> #254 → In progress<span class="s">10:20 · in Tagwerk protokolliert</span></div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Gestern · 24. Nov</span></div>
+        <div class="card new">
+          <div class="row">
+            <span class="dot-ev" style="background:var(--green-fill)"></span>
+            <div class="t"><b>Erledigt:</b> #318 Nährwerte über Verlauf<span class="s">19:15 · geschlossen</span></div>
+          </div>
+          <div class="row">
+            <span class="dot-ev" style="background:var(--orange-fill)"></span>
+            <div class="t"><b>Verschoben:</b> #313 Gerätetests → 27. Nov<span class="s">18:05 · Arbeitstag geändert</span></div>
+          </div>
+          <div class="row">
+            <span class="dot-ev" style="background:var(--green-fill)"></span>
+            <div class="t"><b>Erledigt:</b> #316 Gewicht nach Health<span class="s">16:40 · geschlossen</span></div>
+          </div>
+        </div>
+
+        <div class="ft">Erledigte und angelegte Aufgaben kommen rückwirkend aus GitHub, Erinnerungen und lokalen Daten. Verschiebungen und Statuswechsel protokolliert Tagwerk ab Aktivierung lokal auf dem iPhone.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Zustände: Offline, Ruhend &amp; Leer</span><b>Fehler-, Offline- und Leerzustand</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>Kein Netz</span></div>
+      <div class="nb"><span class="act">‹ Projekte</span><span>Homelab 2026</span><span class="act r"></span></div>
+      <div class="scr">
+        <div class="banner"><b>Offline · GitHub-Stand von 14:10 Uhr.</b><br>Lokale Aufgaben und Erinnerungen sind aktuell.</div>
+
+        <div class="card">
+          <div class="row"><div class="t"><b>Ruht seit 21 Tagen</b><span class="s">In den letzten 4 Wochen keine erledigten oder neuen Schritte. Letzte Bewegung: 4. Nov.</span></div></div>
+          <div class="row"><div class="t">Zeit (4 Wochen)</div><div class="v">Keine Zeitdaten</div></div>
+        </div>
+
+        <div class="sh"><span>Offene Punkte (8)</span></div>
+        <div class="card">
+          <div class="row"><div class="t">Reverse-Proxy Zertifikat prüfen<span class="s">Überfällig · 12. Nov</span></div><span class="ch">›</span></div>
+          <div class="row"><div class="t">Backup-Skript auf NAS testen<span class="s">Ready</span></div><span class="ch">›</span></div>
+        </div>
+
+        <div class="sh"><span>Globaler Leerzustand (ohne Projekte)</span></div>
+        <div class="card" style="padding:18px 16px; text-align:center">
+          <div style="font-size:28px; margin-bottom:4px">📈</div>
+          <b>Noch keine Projekte</b>
+          <div style="font-size:12.5px; color:var(--sub); margin-top:4px">Verbinde GitHub-Projekte in den Einstellungen oder lege Aufgaben in Listen an, um hier deinen Fortschritt zu sehen.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

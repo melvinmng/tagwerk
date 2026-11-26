@@ -13,6 +13,9 @@ final class SearchProbe {
     var completed: [CompletedTask] = []
     var notes: [NoteSearchItem] = []
     var shopping: [ShoppingSearchItem] = []
+    /// What the settings index answers for a text; the texts asked are recorded.
+    var settingsHits: [SettingsSearchItem] = []
+    private(set) var settingsTexts: [String] = []
     var gate: Gate?
     /// `nil` = GitHub not connected.
     var online: Result<[OnlineIssue], IssueSearchError>?
@@ -39,7 +42,11 @@ final class SearchProbe {
                 return self.completed
             },
             notes: { self.notes },
-            shopping: { self.shopping })
+            shopping: { self.shopping },
+            settings: { text in
+                self.settingsTexts.append(text)
+                return self.settingsHits
+            })
         if checkedOff != nil {
             sources.checkOffShopping = { id in
                 self.checkedOff?.append(id)
@@ -86,8 +93,28 @@ struct SearchModelTests {
             case .online(let issue): issue.title
             case .note(let note, _): note.text.split(separator: "\n").first.map(String.init) ?? note.text
             case .shopping(let item, _): item.name
+            case .setting(let item): item.title
             }
         }
+    }
+
+    @Test func settingsHitsComeFromTheSourceWithTheTypedText() async {
+        probe.settingsHits = [SettingsSearchItem(id: "capture.kilocalories", title: "Kalorien (Grundziel)", pathText: "Erfassen")]
+        let model = probe.model()
+        model.text = "kalorien"
+        #expect(model.results.sections.map(\.kind) == [.settings])
+        #expect(probe.settingsTexts.last == "kalorien")
+        #expect(titles(model.results) == ["Kalorien (Grundziel)"])
+    }
+
+    @Test func settingsAreNotAskedBelowTwoCharactersNorUnderAFilter() async {
+        probe.settingsHits = [SettingsSearchItem(id: "x", title: "Fokus-Timer", pathText: "")]
+        let model = probe.model()
+        model.text = "f"
+        #expect(probe.settingsTexts.isEmpty)
+        model.text = "fo"
+        model.filter = .tasks
+        #expect(!model.results.sections.map(\.kind).contains(.settings))
     }
 
     @Test func belowTwoCharactersNothingLoads() async {

@@ -293,6 +293,22 @@ struct BackupTests {
         #expect(fresh.settings.weekPlanningReminderWeekday == 1 && fresh.settings.weekPlanningReminderMinutes == 1080)
     }
 
+    @Test func backup_roundTripsRecentRepositories() throws {
+        sourceSettings.recentRepositories = ["octo/app", "acme/platform"]
+        let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))
+        let target = try makeTarget()
+        try JSONDecoder().decode(AppSettingsBackup.self, from: data).apply(to: target.settings)
+        #expect(target.settings.recentRepositories == ["octo/app", "acme/platform"])
+        // An older backup without the field keeps the list of the target.
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["recentRepositories"] = nil
+        let older = try JSONDecoder().decode(AppSettingsBackup.self, from: JSONSerialization.data(withJSONObject: object))
+        let fresh = try makeTarget()
+        fresh.settings.recentRepositories = ["kept/repo"]
+        older.apply(to: fresh.settings)
+        #expect(fresh.settings.recentRepositories == ["kept/repo"])
+    }
+
     @Test func backup_roundTripsOffer() throws {
         sourceSettings.bibleStudyOffer = .both
         let data = try JSONEncoder().encode(AppSettingsBackup(sourceSettings))

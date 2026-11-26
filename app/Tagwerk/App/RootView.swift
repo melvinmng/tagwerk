@@ -107,6 +107,7 @@ struct RootView: View {
                     .accessibilityIdentifier(AccessibilityID.App.demoReady)
             }
         }
+        .uiTestPickerSheets()
         .sheet(isPresented: assistantPresented) {
             ChatView(assistant: environment.assistant)
         }
@@ -135,7 +136,12 @@ struct RootView: View {
                             onShowDay: { day in environment.closeSearch(); showDay(day) },
                             onShowTask: { id in environment.closeSearch(); showTask(id) },
                             onShowNoteFolder: { scope in environment.closeSearch(); environment.showNotes(scope) },
-                            onShowMorningDay: { day in environment.closeSearch(); environment.showMorningDay(day) })
+                            onShowMorningDay: { day in environment.closeSearch(); environment.showMorningDay(day) },
+                            onShowSetting: { id in
+                                guard let target = SettingsSearchIndex.target(forID: id) else { return }
+                                environment.closeSearch()
+                                environment.openSettings(target)
+                            })
             }
         }
         .background(KeyboardDismissalInstaller())

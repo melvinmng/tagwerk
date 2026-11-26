@@ -239,13 +239,13 @@ struct GitHubCreateTests {
         await #expect(throws: TaskWriteError.offline) { try await makeProvider().create(draft()) }
     }
 
-    @Test func ownedRepositories_readsFullNames() async throws {
+    @Test func accessibleRepositories_readsFullNames() async throws {
         transport.enqueueJSON("/user/repos", #"[{"full_name":"beispiel/app"},{"full_name":"beispiel/web"}]"#)
         let provider = makeProvider()
-        let repos = try await provider.api.ownedRepositories()
+        let repos = try await provider.api.accessibleRepositories()
         #expect(repos == ["beispiel/app", "beispiel/web"])
         let query = try #require(transport.requests.first?.url?.query)
-        #expect(query.contains("affiliation=owner") && query.contains("sort=pushed") && query.contains("per_page=100"))
+        #expect(query.contains("affiliation=") && query.contains("sort=pushed") && query.contains("per_page=100"))
     }
 
     @Test func create_inTwoProjects_addsToBothAndSetsFieldsInEach() async throws {

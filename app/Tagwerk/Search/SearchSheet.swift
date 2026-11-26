@@ -14,6 +14,8 @@ struct SearchSheet: View {
     let onShowNoteFolder: (NotesScope) -> Void
     /// A hit for a day that only has gratitude: closes the search and shows the page of that day.
     let onShowMorningDay: (PlanDay) -> Void
+    /// A hit in the settings: closes the search and shows the page (the ID is that of the entry in `SettingsSearchIndex`).
+    let onShowSetting: (String) -> Void
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -31,12 +33,14 @@ struct SearchSheet: View {
 
     init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void,
          onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in },
-         onShowMorningDay: @escaping (PlanDay) -> Void = { _ in }) {
+         onShowMorningDay: @escaping (PlanDay) -> Void = { _ in },
+         onShowSetting: @escaping (String) -> Void = { _ in }) {
         self.model = model
         self.onShowDay = onShowDay
         self.onShowTask = onShowTask
         self.onShowNoteFolder = onShowNoteFolder
         self.onShowMorningDay = onShowMorningDay
+        self.onShowSetting = onShowSetting
     }
 
     private var calendar: Calendar { environment.planning.calendar }
@@ -514,6 +518,10 @@ struct SearchSheet: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: Text("Öffnen")) { open(note) }
                 .accessibilityAction(named: Text("Im Ordner zeigen")) { showNoteFolder(note) }
+        case .setting(let item):
+            SearchSettingRow(item: item)
+                .onTapGesture { onShowSetting(item.id) }
+                .accessibilityAddTraits(.isButton)
         case .shopping(let item, let match):
             SearchShoppingRow(item: item, match: match, onCheckOff: { Task { await model.checkOff(item) } })
                 .onTapGesture { showsShopping = true }

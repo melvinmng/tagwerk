@@ -263,3 +263,23 @@ struct SearchShoppingRow: View {
         .contentShape(Rectangle())
     }
 }
+
+/// A hit in the settings: the title and the way to it ("Erfassen", "KI › Spracheingabe und Vorlesen"); a tap opens the page.
+struct SearchSettingRow: View {
+    let item: SettingsSearchItem
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: "gearshape").font(.title3).foregroundStyle(.secondaryText).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.title)
+                if !item.pathText.isEmpty { Text(item.pathText).font(.caption).foregroundStyle(.secondaryText) }
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right").imageScale(.small).foregroundStyle(.secondaryText).accessibilityHidden(true)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}

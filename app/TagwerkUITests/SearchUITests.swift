@@ -40,4 +40,15 @@ final class SearchUITests: UITestCase {
         XCTAssertTrue(app.navigationBars["Fokus-Timer"].waitForExistence(timeout: Self.timeout), "The focus timer did not open")
         XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
     }
+
+    func testSearchOpensSettingsPage() {
+        // "Pomodoro" is the setting "Pomodoro (Runden mit Pausen)" on the page "Fokus-Timer".
+        openSearch(typing: "Pomodoro")
+        let hit = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Pomodoro (Runden")).firstMatch
+        XCTAssertTrue(hit.waitForExistence(timeout: Self.timeout), "The setting is not among the hits")
+        hit.tap()
+        // The search sheet closes and the tab "Einstellungen" shows the page.
+        XCTAssertTrue(app.navigationBars["Fokus-Timer"].waitForExistence(timeout: Self.timeout), "The settings page did not open")
+        XCTAssertFalse(app.textFields["Suchen"].exists, "The search sheet is still open")
+    }
 }

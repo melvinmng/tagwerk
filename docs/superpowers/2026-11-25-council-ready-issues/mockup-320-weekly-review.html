@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagwerk · #320 Wochenrückblick: Gewicht &amp; Ernährung (C4) · Mockups</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page-bg: #f5f5f7; --page-fg: #111; --page-muted: #555; --page-border: rgba(0,0,0,.14);
+    --bg: #f2f2f7; --card: #ffffff; --card2: #e5e5ea; --sep: #d1d1d6;
+    --text: #000000; --sub: rgba(60,60,67,.78); --dim: #3c3c43;
+    --accent: #005fcc; --green: #1f7a35; --green-fill: #34c759;
+    --orange: #a84400; --orange-fill: #ff9500; --red: #b91c1c; --purple: #7d3c9e;
+    --pink: #ff2d55; --yellow: #c79a00; --cyan: #0077b6;
+    --frame: #c7c7cc; --badge-bg: rgba(0,95,204,.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #0c0c0e; --page-fg: #f2f2f7; --page-muted: #a1a1aa; --page-border: rgba(255,255,255,.16);
+      --bg: #000000; --card: #1c1c1e; --card2: #2c2c2e; --sep: #38383a;
+      --text: #ffffff; --sub: rgba(235,235,245,.60); --dim: #c7c7cc;
+      --accent: #0a84ff; --green: #30d158; --green-fill: #30d158;
+      --orange: #ff9f0a; --orange-fill: #ff9f0a; --red: #ff6961; --purple: #da8fff;
+      --pink: #ff375f; --yellow: #ffd60a; --cyan: #64d2ff;
+      --frame: #2c2c2e; --badge-bg: rgba(10,132,255,.20);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 20px; background: var(--page-bg); color: var(--page-fg); font: 14px/1.5 -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.3px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; padding-top: 14px; border-top: 1px solid var(--page-border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .lead { color: var(--page-muted); max-width: 960px; margin: 0 0 16px; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font: 700 11.5px system-ui; background: var(--badge-bg); color: var(--accent); }
+  .tag.rec { background: var(--green-fill); color: #000; }
+  .tag.alt { background: var(--card2); color: var(--text); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(393px, 1fr)); gap: 24px; align-items: start; }
+  .col-label { font: 600 13px system-ui; color: var(--page-muted); margin: 0 0 8px 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .col-label b { color: var(--page-fg); }
+  .note { font-size: 12.5px; color: var(--page-muted); margin: 8px 4px 0; max-width: 393px; }
+
+  .phone {
+    width: 393px; height: 852px; max-width: 100%;
+    background: var(--bg); color: var(--text);
+    border: 6px solid var(--frame); border-radius: 44px;
+    padding: 14px 14px 12px; display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    font: 14.5px/1.35 -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  .status { display: flex; justify-content: space-between; font: 600 13px system-ui; padding: 2px 12px 8px; flex-shrink: 0; }
+  .nb { display: flex; justify-content: space-between; align-items: center; font: 600 16px system-ui; padding: 2px 4px 8px; flex-shrink: 0; }
+  .nb .act { color: var(--accent); font-weight: 400; font-size: 15px; min-width: 66px; }
+  .scr { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: var(--card); border-radius: 16px; overflow: hidden; }
+  .card.new { box-shadow: inset 3px 0 0 var(--orange-fill); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; min-height: 42px; border-bottom: 1px solid var(--sep); }
+  .row:last-child { border-bottom: 0; }
+  .row .t { flex: 1; min-width: 0; }
+  .row .s { display: block; font-size: 12px; color: var(--sub); margin-top: 1px; }
+  .row .v { font-size: 13.5px; font-variant-numeric: tabular-nums; text-align: right; color: var(--sub); white-space: nowrap; }
+  .row .v b { color: var(--text); font-weight: 600; }
+  .row .v.ok b { color: var(--green); }
+  .row .v.warn b { color: var(--orange); }
+  .row.action { color: var(--accent); font-weight: 500; }
+  .sh { display: flex; justify-content: space-between; font: 600 11.5px system-ui; text-transform: uppercase; letter-spacing: .4px; color: var(--sub); margin: 4px 12px -4px; }
+  .sh span:last-child { text-transform: none; font-weight: 400; }
+  .ft { font-size: 11.5px; color: var(--sub); margin: -3px 12px 2px; line-height: 1.38; }
+  .wk-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; }
+  .wk-head small { display: block; font: 600 11px system-ui; color: var(--accent); letter-spacing: .4px; text-transform: uppercase; }
+  .wk-head b { font-size: 18px; }
+  .arrows { display: flex; gap: 4px; background: var(--card2); border-radius: 99px; padding: 4px 10px; font-size: 15px; color: var(--accent); }
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 96px; padding: 10px 14px 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar-wrap { width: 100%; flex: 1; display: flex; align-items: flex-end; position: relative; }
+  .bar { width: 100%; border-radius: 5px; background: var(--green-fill); }
+  .bar.over { background: var(--orange-fill); }
+  .bar.dash { background: transparent; border: 1.5px dashed var(--sub); height: 22px !important; opacity: .55; }
+  .bar-tick { position: absolute; left: -2px; right: -2px; height: 1.5px; background: var(--text); opacity: .55; }
+  .bar-lbl { font-size: 11px; color: var(--sub); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font: 600 11.5px system-ui; background: rgba(52,199,89,.16); color: var(--green); }
+  .pill.warn { background: rgba(255,149,0,.16); color: var(--orange); }
+  .spark { padding: 8px 14px 4px; }
+  .spark svg { width: 100%; height: 68px; display: block; }
+</style>
+</head>
+<body>
+
+<h1>#320 · Wochenrückblick: Zahlen zu Gewicht und Ernährung (C4)</h1>
+<p class="lead">Ergänzt den bestehenden <code>WeekReviewView</code> um die fehlenden C4/OR4b-Bestandteile: Budget-Trefferquote („Im Budget an X von Y Tagen“), gebündelte Makros + Nährwerte und den neuen Abschnitt „Gewicht“ (7-Tage-Mittel, 28-Tage-Trend, Zielabstand). Gelb/orange Seitenlinie zeigt neue/geänderte Karten.</p>
+
+<h2>Variante A vs. B · Gewicht &amp; Nährwerte im Wochenrückblick</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag rec">Variante A · Empfehlung</span><b>Kompakte Gewichts-Kennzahlen + Gebündelte Nährwerte</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Erfassen</span><span>Wochenrückblick</span><span class="act"></span></div>
+      <div class="scr">
+        <div class="card">
+          <div class="wk-head">
+            <div><small>Diese Woche · KW 48</small><b>23.–29. Nov ▾</b></div>
+            <div class="arrows"><span>‹</span><span>·</span><span style="opacity:.35">›</span></div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Kalorien</span><span>bisher</span></div>
+        <div class="card new">
+          <div class="row">
+            <div class="t">Ø ~2.180 kcal an 5 Tagen<span class="s"><span class="pill">Im Budget an 4 von 5 Tagen</span></span></div>
+          </div>
+          <div class="bars">
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:74%"></div><div class="bar-tick" style="bottom:82%"></div></div><span class="bar-lbl">Mo</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar over" style="height:92%"></div><div class="bar-tick" style="bottom:78%"></div></div><span class="bar-lbl">Di</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:68%"></div><div class="bar-tick" style="bottom:86%"></div></div><span class="bar-lbl">Mi</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:72%"></div><div class="bar-tick" style="bottom:80%"></div></div><span class="bar-lbl">Do</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:64%"></div><div class="bar-tick" style="bottom:78%"></div></div><span class="bar-lbl">Fr</span></div>
+            <div class="bar-col"><div class="bar-wrap"></div><span class="bar-lbl">Sa</span></div>
+            <div class="bar-col"><div class="bar-wrap"></div><span class="bar-lbl">So</span></div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Gewicht</span><span>bisher</span></div>
+        <div class="card new">
+          <div class="row"><div class="t">7-Tage-Mittel<span class="s">4 Messungen in dieser Woche</span></div><div class="v"><b>81,4 kg</b></div></div>
+          <div class="row"><div class="t">Trend (4 Wochen)</div><div class="v ok"><b>−0,4 kg/Woche</b></div></div>
+          <div class="row"><div class="t">Zielgewicht</div><div class="v"><b>78,0 kg</b> · noch 3,4 kg</div></div>
+          <div class="row action"><div class="t">Verlauf und Ziele öffnen</div><span style="color:var(--sub)">›</span></div>
+        </div>
+
+        <div class="sh"><span>Nährwerte</span><span>bisher</span></div>
+        <div class="card new">
+          <div class="row"><div class="t">Eiweiß</div><div class="v"><b>Ø ~134 g</b> / 140 g</div></div>
+          <div class="row"><div class="t">Kohlenhydrate</div><div class="v"><b>Ø ~218 g</b> · 5 Tage</div></div>
+          <div class="row"><div class="t">Fett</div><div class="v"><b>Ø ~66 g</b> · 5 Tage</div></div>
+          <div class="row"><div class="t">Ballaststoffe</div><div class="v"><b>Ø 27 g</b> · 4 Tage</div></div>
+          <div class="row"><div class="t">Zucker</div><div class="v"><b>Ø 34 g</b> · 4 Tage</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">Alle Ernährungs- und Gewichtszahlen auf einen Blick ohne den Rückblick zu überladen; tieferer Verlauf liegt einen Tipp entfernt in „Verlauf und Ziele“.</p>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag alt">Variante B</span><b>Mit 7-Tage-Sparkline im Gewichtsabschnitt</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Erfassen</span><span>Wochenrückblick</span><span class="act"></span></div>
+      <div class="scr">
+        <div class="card">
+          <div class="wk-head">
+            <div><small>Letzte Woche · KW 47</small><b>16.–22. Nov ▾</b></div>
+            <div class="arrows"><span>‹</span><span>·</span><span>›</span></div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Gewicht</span><span></span></div>
+        <div class="card new">
+          <div class="spark">
+            <svg viewBox="0 0 330 68" aria-label="Gewichtsverlauf KW 47">
+              <line x1="0" y1="54" x2="330" y2="54" stroke="var(--green-fill)" stroke-dasharray="4 4" stroke-width="1.5"/>
+              <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="16,22 68,26 120,24 172,30 224,29 276,34 316,36"/>
+              <circle cx="16" cy="20" r="3.5" fill="var(--sub)"/><circle cx="68" cy="29" r="3.5" fill="var(--sub)"/>
+              <circle cx="172" cy="31" r="3.5" fill="var(--sub)"/><circle cx="224" cy="26" r="3.5" fill="var(--sub)"/>
+              <circle cx="316" cy="38" r="3.5" fill="var(--sub)"/>
+            </svg>
+          </div>
+          <div class="row"><div class="t">7-Tage-Mittel (5 Messungen)</div><div class="v"><b>81,8 kg</b></div></div>
+          <div class="row"><div class="t">Trend (4 Wochen)</div><div class="v ok"><b>−0,3 kg/Woche</b></div></div>
+          <div class="row"><div class="t">Körperfett (optional)</div><div class="v"><b>18,4 %</b></div></div>
+        </div>
+        <div class="ft">Blaue Linie: 7-Tage-Mittel · Punkte: Messungen · Gestrichelt: Zielgewicht (78,0 kg).</div>
+
+        <div class="sh"><span>Kalorien</span><span></span></div>
+        <div class="card new">
+          <div class="row"><div class="t">Ø ~2.240 kcal an 7 Tagen<span class="s"><span class="pill">Im Budget an 6 von 7 Tagen</span></span></div></div>
+        </div>
+
+        <div class="sh"><span>Fortschritt besprechen</span><span></span></div>
+        <div class="card">
+          <div class="row action"><div class="t">✨ Fortschritt mit ChatGPT besprechen</div><span style="color:var(--sub)">›</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">Visuell reichhaltiger, aber eine 7-Tage-Sparkline hat bei 3–4 Messungen oft wenig Aussagekraft im Vergleich zum 3-Monats-Chart in „Verlauf und Ziele“.</p>
+  </div>
+
+</div>
+
+<h2>Rand- &amp; Sonderzustände (Wenige Messungen, Keine Messungen, Leere Woche, Warnung)</h2>
+<div class="grid">
+
+  <div>
+    <p class="col-label"><span class="tag">Zustand: Wenige Daten / Trend-Warnung</span><b>&lt; 3 Messungen &amp; hohes Tempo</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Erfassen</span><span>Wochenrückblick</span><span class="act"></span></div>
+      <div class="scr">
+        <div class="sh"><span>Fall 1: Nur 2 Messungen in der Woche</span><span></span></div>
+        <div class="card new">
+          <div class="row"><div class="t">Wochenmittel<span class="s">2 Messungen · 7-Tage-Mittel ab 3 Tagen</span></div><div class="v"><b>81,6 kg</b></div></div>
+          <div class="row"><div class="t">Trend (4 Wochen)</div><div class="v">–</div></div>
+        </div>
+        <div class="ft">Für einen verlässlichen Trend braucht Tagwerk mindestens 4 Wochen Verlauf.</div>
+
+        <div class="sh"><span>Fall 2: Tempo über App-Grenze</span><span></span></div>
+        <div class="card new">
+          <div class="row"><div class="t">7-Tage-Mittel (6 Messungen)</div><div class="v"><b>79,2 kg</b></div></div>
+          <div class="row"><div class="t">Trend (4 Wochen)<span class="s"><span class="pill warn">Über 0,8 kg/Woche (1 %-Grenze)</span></span></div><div class="v warn"><b>−1,1 kg/Woche</b></div></div>
+        </div>
+
+        <div class="sh"><span>Fall 3: Keine Messungen / Health still</span><span></span></div>
+        <div class="card new">
+          <div class="row"><div class="t" style="color:var(--sub)">Keine Gewichtsmessungen in dieser Woche</div></div>
+          <div class="row action"><div class="t">Verlauf und Ziele öffnen</div><span style="color:var(--sub)">›</span></div>
+        </div>
+        <div class="ft">iOS meldet nicht, ob das Lesen aus Health erlaubt ist. Ohne Erlaubnis zählen nur eigene Einträge.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="col-label"><span class="tag">Zustand: Leere Woche &amp; Teilabdeckung</span><b>Unbekannt bleibt unbekannt</b></p>
+    <div class="phone">
+      <div class="status"><span>14:32</span><span>5G · 94 %</span></div>
+      <div class="nb"><span class="act">‹ Erfassen</span><span>Wochenrückblick</span><span class="act"></span></div>
+      <div class="scr">
+        <div class="card">
+          <div class="wk-head">
+            <div><small>KW 43</small><b>19.–25. Okt ▾</b></div>
+            <div class="arrows"><span>‹</span><span>·</span><span>›</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row"><div class="t" style="color:var(--sub)">In dieser Woche wurde nichts erfasst.</div></div>
+        </div>
+
+        <div class="sh"><span>Teilabdeckung bei Nährwerten</span><span></span></div>
+        <div class="card new">
+          <div class="row"><div class="t">Kalorien<span class="s">Ø ~2.050 kcal an 3 Tagen · Im Budget an 2 von 3 Tagen</span></div></div>
+          <div class="bars" style="height:76px">
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:68%"></div><div class="bar-tick" style="bottom:80%"></div></div><span class="bar-lbl">Mo</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar dash"></div></div><span class="bar-lbl">Di</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar over" style="height:90%"></div><div class="bar-tick" style="bottom:78%"></div></div><span class="bar-lbl">Mi</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar dash"></div></div><span class="bar-lbl">Do</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:70%"></div><div class="bar-tick" style="bottom:80%"></div></div><span class="bar-lbl">Fr</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar dash"></div></div><span class="bar-lbl">Sa</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar dash"></div></div><span class="bar-lbl">So</span></div>
+          </div>
+          <div class="row"><div class="t">Ballaststoffe</div><div class="v"><b>Ø 19 g</b> · 2 Tage</div></div>
+          <div class="row"><div class="t">Zucker</div><div class="v">–</div></div>
+        </div>
+        <div class="ft">Fehlende Tage erscheinen gestrichelt, nie als 0. Unbekannte Nährwerte bleiben „–“.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
