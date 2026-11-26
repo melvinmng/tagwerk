@@ -201,7 +201,8 @@ struct ProjectProgressDetailView: View {
 
     /// One line of the time section; a single element, title as label and the time as value.
     private func timeRow(_ name: String, _ title: LocalizedStringKey, _ value: String) -> some View {
-        LabeledContent(title, value: value)
+        // The value in the primary colour: the secondary grey on the grouped background is reported by the contrast audit.
+        LabeledContent { Text(value).foregroundStyle(.primary) } label: { Text(title) }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
             .accessibilityValue(value)
