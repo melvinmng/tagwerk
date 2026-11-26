@@ -6,7 +6,11 @@ public enum TaskActivityKind: String, Sendable, Hashable, Codable, CaseIterable 
     case completed
     case reopened
     case statusChanged
+    /// The due date changed.
     case rescheduled
+    /// The planned work day in "Planen" changed from one day to another (#332, stage 3). First planning and removal from the plan are
+    /// no entries: only a move shows a task that slips.
+    case replanned
 }
 
 /// One entry of the local activity log: a change the user made to a task through Tagwerk. GitHub and Reminders keep no history of
@@ -68,6 +72,16 @@ public enum TaskActivityRules {
         }
         return entries
     }
+
+    /// The entry of a task that was moved from one planned work day to another. Moving to the same day gives nothing.
+    public static func replanned(_ item: TaskItem, from: PlanDay, to: PlanDay, at date: Date) -> TaskActivityEntry? {
+        guard from != to else { return nil }
+        return TaskActivityEntry(kind: .replanned, taskKey: item.id.key, title: item.title, from: dayText(from), to: dayText(to),
+                                 projectKeys: ProjectProgressReference.keys(of: item), occurredAt: date)
+    }
+
+    /// "2026-11-25"; the form of `dueText` for a day without a time.
+    public static func dayText(_ day: PlanDay) -> String { String(format: "%04d-%02d-%02d", day.year, day.month, day.day) }
 
     /// "2026-11-25" or "2026-11-25 14:30"; independent of the locale, so the log stays readable after a language change.
     public static func dueText(_ due: DueDate) -> String {
