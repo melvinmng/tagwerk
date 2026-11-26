@@ -8,36 +8,24 @@ struct PlanningSettingsSection: View {
     @State private var calendars: [ListInfo] = []
     @State private var calendarError: String?
 
-    /// Calendar weekday numbers (1 = Sunday) with their names, in the order of the app calendar (Monday first).
-    private static var weekdays: [(Int, String)] {
-        let calendar = Calendar.tagwerk
-        let names = DateText.fullWeekdaySymbols(calendar: calendar)
-        return names.enumerated().map { index, name in ((calendar.firstWeekday - 1 + index) % 7 + 1, name) }
-    }
-
     var body: some View {
         @Bindable var settings = environment.settings
         Section {
-            NavigationLink("Arbeitszeit je Wochentag") { weekScheduleEditor }
+            NavigationLink("Arbeitszeit je Wochentag", value: SettingsDestination.workSchedule)
             planCalendarRow
-            NavigationLink {
-                SourceSelectionView(title: "Deadline-Kalender", items: calendars, defaultSelection: [],
-                                    selection: $settings.deadlineCalendarIDs)
-            } label: {
+            NavigationLink(value: SettingsDestination.deadlineCalendars) {
                 LabeledContent("Deadline-Kalender", value: deadlineSummary)
             }
             ValueStepper("Standarddauer", value: $settings.defaultTaskMinutes, in: 15...240, step: 15, kind: .durationMinutes,
                          unit: "min", display: CapacityText.duration)
-            NavigationLink {
-                TravelSettingsView()
-            } label: {
+            NavigationLink(value: SettingsDestination.travel) {
                 LabeledContent("Fahrzeit", value: TravelText.settingsSummary(
                     enabled: settings.travelTimeEnabled, transport: settings.travelTransport, hasHome: settings.homePlace != nil))
             }
             Toggle("Termine zusammenfassen (mit Rückfrage)", isOn: $settings.mergeDuplicateEvents)
-            NavigationLink("Zusammenfassen-Regeln") { MergeRulesView(model: environment.planning) }
+            NavigationLink("Zusammenfassen-Regeln", value: SettingsDestination.mergeRules)
             Button("Zusammenfassungen zurücksetzen") { Task { await environment.planning.resetMergeDecisions() } }
-            NavigationLink("Kalender-Diagnose") { CalendarDiagnosticsView(model: environment.planning) }
+            NavigationLink("Kalender-Diagnose", value: SettingsDestination.calendarDiagnostics)
         } header: {
             Text("Planen")
                 .foregroundStyle(.secondaryText)
@@ -70,7 +58,24 @@ struct PlanningSettingsSection: View {
         }
     }
 
-    private var weekScheduleEditor: some View {
+    private var deadlineSummary: String {
+        let count = environment.settings.deadlineCalendarIDs?.count ?? 0
+        return count == 0 ? String(localized: "Keine") : "\(count)"
+    }
+}
+
+/// The page "Arbeitszeit": working hours of every weekday.
+struct WorkScheduleSettingsView: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    /// Calendar weekday numbers (1 = Sunday) with their names, in the order of the app calendar (Monday first).
+    private static var weekdays: [(Int, String)] {
+        let calendar = Calendar.tagwerk
+        let names = DateText.fullWeekdaySymbols(calendar: calendar)
+        return names.enumerated().map { index, name in ((calendar.firstWeekday - 1 + index) % 7 + 1, name) }
+    }
+
+    var body: some View {
         Form {
             ForEach(Self.weekdays, id: \.0) { weekday, name in
                 WeekdayHoursRow(name: name, hours: hoursBinding(weekday))
@@ -89,11 +94,6 @@ struct PlanningSettingsSection: View {
                 Task { await environment.planning.reload() }
             }
         )
-    }
-
-    private var deadlineSummary: String {
-        let count = environment.settings.deadlineCalendarIDs?.count ?? 0
-        return count == 0 ? String(localized: "Keine") : "\(count)"
     }
 }
 

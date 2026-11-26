@@ -12,15 +12,27 @@ struct SettingsView: View {
     @State private var accessRevision = 0
     @State private var healthAccess: HealthAccess = .notDetermined
     @State private var stepsAccess: StepsAccess = .asked
+    @State private var searchText = ""
 
     var body: some View {
         @Bindable var settings = environment.settings
         NavigationStack(path: Bindable(environment).settingsPath) {
+            ScrollViewReader { proxy in
+            Group {
+            if isShowingSearchResults {
+                // The list is not part of the screen while hits are shown: only the hits are read, audited and focused.
+                SettingsSearchResults(query: searchText) { hit in
+                    searchText = ""
+                    environment.openSettings(hit.target)
+                }
+            } else {
             Form {
                 PlanningSettingsSection()
+                    .id(SettingsAnchor.planning)
 
                 Section {
                     DatePicker("Beginn", selection: time($settings.lunchStartMinutes), displayedComponents: .hourAndMinute)
+                        .id(SettingsAnchor.lunch)
                     ValueStepper("Dauer", value: $settings.lunchDurationMinutes, in: 0...180, step: 15, kind: .durationMinutes,
                                  unit: "min", display: ValueStepper.minutesText)
                 } header: {
@@ -31,33 +43,23 @@ struct SettingsView: View {
                 Section {
                     ValueStepper("Puffer", value: $settings.bufferMinutes, in: 0...60, step: 5, kind: .durationMinutes,
                                  unit: "min", display: ValueStepper.minutesText)
+                        .id(SettingsAnchor.buffer)
                 } footer: {
                     Text("Abstand zwischen Terminen und eingeplanten Aufgaben.")
                         .foregroundStyle(.secondaryText)
                 }
 
                 Section {
-                    NavigationLink {
-                        SourceSelectionView(title: "Kalender", items: calendars,
-                                            defaultSelection: CalendarSelection.defaultSelected(calendars),
-                                            selection: $settings.selectedCalendarIDs)
-                    } label: {
+                    NavigationLink(value: SettingsDestination.calendars) {
                         LabeledContent("Kalender", value: summary(settings.selectedCalendarIDs, all: calendars,
                                                                   fallback: CalendarSelection.defaultSelected(calendars)))
                     }
-                    NavigationLink {
-                        SourceSelectionView(title: "Erinnerungslisten", items: reminderLists,
-                                            defaultSelection: Set(reminderLists.map(\.id)),
-                                            selection: $settings.selectedReminderListIDs,
-                                            lockedIDs: settings.shoppingListID.map { [$0: "Einkaufsliste"] } ?? [:])
-                    } label: {
+                    NavigationLink(value: SettingsDestination.reminderLists) {
                         LabeledContent("Erinnerungslisten",
                                        value: ReminderListSummary.text(selected: settings.selectedReminderListIDs, lists: reminderLists,
                                                                        shopping: settings.shoppingListID))
                     }
-                    NavigationLink {
-                        ShoppingSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.shopping) {
                         LabeledContent("Einkaufsliste", value: shoppingListSummary)
                     }
                 } header: {
@@ -66,19 +68,16 @@ struct SettingsView: View {
                 }
 
                 GitHubSettingsSection()
+                    .id(SettingsAnchor.github)
 
                 Section {
-                    NavigationLink {
-                        AISettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.ai) {
                         LabeledContent("KI", value: aiSummary)
                     }
                 }
 
                 Section {
-                    NavigationLink {
-                        CaptureSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.capture) {
                         LabeledContent("Erfassen", value: IntakeFormat.goalSummary(
                             kcal: settings.goalKilocalories, waterMilliliters: settings.goalWaterMilliliters,
                             workoutMinutesPerWeek: settings.goalWorkoutMinutesPerWeek))
@@ -86,53 +85,38 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    NavigationLink {
-                        RoutineSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.routines) {
                         LabeledContent("Routinen", value: DateText.time(minutes: settings.bedtimeMinutes, calendar: .tagwerk))
                     }
-                    NavigationLink {
-                        NotesSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.notes) {
                         LabeledContent("Notizen", value: NotesSettingsView.sortName(settings.noteSortOrder))
                     }
-                    NavigationLink {
-                        BackupSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.backup) {
                         LabeledContent("Datensicherung", value: BackupSettingsView.lastBackupText(settings.lastAutoBackupAt))
                     }
-                    NavigationLink {
-                        FocusSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.focus) {
                         LabeledContent("Fokus-Timer", value: FocusTimerText.settingsSummary(settings.focusTimerSettings))
                     }
-                    NavigationLink {
-                        SiriShortcutsSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.siri) {
                         LabeledContent("Siri & Kurzbefehle", value: String(localized: "\(SiriPhraseCatalog.shortcutCount) Kurzbefehle"))
                     }
-                    NavigationLink {
-                        LanguageSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.languages) {
                         LabeledContent("Sprachen", value: LanguageSettingsText.summary(settings.contentLanguages))
                     }
                 }
 
                 Section {
-                    NavigationLink {
-                        ReminderDefaultsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.reminderDefaults) {
                         LabeledContent("Standard-Erinnerungen",
                                        value: ReminderText.summary(settings.reminderDefaults.offsets(for: .localTask, isAllDay: false),
                                                                    subject: .task, locale: .current, calendar: .tagwerk))
                     }
                     Toggle("GitHub-Issues", isOn: $settings.githubTaskNotifications)
+                        .id(SettingsAnchor.notifications)
                     Toggle("Erinnerungen", isOn: $settings.reminderTaskNotifications)
                     Toggle("Lokale Aufgaben", isOn: $settings.localTaskNotifications)
                     Toggle("Deadline-Termine", isOn: $settings.deadlineCalendarNotifications)
-                    NavigationLink {
-                        QuietHoursSettingsView()
-                    } label: {
+                    NavigationLink(value: SettingsDestination.quietHours) {
                         LabeledContent("Ruhezeiten", value: QuietHoursSettingsView.summary(settings))
                     }
                 } header: {
@@ -147,6 +131,7 @@ struct SettingsView: View {
                     accessRow("Erinnerungen", state: environment.gateway.accessState) {
                         _ = try? await environment.gateway.requestAccess()
                     }
+                    .id(SettingsAnchor.access)
                     accessRow("Kalender", state: environment.gateway.calendarAccessState) {
                         _ = try? await environment.gateway.requestCalendarAccess()
                     }
@@ -167,18 +152,26 @@ struct SettingsView: View {
 
                 Section {
                     Button("Einrichtung erneut starten") { environment.restartSetup() }
+                        .id(SettingsAnchor.setup)
+                }
+            }
+            }
+            }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Einstellungen durchsuchen")
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: environment.settingsScrollTarget, initial: true) { _, anchor in
+                guard let anchor else { return }
+                // The list is laid out again after the search closes; scrolling right away misses the row.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    withAnimation { proxy.scrollTo(anchor, anchor: .top) }
+                    environment.settingsScrollTarget = nil
                 }
             }
             .navigationTitle("Einstellungen")
             .navigationDestination(for: SettingsDestination.self) { destination in
-                switch destination {
-                case .languages: LanguageSettingsView()
-                case .ai: AISettingsView()
-                case .aiVoice: VoiceSettingsView()
-                case .capture: CaptureSettingsView()
-                case .shopping: ShoppingSettingsView()
-                case .siri: SiriShortcutsSettingsView()
-                }
+                destinationView(destination)
             }
             .assistantToolbarButton { .settings }
             .task {
@@ -191,6 +184,51 @@ struct SettingsView: View {
             .onChange(of: settings.selectedReminderListIDs) { _, _ in
                 Task { await environment.taskList.reload() }
             }
+            }
+        }
+    }
+
+    private var isShowingSearchResults: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// The page of a destination. The pages with a choice of sources get their lists here, like the rows that lead to them.
+    @ViewBuilder
+    private func destinationView(_ destination: SettingsDestination) -> some View {
+        @Bindable var settings = environment.settings
+        switch destination {
+        case .languages: LanguageSettingsView()
+        case .ai: AISettingsView()
+        case .aiVoice: VoiceSettingsView()
+        case .aiPrivacy: AIPrivacyView()
+        case .capture: CaptureSettingsView()
+        case .shopping: ShoppingSettingsView()
+        case .siri: SiriShortcutsSettingsView()
+        case .workSchedule: WorkScheduleSettingsView()
+        case .deadlineCalendars:
+            SourceSelectionView(title: "Deadline-Kalender", items: calendars, defaultSelection: [],
+                                selection: $settings.deadlineCalendarIDs)
+        case .travel: TravelSettingsView()
+        case .mergeRules: MergeRulesView(model: environment.planning)
+        case .calendarDiagnostics: CalendarDiagnosticsView(model: environment.planning)
+        case .calendars:
+            SourceSelectionView(title: "Kalender", items: calendars,
+                                defaultSelection: CalendarSelection.defaultSelected(calendars),
+                                selection: $settings.selectedCalendarIDs)
+        case .reminderLists:
+            SourceSelectionView(title: "Erinnerungslisten", items: reminderLists,
+                                defaultSelection: Set(reminderLists.map(\.id)),
+                                selection: $settings.selectedReminderListIDs,
+                                lockedIDs: settings.shoppingListID.map { [$0: "Einkaufsliste"] } ?? [:])
+        case .githubProjects: GitHubProjectsPage()
+        case .routines: RoutineSettingsView()
+        case .bibleStudy: BibleStudySettingsView()
+        case .habits: HabitListView(model: environment.habits)
+        case .notes: NotesSettingsView()
+        case .backup: BackupSettingsView()
+        case .focus: FocusSettingsView()
+        case .reminderDefaults: ReminderDefaultsView()
+        case .quietHours: QuietHoursSettingsView()
         }
     }
 

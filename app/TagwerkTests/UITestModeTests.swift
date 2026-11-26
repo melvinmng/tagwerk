@@ -20,7 +20,8 @@ struct UITestModeTests {
     // MARK: Direct jump to a screen (-TagwerkUITestScreen)
 
     @Test func screenArgument_namesTheKnownScreens() {
-        let names = ["settings.languages", "settings.ai.voice", "settings.capture", "settings.shopping", "settings.siri"]
+        let names = ["settings.languages", "settings.ai.voice", "settings.capture", "settings.shopping", "settings.siri",
+                     "github.repositoryPicker", "github.projectPicker"]
         #expect(UITestScreen.allCases.map(\.rawValue) == names)
         for name in names {
             let screen = UITestScreen.named(in: ["-TagwerkUITest", UITestMode.screenArgument, name])
@@ -39,6 +40,12 @@ struct UITestModeTests {
     @Test func screenArgument_isIgnoredOutsideTheUITestMode() {
         // The unit test host runs without `-TagwerkUITest`: whatever the arguments say, the app must not jump anywhere.
         #expect(UITestMode.screen == nil)
+    }
+
+    @Test func pickerScreens_areSheetsWithoutASettingsPage() {
+        #expect(UITestScreen.githubRepositoryPicker.isPickerSheet && UITestScreen.githubProjectPicker.isPickerSheet)
+        #expect(UITestScreen.githubRepositoryPicker.settingsPath.isEmpty)
+        #expect(!UITestScreen.settingsSiri.isPickerSheet)
     }
 
     @Test func settingsScreens_openTheirPageOnTheSettingsStack() {

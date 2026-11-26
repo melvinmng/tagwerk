@@ -27,7 +27,7 @@ public struct GitHubAPI: Sendable {
     // MARK: Reading
 
     public func viewerLogin() async throws -> String {
-        try await viewerProjects().login
+        try await viewerProjects(maxPages: 1).login
     }
 
     /// Open issues assigned to the viewer in open projects, and those projects: the viewer's own plus
@@ -99,19 +99,34 @@ public struct GitHubAPI: Sendable {
         try await query(document, variables: [String: String]())
     }
 
-    /// Repositories owned by the viewer, most recently pushed first.
-    public func ownedRepositories() async throws -> [String] {
+    /// Every repository the viewer can access (own, collaborator and organization repositories), most recently
+    /// pushed first. Follows the REST pages until a page is shorter than `pageSize`; `maxPages` is only a guard
+    /// against a response that never ends. A failing page fails the whole call, so a cached full list is never
+    /// replaced by a silently truncated one.
+    public func accessibleRepositories(pageSize: Int = 100, maxPages: Int = 100) async throws -> [String] {
         struct Repository: Decodable { let full_name: String }
-        let data = try await rest("GET", "user/repos", query: [
-            URLQueryItem(name: "affiliation", value: "owner"),
-            URLQueryItem(name: "sort", value: "pushed"),
-            URLQueryItem(name: "per_page", value: "100"),
-        ])
-        do {
-            return try JSONDecoder().decode([Repository].self, from: data).map(\.full_name)
-        } catch {
-            throw GitHubAPIError.decoding(String(describing: error))
+        var names: [String] = []
+        var seen = Set<String>()
+        for page in 1...max(maxPages, 1) {
+            let data = try await rest("GET", "user/repos", query: [
+                URLQueryItem(name: "affiliation", value: "owner,collaborator,organization_member"),
+                URLQueryItem(name: "sort", value: "pushed"),
+                URLQueryItem(name: "per_page", value: String(pageSize)),
+                URLQueryItem(name: "page", value: String(page)),
+            ])
+            let repositories: [Repository]
+            do {
+                repositories = try JSONDecoder().decode([Repository].self, from: data)
+            } catch {
+                throw GitHubAPIError.decoding(String(describing: error))
+            }
+            // The order by push time can shift between two requests; a repository must not be listed twice.
+            for repository in repositories where seen.insert(repository.full_name).inserted {
+                names.append(repository.full_name)
+            }
+            if repositories.count < pageSize { break }
         }
+        return names
     }
 
     /// Logins that can be assigned to issues of `repository` ("owner/name"). Only the first page of 100.
@@ -137,10 +152,24 @@ public struct GitHubAPI: Sendable {
         return try await send(method: method, url: url, body: data)
     }
 
-    func viewerProjects() async throws -> (login: String, projects: [ProjectInfo]) {
-        let data: ProjectsQuery.ViewerData = try await query(ProjectsQuery.viewerProjects)
-        let projects = data.viewer.projectsV2.nodes.filter { !$0.closed }.map(\.info).sorted { $0.number < $1.number }
-        return (data.viewer.login, projects)
+    /// The viewer's open projects, all pages. `maxPages` only guards against a response that never ends; a failing
+    /// page fails the whole call, so a cached full list is never replaced by a silently truncated one.
+    func viewerProjects(maxPages: Int = 50) async throws -> (login: String, projects: [ProjectInfo]) {
+        var login = ""
+        var nodes: [ProjectsQuery.ProjectNode] = []
+        var cursor: String?
+        for _ in 0..<max(maxPages, 1) {
+            let data: ProjectsQuery.ViewerData = try await query(ProjectsQuery.viewerProjects,
+                                                                 variables: CursorVariables(cursor: cursor))
+            login = data.viewer.login
+            let page = data.viewer.projectsV2
+            nodes += page.nodes
+            // A page that claims a successor without a new cursor would repeat itself forever.
+            guard let info = page.pageInfo, info.hasNextPage, let next = info.endCursor, next != cursor else { break }
+            cursor = next
+        }
+        let projects = nodes.filter { !$0.closed }.map(\.info).sorted { $0.number < $1.number }
+        return (login, projects)
     }
 
     /// Adds authentication; after HTTP 401 refreshes the token once and retries.

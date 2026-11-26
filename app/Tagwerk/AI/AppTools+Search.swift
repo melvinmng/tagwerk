@@ -70,6 +70,8 @@ extension AppTools {
                 case .note(let note, let match): noteRows.append((note, match))
                 case .shopping(let item, let match): shoppingRows.append((item, match))
                 case .online(let issue): issueRows.append(issue)
+                // The assistant's input has no settings (it gets no settings hits by design), so this row never occurs.
+                case .setting: break
                 }
             }
         }

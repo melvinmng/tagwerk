@@ -1,7 +1,8 @@
+import Foundation
 import GitHubKit
-import SwiftUI
+import TagwerkCore
 
-/// Texts and preselection of the GitHub project row in "Neue Aufgabe" (multi-select menu like the repository row).
+/// Texts and preselection of the GitHub project row in "Neue Aufgabe" (multi-select list in a searchable sheet, `ProjectChoiceRow`).
 enum ProjectSelection {
     /// Collapsed value: "Kein Projekt", one or two names, from three on the count.
     static func value(titles: [String]) -> String {
@@ -16,6 +17,30 @@ enum ProjectSelection {
     /// after a manual choice they are added.
     static func preselect(current: Set<String>, linked: Set<String>, edited: Bool) -> Set<String> {
         edited ? current.union(linked) : linked
+    }
+
+    /// The sections of the project picker: projects linked to the chosen repository first, then the others; both filtered by
+    /// `query` (the title). `total` is the number of all projects, `othersTotal` that of the unlinked ones, whatever the query.
+    struct Sections: Equatable {
+        var linked: [ProjectInfo]
+        var others: [ProjectInfo]
+        var total: Int
+        var othersTotal: Int
+    }
+
+    static func sections(projects: [ProjectInfo], linkedIDs: Set<String>, query: String) -> Sections {
+        let shown = ChoiceFilter.matching(projects, query: query) { [$0.title] }
+        return Sections(linked: shown.filter { linkedIDs.contains($0.id) },
+                        others: shown.filter { !linkedIDs.contains($0.id) },
+                        total: projects.count,
+                        othersTotal: projects.filter { !linkedIDs.contains($0.id) }.count)
+    }
+
+    /// `selection` with `id` added, or removed when it is in.
+    static func toggled(_ id: String, in selection: Set<String>) -> Set<String> {
+        var result = selection
+        if !result.insert(id).inserted { result.remove(id) }
+        return result
     }
 
     /// Start stages offered for new issues: the stages that every selected project has, in the order of
@@ -57,62 +82,5 @@ enum ProjectSelection {
     static func startStatus(current: String?, options: [String]) -> String? {
         if let current, options.contains(current) { return current }
         return defaultStartStatus(in: options)
-    }
-}
-
-/// The project row: a menu with toggles that stays open while choosing (Mehrfachauswahl).
-struct ProjectSelectionRow: View {
-    let projects: [(id: String, title: String)]
-    @Binding var selection: Set<String>
-    @Binding var edited: Bool
-
-    private var selectedTitles: [String] { projects.filter { selection.contains($0.id) }.map(\.title) }
-
-    var body: some View {
-        Menu {
-            Toggle("Kein Projekt", isOn: Binding(
-                get: { selection.isEmpty },
-                set: { isOn in
-                    guard isOn else { return }
-                    edited = true
-                    selection = []
-                }))
-            Section("Mehrere möglich") {
-                ForEach(projects, id: \.id) { project in
-                    Toggle(project.title, isOn: Binding(
-                        get: { selection.contains(project.id) },
-                        set: { isOn in
-                            edited = true
-                            if isOn { selection.insert(project.id) } else { selection.remove(project.id) }
-                        }))
-                }
-            }
-        } label: {
-            LabeledContent {
-                HStack(spacing: 4) {
-                    if projects.isEmpty {
-                        Text("Keine Projekte")
-                    } else if selectedTitles.count == 2 {
-                        ViewThatFits(in: .horizontal) {
-                            Text(ProjectSelection.value(titles: selectedTitles))
-                            Text("\(2) Projekte")
-                        }
-                    } else {
-                        Text(ProjectSelection.value(titles: selectedTitles))
-                    }
-                    Image(systemName: "chevron.up.chevron.down").imageScale(.small)
-                }
-                .lineLimit(1)
-                .foregroundStyle(.secondaryText)
-            } label: {
-                Text("Projekte").foregroundStyle(.primary)
-            }
-            .contentShape(Rectangle())
-        }
-        .menuActionDismissBehavior(.disabled)
-        .disabled(projects.isEmpty)
-        .accessibilityLabel("Projekte")
-        .accessibilityValue(selectedTitles.formatted(.list(type: .and)))
-        .accessibilityHint("Mehrfachauswahl")
     }
 }

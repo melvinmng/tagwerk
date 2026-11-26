@@ -55,12 +55,14 @@ enum AuditAllowlist {
     /// "Erfassen" for its patterns of the capture page; restricting the entry keeps new grey texts on other pages visible.
     private static let secondaryTextScreens = withLargeText([
         "Aufgaben", "Notizenliste", "Rezepte", "Suche", "Einkaufsliste", "Einkaufsliste › Karte „übersetzen“", "Erfassen",
-        "Tagesabschluss", "Tagesabschluss (Abend)",
+        "Tagesabschluss", "Tagesabschluss (Abend)", "Einstellungen › Suche",
     ]) + gridScreens
     /// The screens with bar buttons, filter marks and quick entry buttons on Liquid Glass (collect runs of 2026-11-25).
     private static let glassButtonScreens = withLargeText([
         "Aufgaben", "Suche", "Erfassen", "Tagesabschluss", "Tagesabschluss (Abend)", "Einkauf › Rezept hinzufügen",
         "Einkauf › Rezept hinzufügen (Notiz)", "Rezept anlegen (Eingabe)", "Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)",
+        // The picker sheets of a GitHub issue: the audit reported only "Abbrechen" on the glass of the bar (run of 2026-11-25).
+        "Neue Aufgabe › Repository wählen", "Neue Aufgabe › Projekte",
     ]) + gridScreens
 
     private static let entries: [Entry] = [
@@ -79,6 +81,8 @@ enum AuditAllowlist {
             "Ganztägig", "Leitfragen einfügen", "Punkte in den Einstellungen anlegen",
             "[A-Z]{2}\\.,? .* · KW \\d+", "Ablauf", "Schlafzeit \\d+:\\d+",
             "Routinen", "Gewohnheiten", "Woche", "Starten", "noch [\\d.]+", "Wasser", "Schritte", "Training · Woche",
+            // The line under a hit of the settings search: the pages that lead to the setting (`SettingsSearchResults`).
+            "KI", "KI › Spracheingabe und Vorlesen",
             "ab (jetzt · )?\\d+:\\d+ bis \\d+:\\d+ · ganzer Tag .*",
         ], screens: secondaryTextScreens, reason: "Secondary text in the tone `secondaryText` (78 % of the label colour, strand K) on the grouped background or on a card: captions, "
             + "counts, section headers, hour labels. Strand K cut the findings of this group from 279 to 102 in three repetitions each "
@@ -115,7 +119,7 @@ enum AuditAllowlist {
             + "the audit measures the mark against the glass of the bar; it is a position artefact of the demo list, not a colour of the mark itself "
             + "(same group as the other texts on the translucent bar, #188)."),
         Entry(auditType: .contrast, labels: [
-            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Termine", "✓ Erledigte", "Essen", "Trinken", "Training",
+            "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Fertig", "Termine", "✓ Erledigte", "Essen", "Trinken", "Training",
         ], screens: glassButtonScreens, reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
             + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
             + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
@@ -284,6 +288,18 @@ enum AuditAllowlist {
             + "the last header \"Tag und Fokus\" at the lower edge of the page, behind the tab bar."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
+        Entry(auditType: .textClipped, labels: ["Repository suchen", "Projekt suchen", "Einstellungen durchsuchen"], screens: withLargeText(["Neue Aufgabe › Repository wählen", "Neue Aufgabe › Projekte", "Einstellungen › Suche"]), reason: "The system search field (`UISearchBarTextField`) of the picker sheets and of the settings search in the largest text size: the audit "
+            + "reports its prompt as possibly clipped at larger Dynamic Type sizes (run of 2026-11-25). The field is drawn by the system "
+            + "(`.searchable`) and wraps nothing itself; the folder list of the notes reports the same finding for its search field (see "
+            + "`acceptsFindingWithoutElement`), here with the element."),
+        Entry(auditType: .dynamicType, labels: [
+            "Abbrechen", "Fertig", "Zuletzt verwendet", "Alle Repositories \\(.*\\)", "Verknüpft mit .*", "Weitere Projekte \\(.*\\)", "Alle Projekte \\(.*\\)",
+        ], screens: ["Neue Aufgabe › Repository wählen", "Neue Aufgabe › Projekte"], reason:
+            "The navigation bar buttons \"Abbrechen\" and \"Fertig\" and the section headers of the picker sheets of a GitHub issue: the audit reports a partial lack "
+            + "of Dynamic Type support at the default size, for one of them per run (runs of 2026-11-25: \"Abbrechen\", \"Weitere Projekte (2)\", \"Fertig\"); "
+            + "in the AX5 run of the same sheets every text grows and passes. The button is the same `Button(\"Abbrechen\")` in a "
+            + "`ToolbarItem(placement: .cancellationAction)` as on the other sheets (see the entry for the recipe screens above), the headers are "
+            + "plain `Text` with a text style in a `Section` header."),
         Entry(auditType: .textClipped, labels: ["Tagwerk-Kurzbefehle"], screens: siriScreens, reason: "The `ShortcutsLink` is a system control; its "
             + "label \"Tagwerk-Kurzbefehle\" is drawn by the system, and the audit reports it as possibly clipped (default size and AX5). The control "
             + "is not part of the app's own layout and cannot be given a line limit or another style (#188 SI2b)."),

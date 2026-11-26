@@ -49,6 +49,7 @@ struct NewTaskSheet: View {
     @State private var projectsEdited = false
     @State private var startStatus: String?
     @State private var gitHubError: String?
+    @State private var isLoadingCatalog = false
     @State private var assignees: Set<String>
     /// The user changed the people; until then the draft keeps the default "Ich" (`nil`).
     @State private var assigneesChosen = false
@@ -87,6 +88,12 @@ struct NewTaskSheet: View {
         return target != .github || repository != nil
     }
 
+    /// Projects linked to the chosen repository.
+    private var linkedProjectIDs: Set<String> {
+        guard let repository, let catalog else { return [] }
+        return Set(catalog.projectIDs(linkedTo: repository))
+    }
+
     /// Projects of the catalog that are selected, in catalog order.
     private var selectedProjects: [ProjectInfo] { (catalog?.projects ?? []).filter { projectIDs.contains($0.id) } }
 
@@ -122,12 +129,10 @@ struct NewTaskSheet: View {
 
                 if target == .github {
                     Section {
-                        Picker("Repository", selection: $repository) {
-                            Text("Wählen …").tag(String?.none)
-                            ForEach(catalog?.repositories ?? [], id: \.self) { Text($0).tag(Optional($0)) }
-                        }
-                        ProjectSelectionRow(projects: (catalog?.projects ?? []).map { (id: $0.id, title: $0.title) },
-                                            selection: $projectIDs, edited: $projectsEdited)
+                        RepositoryChoiceRow(repositories: catalog?.repositories ?? [], selection: $repository, isLoading: isLoadingCatalog)
+                        ProjectChoiceRow(projects: catalog?.projects ?? [],
+                                         linkedProjectIDs: linkedProjectIDs, linkedRepository: repository,
+                                         selection: $projectIDs, edited: $projectsEdited)
                         if !startStatusOptions.isEmpty {
                             Picker("Status", selection: $startStatus) {
                                 ForEach(startStatusOptions, id: \.self) { Text($0).tag(Optional($0)) }
@@ -362,6 +367,8 @@ extension NewTaskSheet {
 
     private func loadCatalog() async {
         guard let gitHub else { return }
+        isLoadingCatalog = true
+        defer { isLoadingCatalog = false }
         catalog = await gitHub.catalog(maxAge: AppEnvironment.catalogMaxAge)
         if catalog == nil { gitHubError = String(localized: "Repositories konnten nicht geladen werden.") }
     }

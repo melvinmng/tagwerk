@@ -26,7 +26,9 @@ class RecipeScreensAuditCase: UITestCase {
         static let capture = SettingsPage(method: "Capture", screen: "settings.capture", navigationTitle: "Erfassen", report: "Einstellungen › Erfassen")
         static let shopping = SettingsPage(method: "Shopping", screen: "settings.shopping", navigationTitle: "Einkaufsliste", report: "Einstellungen › Einkaufsliste")
         static let siri = SettingsPage(method: "Siri", screen: "settings.siri", navigationTitle: "Siri & Kurzbefehle", report: "Einstellungen › Siri & Kurzbefehle")
-        static let all = [languages, voice, capture, shopping, siri]
+        static let repositoryPicker = SettingsPage(method: "RepositoryPicker", screen: "github.repositoryPicker", navigationTitle: "Repository wählen", report: "Neue Aufgabe › Repository wählen")
+        static let projectPicker = SettingsPage(method: "ProjectPicker", screen: "github.projectPicker", navigationTitle: "Projekte (1)", report: "Neue Aufgabe › Projekte")
+        static let all = [languages, voice, capture, shopping, siri, repositoryPicker, projectPicker]
     }
 
     /// The settings page that the running test audits, taken from its name: the app starts in `setUp` with the page as its
@@ -137,6 +139,19 @@ class RecipeScreensAuditCase: UITestCase {
         try audit(page.report)
     }
 
+    /// "Einstellungen" with a search text: the list of hits over the settings.
+    func auditSettingsSearch(_ audit: Audit) throws {
+        tab("Einstellungen")
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The settings have no search field")
+        field.tap()
+        // The return key ends the input and takes the keyboard (with its suggestion bar) off the screen: the audit must see the hits only.
+        field.typeText("Stimme\n")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Spracheingabe und Vorlesen")).firstMatch
+            .waitForExistence(timeout: Self.timeout), "The search shows no hit")
+        try audit("Einstellungen › Suche")
+    }
+
     /// Taps a button that can lie below the fold in the large text size: scrolls to it first.
     private func tapScrolling(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
         // A form is a lazy list: the button does not exist before it is scrolled into view.
@@ -168,6 +183,9 @@ final class AccessibilityAuditRecipesUITests: RecipeScreensAuditCase {
     func testAuditSettingsCapture() throws { try auditSettingsPage(.capture, audit) }
     func testAuditSettingsShopping() throws { try auditSettingsPage(.shopping, audit) }
     func testAuditSettingsSiri() throws { try auditSettingsPage(.siri, audit) }
+    func testAuditSettingsRepositoryPicker() throws { try auditSettingsPage(.repositoryPicker, audit) }
+    func testAuditSettingsProjectPicker() throws { try auditSettingsPage(.projectPicker, audit) }
+    func testAuditSettingsSearch() throws { try auditSettingsSearch(audit) }
 }
 
 /// The recipe screens in the largest text size (AX5) and dark mode: clipped text and contrast (see
@@ -188,4 +206,7 @@ final class AccessibilityAuditRecipesLargeTextUITests: RecipeScreensAuditCase {
     func testAuditSettingsCapture() throws { try auditSettingsPage(.capture, audit) }
     func testAuditSettingsShopping() throws { try auditSettingsPage(.shopping, audit) }
     func testAuditSettingsSiri() throws { try auditSettingsPage(.siri, audit) }
+    func testAuditSettingsRepositoryPicker() throws { try auditSettingsPage(.repositoryPicker, audit) }
+    func testAuditSettingsProjectPicker() throws { try auditSettingsPage(.projectPicker, audit) }
+    func testAuditSettingsSearch() throws { try auditSettingsSearch(audit) }
 }

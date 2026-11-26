@@ -7,7 +7,7 @@ public enum SearchFilter: Sendable, CaseIterable {
 
 /// Sections of the result list. The declaration order is the display order.
 public enum SearchSectionKind: Sendable, Hashable, CaseIterable {
-    case upcomingEvents, openTasks, completedTasks, online, pastEvents, notes, shopping
+    case upcomingEvents, openTasks, completedTasks, online, pastEvents, notes, shopping, settings
 }
 
 /// State of a GitHub issue found online; the first applicable one is shown.
@@ -81,6 +81,20 @@ public struct ShoppingSearchItem: Sendable, Hashable, Identifiable {
     }
 }
 
+/// A hit in the settings as the search sees it: the caller matched it with the index of the settings (titles and keywords), so the
+/// search does not filter it again. `pathText` names the pages that lead to it ("Erfassen"), empty for a row of the main list.
+public struct SettingsSearchItem: Sendable, Hashable, Identifiable {
+    public let id: String
+    public let title: String
+    public let pathText: String
+
+    public init(id: String, title: String, pathText: String) {
+        self.id = id
+        self.title = title
+        self.pathText = pathText
+    }
+}
+
 /// Everything the search filters. Events are already prepared (time blocks dropped, duplicates merged).
 public struct SearchInput: Sendable {
     /// `nil`: not loaded yet or no calendar access.
@@ -94,10 +108,12 @@ public struct SearchInput: Sendable {
     public var notes: [NoteSearchItem]
     /// Already in the order of the shopping page.
     public var shopping: [ShoppingSearchItem]
+    /// Hits in the settings, best first; only the first `SearchResults.settingsLimit` are shown.
+    public var settings: [SettingsSearchItem]
 
     public init(events: [CalendarEvent]? = nil, calendarNames: [String: String] = [:], openTasks: [TaskItem] = [],
                 completed: [CompletedTask] = [], online: [OnlineIssue]? = nil, notes: [NoteSearchItem] = [],
-                shopping: [ShoppingSearchItem] = []) {
+                shopping: [ShoppingSearchItem] = [], settings: [SettingsSearchItem] = []) {
         self.events = events
         self.calendarNames = calendarNames
         self.openTasks = openTasks
@@ -105,6 +121,7 @@ public struct SearchInput: Sendable {
         self.online = online
         self.notes = notes
         self.shopping = shopping
+        self.settings = settings
     }
 }
 
@@ -115,6 +132,7 @@ public enum SearchRow: Sendable, Identifiable {
     case online(OnlineIssue)
     case note(NoteSearchItem, SearchMatch)
     case shopping(ShoppingSearchItem, SearchMatch)
+    case setting(SettingsSearchItem)
 
     public var id: String {
         switch self {
@@ -124,6 +142,7 @@ public enum SearchRow: Sendable, Identifiable {
         case .online(let issue): "online-\(issue.id)"
         case .note(let note, _): "note-\(note.id.uuidString)"
         case .shopping(let item, _): "shopping-\(item.id)"
+        case .setting(let item): "setting-\(item.id)"
         }
     }
 }
@@ -139,6 +158,9 @@ public struct SearchResults: Sendable {
 
     /// Sections in display order; empty sections are left out.
     public let sections: [SearchSection]
+
+    /// Rows of the section "Einstellungen"; more hits are found in the tab "Einstellungen" itself.
+    public static let settingsLimit = 5
 
     public var isEmpty: Bool { sections.isEmpty }
 
@@ -200,6 +222,10 @@ public struct SearchResults: Sendable {
             rowsByKind[.shopping] = input.shopping.compactMap { item in
                 query.match(SearchDocument(shoppingName: item.name, quantity: item.quantity)).map { .shopping(item, $0) }
             }
+        }
+
+        if filter == .all {
+            rowsByKind[.settings] = input.settings.prefix(settingsLimit).map { .setting($0) }
         }
 
         let sections = SearchSectionKind.allCases.compactMap { kind -> SearchSection? in
