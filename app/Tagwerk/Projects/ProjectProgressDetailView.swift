@@ -191,7 +191,6 @@ struct ProjectProgressDetailView: View {
         } header: {
             ProgressSectionHeader(title: "Zeit")
         }
-        .accessibilityIdentifier(AccessibilityID.ProjectProgress.time)
     }
 
     /// One line of the time section; a single element, title as label and the time as value.

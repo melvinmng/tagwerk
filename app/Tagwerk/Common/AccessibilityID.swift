@@ -55,8 +55,7 @@ enum AccessibilityID {
         static let figures = "projectProgress.figures"
         static let openItems = "projectProgress.openItems"
         static let history = "projectProgress.history"
-        /// The time section of the project page and its weekly chart.
-        static let time = "projectProgress.time"
+        /// The weekly chart of the time section of the project page.
         static let timeChart = "projectProgress.timeChart"
         /// A line of the time section: "planned", "invested" or "estimate".
         static func timeRow(_ name: String) -> String { "projectProgress.timeRow.\(name)" }

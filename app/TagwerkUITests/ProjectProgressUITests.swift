@@ -73,8 +73,8 @@ final class ProjectProgressUITests: UITestCase {
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
                       "The weekly chart is missing")
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.figures].firstMatch.exists, "The figures are missing")
-        // The blocked issue and the overdue one are open items of the demo project.
-        waitFor("App-Sperre im Fokus-Modus")
+        // The blocked issue and the overdue one are open items of the demo project, below the time section: scroll to them.
+        scrollTo(app.descendants(matching: .any)["App-Sperre im Fokus-Modus"].firstMatch, what: "App-Sperre im Fokus-Modus")
         XCTAssertTrue(app.staticTexts["Blockiert"].firstMatch.exists || app.staticTexts["BLOCKIERT"].firstMatch.exists,
                       "The group of blocked items is missing")
     }
@@ -83,14 +83,9 @@ final class ProjectProgressUITests: UITestCase {
         app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow(name)].firstMatch
     }
 
-    /// Scrolls the lazy list until the element exists; the time section lies below the chart.
+    /// Drags the page until the element is there: a lazy list creates no row below the fold, and a swipe can pass a short section.
     private func scrollTo(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
-        var swipes = 0
-        while !element.waitForExistence(timeout: 2), swipes < 10 {
-            app.swipeUp()
-            swipes += 1
-        }
-        XCTAssertTrue(element.exists, "\(what) did not appear", file: file, line: line)
+        dragUntilExistsAndHittable(element, what: what, file: file, line: line)
     }
 
     /// The demo project has planned blocks, focus sessions and a completion with a cut block (see `ProjectProgressSources.demo`):
@@ -104,6 +99,8 @@ final class ProjectProgressUITests: UITestCase {
         XCTAssertTrue((timeRow("estimate").value as? String)?.contains("7 h 30 min") ?? false, "open estimates")
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists, "The time chart is missing")
         // The demo records lie in the last three weeks: a longer period shows the same time.
+        // The picker lies above the section: scroll back to it first.
+        dragUntilExistsAndHittable(app.buttons["3 Monate"].firstMatch, what: "The period picker")
         selectSegment("3 Monate")
         scrollTo(timeRow("planned"), what: "The planned time after the change of the period")
         XCTAssertEqual(timeRow("planned").value as? String, "7 h")
@@ -179,6 +176,11 @@ extension UITestCase {
         XCTAssertTrue(app.navigationBars["Beispiel-Projekt"].waitForExistence(timeout: Self.timeout), "The page of the project did not open")
         waitUntilScreenIsStable()
         try audit("Projektseite")
+        // The time section lies below the chart: scroll to it and audit that part of the page as well.
+        let planned = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow("planned")].firstMatch
+        dragUntilExistsAndHittable(planned, what: "The time section of the project page")
+        waitUntilScreenIsStable()
+        try audit("Projektseite Zeit")
         // Back to "Aufgaben": the next audit starts from the list.
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()
