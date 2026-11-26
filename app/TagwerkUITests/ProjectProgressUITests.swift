@@ -17,6 +17,19 @@ final class ProjectProgressUITests: UITestCase {
         app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row(title)].firstMatch
     }
 
+    /// Waits for an element whose label or value contains the text (a sentence of the page is one element with more words).
+    private func waitForText(containing text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let predicate = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text)
+        let element = app.descendants(matching: .any).matching(predicate).firstMatch
+        // The list creates rows near the screen only: scroll in small steps until the sentence is there.
+        var swipes = 0
+        while !element.waitForExistence(timeout: 2), swipes < 10 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(element.exists, "\(text) did not appear", file: file, line: line)
+    }
+
     private func openProject(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
         let project = row(title)
         XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The project \(title) is missing", file: file, line: line)
@@ -69,11 +82,11 @@ final class ProjectProgressUITests: UITestCase {
     func testPeriodPickerChangesThePeriod() {
         openOverview()
         openProject("Beispiel-Projekt")
-        waitFor("in den letzten 4 Wochen", timeout: Self.timeout)
+        waitForText(containing: "in den letzten 4 Wochen")
         selectSegment("3 Monate")
-        waitFor("in den letzten 3 Monaten", timeout: Self.timeout)
+        waitForText(containing: "in den letzten 3 Monaten")
         selectSegment("1 Jahr")
-        waitFor("im letzten Jahr", timeout: Self.timeout)
+        waitForText(containing: "im letzten Jahr")
     }
 
     func testFreePeriodOffersTwoDates() {
@@ -87,24 +100,40 @@ final class ProjectProgressUITests: UITestCase {
     func testProjectPageOfAReminderListHasItsFootnote() {
         openOverview()
         openProject("Studium")
-        waitFor("Gelöschte Erinnerungen fehlen im Verlauf", timeout: Self.timeout)
+        waitForText(containing: "Gelöschte Erinnerungen fehlen im Verlauf")
     }
 }
 
 extension UITestCase {
+    /// Drags the page until the element exists and can be hit: a lazy list creates no row below the fold, which happens at the
+    /// largest text size.
+    func dragUntilExistsAndHittable(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
+        // A list that was scrolled before keeps its position, so the element can lie above: first towards the top, then down.
+        var steps = 0
+        while !(element.exists && element.isHittable), steps < 24 {
+            dragPage(towardsTop: steps < 8)
+            steps += 1
+        }
+        XCTAssertTrue(element.exists && element.isHittable, "\(what) is not reachable by scrolling", file: file, line: line)
+    }
+
     /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
     func auditProjectProgress(_ audit: (String) throws -> Void) throws {
         tab("Aufgaben")
+        // An earlier part of the audit left a page open in this tab (the list of the notes): back to the list of the tasks.
+        var pops = 0
+        while !app.navigationBars["Aufgaben"].exists, pops < 4 {
+            app.navigationBars.buttons.firstMatch.tap()
+            pops += 1
+        }
         let entry = app.buttons[AccessibilityID.ProjectProgress.entryRow].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The row Projektfortschritt is missing")
-        dragUntilHittable(entry)
+        dragUntilExistsAndHittable(entry, what: "The row Projektfortschritt")
         entry.tap()
         XCTAssertTrue(app.navigationBars["Projektfortschritt"].waitForExistence(timeout: Self.timeout), "The overview did not open")
-        let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
-        XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The demo project is missing")
         waitUntilScreenIsStable()
         try audit("Projektfortschritt")
-        dragUntilHittable(project)
+        let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
+        dragUntilExistsAndHittable(project, what: "The demo project")
         project.tap()
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
                       "The page of the project did not open")

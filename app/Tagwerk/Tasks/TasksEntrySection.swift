@@ -101,8 +101,7 @@ struct TasksEntrySection: View {
             environment.tasksPath.append(.projectProgressOverview)
         } label: {
             entryLabel(symbol: "chart.line.uptrend.xyaxis", title: "Projektfortschritt",
-                       subtitle: environment.projectProgress.entrySubtitle(calendar: environment.planning.calendar)
-                           ?? String(localized: "Erledigt, neu und offen je Projekt"),
+                       subtitle: environment.projectProgress.entrySubtitle(calendar: environment.planning.calendar),
                        trailing: nil)
         }
         .accessibilityIdentifier(AccessibilityID.ProjectProgress.entryRow)

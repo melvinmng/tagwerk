@@ -12243,16 +12243,6 @@
         }
       }
     },
-    "Erledigt, neu und offen je Projekt": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done, new and open per project"
-          }
-        }
-      }
-    },
     "Erledigt: %@": {
       "localizations": {
         "en": {
