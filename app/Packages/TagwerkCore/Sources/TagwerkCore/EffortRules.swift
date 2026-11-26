@@ -73,7 +73,7 @@ public enum EffortRules {
         let relevant = ordered.filter { since == nil || $0.start >= since! || $0.id == running?.id }
         let trimDecision = running.map { trim(running: $0, completedAt: completedAt) }
 
-        let countedBlocks = merged(relevant.filter { $0.start < completedAt }.map {
+        let countedBlocks = DateIntervals.merged(relevant.filter { $0.start < completedAt }.map {
             DateInterval(start: $0.start, end: min($0.end, completedAt))
         })
         let blockSeconds = countedBlocks.reduce(0) { $0 + $1.duration }
@@ -81,7 +81,8 @@ public enum EffortRules {
         let focusBeforeCompletion = focus.compactMap { interval -> DateInterval? in
             interval.start < completedAt ? DateInterval(start: interval.start, end: min(interval.end, completedAt)) : nil
         }
-        let outsideBlocks = subtracting(ordered.map { DateInterval(start: $0.start, end: $0.end) }, from: merged(focusBeforeCompletion))
+        let outsideBlocks = DateIntervals.subtracting(ordered.map { DateInterval(start: $0.start, end: $0.end) },
+                                                      from: DateIntervals.merged(focusBeforeCompletion))
         let focusSeconds = outsideBlocks.reduce(0) { $0 + $1.duration }
         let countsFocus = focusSeconds >= Double(minimumFocusSeconds)
 
@@ -118,32 +119,4 @@ public enum EffortRules {
     }
 
     private static func minutes(_ seconds: Double) -> Int { Int((seconds / 60).rounded()) }
-
-    /// The intervals sorted, with those that touch or overlap joined.
-    private static func merged(_ intervals: [DateInterval]) -> [DateInterval] {
-        var result: [DateInterval] = []
-        for interval in intervals.filter({ $0.duration > 0 }).sorted(by: { $0.start < $1.start }) {
-            if let last = result.last, interval.start <= last.end {
-                result[result.count - 1] = DateInterval(start: last.start, end: max(last.end, interval.end))
-            } else {
-                result.append(interval)
-            }
-        }
-        return result
-    }
-
-    /// The parts of `intervals` (merged, sorted) that lie outside every interval of `removed`.
-    private static func subtracting(_ removed: [DateInterval], from intervals: [DateInterval]) -> [DateInterval] {
-        var result = intervals
-        for cut in merged(removed) {
-            result = result.flatMap { interval -> [DateInterval] in
-                guard cut.start < interval.end, cut.end > interval.start else { return [interval] }
-                var parts: [DateInterval] = []
-                if cut.start > interval.start { parts.append(DateInterval(start: interval.start, end: cut.start)) }
-                if cut.end < interval.end { parts.append(DateInterval(start: cut.end, end: interval.end)) }
-                return parts
-            }
-        }
-        return result
-    }
 }
