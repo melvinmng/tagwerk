@@ -2,7 +2,8 @@ import XCTest
 
 /// Accepted accessibility audit findings. Every entry names the element and the audit type, and says why it is
 /// accepted. A finding that needs a design decision points to the section "Designpunkte für #188" of the plan
-/// (docs/superpowers/plans/2026-11-19-g3-uitests-a11y.md). Blanket exceptions per audit type are not allowed.
+/// (docs/superpowers/plans/2026-11-19-g3-uitests-a11y.md). Blanket exceptions per audit type are not allowed. The only rule that is not an entry
+/// is geometric and narrow: contrast findings of content that lies mostly under a system bar (`underSystemBar`).
 @MainActor
 enum AuditAllowlist {
     /// Pins the time of day of the app for the audits (see `UITestMode.now`): morning, so the hour grid of "Planen" shows the
@@ -129,8 +130,8 @@ enum AuditAllowlist {
             + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
             + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
             + "system style (#188, \"Schrift auf Liquid Glass\")."
-            + " The all-day pill \"Projektwoche\" has a solid fill since D4 (2026-11-25); it was reported once on the code before and in none of "
-            + "two runs after the change, so its pattern is struck."
+            + " The all-day pill \"Projektwoche\" has a solid fill since D4 (2026-11-25) and was struck after two collect runs that did not report "
+            + "it; CI reported it again (see the entry for the translucent bars of \"AX5/dark Planen\" below), so it is not accepted here."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
 
@@ -433,6 +434,7 @@ enum AuditAllowlist {
     private static func rejectedFindings(_ app: XCUIApplication, screen: String, pass: XCUIAccessibilityAuditType) throws
         -> [AuditFinding] {
         var findings: [(issue: XCUIAccessibilityAuditIssue, element: XCUIElement?)] = []
+        systemBars = pass.contains(.contrast) ? readSystemBars(of: app) : SystemBars()
         let auditStarted = Date()
         try runAudit(app, for: pass) { issue in
             findings.append((issue, issue.element))
@@ -506,6 +508,8 @@ enum AuditAllowlist {
     enum Coverage: Equatable {
         case entry(index: Int, pattern: String)
         case elementlessRule
+        /// A contrast finding of an element that lies mostly under a system bar (`SystemBarOverlap`); the name of the bar.
+        case underSystemBar(String)
         case none
     }
 
@@ -513,8 +517,88 @@ enum AuditAllowlist {
         let started = Date()
         defer { stats.matchSeconds += Date().timeIntervalSince(started) }
         guard let element else { return acceptsFindingWithoutElement(issue) ? .elementlessRule : .none }
-        guard let match = matchingEntry(issue, element: element) else { return .none }
+        // The entries come first, so that the dead-entry report of the collect mode (`noteHit`) stays truthful.
+        guard let match = matchingEntry(issue, element: element) else {
+            return underSystemBar(issue, element: element).map(Coverage.underSystemBar) ?? .none
+        }
         return .entry(index: match.index, pattern: match.pattern)
+    }
+
+    // MARK: System bars
+
+    /// The system bars of the open screen, read once before a contrast pass (not in the audit handler, where queries are slow).
+    private struct SystemBars {
+        var bars: [SystemBarOverlap.Bar] = []
+        var screen: CGRect = .zero
+        /// The controls and labels of the bars themselves (back button, title, tab items), as `label|frame`. They are never ignored:
+        /// their contrast is the contrast of the app against the glass, which is what the audit should measure.
+        var ownElements: Set<String> = []
+    }
+    private static var systemBars = SystemBars()
+
+    private static func elementKey(label: String, frame: CGRect) -> String {
+        "\(label)|\(Int(frame.minX.rounded())),\(Int(frame.minY.rounded())),\(Int(frame.width.rounded())),\(Int(frame.height.rounded()))"
+    }
+
+    private static func collectOwnElements(of snapshot: XCUIElementSnapshot, into keys: inout Set<String>) {
+        keys.insert(elementKey(label: snapshot.label, frame: snapshot.frame))
+        for child in snapshot.children { collectOwnElements(of: child, into: &keys) }
+    }
+
+    /// Reads the frames of the navigation bars and tab bars of the app (one snapshot each) and the elements inside them.
+    private static func readSystemBars(of app: XCUIApplication) -> SystemBars {
+        var result = SystemBars()
+        result.screen = app.frame
+        let queries: [(name: String, query: XCUIElementQuery)] = [("navigation bar", app.navigationBars), ("tab bar", app.tabBars)]
+        for (name, query) in queries {
+            for bar in query.allElementsBoundByIndex {
+                guard let snapshot = try? bar.snapshot(), !snapshot.frame.isEmpty, snapshot.frame.intersects(result.screen) else { continue }
+                // A bar that a sheet covers (the tab bar behind a sheet, the navigation bar of the page behind it) is in the tree but not
+                // hittable; content of the sheet is not under its glass.
+                guard bar.isHittable else {
+                    print("System bar of \(currentScreen) skipped, not hittable: \(name) \(snapshot.frame)")
+                    continue
+                }
+                result.bars.append(SystemBarOverlap.Bar(name: name, frame: snapshot.frame))
+                collectOwnElements(of: snapshot, into: &result.ownElements)
+            }
+        }
+        // The topmost navigation bar starts below the status bar in the accessibility tree (y 62 pt), but its glass reaches the top of
+        // the screen. A sheet adds a second navigation bar lower down; that one keeps its frame.
+        if let topmost = result.bars.indices.filter({ result.bars[$0].name == "navigation bar" }).min(by: { result.bars[$0].frame.minY < result.bars[$1].frame.minY }) {
+            result.bars[topmost] = result.bars[topmost].extendedToTop(of: result.screen)
+        }
+        print("System bars of \(currentScreen): "
+            + (result.bars.isEmpty ? "none" : result.bars.map { "\($0.name) \($0.frame)" }.joined(separator: ", ")) + "; screen \(result.screen)")
+        return result
+    }
+
+    /// The name of the system bar that a contrast finding is ignored for, or `nil` when the finding stays.
+    ///
+    /// Reason: when a scroll view moves content under a Liquid Glass bar, the contrast check measures that content against the glass and
+    /// not against its own background. In the largest text size the hour grid of "Planen" ends at a different scroll offset from run to
+    /// run (`DayGridScreen.scrollToNowOnOpening` aligns to "now" within a window of three seconds; the cause of the varying offset is
+    /// probable, not measured), so a different element lands behind a bar each time. Seen in CI on "AX5/dark Planen": the all-day pill
+    /// "Projektwoche" (frame y 32 to 101 pt, navigation bar; it has a solid fill since D4), the headline "4 Termine · 10:00–13:00" of the
+    /// collapsed group block (y 811 to 913 pt on a 874 pt screen, tab bar; the rendered block measures 16.5:1 in light and 15.9:1 in dark
+    /// mode, `MarkerRenderContrastTests.collapsedBlock_renderedContrast`) and the hour label "09:30" (y 809 to 839 pt, tab bar; CI run
+    /// 45749510918). A label entry per element never ends, so the rule is geometric: the finding is ignored when at least half of the
+    /// visible height of the element lies in the vertical band of a bar (`SystemBarOverlap`). Every ignored finding is printed with its
+    /// frame and the frame of the bar, so it stays visible in the test log.
+    ///
+    /// Scope: contrast only, and every screen. Content scrolls under a bar on any page, and the effect has nothing to do with the grid; a
+    /// rule for the grid screens only would bring the same whack-a-mole to the next list. The rule never covers clipping or any other
+    /// type: text that is cut off or too small is a real defect wherever it lies. The elements of the bars themselves are excluded (see
+    /// `SystemBars.ownElements`), bars that a sheet covers do not count (not hittable), and an element that is only partly under a bar keeps failing.
+    private static func underSystemBar(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement) -> String? {
+        guard issue.auditType == .contrast, !systemBars.bars.isEmpty else { return nil }
+        guard let snapshot = try? element.snapshot() else { return nil }
+        stats.elementQueries += 1
+        guard !systemBars.ownElements.contains(elementKey(label: snapshot.label, frame: snapshot.frame)),
+              let bar = SystemBarOverlap.bar(covering: snapshot.frame, in: systemBars.bars, within: systemBars.screen) else { return nil }
+        print("Ignored contrast finding under the \(bar.name): \(currentScreen) | label=\(snapshot.label.replacingOccurrences(of: "\n", with: "⏎")) "
+            + "frame=\(snapshot.frame) \(bar.name)=\(bar.frame) | \(issue.compactDescription)")
+        return bar.name
     }
 
     /// Findings without an element cannot be matched by label; only the ones named here are accepted, per screen.
@@ -649,6 +733,7 @@ enum AuditAllowlist {
             switch coverage {
             case .entry(let index, let pattern): accepted = " accepted=\(index):\(pattern)"
             case .elementlessRule: accepted = " accepted=rule"
+            case .underSystemBar(let bar): accepted = " accepted=\(bar)"
             case .none: accepted = " accepted=-"
             }
         }

@@ -155,13 +155,30 @@ struct CaptureModelTests {
         #expect(health.authorizationRequests == 1 && health.groupRequests(.activeEnergy) == 0)
     }
 
+    /// Starts the first Health request and returns once its sheet is open (held by the fake), so the requests that follow
+    /// certainly arrive while a sheet is open. Without the hold the sheet closes after one scheduler yield, and a request that starts later
+    /// would be a legitimate second sheet, which made these tests depend on the order and the timing of the child tasks.
+    private func openFirstSheet(_ health: FakeHealthStore, _ request: @escaping @MainActor () async -> Void) async -> Task<Void, Never> {
+        health.holdsSheets = true
+        let first = Task { await request() }
+        var spins = 0
+        while health.sheetsOpened == 0, spins < 10_000 {
+            await Task.yield()
+            spins += 1
+        }
+        #expect(health.sheetsOpened == 1, "the first request opens its sheet")
+        return first
+    }
+
     @Test func concurrentConnects_showOneSheet() async {
         let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
         let model = make(health)
         await model.reload()
-        async let first: Void = model.connectHealth()
-        async let second: Void = model.connectHealth()
-        _ = await (first, second)
+        let first = await openFirstSheet(health) { await model.connectHealth() }
+        await model.connectHealth()
+        #expect(health.authorizationRequests == 1, "the second request is dropped while the sheet is open")
+        health.releaseHeldSheets()
+        await first.value
         #expect(health.authorizationRequests == 1)
     }
 
@@ -169,14 +186,16 @@ struct CaptureModelTests {
         let health = FakeHealthStore(access: .notDetermined, stepsAccess: .notAsked)
         let model = make(health)
         await model.reload()
-        async let connect: Void = model.connectHealth()
-        async let energy: Void = model.allowActiveEnergy()
-        async let steps: Void = model.connectSteps()
-        _ = await (connect, energy, steps)
-        // The child tasks of `async let` start in any order, so whichever request comes first opens its sheet; the other two are
-        // dropped while it is open. Exactly one sheet in total is the rule, not which one.
-        let sheets = health.authorizationRequests + health.groupRequests(.activeEnergy) + health.stepsAuthorizationRequests
-        #expect(sheets == 1, "only one Health sheet opens at a time")
+        let first = await openFirstSheet(health) { await model.connectHealth() }
+        await model.allowActiveEnergy()
+        await model.connectSteps()
+        #expect(health.sheetsOpened == 1, "only one Health sheet opens at a time")
+        health.releaseHeldSheets()
+        await first.value
+        #expect(health.authorizationRequests == 1 && health.groupRequests(.activeEnergy) == 0 && health.stepsAuthorizationRequests == 0)
+        // The flag is released with the first sheet: a later request opens its own sheet again.
+        await model.connectSteps()
+        #expect(health.sheetsOpened == 2)
     }
 
     @Test func whileTheCardShows_stepsTileOffersNoSecondPrompt() async {
