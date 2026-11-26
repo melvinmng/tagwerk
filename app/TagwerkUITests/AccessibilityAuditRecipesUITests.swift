@@ -145,7 +145,8 @@ class RecipeScreensAuditCase: UITestCase {
         let field = app.searchFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "The settings have no search field")
         field.tap()
-        field.typeText("Stimme")
+        // The return key ends the input and takes the keyboard (with its suggestion bar) off the screen: the audit must see the hits only.
+        field.typeText("Stimme\n")
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Spracheingabe und Vorlesen")).firstMatch
             .waitForExistence(timeout: Self.timeout), "The search shows no hit")
         try audit("Einstellungen › Suche")
