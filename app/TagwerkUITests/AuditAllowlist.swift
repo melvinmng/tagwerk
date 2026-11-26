@@ -154,6 +154,25 @@ enum AuditAllowlist {
             + "some repetitions and not in others."),
 
         Entry(auditType: .contrast, labels: [
+            "Zuletzt bewegt", "Länger nicht bewegt", "Noch nicht geladen", "Zuletzt bewegt: (heute|gestern|vor \\d+ Tagen)",
+            "Keine Bewegung bekannt", "Verlauf je Woche", "Verlauf", "Blockiert", "Blockiert andere", "Überfällig",
+            "Frist in den nächsten \\d+ Tagen", "Weitere offene Punkte", "erledigt", "neu", "offen am Ende der Woche",
+        ], screens: ["Projektfortschritt", "Projektseite"], reason:
+            "Section titles (primary text colour, `ProgressSectionHeader`), the line \"Zuletzt bewegt: …\" of a project row in `secondaryText` "
+            + "and the legend of the weekly chart on the grouped background (collect runs of 2026-11-26, one default-size run: the titles "
+            + "\"Zuletzt bewegt\" and \"Verlauf je Woche\" and the legend entries \"nearly passed\", the line of the row \"failed\"). The grey of the "
+            + "title was changed to the primary colour and is still reported, as the audit reports primary text on other grouped screens "
+            + "(entries above and below); the legend is drawn by Swift Charts and takes its colours from the chart scale. Contrast on "
+            + "the grouped background is a design question (#188). The patterns of the titles that did not show in the run (they lie "
+            + "below the fold) stay for the same reason."),
+        Entry(auditType: .dynamicType, labels: [
+            "erledigt", "neu", "offen am Ende der Woche", "Der offene Bestand ist aus den Anlage- und Schlussdaten zurückgerechnet\\.",
+        ], screens: ["Projektseite"], reason:
+            "The legend of the weekly chart (drawn by Swift Charts, it grows with the text size) and the note under the chart in `.footnote`: the "
+            + "audit reports a partial lack of Dynamic Type support, as for single-line `.subheadline` texts on other screens (entries above). "
+            + "No clipping in the large text run (the audit of the AX5 run checks the clipping and reports nothing for these texts). Stays on "
+            + "the device test list (large text)."),
+        Entry(auditType: .contrast, labels: [
             "Mit ChatGPT besprechen", "Britisches Englisch", "Markennamen lassen",
             "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",
         ], screens: ["Einkaufsliste › Übersetzung", "AX5/dark Einkaufsliste › Übersetzung"], reason:

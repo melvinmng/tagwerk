@@ -110,11 +110,13 @@ struct ProjectProgressOverviewView: View {
     @ViewBuilder
     private func rowSection(title: LocalizedStringKey, rows: [Row]) -> some View {
         if !rows.isEmpty {
-            Section(title) {
+            Section {
                 ForEach(rows) { row in
                     NavigationLink(value: TasksDestination.projectProgress(row.reference)) { rowLabel(row) }
                         .accessibilityIdentifier(AccessibilityID.ProjectProgress.row(row.reference.title))
                 }
+            } header: {
+                ProgressSectionHeader(title: title)
             }
         }
     }
@@ -188,5 +190,15 @@ struct ProjectProgressOverviewView: View {
         }
         .frame(maxWidth: .infinity)
         .listRowBackground(Color.clear)
+    }
+}
+
+/// The title of a section of the project progress in the primary text colour: the grey of the system header only nearly reaches the
+/// contrast the audit asks for.
+struct ProgressSectionHeader: View {
+    let title: LocalizedStringKey
+
+    var body: some View {
+        Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary).textCase(nil)
     }
 }

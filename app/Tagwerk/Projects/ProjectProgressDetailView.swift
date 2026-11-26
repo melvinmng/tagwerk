@@ -129,11 +129,13 @@ struct ProjectProgressDetailView: View {
     }
 
     private func chartSection(_ summary: ProjectSummary, range: ProjectRange) -> some View {
-        Section("Verlauf je Woche") {
+        Section {
             ProjectProgressChart(buckets: summary.buckets, calendar: calendar,
                                  summary: ProjectProgressTexts.chartSummary(summary.buckets, calendar: calendar))
             Text("Der offene Bestand ist aus den Anlage- und Schlussdaten zurückgerechnet.")
                 .font(.footnote).foregroundStyle(.secondaryText)
+        } header: {
+            ProgressSectionHeader(title: "Verlauf je Woche")
         }
     }
 
@@ -162,7 +164,7 @@ struct ProjectProgressDetailView: View {
                     Button("Alle zeigen (\(items.count))") { expandedGroups.insert(id) }
                 }
             } header: {
-                Text(title)
+                ProgressSectionHeader(title: title)
             }
             .accessibilityIdentifier(AccessibilityID.ProjectProgress.openItems)
         }
@@ -187,7 +189,7 @@ struct ProjectProgressDetailView: View {
     @ViewBuilder
     private func historySection(_ facts: [ProjectItemFact], range: ProjectRange) -> some View {
         let events = ProjectProgress.events(facts: facts, in: range)
-        Section("Verlauf") {
+        Section {
             if events.isEmpty {
                 Text("Im Zeitraum gab es keine erledigten oder neuen Einträge.").foregroundStyle(.secondaryText)
             }
@@ -205,6 +207,8 @@ struct ProjectProgressDetailView: View {
             if events.count > shownEvents {
                 Button("Weitere zeigen") { shownEvents += Self.eventPageSize }
             }
+        } header: {
+            ProgressSectionHeader(title: "Verlauf")
         }
         .accessibilityIdentifier(AccessibilityID.ProjectProgress.history)
     }

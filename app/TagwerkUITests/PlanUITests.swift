@@ -18,6 +18,8 @@ final class PlanUITests: UITestCase {
         tab("Aufgaben")
         let task = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Literatur sichten")]
         XCTAssertTrue(task.waitForExistence(timeout: Self.timeout))
+        // With the row "Projektfortschritt" at the head of the list the task lies at the edge of the tab bar: move it up before the tap.
+        dragPage(towardsTop: false)
         task.tap()
         // The editor is a long form; "Geplant" is further down.
         let addBlock = app.buttons["Zeitblock hinzufügen"].firstMatch
@@ -99,6 +101,8 @@ final class PlanUITests: UITestCase {
         tab("Aufgaben")
         let task = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Literatur sichten")]
         XCTAssertTrue(task.waitForExistence(timeout: Self.timeout))
+        // With the row "Projektfortschritt" at the head of the list the task lies at the edge of the tab bar: move it up before the tap.
+        dragPage(towardsTop: false)
         task.tap()
         let addBlock = app.buttons["Zeitblock hinzufügen"].firstMatch
         scrollTo(addBlock)
