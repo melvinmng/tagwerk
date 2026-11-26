@@ -108,9 +108,10 @@ extension UITestCase {
     /// Drags the page until the element exists and can be hit: a lazy list creates no row below the fold, which happens at the
     /// largest text size.
     func dragUntilExistsAndHittable(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
+        // A list that was scrolled before keeps its position, so the element can lie above: first towards the top, then down.
         var steps = 0
-        while !(element.exists && element.isHittable), steps < 12 {
-            dragPage(towardsTop: false)
+        while !(element.exists && element.isHittable), steps < 24 {
+            dragPage(towardsTop: steps < 8)
             steps += 1
         }
         XCTAssertTrue(element.exists && element.isHittable, "\(what) is not reachable by scrolling", file: file, line: line)
