@@ -21,6 +21,9 @@ BackupUITests 100
 BibleStudyUITests 805
 CaptureUITests 273
 FoodLookupUITests 79
+# est. new classes (two tests each, repository and project picker sheets)
+GitHubProjectPickerUITests 60
+GitHubRepositoryPickerUITests 60
 GoalPlanningUITests 83
 HabitUITests 73
 KeyboardDismissalUITests 93
