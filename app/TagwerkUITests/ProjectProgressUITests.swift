@@ -105,19 +105,28 @@ final class ProjectProgressUITests: UITestCase {
 }
 
 extension UITestCase {
+    /// Drags the page until the element exists and can be hit: a lazy list creates no row below the fold, which happens at the
+    /// largest text size.
+    func dragUntilExistsAndHittable(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
+        var steps = 0
+        while !(element.exists && element.isHittable), steps < 12 {
+            dragPage(towardsTop: false)
+            steps += 1
+        }
+        XCTAssertTrue(element.exists && element.isHittable, "\(what) is not reachable by scrolling", file: file, line: line)
+    }
+
     /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
     func auditProjectProgress(_ audit: (String) throws -> Void) throws {
         tab("Aufgaben")
         let entry = app.buttons[AccessibilityID.ProjectProgress.entryRow].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: Self.timeout), "The row Projektfortschritt is missing")
-        dragUntilHittable(entry)
+        dragUntilExistsAndHittable(entry, what: "The row Projektfortschritt")
         entry.tap()
         XCTAssertTrue(app.navigationBars["Projektfortschritt"].waitForExistence(timeout: Self.timeout), "The overview did not open")
-        let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
-        XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The demo project is missing")
         waitUntilScreenIsStable()
         try audit("Projektfortschritt")
-        dragUntilHittable(project)
+        let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
+        dragUntilExistsAndHittable(project, what: "The demo project")
         project.tap()
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
                       "The page of the project did not open")

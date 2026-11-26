@@ -25,7 +25,10 @@ final class AccessibilityAuditUITests: UITestCase {
         try audit("Planen (Tag)")
 
         tab("Aufgaben")
-        waitFor("Pflanzen gießen")
+        // The row "Projektfortschritt" at the head of the list pushes the first task below the fold, where a lazy list creates no row:
+        // the row stands for the loaded list, and the screen is stable once the tasks are in.
+        waitFor(AccessibilityID.ProjectProgress.entryRow)
+        waitUntilScreenIsStable()
         try audit("Aufgaben")
 
         tab("Erfassen")
