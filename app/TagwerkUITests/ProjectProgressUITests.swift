@@ -17,6 +17,19 @@ final class ProjectProgressUITests: UITestCase {
         app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row(title)].firstMatch
     }
 
+    /// Waits for an element whose label or value contains the text (a sentence of the page is one element with more words).
+    private func waitForText(containing text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let predicate = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text)
+        let element = app.descendants(matching: .any).matching(predicate).firstMatch
+        // The list creates rows near the screen only: scroll in small steps until the sentence is there.
+        var swipes = 0
+        while !element.waitForExistence(timeout: 2), swipes < 10 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(element.exists, "\(text) did not appear", file: file, line: line)
+    }
+
     private func openProject(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
         let project = row(title)
         XCTAssertTrue(project.waitForExistence(timeout: Self.timeout), "The project \(title) is missing", file: file, line: line)
@@ -69,11 +82,11 @@ final class ProjectProgressUITests: UITestCase {
     func testPeriodPickerChangesThePeriod() {
         openOverview()
         openProject("Beispiel-Projekt")
-        waitFor("in den letzten 4 Wochen", timeout: Self.timeout)
+        waitForText(containing: "in den letzten 4 Wochen")
         selectSegment("3 Monate")
-        waitFor("in den letzten 3 Monaten", timeout: Self.timeout)
+        waitForText(containing: "in den letzten 3 Monaten")
         selectSegment("1 Jahr")
-        waitFor("im letzten Jahr", timeout: Self.timeout)
+        waitForText(containing: "im letzten Jahr")
     }
 
     func testFreePeriodOffersTwoDates() {
@@ -87,7 +100,7 @@ final class ProjectProgressUITests: UITestCase {
     func testProjectPageOfAReminderListHasItsFootnote() {
         openOverview()
         openProject("Studium")
-        waitFor("Gelöschte Erinnerungen fehlen im Verlauf", timeout: Self.timeout)
+        waitForText(containing: "Gelöschte Erinnerungen fehlen im Verlauf")
     }
 }
 
