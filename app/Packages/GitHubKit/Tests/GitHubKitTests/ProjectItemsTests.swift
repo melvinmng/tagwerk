@@ -27,8 +27,10 @@ struct ProjectItemsTests {
         """
     }
 
-    private static func item(_ content: String, archived: Bool = false, status: String? = nil, due: String? = nil) -> String {
+    private static func item(_ content: String, archived: Bool = false, status: String? = nil, due: String? = nil,
+                             estimate: (field: String, value: Double)? = nil) -> String {
         var values: [String] = []
+        if let estimate { values.append(#"{"number":\#(estimate.value),"field":{"name":"\#(estimate.field)"}}"#) }
         if let status { values.append(#"{"name":"\#(status)","field":{"name":"Status"}}"#) }
         if let due { values.append(#"{"date":"\#(due)","field":{"name":"Due date"}}"#) }
         return #"{"isArchived":\#(archived),"fieldValues":{"nodes":[\#(values.joined(separator: ","))]},"content":\#(content)}"#
@@ -57,6 +59,17 @@ struct ProjectItemsTests {
         let body = try #require(transport.requests.last?.bodyString)
         #expect(!body.contains("assignee:@me"), "the query reads the project, not the viewer's issues")
         #expect(body.contains(#""id":"PVT_1""#))
+    }
+
+    @Test func projectItems_readsTheEstimateInMinutes() async throws {
+        transport.enqueueJSON("/graphql", Self.projectPage([
+            Self.item(Self.issue(1), estimate: ("Estimate (h)", 1.5)),
+            Self.item(Self.issue(2), estimate: ("Estimate (MDs)", 0.5)),
+            Self.item(Self.issue(3)),
+            Self.item(Self.issue(4), estimate: ("Story points", 8)),
+        ]))
+        let result = try await makeAPI().projectItems(projectID: "PVT_1")
+        #expect(result.items.map(\.estimateMinutes) == [90, 240, nil, nil])
     }
 
     @Test func projectItems_followsTheCursorToTheLastPage() async throws {
