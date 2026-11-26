@@ -544,6 +544,11 @@ enum AuditAllowlist {
                 collectOwnElements(of: snapshot, into: &result.ownElements)
             }
         }
+        // The topmost navigation bar starts below the status bar in the accessibility tree (y 62 pt), but its glass reaches the top of
+        // the screen. A sheet adds a second navigation bar lower down; that one keeps its frame.
+        if let topmost = result.bars.indices.filter({ result.bars[$0].name == "navigation bar" }).min(by: { result.bars[$0].frame.minY < result.bars[$1].frame.minY }) {
+            result.bars[topmost] = result.bars[topmost].extendedToTop(of: result.screen)
+        }
         print("System bars of \(currentScreen): "
             + (result.bars.isEmpty ? "none" : result.bars.map { "\($0.name) \($0.frame)" }.joined(separator: ", ")) + "; screen \(result.screen)")
         return result

@@ -14,6 +14,22 @@ struct SystemBarOverlapTests {
         #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == navigationBar)
     }
 
+    @Test func navigationBarInTheAccessibilityTree_reachesUnderTheStatusBar() {
+        // Measured on the iPhone 17 Pro: the navigation bar of "Planen" has the frame y 62 to 116 pt, below the status bar. The all-day pill
+        // "Projektwoche" (y 32 to 101 pt) lies 56 % in that band, and completely in the band extended to the top of the screen.
+        let measuredBar = SystemBarOverlap.Bar(name: "navigation bar", frame: CGRect(x: 0, y: 62, width: 402, height: 54))
+        let pill = CGRect(x: 16, y: 32, width: 370, height: 69)
+        #expect(abs(SystemBarOverlap.coveredShare(of: pill, by: measuredBar.frame, within: screen) - 39.0 / 69.0) < 0.0001)
+        let extended = measuredBar.extendedToTop(of: screen)
+        #expect(extended.frame == CGRect(x: 0, y: 0, width: 402, height: 116))
+        #expect(SystemBarOverlap.coveredShare(of: pill, by: extended.frame, within: screen) == 1)
+        #expect(SystemBarOverlap.bar(covering: pill, in: [extended], within: screen) == extended)
+    }
+
+    @Test func extendingToTheTop_leavesABarAtTheTopAlone() {
+        #expect(navigationBar.extendedToTop(of: screen) == navigationBar)
+    }
+
     @Test func elementInsideTabBar_isCovered() {
         let element = CGRect(x: 19.8, y: 808.9, width: 71.7, height: 29.7)
         #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == tabBar)

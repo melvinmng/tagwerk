@@ -10,6 +10,14 @@ enum SystemBarOverlap {
     struct Bar: Equatable {
         let name: String
         let frame: CGRect
+
+        /// The bar with its upper edge moved to the top of `screen`. The glass of a navigation bar reaches under the status bar, and in the
+        /// accessibility tree the bar starts below it (y 62 pt on the iPhone 17 Pro); content scrolled into the status bar area is measured
+        /// against the same glass.
+        func extendedToTop(of screen: CGRect) -> Bar {
+            guard frame.minY > screen.minY else { return self }
+            return Bar(name: name, frame: CGRect(x: frame.minX, y: screen.minY, width: frame.width, height: frame.maxY - screen.minY))
+        }
     }
 
     /// The share of the visible height of an element that must lie inside a bar. The element is only partly hidden below this value,
