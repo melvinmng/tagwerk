@@ -16,6 +16,8 @@ struct SearchSheet: View {
     let onShowMorningDay: (PlanDay) -> Void
     /// A hit in the settings: closes the search and shows the page (the ID is that of the entry in `SettingsSearchIndex`).
     let onShowSetting: (String) -> Void
+    /// A hit among the repositories and projects of GitHub: closes the search and shows the progress of that repository or project.
+    let onShowGitHubTarget: (GitHubTargetSearchItem) -> Void
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -34,13 +36,15 @@ struct SearchSheet: View {
     init(model: SearchModel, onShowDay: @escaping (PlanDay) -> Void, onShowTask: @escaping (TaskID) -> Void,
          onShowNoteFolder: @escaping (NotesScope) -> Void = { _ in },
          onShowMorningDay: @escaping (PlanDay) -> Void = { _ in },
-         onShowSetting: @escaping (String) -> Void = { _ in }) {
+         onShowSetting: @escaping (String) -> Void = { _ in },
+         onShowGitHubTarget: @escaping (GitHubTargetSearchItem) -> Void = { _ in }) {
         self.model = model
         self.onShowDay = onShowDay
         self.onShowTask = onShowTask
         self.onShowNoteFolder = onShowNoteFolder
         self.onShowMorningDay = onShowMorningDay
         self.onShowSetting = onShowSetting
+        self.onShowGitHubTarget = onShowGitHubTarget
     }
 
     private var calendar: Calendar { environment.planning.calendar }
@@ -521,6 +525,12 @@ struct SearchSheet: View {
         case .setting(let item):
             SearchSettingRow(item: item)
                 .onTapGesture { onShowSetting(item.id) }
+                .accessibilityAddTraits(.isButton)
+        case .githubTarget(let item):
+            SearchGitHubTargetRow(item: item, titleRanges: model.query?.ranges(in: item.title) ?? [])
+                .onTapGesture { onShowGitHubTarget(item) }
+                .accessibilityIdentifier(item.kind == .repository ? AccessibilityID.Search.repositoryHit(item.targetID)
+                                                                   : AccessibilityID.Search.projectHit(item.title))
                 .accessibilityAddTraits(.isButton)
         case .shopping(let item, let match):
             SearchShoppingRow(item: item, match: match, onCheckOff: { Task { await model.checkOff(item) } })

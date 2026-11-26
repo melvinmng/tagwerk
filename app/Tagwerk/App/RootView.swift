@@ -141,6 +141,10 @@ struct RootView: View {
                                 guard let target = SettingsSearchIndex.target(forID: id) else { return }
                                 environment.closeSearch()
                                 environment.openSettings(target)
+                            },
+                            onShowGitHubTarget: { item in
+                                environment.closeSearch()
+                                environment.showProjectProgress(item.progressReference)
                             })
             }
         }

@@ -16,6 +16,9 @@ final class SearchProbe {
     /// What the settings index answers for a text; the texts asked are recorded.
     var settingsHits: [SettingsSearchItem] = []
     private(set) var settingsTexts: [String] = []
+    /// The repositories and projects of the GitHub account; `nil` = GitHub not connected. The reads are counted.
+    var githubTargets: [GitHubTargetSearchItem]?
+    private(set) var githubTargetReads = 0
     var gate: Gate?
     /// `nil` = GitHub not connected.
     var online: Result<[OnlineIssue], IssueSearchError>?
@@ -47,6 +50,12 @@ final class SearchProbe {
                 self.settingsTexts.append(text)
                 return self.settingsHits
             })
+        if githubTargets != nil {
+            sources.githubTargets = {
+                self.githubTargetReads += 1
+                return self.githubTargets ?? []
+            }
+        }
         if checkedOff != nil {
             sources.checkOffShopping = { id in
                 self.checkedOff?.append(id)
@@ -94,6 +103,7 @@ struct SearchModelTests {
             case .note(let note, _): note.text.split(separator: "\n").first.map(String.init) ?? note.text
             case .shopping(let item, _): item.name
             case .setting(let item): item.title
+            case .githubTarget(let item): item.title
             }
         }
     }
@@ -115,6 +125,74 @@ struct SearchModelTests {
         model.text = "fo"
         model.filter = .tasks
         #expect(!model.results.sections.map(\.kind).contains(.settings))
+    }
+
+    private func repository(_ fullName: String) -> GitHubTargetSearchItem {
+        let parts = fullName.split(separator: "/").map(String.init)
+        return GitHubTargetSearchItem(kind: .repository, targetID: fullName, title: parts[1], ownerText: parts[0])
+    }
+
+    @Test func githubTargetsAreReadOnceNoMatterHowOftenTheTextChanges() async {
+        probe.githubTargets = [repository("octo/statistik-app"), repository("octo/notizen")]
+        let model = probe.model()
+        for text in ["st", "sta", "stat", "stati", "statistik"] {
+            model.text = text
+            await model.settle()
+        }
+        #expect(probe.githubTargetReads == 1)
+        #expect(model.results.sections.map(\.kind) == [.openTasks, .githubTargets])
+        #expect(titles(model.results).suffix(1) == ["statistik-app"])
+    }
+
+    @Test func githubTargetsAreNotReadBeforeTheFirstSearchText() async {
+        probe.githubTargets = [repository("octo/statistik-app")]
+        let model = probe.model()
+        model.text = "s"
+        await model.settle()
+        #expect(probe.githubTargetReads == 0)
+        model.text = "st"
+        await model.settle()
+        #expect(probe.githubTargetReads == 1)
+    }
+
+    @Test func withoutGitHubThereIsNoSourceAndNoSection() async {
+        let model = probe.model()
+        model.text = "statistik"
+        await model.settle()
+        #expect(probe.githubTargetReads == 0)
+        #expect(!model.results.sections.map(\.kind).contains(.githubTargets))
+    }
+
+    @Test func githubTargetsAppearOnlyUnderTheFilterAll() async {
+        probe.githubTargets = [repository("octo/statistik-app")]
+        let model = probe.model()
+        model.text = "statistik"
+        await model.settle()
+        #expect(model.results.sections.map(\.kind).contains(.githubTargets))
+        model.filter = .tasks
+        #expect(!model.results.sections.map(\.kind).contains(.githubTargets))
+        model.filter = .all
+        #expect(model.results.sections.map(\.kind).contains(.githubTargets))
+        #expect(probe.githubTargetReads == 1)
+    }
+
+    @Test func aSourceWithoutCandidatesLeavesNoSectionAndNoMessage() async {
+        probe.githubTargets = []
+        let model = probe.model()
+        model.text = "statistik"
+        await model.settle()
+        #expect(!model.results.sections.map(\.kind).contains(.githubTargets))
+        #expect(model.onlineState == .idle)
+    }
+
+    @Test func githubTargetsAreForgottenWhenTheSheetCloses() async {
+        probe.githubTargets = [repository("octo/statistik-app")]
+        let model = probe.model()
+        model.text = "statistik"
+        await model.settle()
+        model.close()
+        model.evaluate()
+        #expect(model.results.isEmpty)
     }
 
     @Test func belowTwoCharactersNothingLoads() async {

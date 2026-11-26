@@ -1,4 +1,5 @@
 import Foundation
+import GitHubKit
 import SwiftUI
 import TagwerkCore
 
@@ -25,6 +26,8 @@ enum UITestMode {
     static let weekdayArgument = "-TagwerkUITestWeekday"
     /// `-TagwerkUITestScan <pages>`: "Dokument scannen" delivers that many test pages instead of opening the document camera.
     static let scanArgument = "-TagwerkUITestScan"
+    /// `-TagwerkUITestGitHubCatalog`: the search finds invented repositories and projects, as if GitHub were connected.
+    static let githubCatalogArgument = "-TagwerkUITestGitHubCatalog"
 
     #if DEBUG && targetEnvironment(simulator)
     static var isActive: Bool { ProcessInfo.processInfo.arguments.contains(launchArgument) }
@@ -86,6 +89,17 @@ enum UITestMode {
         guard isActive, let index = arguments.firstIndex(of: scanArgument), index + 1 < arguments.count else { return nil }
         return Int(arguments[index + 1]).map { min(max($0, 1), 10) }
     }
+
+    /// The invented repositories and projects of `-TagwerkUITestGitHubCatalog` (UI tests have no GitHub account), `nil` without it.
+    static var githubCatalog: GitHubCatalog? {
+        guard isActive, ProcessInfo.processInfo.arguments.contains(githubCatalogArgument) else { return nil }
+        let status = ProjectField(id: "F", name: "Status", orderedOptions: ["Backlog", "Ready", "In progress", "Done"].map { ProjectFieldOption(id: $0, name: $0) })
+        return GitHubCatalog(
+            repositories: ["beispiel/app", "beispiel/studium"],
+            projects: [ProjectInfo(id: "PVT_1", number: 1, title: "App", fields: [status], repositories: ["beispiel/app"]),
+                       ProjectInfo(id: "PVT_2", number: 2, title: "Studium und Klausuren", fields: [], repositories: ["beispiel/studium"])],
+            fetchedAt: Date())
+    }
     #else
     static var isActive: Bool { false }
     static func now() -> Date { Date() }
@@ -95,6 +109,7 @@ enum UITestMode {
     static var colorScheme: ColorScheme? { nil }
     static var screen: UITestScreen? { nil }
     static var scanPageCount: Int? { nil }
+    static var githubCatalog: GitHubCatalog? { nil }
     #endif
 
     /// The weekday (1 = Sunday ... 7 = Saturday) a part of the app takes for a day: the pinned weekday of the UI test mode when it is
