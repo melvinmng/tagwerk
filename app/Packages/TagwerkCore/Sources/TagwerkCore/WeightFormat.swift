@@ -65,6 +65,27 @@ public enum WeightFormat {
         return String(localized: "Dein Trend liegt bei \(current) kg Abnahme pro Woche. Tagwerk weist ab dem kleineren Wert von \(share) % des Körpergewichts und \(kilograms) kg pro Woche darauf hin. Das ist eine Regel der App, keine Leitlinie; sprich bei Fragen mit einer Ärztin oder einem Arzt.", bundle: .module)
     }
 
+    /// The target of the weekly review with the distance to it: "78,0 kg · noch 3,4 kg"; without a mean only the target.
+    public static func targetLine(targetKg: Double, remaining: Double?, locale: Locale = .current) -> String {
+        let target = kilograms(targetKg, locale: locale)
+        guard let remaining else { return target }
+        return target + " · " + String(localized: "noch \(distance(remaining, locale: locale))", bundle: .module)
+    }
+
+    /// The newest measurement of a week that has too few values for a mean: "Letzte Messung 82,4 kg (Do)".
+    public static func latestLine(_ day: DayWeight, calendar: Calendar, locale: Locale = .current) -> String {
+        var style = Date.FormatStyle.dateTime.weekday(.abbreviated).locale(locale)
+        style.timeZone = calendar.timeZone
+        let weekday = day.day.startDate(in: calendar).formatted(style)
+        return String(localized: "Letzte Messung \(kilograms(day.kilograms, locale: locale)) (\(weekday))", bundle: .module)
+    }
+
+    /// "4 Messungen in dieser Woche", "Keine Messung in dieser Woche".
+    public static func measurementsInWeek(_ count: Int) -> String {
+        count > 0 ? String(localized: "\(count) Messungen in dieser Woche", bundle: .module)
+            : String(localized: "Keine Messung in dieser Woche", bundle: .module)
+    }
+
     /// The caption under the weight row of the morning start: "Gestern 82,3 kg · 7-Tage-Mittel 82,1 kg"; `nil` without either.
     public static func morningCaption(yesterday: Double?, mean: Double?, locale: Locale = .current) -> String? {
         var parts: [String] = []

@@ -3259,5 +3259,24 @@
   "Einstellungen (%lld)": "Settings (%lld)",
   "Einstellungen durchsuchen": "Search settings",
   "Einstellungen · %lld": "Settings · %lld",
-  "Einstellungen, %lld": "Settings, %lld"
+  "Einstellungen, %lld": "Settings, %lld",
+  "%lld Messungen in dieser Woche": {
+    "one": "%lld measurement this week",
+    "other": "%lld measurements this week"
+  },
+  "7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.": "7-day mean at the end of the week; the trend compares it with the value four weeks earlier. Own entries and, where allowed, measurements from Health.",
+  "Im Budget an %lld von %lld Tagen": "Within budget on %1$lld of %2$lld days",
+  "Kein Gewicht erfasst": "No weight recorded",
+  "Keine Messung in dieser Woche": "No measurement this week",
+  "Letzte Messung %@ (%@)": "Latest measurement %1$@ (%2$@)",
+  "seit %lld Wochen": {
+    "one": "for %lld week",
+    "other": "for %lld weeks"
+  },
+  "Verlauf und Ziele öffnen": "Open trends and goals",
+  "Veränderung zur Vorwoche": "Change from previous week",
+  "Ziele vom %@": "Goals since %@",
+  "Ø %@ an %@": "Avg. %1$@ on %2$@",
+  "Ø %@ g / %lld g an %@": "Avg. %1$@ g / %2$lld g on %3$@",
+  "Ø Budget %@ kcal": "Avg. budget %@ kcal"
 }

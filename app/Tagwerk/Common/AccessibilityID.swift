@@ -65,6 +65,13 @@ enum AccessibilityID {
         static let weightRow = "trend.weightRow"
     }
 
+    enum WeekReview {
+        /// The link from the weight section of the weekly review to "Verlauf und Ziele".
+        static let trendLink = "weekReview.trendLink"
+        /// The line under the weight figures when the week holds no measurement.
+        static let noWeight = "weekReview.noWeight"
+    }
+
     enum BodyProfile {
         /// The section "Körper" in Einstellungen › Erfassen.
         static let readButton = "bodyProfile.readButton"

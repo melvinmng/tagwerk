@@ -17,12 +17,28 @@ final class WeekReviewModel {
     var reflection = WeekReflection()
     /// Whether the GitHub issues closed in the shown week are part of "Erledigt" (D6): the local numbers show first.
     private(set) var gitHub: GitHubClosed = .notConnected
+    /// The weight figures of a week and the target weight that held then.
+    struct WeekWeight: Equatable {
+        var weekStart: PlanDay
+        var figures: WeightTrend.WeekFigures
+        var targetKg: Double?
+    }
+    private var loadedWeight: WeekWeight?
+    /// How long the stored goals of the shown week have held; `nil` while only the single goals of the settings stand in.
+    private(set) var goalAge: GoalAge?
+    /// The weight of the shown week; `nil` without a weight store and until Health answered. Figures of another week than the one
+    /// on screen are never returned, so a page change does not flash the figures of the week that was left.
+    var weekWeight: WeekWeight? { loadedWeight?.weekStart == review?.weekStart ? loadedWeight : nil }
+    /// Nothing recorded in the week: no entry, no workout, no completed task and no weight.
+    var isWeekEmpty: Bool { (review?.isEmpty ?? false) && (weekWeight?.figures.measurementCount ?? 0) == 0 }
 
     private let store: IntakeStore
     private let health: any HealthStoring
     let settings: AppSettings
     /// Goal plan, Health values and budget of each day (shared with "Erfassen", "Planen" and the widget).
     private let budgets: DayBudgets
+    /// Own and, once the body group was asked, other apps' weights; `nil` leaves the weight out of the review.
+    private let weights: WeightStore?
     let calendar: Calendar
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let completedReminders: (DateInterval) async -> [Date]
@@ -35,12 +51,13 @@ final class WeekReviewModel {
     @ObservationIgnored private let closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])?
 
     init(store: IntakeStore, health: any HealthStoring, settings: AppSettings, budgets: DayBudgets? = nil,
-         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init,
+         calendar: Calendar = .tagwerk, now: @escaping () -> Date = Date.init, weights: WeightStore? = nil,
          completedReminders: @escaping (DateInterval) async -> [Date],
          completedLocalTasks: @escaping (DateInterval) -> [Date],
          habits: HabitsModel? = nil, routineStore: RoutineStore? = nil, openPlanWeek: ((PlanDay) -> Void)? = nil,
          closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil) {
         self.closedIssueDates = closedIssueDates
+        self.weights = weights
         self.habits = habits
         self.routineStore = routineStore
         self.openPlanWeek = openPlanWeek
@@ -144,7 +161,9 @@ final class WeekReviewModel {
         let goalPlan = plans[goalDay] ?? budgets.plan(on: goalDay)
         let goals = WeekReview.Goals(kcal: goalPlan.kcal, waterMilliliters: goalPlan.waterMilliliters,
                                      workoutMinutesPerWeek: goalPlan.workoutMinutesPerWeek, stepsPerDay: goalPlan.stepsPerDay,
-                                     proteinGrams: goalPlan.proteinGrams)
+                                     proteinGrams: goalPlan.proteinGrams, fiberGrams: goalPlan.fiberGrams,
+                                     sugarLimitGrams: goalPlan.sugarLimitGrams)
+        goalAge = budgets.storedPlan(on: goalDay).map { GoalAge.make(validFrom: $0.validFrom, on: goalDay, calendar: calendar) }
         showsSteps = stepsAsked
         loadRoutineParts(for: requested)
         /// `completedDates` are the completions of reminders, local tasks and (once they arrived) closed GitHub issues.
@@ -154,6 +173,18 @@ final class WeekReviewModel {
                             plans: plans, calendar: calendar)
         }
         review = makeReview(completedDates: completed)
+        // The weight comes after the local numbers: Health may answer late, and the review should not wait for it.
+        if let weights {
+            // The mean, the mean of the week before and the trend's earlier mean reach back 34 days from the reference day.
+            let reference = min(requested.adding(days: 6, calendar: calendar), today)
+            let first = reference.adding(days: -(WeightTrend.trendSpanDays + WeightTrend.averageDays), calendar: calendar)
+            let end = reference.adding(days: 1, calendar: calendar)
+            let dayValues = await weights.dayValues(in: DateInterval(start: first.startDate(in: calendar), end: end.startDate(in: calendar)))
+            guard weekStart == requested else { return }
+            let figures = WeightTrend.weekFigures(dayValues, weekStart: requested, today: today, targetKg: goalPlan.targetWeightKg,
+                                                  calendar: calendar)
+            loadedWeight = WeekWeight(weekStart: requested, figures: figures, targetKg: goalPlan.targetWeightKg)
+        }
         guard let closedIssueDates else {
             gitHub = .notConnected
             return

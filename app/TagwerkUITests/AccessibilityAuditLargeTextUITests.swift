@@ -24,6 +24,25 @@ final class AccessibilityAuditLargeTextUITests: UITestCase {
         waitFor("Wochenrückblick, Woche")
         try audit("Erfassen")
 
+        // In the largest text size the row lies below the screen: scroll until a copy the user can tap is on screen (the page
+        // previews of the neighbouring days keep copies in the tree).
+        let reviewEntries = app.buttons.matching(NSPredicate(format: "label MATCHES %@", "Wochenrückblick, Woche.*"))
+        var reviewEntry: XCUIElement?
+        for _ in 0..<8 where reviewEntry == nil {
+            reviewEntry = reviewEntries.allElementsBoundByIndex.first { $0.isHittable }
+            if reviewEntry == nil { app.swipeUp() }
+        }
+        XCTAssertNotNil(reviewEntry, "The row of the weekly review is not reachable by scrolling")
+        reviewEntry?.tap()
+        XCTAssertTrue(app.navigationBars["Wochenrückblick"].waitForExistence(timeout: Self.timeout))
+        try audit("Wochenrückblick")
+        dragUpUntilHittable(app.descendants(matching: .any).matching(identifier: AccessibilityID.WeekReview.trendLink).firstMatch)
+        waitUntilScreenIsStable()
+        // Only clipping: at this scroll position a row lies half behind the navigation bar, and the audit measures its contrast
+        // against the glass of the bar (first run 2026-11-25: weekday mark "Di" at y = −14 pt), not against the list background.
+        try AuditAllowlist.audit(app, screen: "AX5/dark Wochenrückblick (weiter unten)", for: [.textClipped])
+        app.navigationBars.buttons.firstMatch.tap()
+
         openShoppingList()
         try audit("Einkaufsliste")
 
