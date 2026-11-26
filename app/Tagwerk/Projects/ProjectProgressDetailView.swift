@@ -205,9 +205,10 @@ struct ProjectProgressDetailView: View {
         valueRow(id: AccessibilityID.ProjectProgress.timeRow(name), Text(title), value)
     }
 
-    /// A line with a title and a value, one element for VoiceOver.
+    /// A line with a title and a value, one element for VoiceOver. The value is in the primary colour: the secondary grey on the grouped
+    /// background is reported by the contrast audit.
     private func valueRow(id: String, _ title: Text, _ value: String) -> some View {
-        LabeledContent { Text(value) } label: { title }
+        LabeledContent { Text(value).foregroundStyle(.primary) } label: { title }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
             .accessibilityValue(value)
