@@ -1,0 +1,78 @@
+import CoreGraphics
+import Testing
+
+/// The rule that ignores contrast findings of content under a system bar (`app/TagwerkUITests/SystemBarOverlap.swift`).
+struct SystemBarOverlapTests {
+    /// iPhone 17 Pro: 402 × 874 pt.
+    private let screen = CGRect(x: 0, y: 0, width: 402, height: 874)
+    private let navigationBar = SystemBarOverlap.Bar(name: "navigation bar", frame: CGRect(x: 0, y: 0, width: 402, height: 105))
+    private let tabBar = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 0, y: 791, width: 402, height: 83))
+    private var bars: [SystemBarOverlap.Bar] { [navigationBar, tabBar] }
+
+    @Test func elementInsideNavigationBar_isCovered() {
+        let element = CGRect(x: 20, y: 32, width: 300, height: 69)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == navigationBar)
+    }
+
+    @Test func elementInsideTabBar_isCovered() {
+        let element = CGRect(x: 19.8, y: 808.9, width: 71.7, height: 29.7)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == tabBar)
+    }
+
+    @Test func elementBeyondLowerScreenEdge_isJudgedByItsVisiblePart() {
+        // Frame of the headline block of the finding: y 811 to 913 on a 874 pt screen; the visible part (811 to 874) lies inside the tab bar.
+        let element = CGRect(x: 16, y: 811, width: 370, height: 102)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: tabBar.frame, within: screen) == 1)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == tabBar)
+    }
+
+    @Test func elementBetweenTheBars_isNotCovered() {
+        let element = CGRect(x: 20, y: 300, width: 300, height: 60)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == nil)
+    }
+
+    @Test func elementTouchingTheBarOnlyAtItsEdge_isNotCovered() {
+        let element = CGRect(x: 20, y: 105, width: 300, height: 40)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: navigationBar.frame, within: screen) == 0)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == nil)
+    }
+
+    @Test func elementCoveredBelowHalf_isNotIgnored() {
+        // 40 pt high, 15 pt of it in the navigation bar: 37.5 %.
+        let element = CGRect(x: 20, y: 90, width: 300, height: 40)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: navigationBar.frame, within: screen) == 0.375)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == nil)
+    }
+
+    @Test func elementCoveredExactlyByHalf_isIgnored() {
+        let element = CGRect(x: 20, y: 85, width: 300, height: 40)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: navigationBar.frame, within: screen) == 0.5)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == navigationBar)
+    }
+
+    @Test func elementOutsideTheScreen_isNotCovered() {
+        let element = CGRect(x: 20, y: 900, width: 300, height: 40)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: tabBar.frame, within: screen) == 0)
+        #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == nil)
+    }
+
+    @Test func elementWithoutFrame_isNeverCovered() {
+        #expect(SystemBarOverlap.bar(covering: .zero, in: bars, within: screen) == nil)
+        #expect(SystemBarOverlap.bar(covering: .null, in: bars, within: screen) == nil)
+    }
+
+    @Test func noBars_coverNothing() {
+        #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 10, width: 100, height: 20), in: [], within: screen) == nil)
+    }
+
+    @Test func elementSpanningBothBars_takesTheBarWithTheLargerShare() {
+        // A full-height element: 105 pt of its 874 pt lie in the navigation bar and 83 pt in the tab bar; neither share reaches one half.
+        let tall = CGRect(x: 0, y: 0, width: 402, height: 874)
+        #expect(SystemBarOverlap.bar(covering: tall, in: bars, within: screen) == nil)
+        // Small bars of equal reach: the larger share wins.
+        let narrowScreen = CGRect(x: 0, y: 0, width: 402, height: 200)
+        let top = SystemBarOverlap.Bar(name: "navigation bar", frame: CGRect(x: 0, y: 0, width: 402, height: 90))
+        let bottom = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 0, y: 100, width: 402, height: 100))
+        #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 0, width: 402, height: 200), in: [top, bottom], within: narrowScreen) == bottom)
+    }
+}
