@@ -126,6 +126,10 @@ final class AppEnvironment {
     @ObservationIgnored private(set) var isHandlingStoreChange = false
     /// A tab another view asks to show (e.g. "Mit KI planen" from the task list jumps to "Planen").
     var requestedTab: Int?
+    /// The items of the projects of the project progress (#332), shared by the overview, the project pages and the search.
+    let projectProgress: ProjectProgressStore
+    /// The local log of the changes the user makes to tasks; collects from its introduction, evaluated in a later stage of #332.
+    let taskActivity: TaskActivityStore
     /// Pages on top of the task list (shopping list, notes); a deep link sets it to open the shopping list.
     /// A change that drops an open note leaves a line in the log (`NotesNavigationLog`), whether it was a pop or a replacement.
     var tasksPath: [TasksDestination] = [] {
@@ -484,6 +488,14 @@ final class AppEnvironment {
             await MainActor.run { routines.focusChanged(id, isCompleted: isCompleted) }
         }
         taskList.onHandedOver = { id in await planning.didHandOver(id) }
+        let taskActivity = TaskActivityStore(context: context)
+        self.taskActivity = taskActivity
+        taskList.onActivity = { entries in taskActivity.record(entries) }
+        self.projectProgress = ProjectProgressStore(
+            sources: UITestMode.isActive
+                ? .demo(now: { UITestMode.now() })
+                : .live(taskList: taskList, settings: settings, reminderStore: reminderStore, gitHub: gitHubProvider, context: context),
+            now: { UITestMode.now() })
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in
             if source == .github {

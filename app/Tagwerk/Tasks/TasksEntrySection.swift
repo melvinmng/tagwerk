@@ -58,6 +58,7 @@ struct TasksEntrySection: View {
             shoppingRow
             notesRow
             bibleStudyRow
+            projectProgressRow
         }
     }
 
@@ -91,6 +92,20 @@ struct TasksEntrySection: View {
                            trailing: openCount > 0 ? String(localized: "\(openCount) offen") : nil)
             }
         }
+    }
+
+    /// "Projektfortschritt" (#332): the overview of all projects. The subtitle comes from what the overview loaded before; showing the
+    /// row starts no request.
+    private var projectProgressRow: some View {
+        Button {
+            environment.tasksPath.append(.projectProgressOverview)
+        } label: {
+            entryLabel(symbol: "chart.line.uptrend.xyaxis", title: "Projektfortschritt",
+                       subtitle: environment.projectProgress.entrySubtitle(calendar: environment.planning.calendar)
+                           ?? String(localized: "Erledigt, neu und offen je Projekt"),
+                       trailing: nil)
+        }
+        .accessibilityIdentifier(AccessibilityID.ProjectProgress.entryRow)
     }
 
     private var notesRow: some View {

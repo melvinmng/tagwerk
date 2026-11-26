@@ -2471,6 +2471,22 @@
         }
       }
     },
+    "%lld erledigt, %lld neu %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld erledigt, %2$lld neu %3$@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld done, %2$lld new %3$@."
+          }
+        }
+      }
+    },
     "%lld erledigte Artikel endgültig löschen?": {
       "extractionState": "stale",
       "localizations": {
@@ -2774,6 +2790,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld open"
+          }
+        }
+      }
+    },
+    "%lld offen · %lld erledigt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld offen · %2$lld erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld open · %2$lld done"
           }
         }
       }
@@ -3824,6 +3856,16 @@
         }
       }
     },
+    "1 Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 year"
+          }
+        }
+      }
+    },
     "1 Seite": {
       "localizations": {
         "en": {
@@ -3960,6 +4002,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "30 days %@"
+          }
+        }
+      }
+    },
+    "4 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4 weeks"
           }
         }
       }
@@ -4919,6 +4971,16 @@
         }
       }
     },
+    "Alle zeigen (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all (%lld)"
+          }
+        }
+      }
+    },
     "Alle übernehmen (%lld)": {
       "localizations": {
         "en": {
@@ -5490,6 +5552,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Created, not in Tasks: %@. Open on GitHub available."
+          }
+        }
+      }
+    },
+    "Angelegt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created: %@"
           }
         }
       }
@@ -6395,6 +6467,16 @@
         }
       }
     },
+    "Aufgaben, die vor der Wochenauswertung erledigt wurden, haben kein Datum und fehlen in den Wochen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks completed before the weekly review existed have no date and are missing from the weeks."
+          }
+        }
+      }
+    },
     "Aufgeschlagenes Buch": {
       "localizations": {
         "en": {
@@ -7034,12 +7116,32 @@
         }
       }
     },
+    "Bei GitHub zählen alle Issues des Projekts, nicht nur die dir zugewiesenen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For GitHub, all issues of the project count, not only those assigned to you."
+          }
+        }
+      }
+    },
     "Bei iOS-Fokus zurückhalten": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Hold during an iOS Focus"
+          }
+        }
+      }
+    },
+    "Bei „%@“ wurden nicht alle Einträge geladen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not all items of “%@” were loaded."
           }
         }
       }
@@ -7588,6 +7690,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "End of block"
+          }
+        }
+      }
+    },
+    "Blockiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked"
+          }
+        }
+      }
+    },
+    "Blockiert andere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocking others"
           }
         }
       }
@@ -9163,6 +9285,42 @@
         }
       }
     },
+    "Der offene Bestand blieb bei %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The open stock stayed at %lld."
+          }
+        }
+      }
+    },
+    "Der offene Bestand ging von %lld auf %lld.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Der offene Bestand ging von %1$lld auf %2$lld."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The open stock went from %1$lld to %2$lld."
+          }
+        }
+      }
+    },
+    "Der offene Bestand ist aus den Anlage- und Schlussdaten zurückgerechnet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The open stock is calculated back from the creation and closing dates."
+          }
+        }
+      }
+    },
     "Derselbe Termin?": {
       "localizations": {
         "en": {
@@ -9449,6 +9607,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The file could not be read."
+          }
+        }
+      }
+    },
+    "Die Daten konnten nicht geladen werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The data could not be loaded."
           }
         }
       }
@@ -11902,6 +12070,16 @@
         }
       }
     },
+    "Erinnerungsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder list"
+          }
+        }
+      }
+    },
     "Erinnerungslisten": {
       "localizations": {
         "en": {
@@ -12025,6 +12203,26 @@
         }
       }
     },
+    "Erledigt (7 Tage)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done (7 days)"
+          }
+        }
+      }
+    },
+    "Erledigt und neu je Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done and new per week"
+          }
+        }
+      }
+    },
     "Erledigt · %lld": {
       "localizations": {
         "en": {
@@ -12041,6 +12239,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Completed, %lld"
+          }
+        }
+      }
+    },
+    "Erledigt, neu und offen je Projekt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done, new and open per project"
+          }
+        }
+      }
+    },
+    "Erledigt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done: %@"
           }
         }
       }
@@ -12131,6 +12349,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove completed (%lld)"
+          }
+        }
+      }
+    },
+    "Erneut laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
           }
         }
       }
@@ -12341,6 +12569,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing was replaced."
+          }
+        }
+      }
+    },
+    "Es wurden nicht alle Einträge geladen; ältere Wochen können zu niedrig oder zu hoch ausfallen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not all items were loaded; older weeks may come out too low or too high."
           }
         }
       }
@@ -13064,6 +13302,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Friendlier"
+          }
+        }
+      }
+    },
+    "Frist %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due %@"
+          }
+        }
+      }
+    },
+    "Frist in den nächsten %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due in the next %lld days"
           }
         }
       }
@@ -13872,6 +14130,16 @@
         }
       }
     },
+    "Gelöschte Erinnerungen fehlen im Verlauf, wiederkehrende zählen als eine offene Aufgabe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted reminders are missing from the history; repeating ones count as one open task."
+          }
+        }
+      }
+    },
     "Gemessen über Zeitblöcke; Fokus-Timer zählt nur außerhalb der Blöcke, letzte 8 Wochen.": {
       "localizations": {
         "en": {
@@ -13968,6 +14236,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sex for the formula"
+          }
+        }
+      }
+    },
+    "Geschlossen (nicht geplant): %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed (not planned): %@"
           }
         }
       }
@@ -14740,6 +15018,26 @@
         }
       }
     },
+    "GitHub ist gerade nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub can’t be reached right now."
+          }
+        }
+      }
+    },
+    "GitHub ist nicht verbunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub is not connected."
+          }
+        }
+      }
+    },
     "GitHub nicht erreichbar": {
       "localizations": {
         "en": {
@@ -14756,6 +15054,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub is not accepting searches right now. Try again later."
+          }
+        }
+      }
+    },
+    "GitHub nimmt gerade keine weiteren Abfragen an. Versuch es in einigen Minuten noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub is not accepting more requests right now. Try again in a few minutes."
           }
         }
       }
@@ -14866,6 +15174,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "GitHub project"
+          }
+        }
+      }
+    },
+    "GitHub-Repository": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub repository"
           }
         }
       }
@@ -15702,6 +16020,16 @@
         }
       }
     },
+    "Im Zeitraum gab es keine erledigten oder neuen Einträge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There were no completed or new items in this period."
+          }
+        }
+      }
+    },
     "Im gewählten Ordner wurden keine Einträge von „Tagebuch mit Gott“ gefunden. Wähle den entpackten Export (den Ordner mit den .md- und .csv-Dateien).": {
       "localizations": {
         "en": {
@@ -16020,6 +16348,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "There is no working day in the next five days. Pick a date under “Decide one by one”."
+          }
+        }
+      }
+    },
+    "In diesem Projekt gibt es noch nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is nothing in this project yet."
           }
         }
       }
@@ -16751,6 +17089,26 @@
         }
       }
     },
+    "Keine Bewegung bekannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No movement known"
+          }
+        }
+      }
+    },
+    "Keine Daten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No data"
+          }
+        }
+      }
+    },
     "Keine Deadline nach diesem Termin": {
       "localizations": {
         "en": {
@@ -16867,6 +17225,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No projects"
+          }
+        }
+      }
+    },
+    "Keine Projekte in dieser Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects in this source."
           }
         }
       }
@@ -18078,6 +18446,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leave · %lld min"
+          }
+        }
+      }
+    },
+    "Länger nicht bewegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not moved for a while"
           }
         }
       }
@@ -19524,6 +19902,16 @@
         }
       }
     },
+    "Neu (7 Tage)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New (7 days)"
+          }
+        }
+      }
+    },
     "Neu laden": {
       "localizations": {
         "en": {
@@ -20209,6 +20597,16 @@
     "Noch keine Planung protokolliert.": {
       "shouldTranslate": false
     },
+    "Noch keine Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects yet"
+          }
+        }
+      }
+    },
     "Noch keine Sicherheitskopien.": {
       "localizations": {
         "en": {
@@ -20235,6 +20633,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empty so far"
+          }
+        }
+      }
+    },
+    "Noch nicht geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not loaded yet"
           }
         }
       }
@@ -22104,6 +22512,16 @@
         }
       }
     },
+    "Projektfortschritt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project progress"
+          }
+        }
+      }
+    },
     "Protein": {
       "localizations": {
         "en": {
@@ -22702,6 +23120,16 @@
         }
       }
     },
+    "Ruhend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resting"
+          }
+        }
+      }
+    },
     "Ruhezeit von %@ bis %@": {
       "localizations": {
         "de": {
@@ -22830,6 +23258,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Undo"
+          }
+        }
+      }
+    },
+    "Rückstand wächst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backlog growing"
           }
         }
       }
@@ -24262,6 +24700,16 @@
         }
       }
     },
+    "Stand: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of: %@"
+          }
+        }
+      }
+    },
     "Standard": {
       "localizations": {
         "en": {
@@ -25097,6 +25545,16 @@
     },
     "Tagwerk": {
       "shouldTranslate": false
+    },
+    "Tagwerk darf nicht auf Erinnerungen zugreifen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagwerk is not allowed to access Reminders."
+          }
+        }
+      }
     },
     "Tagwerk darf nicht nach Health schreiben. Deine Einträge bleiben in Tagwerk. Ändern kannst du das in der App „Health“ unter Profil › Apps › Tagwerk.": {
       "localizations": {
@@ -26244,6 +26702,16 @@
         }
       }
     },
+    "Verbinde GitHub oder erlaube Erinnerungen unter Einstellungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect GitHub or allow Reminders under Settings."
+          }
+        }
+      }
+    },
     "Verbinden": {
       "localizations": {
         "en": {
@@ -26390,6 +26858,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "History"
+          }
+        }
+      }
+    },
+    "Verlauf je Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History per week"
           }
         }
       }
@@ -27634,6 +28112,26 @@
         }
       }
     },
+    "Weitere offene Punkte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other open items"
+          }
+        }
+      }
+    },
+    "Weitere zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more"
+          }
+        }
+      }
+    },
     "Weiteren Export importieren": {
       "localizations": {
         "en": {
@@ -28162,6 +28660,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Week of %1$@ · %2$@ focus"
+          }
+        }
+      }
+    },
+    "Woche ab %@: %lld erledigt, %lld neu, %lld offen am Ende": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Woche ab %1$@: %2$lld erledigt, %3$lld neu, %4$lld offen am Ende"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week from %1$@: %2$lld done, %3$lld new, %4$lld open at the end"
           }
         }
       }
@@ -29077,6 +29591,46 @@
         }
       }
     },
+    "Zuletzt bewegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently moved"
+          }
+        }
+      }
+    },
+    "Zuletzt bewegt: gestern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last moved: yesterday"
+          }
+        }
+      }
+    },
+    "Zuletzt bewegt: heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last moved: today"
+          }
+        }
+      }
+    },
+    "Zuletzt bewegt: vor %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last moved: %lld days ago"
+          }
+        }
+      }
+    },
     "Zuletzt gelöscht": {
       "localizations": {
         "en": {
@@ -29656,6 +30210,16 @@
         }
       }
     },
+    "abgeschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "finished"
+          }
+        }
+      }
+    },
     "alle 2 Wochen": {
       "localizations": {
         "en": {
@@ -29879,6 +30443,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "always stays separate"
+          }
+        }
+      }
+    },
+    "blockiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "blocked"
+          }
+        }
+      }
+    },
+    "blockiert andere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "blocking others"
           }
         }
       }
@@ -30177,6 +30761,16 @@
         }
       }
     },
+    "geht voran": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "making progress"
+          }
+        }
+      }
+    },
     "geplant %@": {
       "localizations": {
         "en": {
@@ -30253,6 +30847,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "changed · was %@"
+          }
+        }
+      }
+    },
+    "gleichbleibend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "steady"
           }
         }
       }
@@ -30337,6 +30941,16 @@
         }
       }
     },
+    "im letzten Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in the last year"
+          }
+        }
+      }
+    },
     "in %lld Tagen": {
       "localizations": {
         "de": {
@@ -30373,6 +30987,26 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "in den letzten 3 Monaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in the last 3 months"
+          }
+        }
+      }
+    },
+    "in den letzten 4 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in the last 4 weeks"
           }
         }
       }
@@ -30807,6 +31441,16 @@
         }
       }
     },
+    "neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "new"
+          }
+        }
+      }
+    },
     "neu: %@": {
       "localizations": {
         "en": {
@@ -30920,6 +31564,16 @@
         }
       }
     },
+    "noch leer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "still empty"
+          }
+        }
+      }
+    },
     "noch nicht eingeplant": {
       "localizations": {
         "en": {
@@ -30956,6 +31610,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "open"
+          }
+        }
+      }
+    },
+    "offen am Ende der Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open at the end of the week"
           }
         }
       }
@@ -31058,6 +31722,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "check"
+          }
+        }
+      }
+    },
+    "ruhend: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "resting: %lld"
+          }
+        }
+      }
+    },
+    "ruht seit %lld Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "resting for %lld days"
           }
         }
       }
@@ -31258,6 +31942,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "encrypted"
+          }
+        }
+      }
+    },
+    "vom %@ bis %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "vom %1$@ bis %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from %1$@ to %2$@"
           }
         }
       }

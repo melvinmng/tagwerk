@@ -101,6 +101,9 @@ final class TaskListModel {
     /// `onCompletionChanged`, so a time block is cut before the plan reads the calendar again. Also called for a
     /// repeating task that stays open with its next occurrence.
     @ObservationIgnored var onCompletedItem: ((TaskItem, Date) async -> Void)?
+    /// Called with the changes the user made to a task through Tagwerk (created, completed, reopened, status, due date): the local
+    /// activity log of the project progress (#332).
+    @ObservationIgnored var onActivity: (([TaskActivityEntry]) -> Void)?
     /// Called after a written task left the user's lists (handed over to others), so planning can clean up.
     @ObservationIgnored var onHandedOver: ((TaskID) async -> Void)?
     let now: () -> Date
@@ -316,7 +319,7 @@ final class TaskListModel {
             lastError = Self.message(for: TaskWriteError.accessDenied)
             return nil
         }
-        guard let reopened = await write(edit, to: task.id, version: task.version) else { return nil }
+        guard let reopened = await write(edit, to: task.id, version: task.version, previous: task) else { return nil }
         await settle(reopened, provider: provider, announce: false)
         await onCompletionChanged?(task.id, false)
         return reopened
@@ -385,6 +388,7 @@ final class TaskListModel {
         do {
             let created = try await provider.create(draft)
             nextGeneration(for: source)
+            onActivity?([TaskActivityRules.created(created, at: now())])
             await settle(created, provider: provider, announce: true)
             // The source may drop people silently (GitHub: logins that cannot be assigned).
             let missing = AssigneeRules.missing(requested: draft.assignees, actual: created.assignees)
@@ -412,7 +416,12 @@ final class TaskListModel {
         if !missing.isEmpty {
             lastError = Self.unassignedMessage(number: item.issueNumber, created: false, missing: missing)
         }
-        let previousCompletion = items.first(where: { $0.id == item.id })?.isCompleted ?? (wasCompleted ? true : nil)
+        let displayed = items.first(where: { $0.id == item.id })
+        // A completed task opened from the search is not in `items`; its earlier state is only known to be completed.
+        var earlier = displayed
+        if earlier == nil, wasCompleted { earlier = item; earlier?.isCompleted = true }
+        logActivity(before: earlier, after: item)
+        let previousCompletion = displayed?.isCompleted ?? (wasCompleted ? true : nil)
         if let previousCompletion, previousCompletion != item.isCompleted, let hook = onCompletionChanged {
             let completedHook = onCompletedItem, moment = now()
             Task {
@@ -449,6 +458,7 @@ final class TaskListModel {
         do {
             let updated = try await provider.apply(edit, to: id, expectedVersion: item.version)
             nextGeneration(for: id.source)
+            logActivity(before: item, after: updated)
             if updated.isCompleted {
                 items.removeAll { $0.id == id }
             } else {
@@ -489,6 +499,7 @@ final class TaskListModel {
         guard let provider = provider(for: source) else { throw TaskWriteError.accessDenied }
         let created = try await provider.create(draft)
         nextGeneration(for: source)
+        onActivity?([TaskActivityRules.created(created, at: now())])
         // No capsule and no warning: the assistant reports number, link and dropped people in its answer.
         await settle(created, provider: provider, announce: false)
         return created
@@ -506,12 +517,15 @@ final class TaskListModel {
         return try await applyReturning(edit, to: id)
     }
 
-    private func write(_ edit: TaskEdit, to id: TaskID, version: String? = nil) async -> TaskItem? {
+    /// `previous` is the state before the write for a task that is not in `items` (a search hit); otherwise the displayed item.
+    private func write(_ edit: TaskEdit, to id: TaskID, version: String? = nil, previous: TaskItem? = nil) async -> TaskItem? {
         guard let provider = provider(for: id.source),
               let expected = version ?? items.first(where: { $0.id == id })?.version else { return nil }
         do {
+            let before = previous ?? items.first(where: { $0.id == id })
             let updated = try await provider.apply(edit, to: id, expectedVersion: expected)
             nextGeneration(for: id.source)
+            logActivity(before: before, after: updated)
             return updated
         } catch TaskWriteError.conflict {
             lastError = String(localized: "Die Aufgabe wurde inzwischen geändert. Die Liste ist jetzt aktuell.")
@@ -522,6 +536,12 @@ final class TaskListModel {
             lastError = Self.message(for: error)
         }
         return nil
+    }
+
+    private func logActivity(before: TaskItem?, after: TaskItem) {
+        guard let onActivity else { return }
+        let entries = TaskActivityRules.entries(before: before, after: after, at: now())
+        if !entries.isEmpty { onActivity(entries) }
     }
 
     /// Puts a written item into the list, or takes it out when the source says it no longer belongs
