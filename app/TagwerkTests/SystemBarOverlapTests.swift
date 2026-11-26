@@ -81,14 +81,20 @@ struct SystemBarOverlapTests {
         #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 10, width: 100, height: 20), in: [], within: screen) == nil)
     }
 
-    @Test func elementSpanningBothBars_takesTheBarWithTheLargerShare() {
-        // A full-height element: 105 pt of its 874 pt lie in the navigation bar and 83 pt in the tab bar; neither share reaches one half.
+    @Test func elementCoveredByTwoBars_takesTheBarWithTheLargerShare() {
+        // Two overlapping bands, as a sheet bar over a page bar.
+        let smallScreen = CGRect(x: 0, y: 0, width: 402, height: 200)
+        let top = SystemBarOverlap.Bar(name: "navigation bar", frame: CGRect(x: 0, y: 0, width: 402, height: 60))
+        let bottom = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 0, y: 45, width: 402, height: 100))
+        // Overlapping bands (a sheet bar over a page bar): element y 10 to 60: 100 % in the top bar, 30 % in the bottom bar.
+        #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 10, width: 402, height: 50), in: [bottom, top], within: smallScreen) == top)
+        // Element y 50 to 70: 50 % in the top bar (50 to 60), 100 % in the bottom bar (50 to 70): both reach one half, the larger share wins.
+        #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 50, width: 402, height: 20), in: [top, bottom], within: smallScreen) == bottom)
+    }
+
+    @Test func fullHeightElement_isNotCoveredByEitherBar() {
+        // 105 pt of 874 pt lie in the navigation bar and 83 pt in the tab bar; neither share reaches one half.
         let tall = CGRect(x: 0, y: 0, width: 402, height: 874)
         #expect(SystemBarOverlap.bar(covering: tall, in: bars, within: screen) == nil)
-        // Small bars of equal reach: the larger share wins.
-        let narrowScreen = CGRect(x: 0, y: 0, width: 402, height: 200)
-        let top = SystemBarOverlap.Bar(name: "navigation bar", frame: CGRect(x: 0, y: 0, width: 402, height: 90))
-        let bottom = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 0, y: 100, width: 402, height: 100))
-        #expect(SystemBarOverlap.bar(covering: CGRect(x: 0, y: 0, width: 402, height: 200), in: [top, bottom], within: narrowScreen) == bottom)
     }
 }

@@ -540,6 +540,12 @@ enum AuditAllowlist {
         for (name, query) in queries {
             for bar in query.allElementsBoundByIndex {
                 guard let snapshot = try? bar.snapshot(), !snapshot.frame.isEmpty, snapshot.frame.intersects(result.screen) else { continue }
+                // A bar that a sheet covers (the tab bar behind a sheet, the navigation bar of the page behind it) is in the tree but not
+                // hittable; content of the sheet is not under its glass.
+                guard bar.isHittable else {
+                    print("System bar of \(currentScreen) skipped, not hittable: \(name) \(snapshot.frame)")
+                    continue
+                }
                 result.bars.append(SystemBarOverlap.Bar(name: name, frame: snapshot.frame))
                 collectOwnElements(of: snapshot, into: &result.ownElements)
             }
@@ -570,7 +576,7 @@ enum AuditAllowlist {
     /// Scope: contrast only, and every screen. Content scrolls under a bar on any page, and the effect has nothing to do with the grid; a
     /// rule for the grid screens only would bring the same whack-a-mole to the next list. The rule never covers clipping or any other
     /// type: text that is cut off or too small is a real defect wherever it lies. The elements of the bars themselves are excluded (see
-    /// `SystemBars.ownElements`), and an element that is only partly under a bar keeps failing.
+    /// `SystemBars.ownElements`), bars that a sheet covers do not count (not hittable), and an element that is only partly under a bar keeps failing.
     private static func underSystemBar(_ issue: XCUIAccessibilityAuditIssue, element: XCUIElement) -> String? {
         guard issue.auditType == .contrast, !systemBars.bars.isEmpty else { return nil }
         guard let snapshot = try? element.snapshot() else { return nil }
