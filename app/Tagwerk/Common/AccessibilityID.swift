@@ -55,6 +55,13 @@ enum AccessibilityID {
         static let figures = "projectProgress.figures"
         static let openItems = "projectProgress.openItems"
         static let history = "projectProgress.history"
+        /// The time section of the project page and its weekly chart.
+        static let time = "projectProgress.time"
+        static let timeChart = "projectProgress.timeChart"
+        /// A line of the time section: "planned", "invested" or "estimate".
+        static func timeRow(_ name: String) -> String { "projectProgress.timeRow.\(name)" }
+        /// The sentence that says nothing was recorded in the period.
+        static let timeEmpty = "projectProgress.timeEmpty"
         /// The note "Erneut laden" after a failed load.
         static let retry = "projectProgress.retry"
     }

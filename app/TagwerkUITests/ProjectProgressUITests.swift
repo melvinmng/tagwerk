@@ -79,6 +79,46 @@ final class ProjectProgressUITests: UITestCase {
                       "The group of blocked items is missing")
     }
 
+    private func timeRow(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow(name)].firstMatch
+    }
+
+    /// Scrolls the lazy list until the element exists; the time section lies below the chart.
+    private func scrollTo(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
+        var swipes = 0
+        while !element.waitForExistence(timeout: 2), swipes < 10 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(element.exists, "\(what) did not appear", file: file, line: line)
+    }
+
+    /// The demo project has planned blocks, focus sessions and a completion with a cut block (see `ProjectProgressSources.demo`):
+    /// planned 7 h, invested 4 h, estimates of three open items 7 h 30 min.
+    func testProjectPageShowsPlannedAndInvestedTime() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        scrollTo(timeRow("planned"), what: "The planned time")
+        XCTAssertEqual(timeRow("planned").value as? String, "7 h", "planned time")
+        XCTAssertEqual(timeRow("invested").value as? String, "4 h", "invested time")
+        XCTAssertTrue((timeRow("estimate").value as? String)?.contains("7 h 30 min") ?? false, "open estimates")
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists, "The time chart is missing")
+        // The demo records lie in the last three weeks: a longer period shows the same time.
+        selectSegment("3 Monate")
+        scrollTo(timeRow("planned"), what: "The planned time after the change of the period")
+        XCTAssertEqual(timeRow("planned").value as? String, "7 h")
+    }
+
+    func testProjectWithoutRecordedTimeSaysSoInsteadOfZero() {
+        openOverview()
+        openProject("Studium")
+        scrollTo(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeEmpty].firstMatch, what: "The note about missing time data")
+        XCTAssertEqual(timeRow("planned").value as? String, "–")
+        XCTAssertEqual(timeRow("invested").value as? String, "–")
+        XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists,
+                       "A chart of nothing is no information")
+    }
+
     func testPeriodPickerChangesThePeriod() {
         openOverview()
         openProject("Beispiel-Projekt")

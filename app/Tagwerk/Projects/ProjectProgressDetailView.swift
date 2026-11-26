@@ -12,12 +12,26 @@ struct ProjectProgressDetailView: View {
     @State private var customEnd = UITestMode.now()
     @State private var shownEvents = Self.eventPageSize
     @State private var expandedGroups = Set<String>()
+    /// The time of the page, read on the device for the period it was read for (see `TimeLoad`).
+    @State private var time: (load: TimeLoad, summary: ProjectTimeSummary)?
 
     /// Entries of the history added by each tap on "Weitere zeigen", and rows shown per group of open items at first.
     static let eventPageSize = 25
     static let groupLimit = 5
 
+    /// What the time section depends on: the period and the facts it was calculated from. A change reads the records again.
+    private struct TimeLoad: Hashable {
+        var choice: ProjectPeriodChoice
+        var customStart: Date
+        var customEnd: Date
+        var factsFetchedAt: Date?
+    }
+
     private var store: ProjectProgressStore { environment.projectProgress }
+    private var timeLoad: TimeLoad {
+        TimeLoad(choice: choice, customStart: choice == .custom ? customStart : .distantPast,
+                 customEnd: choice == .custom ? customEnd : .distantPast, factsFetchedAt: store.facts(of: reference)?.fetchedAt)
+    }
     private var calendar: Calendar { environment.planning.calendar }
     private var now: Date { UITestMode.now() }
 
@@ -48,6 +62,16 @@ struct ProjectProgressDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await store.load(reference, force: true) }
         .task { await store.load(reference) }
+        .task(id: timeLoad) { readTime() }
+    }
+
+    /// Reads the recorded time for the tasks of the project and the period. Local data only, so it needs no waiting state.
+    private func readTime() {
+        guard let load = store.facts(of: reference) else { return }
+        let range = ProjectProgress.range(of: period, now: now, calendar: calendar)
+        let keys = ProjectFactsMapping.timeKeys(of: reference.kind, facts: load.facts)
+        let inputs = store.timeInputs(taskKeys: keys, range: range)
+        time = (timeLoad, ProjectTime.summary(inputs: inputs, taskKeys: keys, range: range, calendar: calendar))
     }
 
     private var retryButton: some View {
@@ -73,6 +97,7 @@ struct ProjectProgressDetailView: View {
             Section { Text("In diesem Projekt gibt es noch nichts.").foregroundStyle(.secondaryText) }
         } else {
             chartSection(summary, range: range)
+            timeSection(load.facts)
             openItemsSections(load.facts)
             historySection(load.facts, range: range)
         }
@@ -137,6 +162,45 @@ struct ProjectProgressDetailView: View {
         } header: {
             ProgressSectionHeader(title: "Verlauf je Woche")
         }
+    }
+
+    // MARK: Time
+
+    @ViewBuilder
+    private func timeSection(_ facts: [ProjectItemFact]) -> some View {
+        let estimate = ProjectTime.openEstimate(facts: facts)
+        Section {
+            if let time, time.load == timeLoad {
+                let summary = time.summary
+                if summary.hasData {
+                    ProjectTimeChart(weeks: summary.weeks, calendar: calendar,
+                                     summary: ProjectProgressTexts.timeChartSummary(summary.weeks, calendar: calendar))
+                } else {
+                    // Nothing recorded is not a measured zero: no "0 h", and the reason when the blocks cannot be read.
+                    Text("Keine Zeitdaten im Zeitraum").foregroundStyle(.secondaryText)
+                        .accessibilityIdentifier(AccessibilityID.ProjectProgress.timeEmpty)
+                }
+                timeRow("planned", "Eingeplant", ProjectProgressTexts.plannedText(summary))
+                timeRow("invested", "Investiert", ProjectProgressTexts.investedText(summary))
+                timeRow("estimate", "Offene Schätzungen", ProjectProgressTexts.estimateText(estimate))
+                Text("Eingeplant sind die Zeitblöcke, die Tagwerk im Plan für diese Aufgaben angelegt hat. Investiert sind der Fokus-Timer und die Blöcke bis zum Erledigen in Tagwerk. Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.")
+                    .font(.footnote).foregroundStyle(.secondaryText)
+            } else {
+                ProgressView()
+            }
+        } header: {
+            ProgressSectionHeader(title: "Zeit")
+        }
+        .accessibilityIdentifier(AccessibilityID.ProjectProgress.time)
+    }
+
+    /// One line of the time section; a single element, title as label and the time as value.
+    private func timeRow(_ name: String, _ title: LocalizedStringKey, _ value: String) -> some View {
+        LabeledContent(title, value: value)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(title)
+            .accessibilityValue(value)
+            .accessibilityIdentifier(AccessibilityID.ProjectProgress.timeRow(name))
     }
 
     // MARK: Open items

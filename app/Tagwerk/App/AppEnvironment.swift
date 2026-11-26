@@ -494,7 +494,12 @@ final class AppEnvironment {
         self.projectProgress = ProjectProgressStore(
             sources: UITestMode.isActive
                 ? .demo(now: { UITestMode.now() })
-                : .live(taskList: taskList, settings: settings, reminderStore: reminderStore, gitHub: gitHubProvider, context: context),
+                : .live(taskList: taskList, settings: settings, reminderStore: reminderStore, gitHub: gitHubProvider,
+                        estimates: SwiftDataEstimateStore(context: context),
+                        time: ProjectTimeReader(focusStore: focusStore,
+                                                blocks: { blockPlanner.blocks(forTaskKeys: $0, in: $1) },
+                                                calendarAvailable: { gateway.calendarAccessState == .fullAccess }),
+                        context: context),
             now: { UITestMode.now() })
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in

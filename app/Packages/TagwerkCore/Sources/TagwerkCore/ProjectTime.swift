@@ -95,6 +95,16 @@ public struct ProjectTimeSummary: Sendable, Hashable {
     public var hasInvested: Bool
     public var calendarAvailable: Bool
 
+    public init(weeks: [ProjectTimeWeek], plannedSeconds: TimeInterval, investedSeconds: TimeInterval, hasPlanned: Bool, hasInvested: Bool,
+                calendarAvailable: Bool) {
+        self.weeks = weeks
+        self.plannedSeconds = plannedSeconds
+        self.investedSeconds = investedSeconds
+        self.hasPlanned = hasPlanned
+        self.hasInvested = hasInvested
+        self.calendarAvailable = calendarAvailable
+    }
+
     /// Neither planned nor invested time is known: the page says "Keine Zeitdaten" instead of showing 0 h.
     public var hasData: Bool { hasPlanned || hasInvested }
 }
@@ -105,6 +115,12 @@ public struct ProjectOpenEstimate: Sendable, Hashable {
     public var minutes: Int
     public var estimatedCount: Int
     public var withoutEstimateCount: Int
+
+    public init(minutes: Int, estimatedCount: Int, withoutEstimateCount: Int) {
+        self.minutes = minutes
+        self.estimatedCount = estimatedCount
+        self.withoutEstimateCount = withoutEstimateCount
+    }
 
     public var openCount: Int { estimatedCount + withoutEstimateCount }
 }
