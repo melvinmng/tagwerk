@@ -203,6 +203,9 @@ struct BackupTests {
                                             nutrients: NutrientValues(fiber: nil, sugar: 6, saturatedFat: 0.2, salt: 0.15),
                                             origin: .openFoodFacts, barcode: "4000000000000",
                                             sourceNote: "Open Food Facts, abgerufen am 18.11.2026"), createdAt: now))
+        context.insert(TaskActivityRecord(TaskActivityEntry(
+            kind: .statusChanged, taskKey: "github:I_1", title: "Projektfortschritt", from: "Ready", to: "In progress",
+            projectKeys: ["gitHubProject:PVT_1"], occurredAt: now), id: UUID(uuidString: "00000000-0000-0000-0000-0000000000A1") ?? UUID()))
         settings.foodLookupConsent = true
         settings.foodLookupContact = "backup@example.org"
         settings.activityCreditPercent = 75
@@ -576,6 +579,31 @@ struct BackupTests {
         #expect(food.nutrients == NutrientValues(fiber: nil, sugar: 6, saturatedFat: 0.2, salt: 0.15))
         #expect(food.origin == .openFoodFacts && food.barcode == "4000000000000")
         #expect(food.sourceNote == "Open Food Facts, abgerufen am 18.11.2026")
+    }
+
+    @Test func restore_oldFileWithoutTheActivityLog_keepsTheLogOfTheDevice() throws {
+        var object = try #require(try JSONSerialization.jsonObject(with: backup.makeBackupData()) as? [String: Any])
+        var entities = try #require(object["entities"] as? [String: Any])
+        entities["taskActivities"] = nil
+        object["entities"] = entities
+        let target = try makeTarget()
+        target.container.mainContext.insert(TaskActivityRecord(TaskActivityEntry(
+            kind: .completed, taskKey: "local:1", title: "Nur auf dem Ziel", projectKeys: ["local:local"], occurredAt: clock.now)))
+        try target.service.restore(try target.service.inspect(JSONSerialization.data(withJSONObject: object)))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<TaskActivityRecord>())
+        #expect(stored.map(\.title) == ["Nur auf dem Ziel"])
+    }
+
+    @Test func restore_withTheActivityLog_replacesTheLogAndKeepsEveryValue() throws {
+        let target = try makeTarget()
+        target.container.mainContext.insert(TaskActivityRecord(TaskActivityEntry(
+            kind: .completed, taskKey: "local:1", title: "Nur auf dem Ziel", projectKeys: ["local:local"], occurredAt: clock.now)))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData()))
+        let stored = try target.container.mainContext.fetch(FetchDescriptor<TaskActivityRecord>())
+        #expect(stored.count == 1)
+        let entry = try #require(stored.first?.entry)
+        #expect(entry.kind == .statusChanged && entry.from == "Ready" && entry.to == "In progress")
+        #expect(entry.projectKeys == ["gitHubProject:PVT_1"] && entry.taskKey == "github:I_1")
     }
 
     // MARK: Round trip

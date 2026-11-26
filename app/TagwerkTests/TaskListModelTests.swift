@@ -1012,3 +1012,64 @@ struct TaskContextMenuStatusTests {
     }
 }
 
+
+@MainActor
+struct TaskListActivityTests {
+    let local = FakeTaskProvider(source: .local, tasks: [makeTask("Fahrrad", source: .local)])
+
+    private func makeModel() -> (TaskListModel, Recorder) {
+        let model = TaskListModel(providers: [local], now: testNow, calendar: testCalendar())
+        let recorder = Recorder()
+        model.onActivity = { recorder.entries += $0 }
+        return (model, recorder)
+    }
+
+    final class Recorder { var entries: [TaskActivityEntry] = [] }
+
+    @Test func complete_isLogged() async {
+        let (model, recorder) = makeModel()
+        await model.reload()
+        await model.complete(TaskID(source: .local, rawValue: "Fahrrad"))
+        #expect(recorder.entries.map(\.kind) == [.completed])
+        #expect(recorder.entries.first?.projectKeys == ["local:local"])
+        #expect(recorder.entries.first?.occurredAt == testNow())
+    }
+
+    @Test func reschedule_isLoggedWithBeforeAndAfter() async {
+        let due = DueDate(year: 2026, month: 11, day: 18)
+        local.tasks = [makeTask("Bericht", source: .local, due: due)]
+        let (model, recorder) = makeModel()
+        await model.reload()
+        await model.rescheduleReturningForTest(TaskID(source: .local, rawValue: "Bericht"), to: DueDate(year: 2026, month: 11, day: 25))
+        #expect(recorder.entries.map(\.kind) == [.rescheduled])
+        #expect(recorder.entries.first?.from == "2026-11-18" && recorder.entries.first?.to == "2026-11-25")
+    }
+
+    @Test func create_isLogged() async {
+        let (model, recorder) = makeModel()
+        await model.create(TaskDraft(title: "Neu"), in: .local)
+        #expect(recorder.entries.map(\.kind) == [.created])
+    }
+
+    @Test func nothingChanged_logsNothing() async {
+        let (model, recorder) = makeModel()
+        await model.reload()
+        let item = model.items[0]
+        model.didSave(item)
+        #expect(recorder.entries.isEmpty)
+    }
+
+    @Test func didSave_aCompletedSearchHitThatIsReopenedIsLogged() async {
+        let (model, recorder) = makeModel()
+        await model.reload()
+        let reopened = makeTask("Alt", source: .local)
+        model.didSave(reopened, wasCompleted: true)
+        #expect(recorder.entries.map(\.kind) == [.reopened])
+    }
+}
+
+private extension TaskListModel {
+    func rescheduleReturningForTest(_ id: TaskID, to due: DueDate?) async {
+        _ = try? await rescheduleReturning(id, to: due)
+    }
+}
