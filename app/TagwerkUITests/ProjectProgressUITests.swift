@@ -135,8 +135,8 @@ extension UITestCase {
         let project = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Beispiel-Projekt")].firstMatch
         dragUntilExistsAndHittable(project, what: "The demo project")
         project.tap()
-        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
-                      "The page of the project did not open")
+        // The title of the page, not the chart: at the largest text size the chart lies below the fold of the lazy list.
+        XCTAssertTrue(app.navigationBars["Beispiel-Projekt"].waitForExistence(timeout: Self.timeout), "The page of the project did not open")
         waitUntilScreenIsStable()
         try audit("Projektseite")
         // Back to "Aufgaben": the next audit starts from the list.
