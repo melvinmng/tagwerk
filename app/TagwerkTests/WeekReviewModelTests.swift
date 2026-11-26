@@ -23,9 +23,11 @@ struct WeekReviewModelTests {
     final class Calls { var reminderIntervals: [DateInterval] = [] }
 
     private func make(_ health: FakeHealthStore, calls: Calls = Calls(), reminders: [Date] = [], local: [Date] = [],
-                      closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil) -> WeekReviewModel {
+                      closedIssueDates: (@MainActor (DateInterval) async throws -> [Date])? = nil,
+                      withWeights: Bool = false) -> WeekReviewModel {
         let now = self.now
-        return WeekReviewModel(store: store, health: health, settings: settings, calendar: calendar, now: { now },
+        let weights = withWeights ? WeightStore(intake: store, health: health, calendar: calendar) : nil
+        return WeekReviewModel(store: store, health: health, settings: settings, calendar: calendar, now: { now }, weights: weights,
                                completedReminders: { interval in
                                    calls.reminderIntervals.append(interval)
                                    return reminders.filter { interval.contains($0) }
@@ -214,28 +216,31 @@ struct WeekReviewModelTests {
         #expect(model.weekStart == PlanDay(year: 2026, month: 11, day: 16))
     }
 
-    @Test func proteinOnlyWithGoal() async {
+    @Test func proteinMean_isKnownWithoutGoal_goalComesFromTheSettings() async {
         let item = MealItem(name: "x", amount: "1", kcalMin: 500, kcal: 500, kcalMax: 500, protein: 40, carbs: 0, fat: 0, isEstimated: false)
         store.addMeal(MealValue(id: UUID(), date: now, kind: .lunch, title: "x", items: [item], origin: .manual), estimatedAt: nil)
         let model = make(FakeHealthStore())
         await model.reload()
-        #expect(model.review?.averageProtein == nil)
+        #expect(model.review?.averageProtein == 40)
+        #expect(model.review?.goals.proteinGrams == nil)
         settings.proteinGoalEnabled = true
         await model.reload()
         #expect(model.review?.averageProtein == 40)
+        #expect(model.review?.goals.proteinGrams != nil)
     }
 
     // MARK: Budget, goal plans and stored Health values (nutrition plan, C4)
 
-    private func makeWithBudgets(_ health: FakeHealthStore, plans: [GoalPlan]) -> WeekReviewModel {
+    private func makeWithBudgets(_ health: FakeHealthStore, plans: [GoalPlan], withWeights: Bool = false) -> WeekReviewModel {
         let now = self.now
         let context = container.mainContext
         let goals = GoalStore(context: context, settings: settings, calendar: calendar, now: { now })
         for plan in plans { goals.adopt(plan) }
         let budgets = DayBudgets(intake: store, goals: goals, dayHealth: DayHealthStore(context: context, now: { now }), health: health,
                                  settings: settings, calendar: calendar, now: { now })
+        let weights = withWeights ? WeightStore(intake: store, health: health, calendar: calendar) : nil
         return WeekReviewModel(store: store, health: health, settings: settings, budgets: budgets, calendar: calendar, now: { now },
-                               completedReminders: { _ in [] }, completedLocalTasks: { _ in [] })
+                               weights: weights, completedReminders: { _ in [] }, completedLocalTasks: { _ in [] })
     }
 
     private func plan(from day: PlanDay, kcal: Int) -> GoalPlan {
@@ -334,6 +339,127 @@ struct WeekReviewModelTests {
         model.planNextWeek()
         #expect(opened.days == [PlanDay(year: 2026, month: 11, day: 23)])
     }
+
+    // MARK: Weight and goals of the shown week (C4)
+
+    private func weightEntry(_ kilograms: Double, day: PlanDay) {
+        let date = day.startDate(in: calendar).addingTimeInterval(7 * 3600)
+        store.addWeight(WeightValue(id: UUID(), date: date, kilograms: kilograms))
+    }
+
+    @Test func reload_withoutWeightStore_hasNoWeightSection() async {
+        weightEntry(82, day: PlanDay(year: 2026, month: 11, day: 16))
+        let model = make(FakeHealthStore())
+        await model.reload()
+        #expect(model.weekWeight == nil)
+    }
+
+    @Test func reload_currentWeek_referencesToday() async {
+        for (offset, kilograms) in [(0, 82.0), (1, 81.0), (2, 80.0)] {
+            weightEntry(kilograms, day: PlanDay(year: 2026, month: 11, day: 16 + offset))
+        }
+        let model = make(FakeHealthStore(), withWeights: true)
+        await model.reload()
+        #expect(model.weekWeight?.figures.referenceDay == PlanDay(year: 2026, month: 11, day: 18))
+        #expect(model.weekWeight?.figures.mean == 81)
+        #expect(model.weekWeight?.figures.measurementCount == 3)
+    }
+
+    @Test func reload_weightOfTheShownWeek_notOfToday() async {
+        // Last week 90, 89, 88 (mean 89); this week 80, 80, 80. Going back must show the mean at the end of last week.
+        for (offset, kilograms) in [(0, 90.0), (1, 89.0), (2, 88.0)] {
+            weightEntry(kilograms, day: PlanDay(year: 2026, month: 11, day: 9 + offset))
+        }
+        for offset in 0..<3 { weightEntry(80, day: PlanDay(year: 2026, month: 11, day: 16 + offset)) }
+        let model = make(FakeHealthStore(), withWeights: true)
+        await model.reload()
+        #expect(model.weekWeight?.figures.mean == 80)
+        // The window of the previous mean (5 to 11 Nov) holds the last three values of the week before: 89.
+        #expect(model.weekWeight?.figures.previousMean == 89)
+        #expect(model.weekWeight?.figures.change == -9)
+        await model.goBack()
+        #expect(model.weekWeight?.weekStart == PlanDay(year: 2026, month: 11, day: 9))
+        #expect(model.weekWeight?.figures.referenceDay == PlanDay(year: 2026, month: 11, day: 15))
+        #expect(model.weekWeight?.figures.mean == 89)
+    }
+
+    @Test func reload_changeIsTheDifferenceOfTwoWeeklyMeans() async {
+        // Week of 9 Nov: mean 82 at its Sunday; the week before (2 Nov) has the mean 84 at its Sunday.
+        for (offset, kilograms) in [(0, 83.0), (2, 82.0), (4, 81.0)] { weightEntry(kilograms, day: PlanDay(year: 2026, month: 11, day: 9 + offset)) }
+        for (offset, kilograms) in [(0, 85.0), (2, 84.0), (4, 83.0)] { weightEntry(kilograms, day: PlanDay(year: 2026, month: 11, day: 2 + offset)) }
+        let model = make(FakeHealthStore(), withWeights: true)
+        await model.reload()
+        await model.goBack()
+        #expect(model.weekWeight?.figures.mean == 82)
+        #expect(model.weekWeight?.figures.previousMean == 84)
+        #expect(model.weekWeight?.figures.change == -2)
+    }
+
+    @Test func reload_bodyGroupNotAsked_usesOwnEntriesOnly() async {
+        let health = FakeHealthStore()
+        health.foreignWeights = (0..<3).map {
+            ForeignWeight(id: UUID(), date: PlanDay(year: 2026, month: 11, day: 16 + $0).startDate(in: calendar).addingTimeInterval(8 * 3600),
+                          kilograms: 99, sourceName: "Waage")
+        }
+        weightEntry(82, day: PlanDay(year: 2026, month: 11, day: 16))
+        let notAsked = make(health, withWeights: true)
+        await notAsked.reload()
+        #expect(notAsked.weekWeight?.figures.measurementCount == 1)
+        #expect(notAsked.weekWeight?.figures.mean == nil)
+
+        health.setGroupAccess(.asked, for: .body)
+        let asked = make(health, withWeights: true)
+        await asked.reload()
+        #expect(asked.weekWeight?.figures.measurementCount == 3)
+        #expect(asked.weekWeight?.figures.mean != nil)
+    }
+
+    @Test func reload_weekWithoutMeasurements_keepsTheSectionWithAHint() async {
+        let model = make(FakeHealthStore(), withWeights: true)
+        await model.reload()
+        #expect(model.weekWeight != nil)
+        #expect(model.weekWeight?.figures.measurementCount == 0)
+        #expect(model.isWeekEmpty)
+    }
+
+    @Test func isWeekEmpty_falseWhenOnlyWeightWasRecorded() async {
+        weightEntry(82, day: PlanDay(year: 2026, month: 11, day: 17))
+        let model = make(FakeHealthStore(), withWeights: true)
+        await model.reload()
+        #expect(model.review?.isEmpty == true)
+        #expect(!model.isWeekEmpty)
+    }
+
+    @Test func reload_targetWeightComesFromThePlanOfTheShownWeek() async {
+        let monday = PlanDay(year: 2026, month: 11, day: 16)
+        var first = plan(from: PlanDay(year: 2026, month: 10, day: 1), kcal: 2000)
+        first.targetWeightKg = 78
+        var second = plan(from: monday.adding(days: 1, calendar: calendar), kcal: 2000)
+        second.targetWeightKg = 75
+        for offset in 0..<3 { weightEntry(80, day: monday.adding(days: offset, calendar: calendar)) }
+        let model = makeWithBudgets(FakeHealthStore(), plans: [first, second], withWeights: true)
+        await model.reload()
+        #expect(model.weekWeight?.targetKg == 75)
+        #expect(model.weekWeight?.figures.remainingToTarget == -5)
+        await model.goBack()
+        #expect(model.weekWeight?.targetKg == 78)
+    }
+
+    @Test func goalAge_namesThePlanOfTheGoalDay() async {
+        let first = plan(from: PlanDay(year: 2026, month: 10, day: 26), kcal: 2000)
+        let model = makeWithBudgets(FakeHealthStore(), plans: [first])
+        await model.reload()
+        // Goal day is today, Wednesday 18 Nov: 23 days after 26 Oct, three full weeks.
+        #expect(model.goalAge?.validFrom == PlanDay(year: 2026, month: 10, day: 26))
+        #expect(model.goalAge?.weeks == 3)
+    }
+
+    @Test func goalAge_withoutAStoredPlan_isHidden() async {
+        let model = make(FakeHealthStore())
+        await model.reload()
+        #expect(model.goalAge == nil, "the single goals of the settings stand in; there is no date to name")
+    }
+
 }
 
 struct PageSwipeTests {

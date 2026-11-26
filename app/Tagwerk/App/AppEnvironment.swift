@@ -1144,6 +1144,7 @@ final class AppEnvironment {
             closedIssueDates = { interval in try await gitHub.closedIssueDates(in: interval) }
         }
         return WeekReviewModel(store: intake, health: health, settings: settings, budgets: budgets, calendar: capture.calendar,
+                               weights: capture.weights,
                                completedReminders: { [weak self] interval in
                                    await reminderStore.completionDates(in: interval, listIDs: self?.taskReminderListIDs())
                                },

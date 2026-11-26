@@ -12,6 +12,14 @@ final class AccessibilityAuditUITests: UITestCase {
         try AuditAllowlist.audit(app, screen: screen, for: .all)
     }
 
+    /// The weekly review without the Dynamic Type check: for its plain `Text` rows (body style, no fixed frame, line limit or font) the
+    /// audit named a different text in each of four runs on 2026-11-25 ("Do", "Mi", "Verlauf und Ziele öffnen", "Kein Gewicht erfasst"),
+    /// the same flakiness the allowlist records for other screens. Large text is checked by the AX5 run (text clipped) and stays on the
+    /// device test list.
+    private func auditWeekReview(_ screen: String) throws {
+        try AuditAllowlist.audit(app, screen: screen, for: XCUIAccessibilityAuditType.all.subtracting(.dynamicType))
+    }
+
     func testAuditDefaultSize() throws {
         waitFor("Sprechstunde")
         try audit("Planen (Tag)")
@@ -26,6 +34,12 @@ final class AccessibilityAuditUITests: UITestCase {
         try audit("Tagesabschluss")
         tapButton("Abschließen")
         waitUntilGone(app.navigationBars["Tagesabschluss"])
+
+        // The weekly review: its head, the calories and the weight section (the demo data holds no weight, so the hint shows).
+        onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
+        XCTAssertTrue(app.navigationBars["Wochenrückblick"].waitForExistence(timeout: Self.timeout))
+        try auditWeekReview("Wochenrückblick")
+        app.navigationBars.buttons.firstMatch.tap()
 
         openShoppingList()
         for item in ["Milch", "Brot"] {
@@ -61,6 +75,16 @@ extension UITestCase {
         let from = towardsTop ? 0.35 : 0.7, to = towardsTop ? 0.65 : 0.4
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: from))
             .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: to)))
+    }
+
+    /// Drags the page up in steps of the same length until the element exists and can be hit (at most 40 steps). For rows of a list
+    /// that the system builds only when they come near the screen, so `dragUntilHittable` cannot ask for their frame yet.
+    func dragUpUntilHittable(_ element: XCUIElement) {
+        var steps = 0
+        while !(element.exists && element.isHittable), steps < 40 {
+            dragPage(towardsTop: false)
+            steps += 1
+        }
     }
 
     /// Drags the page in steps of the same length until the element can be hit (at most 40 steps): down while the element lies

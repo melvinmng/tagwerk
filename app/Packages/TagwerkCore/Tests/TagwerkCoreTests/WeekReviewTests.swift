@@ -8,8 +8,9 @@ struct WeekReviewTests {
     let monday = PlanDay(year: 2026, month: 11, day: 16)
     let goals = WeekReview.Goals(kcal: 2300, waterMilliliters: 2000, workoutMinutesPerWeek: 150, stepsPerDay: 8000, proteinGrams: nil)
 
-    private func meal(day: Int, kcal: Double, estimated: Bool = true, protein: Double = 0) -> MealValue {
-        let item = MealItem(name: "x", amount: "1", kcalMin: kcal, kcal: kcal, kcalMax: kcal, protein: protein, carbs: 0, fat: 0,
+    private func meal(day: Int, kcal: Double, estimated: Bool = true, protein: Double = 0, carbs: Double = 0,
+                      fat: Double = 0) -> MealValue {
+        let item = MealItem(name: "x", amount: "1", kcalMin: kcal, kcal: kcal, kcalMax: kcal, protein: protein, carbs: carbs, fat: fat,
                             isEstimated: estimated)
         return MealValue(id: UUID(), date: instant(2026, 11, day, 12, 0, in: calendar), kind: .lunch, title: "x", items: [item],
                          origin: estimated ? .estimated : .manual)
@@ -117,12 +118,15 @@ struct WeekReviewTests {
         #expect(result.isEmpty == false)
     }
 
-    @Test func review_proteinOnlyWhenGoalEnabled() {
+    @Test func review_proteinMean_isKnownWithoutAGoal() {
+        // Protein sits in the combined nutrient group next to carbohydrates and fat, so its mean does not depend on a goal.
         let meals = [meal(day: 16, kcal: 2000, protein: 100), meal(day: 17, kcal: 2000, protein: 60)]
-        #expect(review(meals: meals).averageProtein == nil)
-        let withGoal = review(meals: meals, goals: WeekReview.Goals(kcal: 2300, waterMilliliters: 2000, workoutMinutesPerWeek: 150,
-                                                                     stepsPerDay: 8000, proteinGrams: 120))
-        #expect(withGoal.averageProtein == 80)
+        let result = review(meals: meals)
+        #expect(result.averageProtein == 80)
+        #expect(result.proteinDays == 2)
+        #expect(result.goals.proteinGrams == nil)
+        #expect(review().averageProtein == nil)
+        #expect(review().proteinDays == 0)
     }
 
     @Test func review_weekTitle() {
@@ -212,5 +216,153 @@ struct WeekReviewTests {
         #expect(result.averageNutrients.fiber == 25)
         #expect(result.nutrientDays[.fiber] == 2)
         #expect(result.averageNutrients.sugar == nil && result.nutrientDays[.sugar] == 0, "unknown is not 0")
+    }
+
+    // MARK: Budget days, macro means and goals (C4)
+
+    private func budgetedReview(meals: [MealValue], budgets: [PlanDay: EnergyBudget] = [:],
+                                now: Date? = nil) -> WeekReview {
+        WeekReview.make(weekStart: monday, now: now ?? instant(2026, 11, 25, 9, 0, in: calendar), meals: meals, drinks: [],
+                        workouts: [], completedDates: [], goals: goals, budgets: budgets, calendar: calendar)
+    }
+
+    @Test func daysWithinBudget_countsOnlyDaysWithMeals() {
+        // Single goal of 2.300: Monday and Tuesday are within it, Wednesday is over; the empty days do not count either way.
+        let result = review(meals: [meal(day: 16, kcal: 2000), meal(day: 17, kcal: 2300), meal(day: 18, kcal: 2400)])
+        #expect(result.daysWithMeals == 3)
+        #expect(result.daysWithinBudget == 2)
+        #expect(review().daysWithinBudget == 0)
+    }
+
+    @Test func daysWithinBudget_usesBudgetOfEachDay() {
+        let base = plan(kcal: 2000)
+        // Monday credits 600 kcal of activity (budget 2.600), Tuesday has no activity (budget 2.000); both eat 2.400.
+        let budgets = [day(16): budget(base, active: 600, eaten: 2400), day(17): budget(base, active: nil, eaten: 2400)]
+        let result = budgetedReview(meals: [meal(day: 16, kcal: 2400), meal(day: 17, kcal: 2400)], budgets: budgets)
+        #expect(result.days[0].goalKcal == 2600)
+        #expect(result.days[1].goalKcal == 2000)
+        #expect(result.daysWithinBudget == 1)
+    }
+
+    @Test func daysWithinBudget_futureDaysNeverCount() {
+        let result = review(meals: [meal(day: 16, kcal: 1000)], now: instant(2026, 11, 17, 9, 0, in: calendar))
+        #expect(result.daysWithinBudget == 1)
+        #expect(result.days.filter { $0.isFuture && $0.kcal != nil }.isEmpty)
+    }
+
+    @Test func averageBudget_overDaysWithMeals() {
+        let base = plan(kcal: 2000)
+        let budgets = [day(16): budget(base, active: 600, eaten: 2400), day(17): budget(base, active: nil, eaten: 2400),
+                       day(18): budget(base, active: 1000, eaten: 0)]
+        // Wednesday has a large budget but no meal: it must not pull the mean of the days with meals up.
+        let result = budgetedReview(meals: [meal(day: 16, kcal: 2400), meal(day: 17, kcal: 2400)], budgets: budgets)
+        #expect(result.averageBudgetKcal == 2300)
+        #expect(review().averageBudgetKcal == nil)
+    }
+
+    @Test func carbsAndFat_meanOverDaysWithMeals() {
+        let result = review(meals: [meal(day: 16, kcal: 2000, carbs: 200, fat: 60), meal(day: 17, kcal: 2000, carbs: 300, fat: 80)])
+        #expect(result.averageCarbs == 250)
+        #expect(result.averageFat == 70)
+        #expect(result.carbsDays == 2 && result.fatDays == 2)
+        #expect(result.days[2].carbs == nil && result.days[2].fat == nil, "a day without meals stays unknown, not 0")
+        #expect(review().averageCarbs == nil && review().averageFat == nil)
+        #expect(review().carbsDays == 0)
+    }
+
+    @Test func carbsAndFat_foreignValueAloneOpensTheDay() {
+        let own = DayIntake(kcal: 0, kcalMin: 0, kcalMax: 0, protein: 0, carbs: 0, fat: 0, waterMilliliters: 0, hasEstimate: false)
+        let foreign = ForeignIntake(kcal: 700, carbs: 90, sources: ["Yazio"])
+        let result = WeekReview.make(weekStart: monday, now: instant(2026, 11, 25, 9, 0, in: calendar), meals: [], drinks: [],
+                                     workouts: [], completedDates: [], goals: goals,
+                                     totals: [day(16): IntakeTotals(own: own, foreign: foreign)], calendar: calendar)
+        #expect(result.days[0].carbs == 90)
+        #expect(result.days[0].fat == nil, "the other app gave no fat value")
+        #expect(result.averageCarbs == 90)
+        #expect(result.averageFat == nil)
+    }
+
+    @Test func macroGoals_followTheScaledGoalOfEachDay() {
+        let base = GoalPlan(validFrom: monday, kcal: 2000, carbsGrams: 250, fatGrams: 70, waterMilliliters: 2000, stepsPerDay: 8000,
+                            workoutMinutesPerWeek: 150)
+        let active = budget(base, active: 800, eaten: 2000)
+        let rest = budget(base, active: nil, eaten: 2000)
+        let meals = [meal(day: 16, kcal: 2000, carbs: 200, fat: 60), meal(day: 17, kcal: 2000, carbs: 200, fat: 60)]
+        let result = budgetedReview(meals: meals, budgets: [day(16): active, day(17): rest])
+        let carbGoals = [active.scaledCarbs!, rest.scaledCarbs!]
+        let fatGoals = [active.scaledFat!, rest.scaledFat!]
+        #expect(carbGoals[0] > 250 && carbGoals[1] == 250, "activity grows the carbohydrate goal of that day only")
+        #expect(result.averageGoalCarbs == Int((Double(carbGoals.reduce(0, +)) / 2).rounded()))
+        #expect(result.averageGoalFat == Int((Double(fatGoals.reduce(0, +)) / 2).rounded()))
+    }
+
+    @Test func macroGoals_withoutAGoal_areUnknown() {
+        let base = plan(kcal: 2000)
+        let result = budgetedReview(meals: [meal(day: 16, kcal: 2000, carbs: 200)], budgets: [day(16): budget(base, active: nil, eaten: 2000)])
+        #expect(result.averageGoalCarbs == nil)
+        #expect(result.averageGoalFat == nil)
+    }
+
+    @Test func oldCallersWithoutNewParameters_unchanged() {
+        let result = review(meals: [meal(day: 16, kcal: 2000)])
+        #expect(result.days[0].goalKcal == 2300)
+        #expect(result.daysWithinBudget == 1)
+        #expect(result.averageBudgetKcal == 2300)
+        #expect(result.goals.fiberGrams == nil && result.goals.sugarLimitGrams == nil)
+    }
+
+    // MARK: Texts
+
+    private let german = Locale(identifier: "de_DE")
+
+    @Test func weekBudgetDays_text() {
+        #expect(IntakeFormat.weekBudgetDays(within: 4, of: 5) == "Im Budget an 4 von 5 Tagen")
+        #expect(IntakeFormat.weekBudgetDays(within: 0, of: 1) == "Im Budget an 0 von 1 Tagen")
+    }
+
+    @Test func weekBudgetAverage_text() {
+        #expect(IntakeFormat.weekBudgetAverage(2450, locale: german) == "Ø Budget 2.450 kcal")
+    }
+
+    @Test func weekMacro_meanAgainstGoal_unknownStaysDash() {
+        #expect(IntakeFormat.weekMacro(mean: 118.4, days: 5, goal: 140, estimated: true) == "Ø ~118 g / 140 g an 5 Tagen")
+        #expect(IntakeFormat.weekMacro(mean: 218, days: 5, goal: nil, estimated: false) == "Ø 218 g an 5 Tagen")
+        #expect(IntakeFormat.weekMacro(mean: nil, days: 0, goal: 140, estimated: true) == "–")
+        #expect(IntakeFormat.weekMacro(mean: 0, days: 0, goal: nil, estimated: false) == "–", "no day knows the value")
+    }
+
+    @Test func weekNutrient_withAndWithoutGoal() {
+        #expect(IntakeFormat.weekNutrient(.fiber, mean: 22.3, days: 4, goal: 30, locale: german) == "Ø 22 / 30 g an 4 Tagen")
+        #expect(IntakeFormat.weekNutrient(.sugar, mean: 61, days: 3, goal: 50, locale: german) == "Ø 61 / max. 50 g an 3 Tagen")
+        #expect(IntakeFormat.weekNutrient(.salt, mean: 5.4, days: 2, goal: nil, locale: german) == "Ø 5,4 g an 2 Tagen")
+        #expect(IntakeFormat.weekNutrient(.sugar, mean: nil, days: 0, goal: 50, locale: german) == "–")
+    }
+
+    // MARK: Age of the goals
+
+    @Test func goalAge_countsFullWeeksSinceValidFrom() {
+        let age = GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 1), on: PlanDay(year: 2026, month: 11, day: 22), calendar: calendar)
+        #expect(age.weeks == 3)
+        #expect(GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 1), on: PlanDay(year: 2026, month: 11, day: 21), calendar: calendar).weeks == 2)
+    }
+
+    @Test func goalAge_sameDayOrLaterValidFrom_isZeroWeeks() {
+        let same = GoalAge.make(validFrom: monday, on: monday, calendar: calendar)
+        #expect(same.weeks == 0)
+        let later = GoalAge.make(validFrom: PlanDay(year: 2026, month: 11, day: 20), on: monday, calendar: calendar)
+        #expect(later.weeks == 0)
+    }
+
+    @Test func goalAge_acrossTheClockChange_staysCalendarDays() {
+        // 25 Oct 2026 ends daylight-saving time in Berlin; four calendar weeks are still four weeks.
+        let age = GoalAge.make(validFrom: PlanDay(year: 2026, month: 10, day: 19), on: PlanDay(year: 2026, month: 11, day: 16), calendar: calendar)
+        #expect(age.weeks == 4)
+    }
+
+    @Test func goalsSince_text_namesTheDateAndTheWeeks() {
+        let first = PlanDay(year: 2026, month: 11, day: 1)
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 3), calendar: calendar, locale: german) == "Ziele vom 1. Nov. · seit 3 Wochen")
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 1), calendar: calendar, locale: german) == "Ziele vom 1. Nov. · seit 1 Woche")
+        #expect(IntakeFormat.goalsSince(GoalAge(validFrom: first, weeks: 0), calendar: calendar, locale: german) == "Ziele vom 1. Nov.")
     }
 }

@@ -3988,6 +3988,16 @@
         }
       }
     },
+    "7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-day mean at the end of the week; the trend compares it with the value four weeks earlier. Own entries and, where allowed, measurements from Health."
+          }
+        }
+      }
+    },
     "7-Tage-Mittel · heute": {
       "localizations": {
         "en": {
@@ -16427,6 +16437,16 @@
         }
       }
     },
+    "Kein Gewicht erfasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No weight recorded"
+          }
+        }
+      }
+    },
     "Kein Lebensmittel passt zu deiner Suche.": {
       "localizations": {
         "en": {
@@ -26130,6 +26150,16 @@
         }
       }
     },
+    "Verlauf und Ziele öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open trends and goals"
+          }
+        }
+      }
+    },
     "Vers": {
       "localizations": {
         "en": {
@@ -26292,6 +26322,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discarded"
+          }
+        }
+      }
+    },
+    "Veränderung zur Vorwoche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change from previous week"
           }
         }
       }
@@ -31590,6 +31630,7 @@
       }
     },
     "Ø %@ g an %@": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -31622,6 +31663,7 @@
       }
     },
     "Ø %@%lld g / %lld g an %@": {
+      "extractionState": "stale",
       "localizations": {
         "de": {
           "stringUnit": {

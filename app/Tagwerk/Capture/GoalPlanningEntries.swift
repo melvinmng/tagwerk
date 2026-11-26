@@ -9,6 +9,8 @@ struct GoalPlanningEntries: View {
     }
 
     var offer = Offer.planAndReview
+    /// A line above the footer, e.g. the age of the goals in the weekly review; `nil` leaves the footer as it is.
+    var note: String?
     @Environment(AppEnvironment.self) private var environment
 
     private var flow: GoalPlanningFlow { environment.goalPlanning }
@@ -35,6 +37,7 @@ struct GoalPlanningEntries: View {
                 .accessibilityIdentifier(AccessibilityID.GoalPlanning.reviewEntry)
             }
         } footer: {
+            if let note { Text(note) }
             if isSignedIn {
                 Text("Du wählst vor jedem Gespräch aus, was an ChatGPT geht. Es geht nichts weg, bevor du das Gespräch beginnst. Tagwerk gibt keine medizinische Beratung.")
             } else {

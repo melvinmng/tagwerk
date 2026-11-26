@@ -118,6 +118,11 @@ enum AuditAllowlist {
             + "\"Aufgaben\" (frame at the lower edge of the screen, behind the bar). The row \"Bible Study\" above the list moved the rows down, so "
             + "the audit measures the mark against the glass of the bar; it is a position artefact of the demo list, not a colour of the mark itself "
             + "(same group as the other texts on the translucent bar, #188)."),
+        Entry(auditType: .contrast, labels: ["7-Tage-Mittel am Ende der Woche.*"], screens: ["Wochenrückblick"], reason:
+            "Footer of the weight section of the weekly review at the lower edge of the first screen: measured on 2026-11-25 at the frame "
+            + "(16, 807, 370 × 62 pt) on a screen 874 pt high, that is completely behind the translucent tab bar (it starts at about 791 pt), "
+            + "so the audit measures the text in `secondaryText` against the glass of the bar, not against the grouped background. Position "
+            + "artefact of the demo data, the same group as the last rows of \"Aufgaben\" behind the bar."),
         Entry(auditType: .contrast, labels: [
             "Auswählen", "Getrennt lassen", "Zusammenfassen", "Abbrechen", "Fertig", "Termine", "✓ Erledigte", "Essen", "Trinken", "Training",
         ], screens: glassButtonScreens, reason: "Button and segment texts on Liquid Glass or on bordered tint (navigation bar, filter marks, quick entry). The accent colour "
@@ -231,6 +236,11 @@ enum AuditAllowlist {
             "Ältere Termine durchsuchen · vor .*",
         ], screens: withLargeText(["Aufgaben", "Suche", "Erfassen", "Tagesabschluss"]) + eveningSheetScreens + gridScreens, reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "
             + "entry rows of \"Aufgaben\", \"Erfassen\"). Not reproducible by eye; stays on the device test list (large text)."),
+        Entry(auditType: .textClipped, labels: ["\\d+\\.[–-][^ ]+ [A-Za-zä]+\\.?", "\\d+\\. [A-Za-zä]+\\.? [–-] .*"], screens: ["Wochenrückblick"], reason:
+            "Week title of the weekly review (\"23.–29. Nov.\"): the title of `PageTitleLabel`, one line in `title3.bold()` that shrinks to 80 % "
+            + "(the component of the day and week headers, #188 / #175). Measured on 2026-11-25 at the frame (36, 183, 115 × 24 pt): the title is "
+            + "complete on the screenshot of the run; the audit reports its generic warning \"may be clipped at larger Dynamic Type sizes\". The AX5 "
+            + "run of the same screen (\"AX5/dark Wochenrückblick\") reports nothing for it. Stays on the device test list (large text)."),
         Entry(auditType: .textClipped, labels: ["Unerledigtes verschieben · \\d+ Aufgaben?"], screens: eveningPlanScreens + eveningSheetScreens, reason:
             "Row \"Unerledigtes verschieben\" (`LeftoverLine`): the text wraps (`fixedSize(horizontal: false, vertical: true)`) and the row is at least "
             + "44 pt high. Checked on the frames of the findings: 266 × 18 pt (one line) in the capacity card at the default size, 206 × 38 pt "

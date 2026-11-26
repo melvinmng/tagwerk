@@ -9,15 +9,21 @@ public struct WeekReview: Sendable, Hashable {
         public var workoutMinutesPerWeek: Int
         /// 0 means no step goal; no day then counts as reaching it.
         public var stepsPerDay: Int
-        /// `nil` while the protein goal is off; the review then shows no protein.
+        /// `nil` while the protein goal is off; the review then shows the mean without a goal.
         public var proteinGrams: Int?
+        /// Fibre target and sugar limit of the plan that holds now; `nil` without one.
+        public var fiberGrams: Int?
+        public var sugarLimitGrams: Int?
 
-        public init(kcal: Int, waterMilliliters: Int, workoutMinutesPerWeek: Int, stepsPerDay: Int, proteinGrams: Int?) {
+        public init(kcal: Int, waterMilliliters: Int, workoutMinutesPerWeek: Int, stepsPerDay: Int, proteinGrams: Int?,
+                    fiberGrams: Int? = nil, sugarLimitGrams: Int? = nil) {
             self.kcal = kcal
             self.waterMilliliters = waterMilliliters
             self.workoutMinutesPerWeek = workoutMinutesPerWeek
             self.stepsPerDay = stepsPerDay
             self.proteinGrams = proteinGrams
+            self.fiberGrams = fiberGrams
+            self.sugarLimitGrams = sugarLimitGrams
         }
     }
 
@@ -29,10 +35,16 @@ public struct WeekReview: Sendable, Hashable {
         public var hasEstimate: Bool
         public var waterMilliliters: Int?
         public var protein: Double?
+        /// `nil` without a meal (or a value of another app) that day, like `protein`.
+        public var carbs: Double?
+        public var fat: Double?
         /// The further nutrients of the day; a nutrient no meal knows stays `nil` (never 0).
         public var nutrients: NutrientValues
         /// Energy budget of the day: the base goal of the plan that held on it plus the credited activity (a later day: the base goal).
         public var goalKcal: Int
+        /// Carbohydrate and fat goal of the day, grown with the credited activity (decision BU3c); `nil` without a goal or budget.
+        public var goalCarbs: Int?
+        public var goalFat: Int?
         /// Water and step goals of the plan that held on that day.
         public var goalWaterMilliliters: Int
         public var goalSteps: Int
@@ -59,7 +71,20 @@ public struct WeekReview: Sendable, Hashable {
     /// Rounded mean over the days with a step value; `nil` without any.
     public var averageSteps: Int?
     public var stepGoalDays: Int
+    /// Means per day over the days that know the macro, and how many days that are.
     public var averageProtein: Double?
+    public var averageCarbs: Double?
+    public var averageFat: Double?
+    public var proteinDays: Int
+    public var carbsDays: Int
+    public var fatDays: Int
+    /// Mean of the carbohydrate and fat goals of the days that know the macro; `nil` without a goal.
+    public var averageGoalCarbs: Int?
+    public var averageGoalFat: Int?
+    /// Days with a meal whose eaten energy did not exceed the budget of that day; counted out of `daysWithMeals`.
+    public var daysWithinBudget: Int
+    /// Mean budget of the days with a meal; `nil` without one.
+    public var averageBudgetKcal: Double?
     /// Mean per day over the days that know the nutrient, and how many days that are. Meals without a value are not in the sum, so
     /// the mean is a lower bound.
     public var averageNutrients: NutrientValues
@@ -99,8 +124,11 @@ public struct WeekReview: Sendable, Hashable {
             for nutrient in Nutrient.allCases { nutrients[nutrient] = total.nutrient(nutrient).value }
             return Day(day: day, kcal: dayMeals.isEmpty && foreign?.kcal == nil ? nil : total.kcal, hasEstimate: total.hasEstimate,
                        waterMilliliters: dayDrinks.isEmpty && foreign?.waterMilliliters == nil ? nil : total.waterMilliliters,
-                       protein: dayMeals.isEmpty && foreign?.protein == nil ? nil : total.protein, nutrients: nutrients,
+                       protein: dayMeals.isEmpty && foreign?.protein == nil ? nil : total.protein,
+                       carbs: dayMeals.isEmpty && foreign?.carbs == nil ? nil : total.carbs,
+                       fat: dayMeals.isEmpty && foreign?.fat == nil ? nil : total.fat, nutrients: nutrients,
                        goalKcal: budgets[day]?.budget ?? goals.kcal,
+                       goalCarbs: budgets[day]?.scaledCarbs, goalFat: budgets[day]?.scaledFat,
                        goalWaterMilliliters: plans[day]?.waterMilliliters ?? goals.waterMilliliters,
                        goalSteps: plans[day]?.stepsPerDay ?? goals.stepsPerDay,
                        steps: isFuture ? nil : steps[day], isFuture: isFuture)
@@ -109,6 +137,11 @@ public struct WeekReview: Sendable, Hashable {
         let kcalDays = days.compactMap(\.kcal)
         let waterDays = days.compactMap(\.waterMilliliters)
         let proteinDays = days.compactMap(\.protein)
+        let carbsDays = days.compactMap(\.carbs)
+        let fatDays = days.compactMap(\.fat)
+        let withMeals = days.filter { $0.kcal != nil }
+        func mean(_ values: [Double]) -> Double? { values.isEmpty ? nil : values.reduce(0, +) / Double(values.count) }
+        func goalMean(_ values: [Int]) -> Int? { mean(values.map(Double.init)).map { Int($0.rounded()) } }
         let stepDays = days.compactMap(\.steps)
         var averageNutrients = NutrientValues()
         var nutrientDays: [Nutrient: Int] = [:]
@@ -131,8 +164,12 @@ public struct WeekReview: Sendable, Hashable {
             daysWithSteps: stepDays.count,
             averageSteps: stepDays.isEmpty ? nil : Int((Double(stepDays.reduce(0, +)) / Double(stepDays.count)).rounded()),
             stepGoalDays: days.filter { $0.goalSteps > 0 && ($0.steps ?? -1) >= $0.goalSteps }.count,
-            averageProtein: goals.proteinGrams == nil || proteinDays.isEmpty
-                ? nil : proteinDays.reduce(0, +) / Double(proteinDays.count),
+            averageProtein: mean(proteinDays), averageCarbs: mean(carbsDays), averageFat: mean(fatDays),
+            proteinDays: proteinDays.count, carbsDays: carbsDays.count, fatDays: fatDays.count,
+            averageGoalCarbs: goalMean(days.filter { $0.carbs != nil }.compactMap(\.goalCarbs)),
+            averageGoalFat: goalMean(days.filter { $0.fat != nil }.compactMap(\.goalFat)),
+            daysWithinBudget: withMeals.filter { ($0.kcal ?? 0) <= Double($0.goalKcal) }.count,
+            averageBudgetKcal: mean(withMeals.map { Double($0.goalKcal) }),
             averageNutrients: averageNutrients, nutrientDays: nutrientDays,
             completedTasks: completedDates.filter(inWeek).count,
             isCurrentWeek: (weekStart...weekStart.adding(days: 6, calendar: calendar)).contains(today))
@@ -159,7 +196,64 @@ public struct WeekReview: Sendable, Hashable {
     }
 }
 
+/// How long the goals of the review have held: the day they became valid and the full weeks since then.
+public struct GoalAge: Sendable, Hashable {
+    public var validFrom: PlanDay
+    public var weeks: Int
+
+    public init(validFrom: PlanDay, weeks: Int) {
+        self.validFrom = validFrom
+        self.weeks = weeks
+    }
+
+    /// Full calendar weeks from `validFrom` to `day`; a plan that starts on or after `day` has zero.
+    public static func make(validFrom: PlanDay, on day: PlanDay, calendar: Calendar) -> GoalAge {
+        let days = calendar.dateComponents([.day], from: validFrom.startDate(in: calendar), to: day.startDate(in: calendar)).day ?? 0
+        return GoalAge(validFrom: validFrom, weeks: max(0, days / 7))
+    }
+}
+
 extension IntakeFormat {
+    /// "Ziele vom 1. Nov. · seit 3 Wochen"; under a full week only the date.
+    public static func goalsSince(_ age: GoalAge, calendar: Calendar, locale: Locale = .current) -> String {
+        var style = Date.FormatStyle.dateTime.day().month(.abbreviated).locale(locale)
+        style.timeZone = calendar.timeZone
+        let date = age.validFrom.startDate(in: calendar).formatted(style)
+        let since = String(localized: "Ziele vom \(date)", bundle: .module)
+        guard age.weeks > 0 else { return since }
+        return since + " · " + String(localized: "seit \(age.weeks) Wochen", bundle: .module)
+    }
+
+    /// "Im Budget an 4 von 5 Tagen": `total` is the number of days with a meal.
+    public static func weekBudgetDays(within: Int, of total: Int) -> String {
+        String(localized: "Im Budget an \(within) von \(total) Tagen", bundle: .module)
+    }
+
+    /// "Ø Budget 2.450 kcal"
+    public static func weekBudgetAverage(_ kcal: Double, locale: Locale = .current) -> String {
+        String(localized: "Ø Budget \(grouped(Int(kcal.rounded()), locale: locale)) kcal", bundle: .module)
+    }
+
+    /// A macro of the weekly review: "Ø ~118 g / 140 g an 5 Tagen", without a goal "Ø ~218 g an 5 Tagen"; "–" when no day knows it
+    /// (never 0).
+    public static func weekMacro(mean: Double?, days: Int, goal: Int?, estimated: Bool) -> String {
+        guard let mean, days > 0 else { return "–" }
+        let number = "\(estimated ? "~" : "")\(Int(mean.rounded()))"
+        let dayCount = String(localized: "\(days) Tagen", bundle: .module)
+        guard let goal else { return String(localized: "Ø \(number) g an \(dayCount)", bundle: .module) }
+        return String(localized: "Ø \(number) g / \(goal) g an \(dayCount)", bundle: .module)
+    }
+
+    /// A further nutrient of the weekly review: "Ø 22 / 30 g an 4 Tagen"; a limit reads "Ø 61 / max. 50 g an 3 Tagen" as on the day
+    /// card. "–" when no day knows it (never 0).
+    public static func weekNutrient(_ nutrient: Nutrient, mean: Double?, days: Int, goal: Int?, locale: Locale = .current) -> String {
+        guard let mean, days > 0 else { return "–" }
+        let sum = NutrientSum(value: mean, known: 1, total: 1)
+        let figures = Self.nutrient(nutrient, sum: sum, goal: goal.map(Double.init), isLimitGoal: nutrient.isLimit, locale: locale)
+        let dayCount = String(localized: "\(days) Tagen", bundle: .module)
+        return String(localized: "Ø \(figures) an \(dayCount)", bundle: .module)
+    }
+
     /// Training in the weekly review: "2 h 7 min / 2 h 30 min · 3 Trainings"; the count only names workouts of at least
     /// 10 min, the goal part is left out when the goal is 0.
     public static func weekTraining(minutes: Int, count: Int, goal: Int) -> String {

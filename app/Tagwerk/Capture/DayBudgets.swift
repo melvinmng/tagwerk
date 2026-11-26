@@ -55,6 +55,9 @@ final class DayBudgets {
         return fallback
     }
 
+    /// The stored goal plan that holds on `day`; `nil` when only the single goals of the settings stand in.
+    func storedPlan(on day: PlanDay) -> GoalPlan? { goals?.current(on: day) }
+
     private static let fallbackPlanID = UUID(uuidString: "00000000-0000-0000-0000-00000000F0A1")!
 
     /// The figures of `day` for its own entries `own`. Today uses the current credit share; a past day the share that was set when

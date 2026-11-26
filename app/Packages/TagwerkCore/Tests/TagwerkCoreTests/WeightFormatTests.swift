@@ -56,4 +56,24 @@ struct WeightFormatTests {
         let sparse = WeightOverview.make(Dictionary(uniqueKeysWithValues: [day(-3, 79)]), today: today, calendar: calendar)
         #expect(sparse.today == nil && sparse.yesterday == nil && sparse.mean == nil && sparse.latest == 79)
     }
+
+    // MARK: Weekly review
+
+    @Test func targetLine_namesTheDistanceOnlyWhenTheMeanIsKnown() {
+        #expect(WeightFormat.targetLine(targetKg: 78, remaining: -3.4, locale: de) == "78,0 kg · noch 3,4 kg")
+        #expect(WeightFormat.targetLine(targetKg: 78, remaining: 2, locale: de) == "78,0 kg · noch 2,0 kg")
+        #expect(WeightFormat.targetLine(targetKg: 78, remaining: nil, locale: de) == "78,0 kg")
+    }
+
+    @Test func latestLine_namesTheWeekday() {
+        // Thursday, 19 Nov 2026.
+        let day = DayWeight(day: PlanDay(year: 2026, month: 11, day: 19), kilograms: 82.4)
+        #expect(WeightFormat.latestLine(day, calendar: calendar, locale: de) == "Letzte Messung 82,4 kg (Do)")
+    }
+
+    @Test func measurementsInWeek_countsOrSaysThereIsNone() {
+        #expect(WeightFormat.measurementsInWeek(4) == "4 Messungen in dieser Woche")
+        #expect(WeightFormat.measurementsInWeek(1) == "1 Messung in dieser Woche")
+        #expect(WeightFormat.measurementsInWeek(0) == "Keine Messung in dieser Woche")
+    }
 }
