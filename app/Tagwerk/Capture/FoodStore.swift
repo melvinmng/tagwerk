@@ -24,6 +24,17 @@ final class FoodStore {
 
     func food(_ id: UUID) -> FoodValue? { record(id)?.value }
 
+    /// The food with this barcode, compared in its normalized form (a UPC-A code matches the EAN-13 code with a leading zero). When
+    /// several foods carry the same code, the one created last wins. `nil` for an unknown or invalid code.
+    func food(barcode: String) -> FoodValue? {
+        guard let key = Barcode.comparisonKey(barcode) else { return nil }
+        let records = (try? context.fetch(FetchDescriptor<FoodRecord>())) ?? []
+        return records
+            .filter { $0.barcode.flatMap(Barcode.comparisonKey) == key }
+            .max { $0.createdAt < $1.createdAt }?
+            .value
+    }
+
     var isEmpty: Bool {
         var descriptor = FetchDescriptor<FoodRecord>()
         descriptor.fetchLimit = 1

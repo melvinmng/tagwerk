@@ -120,6 +120,16 @@ enum AccessibilityID {
         static let results = "foodLookup.results"
         static let searchButton = "foodLookup.searchButton"
         static let saveFood = "foodLookup.saveFood"
+        /// The row "Strichcode scannen" in the food list, and the scan icon in the search field.
+        static let scanRow = "foodLookup.scanRow"
+        static let scanIcon = "foodLookup.scanIcon"
+        /// The scan sheet: switch to typed digits, the field and its button, and the ways on after a result.
+        static let manualEntryButton = "foodLookup.manualEntry"
+        static let manualField = "foodLookup.manualField"
+        static let manualSubmit = "foodLookup.manualSubmit"
+        static let scanCreateFood = "foodLookup.scanCreateFood"
+        static let scanAgain = "foodLookup.scanAgain"
+        static let scanRetry = "foodLookup.scanRetry"
     }
 
     enum NoteEditor {

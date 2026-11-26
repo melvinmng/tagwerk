@@ -208,7 +208,7 @@ private struct CaptureSettingsForm: View {
                 Text("Online-Suche")
                     .foregroundStyle(.secondaryText)
             } footer: {
-                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
+                Text("Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen oder Strichcode suchen, nur auf dein Tippen. Dabei gehen das Suchwort oder der Strichcode, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.")
                     .foregroundStyle(.secondaryText)
             }
 

@@ -3343,11 +3343,22 @@
       }
     },
     "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "**Sent:** the search word (later also a barcode), technically unavoidably your IP address, the name of the app with its version and, if you enter one below, your contact address, otherwise the link to the Tagwerk project."
+          }
+        }
+      }
+    },
+    "**Gesendet wird:** das Suchwort oder der Strichcode, technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sent:** the search word or the barcode, technically unavoidably your IP address, the name of the app with its version and, if you enter one below, your contact address, otherwise the link to the Tagwerk project."
           }
         }
       }
@@ -3537,7 +3548,18 @@
         }
       }
     },
+    "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst oder einen Strichcode scannst, nie beim Tippen im Suchfeld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Only when you tap:** Nothing is searched until you tap “Search online” or scan a barcode, never while you type in the search field."
+          }
+        }
+      }
+    },
     "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst, nie beim Tippen im Suchfeld.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7052,6 +7074,16 @@
         }
       }
     },
+    "Beim Anlegen wird der Strichcode mit dem Lebensmittel gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you create the food, the barcode is saved with it."
+          }
+        }
+      }
+    },
     "Beim Diktieren und in der Einkaufsliste wechselst du die Sprache auch direkt am Feld. Rezepte übersetzt ChatGPT in die gewählte Sprache; die Artikel der Einkaufsliste entstehen in der Sprache der Einkaufsliste.": {
       "localizations": {
         "en": {
@@ -7926,6 +7958,16 @@
         }
       }
     },
+    "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen oder Strichcode suchen, nur auf dein Tippen. Dabei gehen das Suchwort oder der Strichcode, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets you search packaged foods by name or barcode in Open Food Facts, only when you tap. The search word or the barcode, your IP address and, if you enter one, the contact address go to the operator, never amounts, meals, goals or data from Health. The contact address is optional; without it Tagwerk names the link to its project. The database is licensed under the Open Database License (ODbL), its contents under the Database Contents License (DbCL). The data comes from volunteers and can be wrong. Tagwerk does not load product images (CC BY-SA 3.0). A product you take over appears in “My foods” with a note about its source."
+          }
+        }
+      }
+    },
     "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Ohne Kontaktadresse geht keine Anfrage hinaus; leerst du das Feld, schaltet sich die Suche aus. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
       "extractionState": "stale",
       "localizations": {
@@ -7949,6 +7991,7 @@
       }
     },
     "Damit kannst du verpackte Lebensmittel in Open Food Facts nach Namen suchen, nur auf dein Tippen. Dabei gehen das Suchwort, deine IP-Adresse und, wenn du eine einträgst, die Kontaktadresse an den Betreiber, nie Mengen, Mahlzeiten, Ziele oder Daten aus Health. Die Kontaktadresse ist freiwillig; ohne sie nennt Tagwerk den Link zu seinem Projekt. Die Datenbank steht unter der Open Database License (ODbL), ihre Inhalte unter der Database Contents License (DbCL). Die Daten stammen von Freiwilligen und können falsch sein. Produktbilder (CC BY-SA 3.0) lädt Tagwerk nicht. Ein übernommenes Produkt steht in „Meine Lebensmittel“ mit dem Hinweis auf die Quelle.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -8164,6 +8207,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The issue will not be assigned to anyone and will not appear in your tasks."
+          }
+        }
+      }
+    },
+    "Das Kamerabild bleibt auf dem Gerät. Gesendet wird höchstens die Nummer, und nur nach deiner Einwilligung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera image stays on the device. At most the number is sent, and only with your consent."
           }
         }
       }
@@ -9501,6 +9554,16 @@
         }
       }
     },
+    "Die Kamera ist für Tagwerk ausgeschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is turned off for Tagwerk."
+          }
+        }
+      }
+    },
     "Die Kategorie gilt für jeden Artikel mit diesem Namen.": {
       "localizations": {
         "en": {
@@ -10482,6 +10545,26 @@
         }
       }
     },
+    "Dieser Strichcode ist nicht in „Meine Lebensmittel“. Bevor Tagwerk bei Open Food Facts nachfragt, brauchen wir deine Einwilligung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This barcode is not in “My foods”. Before Tagwerk asks Open Food Facts, we need your consent."
+          }
+        }
+      }
+    },
+    "Dieser Strichcode ist nicht in „Meine Lebensmittel“. Ohne Einwilligung fragt Tagwerk nicht bei Open Food Facts nach.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This barcode is not in “My foods”. Without your consent, Tagwerk does not ask Open Food Facts."
+          }
+        }
+      }
+    },
     "Dieser Termin lässt sich nicht ändern.": {
       "localizations": {
         "en": {
@@ -10730,6 +10813,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can change this later in Settings."
+          }
+        }
+      }
+    },
+    "Du kannst die Nummer unter dem Strichcode auch von Hand eingeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also enter the number under the barcode by hand."
           }
         }
       }
@@ -12042,6 +12135,16 @@
         }
       }
     },
+    "Erneut scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan again"
+          }
+        }
+      }
+    },
     "Erneut versuchen": {
       "localizations": {
         "en": {
@@ -13292,11 +13395,22 @@
       }
     },
     "Für die Online-Suche sendet Tagwerk dein Suchwort an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For the online search, Tagwerk sends your search word to Open Food Facts, an open food database by volunteers (openfoodfacts.org), without an account."
+          }
+        }
+      }
+    },
+    "Für die Online-Suche sendet Tagwerk dein Suchwort oder einen Strichcode an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For the online search, Tagwerk sends your search word or a barcode to Open Food Facts, an open food database by volunteers (openfoodfacts.org), without an account."
           }
         }
       }
@@ -14364,6 +14478,16 @@
         }
       }
     },
+    "Gib die Nummer unter dem Strichcode ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the number under the barcode."
+          }
+        }
+      }
+    },
     "Gib diesen Code auf GitHub ein:": {
       "localizations": {
         "en": {
@@ -14892,6 +15016,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checks off a habit for today without opening the app."
+          }
+        }
+      }
+    },
+    "Halte den Strichcode in den Rahmen, oder gib die Nummer von Hand ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold the barcode inside the frame, or enter the number by hand."
+          }
+        }
+      }
+    },
+    "Halte den Strichcode in den Rahmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold the barcode inside the frame."
           }
         }
       }
@@ -16274,6 +16418,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calorie goal, kcal, energy, budget"
+          }
+        }
+      }
+    },
+    "Kamera verwenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use camera"
+          }
+        }
+      }
+    },
+    "Kamera zum Lesen von Strichcodes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera for reading barcodes"
           }
         }
       }
@@ -20438,6 +20602,16 @@
         }
       }
     },
+    "Nummer eingeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter number"
+          }
+        }
+      }
+    },
     "Nur Aufgaben": {
       "localizations": {
         "en": {
@@ -21087,6 +21261,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Food Facts refused the request (error 403). This usually concerns the network address or the app's identification, not your input. Try again later or on a different network."
+          }
+        }
+      }
+    },
+    "Open Food Facts kennt diesen Strichcode nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts does not know this barcode."
           }
         }
       }
@@ -23084,6 +23268,16 @@
         }
       }
     },
+    "Selbst anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create it myself"
+          }
+        }
+      }
+    },
     "Selbst planen": {
       "localizations": {
         "en": {
@@ -24420,12 +24614,52 @@
         }
       }
     },
+    "Strichcode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode"
+          }
+        }
+      }
+    },
+    "Strichcode erkannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode recognized"
+          }
+        }
+      }
+    },
+    "Strichcode scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan barcode"
+          }
+        }
+      }
+    },
     "Strichcode, Lebensmittel, Produktsuche, Einwilligung": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Barcode, food, product search, consent"
+          }
+        }
+      }
+    },
+    "Strichcode-Nummer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode number"
           }
         }
       }
@@ -24446,6 +24680,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hours"
+          }
+        }
+      }
+    },
+    "Suche bei Open Food Facts …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching Open Food Facts …"
           }
         }
       }

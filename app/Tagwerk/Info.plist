@@ -42,7 +42,7 @@
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Tagwerk liest deinen Kalender, um deinen Tag zu planen.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst.</string>
+	<string>Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, liest Strichcodes von Lebensmitteln und nimmt Fotos auf, die du an eine Notiz anhängst.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Tagwerk entsperrt damit gesperrte Notizen und private Ordner.</string>
 	<key>NSHealthShareUsageDescription</key>

@@ -42,10 +42,10 @@ struct FoodLookupConsentSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Für die Online-Suche sendet Tagwerk dein Suchwort an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.")
-                    point("paperplane", "**Gesendet wird:** das Suchwort (später auch ein Strichcode), technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.")
+                    Text("Für die Online-Suche sendet Tagwerk dein Suchwort oder einen Strichcode an Open Food Facts, eine offene Lebensmitteldatenbank von Freiwilligen (openfoodfacts.org), ohne Konto.")
+                    point("paperplane", "**Gesendet wird:** das Suchwort oder der Strichcode, technisch unvermeidbar deine IP-Adresse, der Name der App mit ihrer Version und, wenn du unten eine einträgst, deine Kontaktadresse, sonst der Link zum Projekt von Tagwerk.")
                     point("eye.slash", "**Nicht gesendet werden:** Mengen, Mahlzeiten, Ziele, Gewicht, Daten aus Health und ein Konto.")
-                    point("hand.tap", "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst, nie beim Tippen im Suchfeld.")
+                    point("hand.tap", "**Nur auf dein Tippen:** Gesucht wird erst, wenn du „Online suchen“ tippst oder einen Strichcode scannst, nie beim Tippen im Suchfeld.")
                     point("exclamationmark.circle", "**Wer sucht, verrät, was er isst oder kaufen will.** Open Food Facts speichert IP-Adressen und Protokolle bis zu 3 Jahre. Die Daten stammen von Freiwilligen und können fehlen oder falsch sein.")
 
                     if let model {

@@ -89,6 +89,44 @@ struct FoodStoreTests {
         #expect(again.kcal == 360 && !again.isEstimated)
     }
 
+    // MARK: Lookup by barcode
+
+    @Test func foodByBarcode_findsStoredFood() {
+        let store = makeStore()
+        let skyr = FoodValue(name: "Skyr", reference: .per100g, kcal: 62, barcode: "4008400404127")
+        store.save(skyr)
+        store.save(FoodValue(name: "Hafer", reference: .per100g, kcal: 372, barcode: "96385074"))
+        #expect(store.food(barcode: "4008400404127") == skyr)
+        #expect(store.food(barcode: " 4008400404127\n") == skyr, "the code is normalized before the comparison")
+    }
+
+    @Test func foodByBarcode_unknownOrInvalidIsNil() {
+        let store = makeStore()
+        store.save(FoodValue(name: "Skyr", reference: .per100g, kcal: 62, barcode: "4008400404127"))
+        store.save(FoodValue(name: "Ohne Code", reference: .per100g, kcal: 10))
+        #expect(store.food(barcode: "96385074") == nil)
+        #expect(store.food(barcode: "4008400404128") == nil, "a wrong check digit never matches")
+        #expect(store.food(barcode: "") == nil)
+    }
+
+    @Test func foodByBarcode_matchesUPCAAndEAN13WithLeadingZero() {
+        let store = makeStore()
+        let food = FoodValue(name: "Cola", reference: .per100ml, kcal: 42, barcode: "0036000291452")
+        store.save(food)
+        #expect(store.food(barcode: "036000291452") == food)
+    }
+
+    @Test func foodByBarcode_prefersTheNewestFood() {
+        var clock = Date(timeIntervalSince1970: 1_000_000)
+        let store = FoodStore(context: container.mainContext, now: { clock })
+        let older = FoodValue(name: "Skyr alt", reference: .per100g, kcal: 60, barcode: "4008400404127")
+        store.save(older)
+        clock = clock.addingTimeInterval(3600)
+        let newer = FoodValue(name: "Skyr neu", reference: .per100g, kcal: 62, barcode: "4008400404127")
+        store.save(newer)
+        #expect(store.food(barcode: "4008400404127") == newer)
+    }
+
     // MARK: Values the number fields round (the edit sheet)
 
     /// What a number field shows for a value and writes back when it appears.

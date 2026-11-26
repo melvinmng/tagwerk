@@ -38,13 +38,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, und Fotos, die du an eine Notiz anhängst."
+            "value": "Tagwerk nimmt Fotos von Mahlzeiten auf, um Kalorien und Nährwerte schätzen zu lassen, liest Strichcodes von Lebensmitteln und nimmt Fotos auf, die du an eine Notiz anhängst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagwerk takes photos of meals to estimate calories and nutrients, and photos you attach to a note."
+            "value": "Tagwerk takes photos of meals to estimate calories and nutrients, reads barcodes on food, and takes photos you attach to a note."
           }
         }
       }
