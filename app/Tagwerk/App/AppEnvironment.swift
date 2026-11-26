@@ -721,6 +721,12 @@ final class AppEnvironment {
         requestedTab = 1
     }
 
+    /// Opens the page of one project (#332) in the tab "Aufgaben", on top of the overview. Replaces whatever was pushed there.
+    func showProjectProgress(_ reference: ProjectProgressReference) {
+        tasksPath = [.projectProgressOverview, .projectProgress(reference)]
+        requestedTab = 1
+    }
+
     /// The list "Im Ordner zeigen" opens for a note: its folder; "Notizen" for a note without a folder or whose folder is
     /// gone (where `NoteStore` lists it, but only own notes, not thought notes); "Zuletzt gelöscht" for a note in the trash.
     /// "Alle Notizen" is the fallback for a note that does not exist or would not appear in "Notizen".
