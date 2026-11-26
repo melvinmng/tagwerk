@@ -12,7 +12,7 @@
 AccessibilityAuditEveningUITests 112
 AccessibilityAuditLargeTextUITests 68
 AccessibilityAuditRecipesUITests 685
-AccessibilityAuditUITests 452
+AccessibilityAuditUITests 500
 AssistantCardFollowUpUITests 84
 AssistantCardLargeTextUITests 58
 AssistantCardUITests 66
@@ -36,8 +36,8 @@ NoteLockUITests 185
 NotesUITests 166
 NowMarkerUITests 26
 PlanUITests 148
-# est. new class (seven tests, overview and page of the project progress)
-ProjectProgressUITests 150
+# est. class of the project progress (nine tests, overview and page with time section; 260 s measured locally at 1.4 for the runner)
+ProjectProgressUITests 360
 RoutineUITests 260
 SearchUITests 114
 SettingsNavigationUITests 39
