@@ -187,6 +187,30 @@ extension UITestCase {
         XCTAssertTrue(element.exists && element.isHittable, "\(what) is not reachable by scrolling", file: file, line: line)
     }
 
+    /// Drags the page up in small steps until no text or row crosses the upper edge of the tab bar. The contrast check measures a
+    /// line that straddles the edge partly against the glass of the bar and reports a real failure (the rule for text mostly under the
+    /// bar accepts only what is covered by half or more). Where a list happens to stop after the drags depends on timing, so the part of
+    /// the page the audit looks at is moved until the edge lies between two rows.
+    func scrollPageClearOfTabBar() {
+        let barTop = app.tabBars.firstMatch.frame.minY
+        for _ in 0..<8 {
+            guard let snapshot = try? app.snapshot(), Self.hasElement(in: snapshot, crossing: barTop) else { return }
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.66)))
+        }
+    }
+
+    private static func hasElement(in snapshot: XCUIElementSnapshot, crossing edge: CGFloat) -> Bool {
+        for child in snapshot.children {
+            let frame = child.frame
+            // Containers (the list, the window) are as high as the screen; rows and texts are not.
+            if frame.width > 0, frame.height > 0, frame.height < 120, frame.minY < edge - 1, frame.maxY > edge + 1,
+               [.staticText, .cell].contains(child.elementType) { return true }
+            if hasElement(in: child, crossing: edge) { return true }
+        }
+        return false
+    }
+
     /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
     func auditProjectProgress(_ audit: (String) throws -> Void) throws {
         tab("Aufgaben")
@@ -212,6 +236,7 @@ extension UITestCase {
         // The time section lies below the chart: scroll to it and audit that part of the page as well.
         let planned = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow("planned")].firstMatch
         dragUntilExistsAndHittable(planned, what: "The time section of the project page")
+        scrollPageClearOfTabBar()
         waitUntilScreenIsStable()
         try audit("Projektseite Zeit")
         // The status history follows the time section: the third part of the page the audits cover.
