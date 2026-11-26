@@ -7,6 +7,9 @@ import TagwerkCore
 @MainActor
 final class PlanStore {
     private let context: ModelContext
+    /// Called after a task's planned day moved from one day to another, with the day before and the day after. First planning, removal
+    /// from the plan and assigning the same day again do not call it. The activity log of the project progress listens (#332).
+    var onDayMoved: ((TaskID, PlanDay, PlanDay) -> Void)?
 
     init(context: ModelContext) {
         self.context = context
@@ -15,12 +18,15 @@ final class PlanStore {
     // MARK: Day assignments
 
     func assign(_ id: TaskID, to day: PlanDay) {
+        var previous: PlanDay?
         if let existing = record(for: id) {
+            previous = existing.planDay
             existing.planDay = day
         } else {
             context.insert(DayAssignment(taskKey: id.key, day: day))
         }
         save()
+        if let previous, previous != day { onDayMoved?(id, previous, day) }
     }
 
     func unassign(_ id: TaskID) {

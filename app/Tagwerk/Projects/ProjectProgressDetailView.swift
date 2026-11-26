@@ -98,6 +98,7 @@ struct ProjectProgressDetailView: View {
         } else {
             chartSection(summary, range: range)
             timeSection(load.facts)
+            statusHistorySections(load.facts, range: range)
             openItemsSections(load.facts)
             historySection(load.facts, range: range)
         }
@@ -201,11 +202,52 @@ struct ProjectProgressDetailView: View {
 
     /// One line of the time section; a single element, title as label and the time as value.
     private func timeRow(_ name: String, _ title: LocalizedStringKey, _ value: String) -> some View {
-        LabeledContent(title, value: value)
+        valueRow(id: AccessibilityID.ProjectProgress.timeRow(name), Text(title), value)
+    }
+
+    /// A line with a title and a value, one element for VoiceOver.
+    private func valueRow(id: String, _ title: Text, _ value: String) -> some View {
+        LabeledContent { Text(value) } label: { title }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
             .accessibilityValue(value)
-            .accessibilityIdentifier(AccessibilityID.ProjectProgress.timeRow(name))
+            .accessibilityIdentifier(id)
+    }
+
+    // MARK: Status history
+
+    /// What the user changed through Tagwerk in the period: moves between Status values and the time spent in them (GitHub Projects),
+    /// reopenings and reschedules. The log is local and young, so the note under it says what it covers.
+    @ViewBuilder
+    private func statusHistorySections(_ facts: [ProjectItemFact], range: ProjectRange) -> some View {
+        let history = store.statusHistory(of: reference, facts: facts, range: range)
+        Section {
+            if history.isEmpty {
+                Text("Im Zeitraum wurde keine Änderung aus Tagwerk protokolliert.").foregroundStyle(.secondaryText)
+                    .accessibilityIdentifier(AccessibilityID.ProjectProgress.statusEmpty)
+            } else {
+                if history.statusChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("changes"), Text("Statuswechsel"), "\(history.statusChanges)") }
+                ForEach(history.transitions.prefix(Self.groupLimit)) { transition in
+                    valueRow(id: AccessibilityID.ProjectProgress.statusRow("transition.\(transition.from)>\(transition.to)"),
+                             Text(verbatim: ProjectProgressTexts.transitionText(transition)), "\(transition.count)×")
+                }
+                ForEach(history.durations.prefix(Self.groupLimit)) { duration in
+                    valueRow(id: AccessibilityID.ProjectProgress.statusRow("duration.\(duration.status)"), Text(verbatim: duration.status),
+                             ProjectProgressTexts.statusDurationText(duration.seconds))
+                }
+                if history.reopenCount > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("reopened"), Text("Wieder geöffnet"), "\(history.reopenCount)") }
+                if history.dueDateChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("dueDates"), Text("Frist verschoben"), "\(history.dueDateChanges)") }
+                if history.planDayChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("planDays"), Text("Arbeitstag verschoben"), "\(history.planDayChanges)") }
+            }
+        } header: {
+            ProgressSectionHeader(title: "Änderungen in Tagwerk")
+        }
+        Section {
+            Text(ProjectProgressTexts.statusHistoryNote(since: history.loggedSince))
+                .accessibilityIdentifier(AccessibilityID.ProjectProgress.statusNote)
+        }
+        .font(.footnote).foregroundStyle(.secondaryText)
+        .listRowBackground(Color.clear)
     }
 
     // MARK: Open items

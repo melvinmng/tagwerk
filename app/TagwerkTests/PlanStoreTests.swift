@@ -24,6 +24,28 @@ struct PlanStoreTests {
         #expect(store.assignments(in: today...PlanDay(year: 2026, month: 11, day: 30)).count == 1)
     }
 
+    // MARK: Moves of the planned day (the activity log of #332)
+
+    @Test func onDayMoved_reportsAMoveFromOneDayToAnother() {
+        var moves: [(TaskID, PlanDay, PlanDay)] = []
+        store.onDayMoved = { moves.append(($0, $1, $2)) }
+        let later = PlanDay(year: 2026, month: 11, day: 20)
+        store.assign(a, to: today)
+        store.assign(a, to: later)
+        #expect(moves.count == 1)
+        #expect(moves.first?.0 == a && moves.first?.1 == today && moves.first?.2 == later)
+    }
+
+    @Test func onDayMoved_isSilentForFirstPlanningRemovalAndTheSameDay() {
+        var moves = 0
+        store.onDayMoved = { _, _, _ in moves += 1 }
+        store.assign(a, to: today)
+        store.assign(a, to: today)
+        store.unassign(a)
+        store.assign(a, to: today)
+        #expect(moves == 0)
+    }
+
     @Test func unassign_removes() {
         store.assign(a, to: today)
         store.unassign(a)

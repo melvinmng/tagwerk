@@ -173,6 +173,26 @@ enum ProjectProgressTexts {
         }.joined(separator: ". ") + "."
     }
 
+    // MARK: Status history
+
+    /// The time an item spent in a Status: "5 Tage" from two days on, otherwise hours and minutes.
+    static func statusDurationText(_ seconds: TimeInterval) -> String {
+        let days = Int((seconds / 86_400).rounded())
+        return seconds >= 2 * 86_400 ? String(localized: "\(days) Tage") : durationText(seconds)
+    }
+
+    /// "Ready → In progress".
+    static func transitionText(_ transition: ProjectStatusTransition) -> String { "\(transition.from) → \(transition.to)" }
+
+    /// The note under the status history: it only covers what the user changed through Tagwerk on this device since the log began.
+    static func statusHistoryNote(since: Date?) -> String {
+        guard let since else {
+            return String(localized: "Das Protokoll hat noch keine Einträge. Es hält nur Änderungen fest, die du in Tagwerk auf diesem Gerät machst. GitHub und Erinnerungen speichern keinen Verlauf.")
+        }
+        let date = since.formatted(date: .abbreviated, time: .omitted)
+        return String(localized: "Nur Änderungen, die du in Tagwerk auf diesem Gerät gemacht hast, seit \(date). GitHub und Erinnerungen speichern keinen Verlauf.")
+    }
+
     static func failureText(_ failure: ProjectLoadFailure) -> String {
         switch failure {
         case .notConnected: String(localized: "GitHub ist nicht verbunden.")

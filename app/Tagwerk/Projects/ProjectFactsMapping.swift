@@ -32,14 +32,28 @@ enum ProjectFactsMapping {
                         estimateMinutes: task.estimateMinutes)
     }
 
-    /// The tasks (`TaskID.key`) whose time belongs to the project: every item, open or closed. `taskKey` of a GitHub item is set only
-    /// while Tagwerk has the issue loaded (to open the editor), but the focus time and the blocks of an issue that was completed
-    /// stay in the records, so the key is built from the issue ID, the same ID `GitHubMapping` gives the `TaskID`.
-    static func timeKeys(of kind: ProjectProgressReference.Kind, facts: [ProjectItemFact]) -> Set<String> {
+    /// The task (`TaskID.key`) whose records belong to the item, open or closed. `taskKey` of a GitHub item is set only while Tagwerk has
+    /// the issue loaded (to open the editor), but the focus time, the blocks and the activity log of an issue that was completed stay
+    /// in the records, so the key is built from the issue ID, the same ID `GitHubMapping` gives the `TaskID`.
+    static func recordKey(of kind: ProjectProgressReference.Kind, _ fact: ProjectItemFact) -> String? {
         switch kind {
-        case .gitHubProject, .gitHubRepository: Set(facts.map { TaskID(source: .github, rawValue: $0.id).key })
-        case .remindersList, .local: Set(facts.compactMap(\.taskKey))
+        case .gitHubProject, .gitHubRepository: TaskID(source: .github, rawValue: fact.id).key
+        case .remindersList, .local: fact.taskKey
         }
+    }
+
+    /// The tasks whose time belongs to the project: every item, open or closed.
+    static func timeKeys(of kind: ProjectProgressReference.Kind, facts: [ProjectItemFact]) -> Set<String> {
+        Set(facts.compactMap { recordKey(of: kind, $0) })
+    }
+
+    /// When each closed item of the project was completed or closed, by task key.
+    static func closedDates(of kind: ProjectProgressReference.Kind, facts: [ProjectItemFact]) -> [String: Date] {
+        var dates: [String: Date] = [:]
+        for fact in facts {
+            if let key = recordKey(of: kind, fact), let closedAt = fact.closedAt { dates[key] = closedAt }
+        }
+        return dates
     }
 
     /// The reason a failed GitHub request is shown with.

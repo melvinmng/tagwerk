@@ -61,6 +61,11 @@ enum AccessibilityID {
         static func timeRow(_ name: String) -> String { "projectProgress.timeRow.\(name)" }
         /// The sentence that says nothing was recorded in the period.
         static let timeEmpty = "projectProgress.timeEmpty"
+        /// A line of the status history ("changes", "reopened", "dueDates", "planDays", "duration.<status>", "transition.<text>").
+        static func statusRow(_ name: String) -> String { "projectProgress.statusRow.\(name)" }
+        /// The sentence that says nothing was logged in the period, and the note about what the log covers.
+        static let statusEmpty = "projectProgress.statusEmpty"
+        static let statusNote = "projectProgress.statusNote"
         /// The note "Erneut laden" after a failed load.
         static let retry = "projectProgress.retry"
     }
