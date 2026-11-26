@@ -186,7 +186,7 @@ extension GitHubAPI {
         for page in 0..<max(maxPages, 1) {
             let data: ProjectsQuery.ProjectItemsData = try await query(
                 ProjectsQuery.projectItems, variables: ProjectItemsVariables(id: projectID, cursor: cursor), allowPartial: true)
-            guard let items = data.node?.items else { throw GitHubAPIError.graphQL("Project not found") }
+            guard let items = data.node?.items else { throw GitHubAPIError.decoding("missing node") }
             for item in items.nodes.compactMap({ $0 }) {
                 if let record = item.content?.record(item: item) { records.append(record) }
             }
@@ -207,7 +207,7 @@ extension GitHubAPI {
             let data: ProjectsQuery.RepositoryIssuesData = try await query(
                 ProjectsQuery.repositoryIssues,
                 variables: RepositoryIssuesVariables(owner: parts[0], name: parts[1], cursor: cursor), allowPartial: true)
-            guard let issues = data.repository?.issues else { throw GitHubAPIError.graphQL("Repository not found") }
+            guard let issues = data.repository?.issues else { throw GitHubAPIError.decoding("missing repository node") }
             records += issues.nodes.compactMap { $0?.record(item: nil) }
             guard issues.pageInfo.hasNextPage, let next = issues.pageInfo.endCursor, next != cursor else { break }
             cursor = next

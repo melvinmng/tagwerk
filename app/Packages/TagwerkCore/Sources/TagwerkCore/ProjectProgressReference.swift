@@ -36,3 +36,17 @@ public struct ProjectProgressReference: Hashable, Codable, Sendable, Identifiabl
     /// Identity of a project across sources; two references with the same kind and ID are the same project, whatever the title.
     public var key: String { "\(kind.rawValue):\(id)" }
 }
+
+extension ProjectProgressReference {
+    /// The `key` of every project a task belongs to: its repository, reminder list or "Lokal", plus each GitHub Project it sits in.
+    public static func keys(of item: TaskItem) -> [String] {
+        var keys: [String] = []
+        switch item.id.source {
+        case .github: keys.append("\(Kind.gitHubRepository.rawValue):\(item.container.id)")
+        case .reminders: keys.append("\(Kind.remindersList.rawValue):\(item.container.id)")
+        case .local: keys.append("\(Kind.local.rawValue):\(localID)")
+        }
+        keys += item.subContainers.map { "\(Kind.gitHubProject.rawValue):\($0.id)" }
+        return keys
+    }
+}

@@ -85,6 +85,11 @@ public struct ProjectRange: Sendable, Hashable {
     public var start: Date
     public var end: Date
 
+    public init(start: Date, end: Date) {
+        self.start = start
+        self.end = end
+    }
+
     public func contains(_ date: Date) -> Bool { date >= start && date < end }
 }
 
@@ -98,6 +103,14 @@ public struct ProjectWeekBucket: Sendable, Hashable, Identifiable {
     /// Items that existed and were still open at the end of the week (at the end of the period for the last one).
     public var openAtEnd: Int
     public var id: Date { start }
+
+    public init(start: Date, created: Int, completed: Int, closedNotPlanned: Int, openAtEnd: Int) {
+        self.start = start
+        self.created = created
+        self.completed = completed
+        self.closedNotPlanned = closedNotPlanned
+        self.openAtEnd = openAtEnd
+    }
 }
 
 /// What the project page and a row of the overview say about one project.
@@ -147,6 +160,12 @@ public struct ProjectEvent: Sendable, Hashable, Identifiable {
     public var date: Date
     public var item: ProjectItemFact
     public var id: String { "\(item.id)#\(kind.rawValue)" }
+
+    public init(kind: Kind, date: Date, item: ProjectItemFact) {
+        self.kind = kind
+        self.date = date
+        self.item = item
+    }
 }
 
 /// The open items of a project in the order the page shows them; an item sits in the first group that fits.
