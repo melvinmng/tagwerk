@@ -156,22 +156,28 @@ enum AuditAllowlist {
         Entry(auditType: .contrast, labels: [
             "Zuletzt bewegt", "Länger nicht bewegt", "Noch nicht geladen", "Zuletzt bewegt: (heute|gestern|vor \\d+ Tagen)",
             "Keine Bewegung bekannt", "Verlauf je Woche", "Verlauf", "Blockiert", "Blockiert andere", "Überfällig",
-            "Frist in den nächsten \\d+ Tagen", "Weitere offene Punkte", "erledigt", "neu", "offen am Ende der Woche",
-        ], screens: ["Projektfortschritt", "Projektseite"], reason:
+            "Frist in den nächsten \\d+ Tagen", "Weitere offene Punkte", "erledigt", "neu", "offen am Ende der Woche", "Zeit",
+            "eingeplant", "investiert",
+        ], screens: ["Projektfortschritt", "Projektseite", "Projektseite Zeit"], reason:
             "Section titles (primary text colour, `ProgressSectionHeader`), the line \"Zuletzt bewegt: …\" of a project row in `secondaryText` "
             + "and the legend of the weekly chart on the grouped background (collect runs of 2026-11-26, one default-size run: the titles "
             + "\"Zuletzt bewegt\" and \"Verlauf je Woche\" and the legend entries \"nearly passed\", the line of the row \"failed\"). The grey of the "
             + "title was changed to the primary colour and is still reported, as the audit reports primary text on other grouped screens "
             + "(entries above and below); the legend is drawn by Swift Charts and takes its colours from the chart scale. Contrast on "
             + "the grouped background is a design question (#188). The patterns of the titles that did not show in the run (they lie "
-            + "below the fold) stay for the same reason."),
+            + "below the fold) stay for the same reason. The title \"Zeit\" of the time section (stage 2, audit part \"Projektseite Zeit\") "
+            + "is the same `ProgressSectionHeader` and was reported \"nearly passed\" in the first run with that part, and so was the legend entry "
+            + "\"eingeplant\" of the time chart (the same Swift Charts legend as above; \"investiert\" is the second entry of it)."),
         Entry(auditType: .dynamicType, labels: [
             "erledigt", "neu", "offen am Ende der Woche", "Der offene Bestand ist aus den Anlage- und Schlussdaten zurückgerechnet\\.",
-        ], screens: ["Projektseite"], reason:
+            "eingeplant", "investiert", "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat\\.",
+            "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk\\.", "Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit\\.",
+        ], screens: ["Projektseite", "Projektseite Zeit"], reason:
             "The legend of the weekly chart (drawn by Swift Charts, it grows with the text size) and the note under the chart in `.footnote`: the "
             + "audit reports a partial lack of Dynamic Type support, as for single-line `.subheadline` texts on other screens (entries above). "
             + "No clipping in the large text run (the audit of the AX5 run checks the clipping and reports nothing for these texts). Stays on "
-            + "the device test list (large text)."),
+            + "the device test list (large text). The legend of the time chart (\"eingeplant\", \"investiert\") is the same mechanism, and the three explanation lines under the time section in `.footnote` were reported "
+            + "(first run with that part, default size) like the note under the weekly chart."),
         Entry(auditType: .contrast, labels: [
             "Mit ChatGPT besprechen", "Britisches Englisch", "Markennamen lassen",
             "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",

@@ -183,14 +183,20 @@ struct ProjectProgressDetailView: View {
                 timeRow("planned", "Eingeplant", ProjectProgressTexts.plannedText(summary))
                 timeRow("invested", "Investiert", ProjectProgressTexts.investedText(summary))
                 timeRow("estimate", "Offene Schätzungen", ProjectProgressTexts.estimateText(estimate))
-                Text("Eingeplant sind die Zeitblöcke, die Tagwerk im Plan für diese Aufgaben angelegt hat. Investiert sind der Fokus-Timer und die Blöcke bis zum Erledigen in Tagwerk. Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.")
-                    .font(.footnote).foregroundStyle(.secondaryText)
             } else {
                 ProgressView()
             }
         } header: {
             ProgressSectionHeader(title: "Zeit")
         }
+        // The explanation in a section of its own like the footer of the page, which the audits pass.
+        Section {
+            Text("Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat.")
+            Text("Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk.")
+            Text("Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.")
+        }
+        .font(.footnote).foregroundStyle(.secondaryText)
+        .listRowBackground(Color.clear)
     }
 
     /// One line of the time section; a single element, title as label and the time as value.

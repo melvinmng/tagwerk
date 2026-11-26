@@ -6499,6 +6499,16 @@
         }
       }
     },
+    "Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks that were not worked on in Tagwerk have no time."
+          }
+        }
+      }
+    },
     "Aufgaben, die vor der Wochenauswertung erledigt wurden, haben kein Datum und fehlen in den Wochen.": {
       "localizations": {
         "en": {
@@ -11379,11 +11389,22 @@
       }
     },
     "Eingeplant sind die Zeitblöcke, die Tagwerk im Plan für diese Aufgaben angelegt hat. Investiert sind der Fokus-Timer und die Blöcke bis zum Erledigen in Tagwerk. Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Planned is the time blocks Tagwerk created in the plan for these tasks. Invested is the focus timer and the blocks up to completion in Tagwerk. Tasks that were not worked on in Tagwerk have no time."
+          }
+        }
+      }
+    },
+    "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned: time blocks Tagwerk created for these tasks."
           }
         }
       }
@@ -16546,6 +16567,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invested"
+          }
+        }
+      }
+    },
+    "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invested: focus timer and blocks up to completion in Tagwerk."
           }
         }
       }

@@ -27,14 +27,7 @@ struct ProjectTimeChart: View {
                 AxisValueLabel(format: .dateTime.day().month(.defaultDigits))
             }
         }
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let hours = value.as(Double.self) { Text(String(localized: "\(Int(hours)) h")) }
-                }
-            }
-        }
+        .chartYAxisLabel("Stunden")
         .environment(\.calendar, calendar)
         .frame(height: 200)
         .accessibilityElement(children: .ignore)
