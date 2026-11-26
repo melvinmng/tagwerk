@@ -32,6 +32,9 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     private var _groupRequests: [HealthAccessGroup: Int] = [:]
     private var _authorizationRequests = 0
     private var _stepsAuthorizationRequests = 0
+    private var _sheetsOpened = 0
+    private var _holdsSheets = false
+    private var _heldSheets: [CheckedContinuation<Void, Never>] = []
     private var _foreignReads: [DateInterval] = []
     private var _stepsReads: [DateInterval] = []
     private var _nutritionReads: [DateInterval] = []
@@ -77,6 +80,8 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
         set { lock.withLock { _foreignWeights = newValue } }
     }
     var authorizationRequests: Int { lock.withLock { _authorizationRequests } }
+    /// How many Health sheets were opened in total (consent, group and steps requests), counted when the sheet opens.
+    var sheetsOpened: Int { lock.withLock { _sheetsOpened } }
     var stepsAuthorizationRequests: Int { lock.withLock { _stepsAuthorizationRequests } }
     var foreignReads: [DateInterval] { lock.withLock { _foreignReads } }
     var stepsReads: [DateInterval] { lock.withLock { _stepsReads } }
@@ -92,11 +97,45 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
 
     func access() async -> HealthAccess { currentAccess }
 
+    /// While set, an opened sheet stays open until `releaseHeldSheets()`, so a test decides when the first request ends instead of
+    /// relying on the scheduler (a single `Task.yield()` is not a guarantee that concurrent callers have started).
+    var holdsSheets: Bool {
+        get { lock.withLock { _holdsSheets } }
+        set { lock.withLock { _holdsSheets = newValue } }
+    }
+
+    /// Closes every held sheet and stops holding new ones.
+    func releaseHeldSheets() {
+        let held = lock.withLock {
+            _holdsSheets = false
+            defer { _heldSheets = [] }
+            return _heldSheets
+        }
+        for continuation in held { continuation.resume() }
+    }
+
+    /// The suspension of an open sheet: held until released, otherwise one yield so concurrent callers can interleave.
+    private func suspendWhileSheetIsOpen() async {
+        lock.withLock { _sheetsOpened += 1 }
+        guard lock.withLock({ _holdsSheets }) else {
+            await Task.yield()
+            return
+        }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let resumeNow = lock.withLock { () -> Bool in
+                guard _holdsSheets else { return true }
+                _heldSheets.append(continuation)
+                return false
+            }
+            if resumeNow { continuation.resume() }
+        }
+    }
+
     /// Like the real store, the one consent sheet covers the core group, steps, the active energy, the weight and the height.
     /// It suspends once, so concurrent callers can interleave in tests.
     func requestAuthorization() async throws {
         lock.withLock { _authorizationRequests += 1 }
-        await Task.yield()
+        await suspendWhileSheetIsOpen()
         if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
             if _access == .notDetermined { _access = .authorized }
@@ -218,7 +257,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     func groupRequests(_ group: HealthAccessGroup) -> Int { lock.withLock { _groupRequests[group] ?? 0 } }
 
     func requestAuthorization(for group: HealthAccessGroup) async throws {
-        await Task.yield()
+        await suspendWhileSheetIsOpen()
         if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
             _groupRequests[group, default: 0] += 1
@@ -232,7 +271,7 @@ final class FakeHealthStore: HealthStoring, @unchecked Sendable {
     }
 
     func requestStepsAuthorization() async throws {
-        await Task.yield()
+        await suspendWhileSheetIsOpen()
         if failRequests { throw NSError(domain: "FakeHealth", code: 5) }
         lock.withLock {
             _stepsAuthorizationRequests += 1
