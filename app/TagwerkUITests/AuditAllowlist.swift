@@ -120,8 +120,8 @@ enum AuditAllowlist {
             + "(`AccentColor`, #005FCC) is not the cause any more: \"Alle\" and the accent texts of the recipe screens pass since strand K. What "
             + "remains is text whose background the system draws and lets the list scroll behind; no own colour to change without replacing the "
             + "system style (#188, \"Schrift auf Liquid Glass\")."
-            + " The all-day pill \"Projektwoche\" has a solid fill since D4 (2026-11-25); it was reported once on the code before and in none of "
-            + "two runs after the change, so its pattern is struck."
+            + " The all-day pill \"Projektwoche\" has a solid fill since D4 (2026-11-25) and was struck after two collect runs that did not report "
+            + "it; CI reported it again (see the entry for the translucent bars of \"AX5/dark Planen\" below), so it is not accepted here."
             + " Patterns that no finding matched in either measurement stay: the evening runs of the measurement are incomplete (one of three failed "
             + "each time) and earlier runs reported them; only patterns that were reported in every repetition before and in none after were struck."),
 
@@ -174,6 +174,21 @@ enum AuditAllowlist {
             + "24 % (grey). The time line (`gridTimeText`, 85 %, KO3a) and the titles on blue, green and red pass since strand K; the grey "
             + "tint is the colour code of the grid (break, appointment without calendar colour), and the audit still reports its title in "
             + "default size (6 findings before, 4 after, three repetitions each). Contrast on tint is a design question (#188)."),
+
+        Entry(auditType: .contrast, labels: ["Projektwoche", "\\d+ Termine · \\d\\d:\\d\\d–\\d\\d:\\d\\d"], screens: ["AX5/dark Planen"], reason:
+            "Elements of \"Planen\" in the AX5 run that the page scrolls under a system bar: the all-day pill \"Projektwoche\" (frame y 32 to "
+            + "101 pt, behind the navigation bar) and the headline of the block that collapses the overlapping entries of the hour grid "
+            + "(BF1c, `CollapsedGroupBlock`; frame y 811 to 913 pt on a 874 pt screen, behind and below the tab bar). Both have a solid fill "
+            + "(D4) or a grey tint (the rendered image of the headline block measures 16.5:1 in light and 15.9:1 in dark mode, "
+            + "`MarkerRenderContrastTests.collapsedBlock_renderedContrast`), so the audit most likely measures them against the Liquid Glass of the "
+            + "bar and not against their own background. Which element lies under a bar depends on the final scroll offset of the page. "
+            + "Probable cause, not measured: the hour grid aligns to \"now\" within a window of three seconds (`DayGridScreen.scrollToNowOnOpening`), "
+            + "and the content above it may finish loading later on a slower runner. Measured in CI after the allowlist was pruned (commit 8dccdf68; "
+            + "no app code changed since): the test passed in 3 of 6 executions (three runs) and failed in 3 (one run with \"Projektwoche\", one run with "
+            + "the headline and its retry on the same runner). A finding is confirmed within a run (`AuditConfirmation`) but differs between runs. "
+            + "Both patterns were removed on 2026-11-25 after collect runs of three repetitions that did not report them, which was too few to rule "
+            + "out an intermittent finding. A run of the test on a loaded local machine did not reproduce either finding. Making the alignment "
+            + "independent of the speed of the machine changes the behaviour of the product and is left to #188."),
 
         // MARK: Dynamic Type
         Entry(auditType: .dynamicType, labels: ["\\d\\d:\\d\\d"] + gridCellLabels, screens: ["Planen (Tag)", "Planen (Abend)"], reason:
