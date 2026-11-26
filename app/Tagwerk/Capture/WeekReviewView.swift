@@ -65,7 +65,7 @@ struct WeekReviewView: View {
                 Section {
                     Text("\(review.completedTasks) Aufgaben")
                 } header: { header("Erledigt", review) } footer: {
-                    Text(WeekReviewModel.completedFooter(model.gitHub))
+                    Text(WeekReviewModel.completedFooter(model.gitHub)).foregroundStyle(.secondaryText)
                 }
             }
             GoalPlanningEntries(offer: .reviewOnly,
@@ -116,6 +116,8 @@ struct WeekReviewView: View {
             Spacer()
             if review.isCurrentWeek { Text("bisher") }
         }
+        // The tone of the other section headers, so the contrast audit has nothing to report.
+        .foregroundStyle(.secondaryText)
     }
 
     private func dayCount(_ count: Int) -> String { String(localized: "\(count) Tagen") }
@@ -147,7 +149,7 @@ struct WeekReviewView: View {
                 .frame(height: 140)
                 .padding(.vertical, 4)
         } header: { header("Kalorien", review) } footer: {
-            Text("Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.")
+            Text("Das Ziel jedes Tages ist sein Grundziel plus die angerechnete Aktivität; die Striche zeigen es je Tag.").foregroundStyle(.secondaryText)
         }
     }
 
@@ -169,7 +171,7 @@ struct WeekReviewView: View {
                     }
                 }
             } header: { header("Nährwerte", review) } footer: {
-                Text("Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.")
+                Text("Tagesmittel aus den Tagen, an denen der Wert bekannt ist. Mahlzeiten ohne Angabe fehlen in der Summe, das Mittel liegt dann eher zu niedrig.").foregroundStyle(.secondaryText)
             }
         }
     }
@@ -236,7 +238,7 @@ struct WeekReviewView: View {
                 }
                 .accessibilityIdentifier(AccessibilityID.WeekReview.trendLink)
             } header: { header("Gewicht", review) } footer: {
-                Text("7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.")
+                Text("7-Tage-Mittel am Ende der Woche; der Trend vergleicht mit dem Stand vier Wochen davor. Eigene Einträge und, wenn erlaubt, Messungen aus Health.").foregroundStyle(.secondaryText)
             }
         }
     }
@@ -258,7 +260,7 @@ struct WeekReviewView: View {
                 .frame(height: 100)
                 .padding(.vertical, 4)
         } header: { header("Schritte", review) } footer: {
-            Text("Schritte kommen aus Health (iPhone und Apple Watch, von Health zusammengeführt).")
+            Text("Schritte kommen aus Health (iPhone und Apple Watch, von Health zusammengeführt).").foregroundStyle(.secondaryText)
         }
     }
 
