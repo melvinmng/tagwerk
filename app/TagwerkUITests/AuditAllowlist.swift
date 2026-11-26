@@ -178,6 +178,15 @@ enum AuditAllowlist {
             + "No clipping in the large text run (the audit of the AX5 run checks the clipping and reports nothing for these texts). Stays on "
             + "the device test list (large text). The legend of the time chart (\"eingeplant\", \"investiert\") is the same mechanism, and the three explanation lines under the time section in `.footnote` were reported "
             + "(first run with that part, default size) like the note under the weekly chart."),
+        Entry(auditType: .textClipped, labels: [
+            "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat\\.",
+            "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk\\.",
+            "Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit\\.",
+        ], screens: ["Projektseite", "Projektseite Zeit"], reason:
+            "The three explanation lines under the time section (stage 2, `.footnote` in a section of their own like the footer of the page). "
+            + "The first line was reported \"may be clipped at larger Dynamic Type sizes\" in one full run under load (2026-11-26, frame 370 x 64 pt "
+            + "for three lines) and not in four single runs of the audit class; the page is a list that grows with the text size, and the "
+            + "large text run (AX5) checks the clipping and reports nothing for these lines. Stays on the device test list (large text)."),
         Entry(auditType: .contrast, labels: [
             "Mit ChatGPT besprechen", "Britisches Englisch", "Markennamen lassen",
             "Senden gibt die Namen deiner offenen Artikel, die Übersetzung mit deinen Änderungen und deine Nachricht an ChatGPT\\. Mengen gehen nicht mit\\.",
