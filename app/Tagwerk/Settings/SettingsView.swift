@@ -18,6 +18,14 @@ struct SettingsView: View {
         @Bindable var settings = environment.settings
         NavigationStack(path: Bindable(environment).settingsPath) {
             ScrollViewReader { proxy in
+            Group {
+            if isShowingSearchResults {
+                // The list is not part of the screen while hits are shown: only the hits are read, audited and focused.
+                SettingsSearchResults(query: searchText) { hit in
+                    searchText = ""
+                    environment.openSettings(hit.target)
+                }
+            } else {
             Form {
                 PlanningSettingsSection()
                     .id(SettingsAnchor.planning)
@@ -147,16 +155,9 @@ struct SettingsView: View {
                         .id(SettingsAnchor.setup)
                 }
             }
-            .accessibilityHidden(isShowingSearchResults)
-            .overlay {
-                if isShowingSearchResults {
-                    SettingsSearchResults(query: searchText) { hit in
-                        searchText = ""
-                        environment.openSettings(hit.target)
-                    }
-                }
             }
-            .searchable(text: $searchText, prompt: "Einstellungen durchsuchen")
+            }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Einstellungen durchsuchen")
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .onChange(of: environment.settingsScrollTarget, initial: true) { _, anchor in

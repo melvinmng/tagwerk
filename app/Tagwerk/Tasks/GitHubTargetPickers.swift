@@ -102,13 +102,18 @@ struct RepositoryPickerSheet: View {
         NavigationStack {
             List {
                 if !sections.recent.isEmpty {
-                    Section("Zuletzt verwendet") {
+                    Section {
                         ForEach(sections.recent, id: \.self) { row($0) }
+                    } header: {
+                        Text("Zuletzt verwendet").foregroundStyle(.secondaryText)
                     }
                 }
                 if !sections.all.isEmpty {
-                    Section("Alle Repositories (\(RepositoryChoice.countText(shown: sections.all.count, total: sections.total)))") {
+                    Section {
                         ForEach(sections.all, id: \.self) { row($0) }
+                    } header: {
+                        Text("Alle Repositories (\(RepositoryChoice.countText(shown: sections.all.count, total: sections.total)))")
+                            .foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -251,15 +256,21 @@ struct ProjectPickerSheet: View {
                     }
                 }
                 if !sections.linked.isEmpty {
-                    Section(linkedRepository.map { String(localized: "Verknüpft mit \($0)") } ?? String(localized: "Mit dem Repository verknüpft")) {
+                    Section {
                         ForEach(sections.linked) { row($0) }
+                    } header: {
+                        Text(linkedRepository.map { String(localized: "Verknüpft mit \($0)") } ?? String(localized: "Mit dem Repository verknüpft"))
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 if !sections.others.isEmpty {
                     let count = RepositoryChoice.countText(shown: sections.others.count, total: sections.othersTotal)
-                    Section(sections.linked.isEmpty && sections.othersTotal == sections.total
-                            ? String(localized: "Alle Projekte (\(count))") : String(localized: "Weitere Projekte (\(count))")) {
+                    Section {
                         ForEach(sections.others) { row($0) }
+                    } header: {
+                        Text(sections.linked.isEmpty && sections.othersTotal == sections.total
+                             ? String(localized: "Alle Projekte (\(count))") : String(localized: "Weitere Projekte (\(count))"))
+                            .foregroundStyle(.secondaryText)
                     }
                 }
             }
