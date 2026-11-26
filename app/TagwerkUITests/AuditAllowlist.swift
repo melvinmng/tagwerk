@@ -207,6 +207,11 @@ enum AuditAllowlist {
             "Title and second line of the row \"Bible Study\" in \"Aufgaben\" (where the last session ended): `.subheadline` in the same entry label as the "
             + "row of the notes, so it grows with the text size and is not clipped in the large text run; the audit reports a partial lack of "
             + "support for single-line `.subheadline` texts from run to run, as for the evening sheet above. Stays on the device test list (large text)."),
+        Entry(auditType: .dynamicType, labels: ["Projektfortschritt", "\\d+ Projekte( · ruhend: \\d+)?"], screens: ["Aufgaben"], reason:
+            "Title and second line of the row \"Projektfortschritt\" in \"Aufgaben\": the same `entryLabel` as the rows of the shopping list, the notes and "
+            + "\"Bible Study\" (title in `.body`, second line in `.subheadline`, both text styles that grow with the text size and are not clipped in the "
+            + "large text run); the audit reports a partial lack of support for the row from run to run, as for the \"Bible Study\" row above. "
+            + "Stays on the device test list (large text)."),
         Entry(auditType: .dynamicType, labels: [
             "P1", "Ältere Termine durchsuchen · vor .*", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
         ], screens: ["Suche", "Aufgaben"], reason: "Priority capsule and the hint rows of the search sheet use text styles; the audit still reports a partial lack of "

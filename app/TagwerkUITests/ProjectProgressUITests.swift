@@ -120,6 +120,12 @@ extension UITestCase {
     /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
     func auditProjectProgress(_ audit: (String) throws -> Void) throws {
         tab("Aufgaben")
+        // An earlier part of the audit left a page open in this tab (the list of the notes): back to the list of the tasks.
+        var pops = 0
+        while !app.navigationBars["Aufgaben"].exists, pops < 4 {
+            app.navigationBars.buttons.firstMatch.tap()
+            pops += 1
+        }
         let entry = app.buttons[AccessibilityID.ProjectProgress.entryRow].firstMatch
         dragUntilExistsAndHittable(entry, what: "The row Projektfortschritt")
         entry.tap()
