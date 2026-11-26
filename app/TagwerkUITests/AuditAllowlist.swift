@@ -661,6 +661,12 @@ enum AuditAllowlist {
         if issue.auditType == .sufficientElementDescription {
             return ["Rezept-Notiz", "AX5/dark Rezept-Notiz"].contains(currentScreen)
         }
+        // The parts of the project page below the weekly chart ("Projektseite Zeit", and later "Projektseite Änderungen") can report one
+        // "Dynamic Type font sizes are unsupported" without an element (no label, no identifier, frame 0×0) in the full run: collect run
+        // of 2026-11-26 (full local run, both default-size and part "Projektseite Zeit"); the single run of the audit class reported the
+        // legend entries of the time chart with their elements, and the entries for them (see the Dynamic Type entry of the project
+        // page) match there. The finding has no element and no frame, so only these screens accept it, for this audit type only.
+        if issue.auditType == .dynamicType { return ["Projektseite Zeit", "Projektseite Änderungen"].contains(currentScreen) }
         // The card of "Artikel übersetzen" also reports one "nearly passed" contrast finding without an element (the grey second line or the
         // button on the material of the card; the same texts are reported with their frames and covered by the entries below).
         if issue.auditType == .contrast { return currentScreen == "Einkaufsliste › Karte „übersetzen“" }
