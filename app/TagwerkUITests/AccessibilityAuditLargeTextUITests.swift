@@ -47,5 +47,7 @@ final class AccessibilityAuditLargeTextUITests: UITestCase {
         try audit("Einkaufsliste")
 
         try auditBarcodeScan(audit)
+
+        try auditProjectProgress(audit)
     }
 }

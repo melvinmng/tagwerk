@@ -11,4 +11,8 @@ enum TasksDestination: Hashable {
     case note(UUID)
     /// A day of "Tagesstart" that only has gratitude and no note.
     case morningDay(PlanDay)
+    /// The overview of all projects (#332).
+    case projectProgressOverview
+    /// The page of one project (#332); also the target of the project hits of the global search.
+    case projectProgress(ProjectProgressReference)
 }

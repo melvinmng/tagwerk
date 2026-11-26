@@ -34,6 +34,24 @@ enum AccessibilityID {
         static let editorTitle = "tasks.editorTitle"
     }
 
+    enum ProjectProgress {
+        /// The row "Projektfortschritt" at the head of "Aufgaben".
+        static let entryRow = "projectProgress.entryRow"
+        /// The picker of the source filter and of the period.
+        static let sourceFilter = "projectProgress.sourceFilter"
+        static let periodPicker = "projectProgress.periodPicker"
+        /// A project row of the overview; the title makes it unique.
+        static func row(_ title: String) -> String { "projectProgress.row.\(title)" }
+        /// The weekly chart of the project page.
+        static let chart = "projectProgress.chart"
+        /// The sections of the project page.
+        static let figures = "projectProgress.figures"
+        static let openItems = "projectProgress.openItems"
+        static let history = "projectProgress.history"
+        /// The note "Erneut laden" after a failed load.
+        static let retry = "projectProgress.retry"
+    }
+
     enum Travel {
         /// The capsule "10 min zu früh" of a trip that starts before the previous event ends.
         static let warningCapsule = "travel.warningCapsule"
