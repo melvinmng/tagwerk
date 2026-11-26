@@ -920,6 +920,9 @@ final class AppEnvironment {
         let searcher = self.eventSearcher
         let reminders = self.remindersProvider
         let searchOnline = isGitHubActive ? Self.searchOnlineSource(taskList: taskList) : nil
+        var githubTargets = isGitHubActive ? GitHubTargetSearch.source(provider: gitHub) : nil
+        // UI tests have no GitHub account: with `-TagwerkUITestGitHubCatalog` the search finds invented repositories and projects.
+        if let catalog = UITestMode.githubCatalog { githubTargets = { GitHubTargetSearch.items(from: catalog) } }
         let notes = self.notes
         let noteLock = self.noteLock
         let routines = self.routines
@@ -942,6 +945,7 @@ final class AppEnvironment {
             },
             shopping: Self.searchShoppingSource(shopping: shopping),
             settings: { SettingsSearchIndex.searchItems(for: $0) },
+            githubTargets: githubTargets,
             searchOnline: searchOnline)
         if settings.shoppingListID != nil {
             // A failed write leaves the item on the list; the model reads the rows again either way.

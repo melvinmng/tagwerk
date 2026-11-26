@@ -24,6 +24,8 @@ FoodLookupUITests 79
 # est. new classes (two tests each, repository and project picker sheets)
 GitHubProjectPickerUITests 60
 GitHubRepositoryPickerUITests 60
+# est. new class (three tests, search hits of repositories and projects)
+GitHubSearchUITests 75
 GoalPlanningUITests 83
 HabitUITests 73
 KeyboardDismissalUITests 93

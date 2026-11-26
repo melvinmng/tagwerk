@@ -7,7 +7,7 @@ public enum SearchFilter: Sendable, CaseIterable {
 
 /// Sections of the result list. The declaration order is the display order.
 public enum SearchSectionKind: Sendable, Hashable, CaseIterable {
-    case upcomingEvents, openTasks, completedTasks, online, pastEvents, notes, shopping, settings
+    case upcomingEvents, openTasks, completedTasks, online, pastEvents, notes, shopping, githubTargets, settings
 }
 
 /// State of a GitHub issue found online; the first applicable one is shown.
@@ -95,6 +95,45 @@ public struct SettingsSearchItem: Sendable, Hashable, Identifiable {
     }
 }
 
+/// A GitHub repository or project of the signed-in account as a candidate of the search. The search matches it with the text of the
+/// query (`SearchResults.make`); it never asks GitHub, the candidates come from the catalog that is stored on the device.
+public struct GitHubTargetSearchItem: Sendable, Hashable, Identifiable {
+    public enum Kind: Sendable, Hashable { case repository, project }
+
+    public let kind: Kind
+    /// "owner/name" of a repository, the node ID of a project: stable across renames of the title and what a detail view needs.
+    public let targetID: String
+    /// The name of the repository (without the owner) or the title of the project.
+    public let title: String
+    /// The owner or organisation of a repository, the owners of the repositories linked to a project; empty when unknown.
+    public let ownerText: String
+    /// Number of a project in its owner's list; `nil` for a repository.
+    public let projectNumber: Int?
+
+    public var id: String {
+        switch kind {
+        case .repository: "repository-\(targetID)"
+        case .project: "project-\(targetID)"
+        }
+    }
+
+    public init(kind: Kind, targetID: String, title: String, ownerText: String, projectNumber: Int? = nil) {
+        self.kind = kind
+        self.targetID = targetID
+        self.title = title
+        self.ownerText = ownerText
+        self.projectNumber = projectNumber
+    }
+
+    /// The texts a query has to find: "owner/name" and the name for a repository, the title for a project, the owners for both.
+    var searchTexts: [String] {
+        switch kind {
+        case .repository: [targetID, title, ownerText]
+        case .project: [title, ownerText]
+        }
+    }
+}
+
 /// Everything the search filters. Events are already prepared (time blocks dropped, duplicates merged).
 public struct SearchInput: Sendable {
     /// `nil`: not loaded yet or no calendar access.
@@ -110,10 +149,13 @@ public struct SearchInput: Sendable {
     public var shopping: [ShoppingSearchItem]
     /// Hits in the settings, best first; only the first `SearchResults.settingsLimit` are shown.
     public var settings: [SettingsSearchItem]
+    /// Every repository and project of the signed-in GitHub account (unfiltered, in catalog order); empty while GitHub is not connected.
+    public var githubTargets: [GitHubTargetSearchItem]
 
     public init(events: [CalendarEvent]? = nil, calendarNames: [String: String] = [:], openTasks: [TaskItem] = [],
                 completed: [CompletedTask] = [], online: [OnlineIssue]? = nil, notes: [NoteSearchItem] = [],
-                shopping: [ShoppingSearchItem] = [], settings: [SettingsSearchItem] = []) {
+                shopping: [ShoppingSearchItem] = [], settings: [SettingsSearchItem] = [],
+                githubTargets: [GitHubTargetSearchItem] = []) {
         self.events = events
         self.calendarNames = calendarNames
         self.openTasks = openTasks
@@ -122,6 +164,7 @@ public struct SearchInput: Sendable {
         self.notes = notes
         self.shopping = shopping
         self.settings = settings
+        self.githubTargets = githubTargets
     }
 }
 
@@ -133,6 +176,7 @@ public enum SearchRow: Sendable, Identifiable {
     case note(NoteSearchItem, SearchMatch)
     case shopping(ShoppingSearchItem, SearchMatch)
     case setting(SettingsSearchItem)
+    case githubTarget(GitHubTargetSearchItem)
 
     public var id: String {
         switch self {
@@ -143,6 +187,7 @@ public enum SearchRow: Sendable, Identifiable {
         case .note(let note, _): "note-\(note.id.uuidString)"
         case .shopping(let item, _): "shopping-\(item.id)"
         case .setting(let item): "setting-\(item.id)"
+        case .githubTarget(let item): item.id
         }
     }
 }
@@ -225,6 +270,9 @@ public struct SearchResults: Sendable {
         }
 
         if filter == .all {
+            // Repositories before projects; within both, hits that start every word of the query come first (as in the pickers).
+            let candidates = input.githubTargets.filter { $0.kind == .repository } + input.githubTargets.filter { $0.kind == .project }
+            rowsByKind[.githubTargets] = ChoiceFilter.matching(candidates, query: query.text, text: \.searchTexts).map { .githubTarget($0) }
             rowsByKind[.settings] = input.settings.prefix(settingsLimit).map { .setting($0) }
         }
 

@@ -36,6 +36,20 @@ import Testing
             shopping: [ShoppingSearchItem(id: "s", name: "Statistik-Heft", quantity: nil)])
     }
 
+    private func repository(_ owner: String, _ name: String) -> GitHubTargetSearchItem {
+        GitHubTargetSearchItem(kind: .repository, targetID: "\(owner)/\(name)", title: name, ownerText: owner)
+    }
+
+    private func project(_ id: String, _ title: String, number: Int = 1, owner: String = "octo") -> GitHubTargetSearchItem {
+        GitHubTargetSearchItem(kind: .project, targetID: id, title: title, ownerText: owner, projectNumber: number)
+    }
+
+    private func targetIDs(_ results: SearchResults) -> [String] {
+        results.sections.first { $0.kind == .githubTargets }?.rows.compactMap { row -> String? in
+            if case .githubTarget(let item) = row { item.targetID } else { nil }
+        } ?? []
+    }
+
     private func make(_ input: SearchInput, filter: SearchFilter = .all, includeCompleted: Bool = true,
                       _ text: String = "statistik") -> SearchResults {
         SearchResults.make(query: SearchQuery(text)!, filter: filter, includeCompleted: includeCompleted, input: input,
@@ -45,6 +59,7 @@ import Testing
     @Test func sectionsFollowSpecOrderAndDropEmptyOnes() {
         var input = full()
         input.settings = [SettingsSearchItem(id: "s", title: "Erfassen", pathText: "")]
+        input.githubTargets = [repository("octo", "statistik-app")]
         #expect(make(input).sections.map(\.kind) == SearchSectionKind.allCases)
         input.completed = []
         #expect(!make(input).sections.map(\.kind).contains(.completedTasks))
@@ -103,6 +118,73 @@ import Testing
 
     @Test func noSettingsMeansNoSection() {
         #expect(!make(full()).sections.map(\.kind).contains(.settings))
+    }
+
+    @Test func githubTargetsOnlyUnderAll() {
+        var input = SearchInput()
+        input.githubTargets = [repository("octo", "statistik-app")]
+        #expect(make(input, filter: .all).sections.map(\.kind) == [.githubTargets])
+        for filter in [SearchFilter.events, .tasks] {
+            #expect(make(input, filter: filter).isEmpty)
+        }
+    }
+
+    @Test func githubTargetsComeBeforeTheSettings() {
+        var input = SearchInput()
+        input.githubTargets = [repository("octo", "statistik-app")]
+        input.settings = settings(1)
+        #expect(make(input).sections.map(\.kind) == [.githubTargets, .settings])
+    }
+
+    @Test func githubTargetsAreMatchedByNameOwnerAndTitleIgnoringCaseAndUmlauts() {
+        var input = SearchInput()
+        input.githubTargets = [repository("octo", "Statistik-App"), repository("uni-münchen", "notizen"), project("P1", "Prüfungsplanung"),
+                               project("P2", "Haushalt")]
+        #expect(targetIDs(make(input, "STATISTIK")) == ["octo/Statistik-App"])
+        #expect(targetIDs(make(input, "münchen")) == ["uni-münchen/notizen"])
+        #expect(targetIDs(make(input, "prufungsplanung")) == ["P1"])
+        #expect(targetIDs(make(input, "PRÜFUNG")) == ["P1"])
+        #expect(targetIDs(make(input, "octo/stat")) == ["octo/Statistik-App"])
+    }
+
+    @Test func githubTargetsNeedEveryWordOfTheQuery() {
+        var input = SearchInput()
+        input.githubTargets = [repository("octo", "statistik-app"), repository("octo", "statistik-web"), project("P1", "Statistik")]
+        #expect(targetIDs(make(input, "octo web")) == ["octo/statistik-web"])
+        #expect(targetIDs(make(input, "statistik nirgends")) == [])
+    }
+
+    @Test func githubTargetsListRepositoriesBeforeProjectsAndKeepTheOrderOtherwise() {
+        var input = SearchInput()
+        input.githubTargets = [project("P1", "Statistik"), repository("octo", "statistik-b"), repository("octo", "statistik-a")]
+        #expect(targetIDs(make(input)) == ["octo/statistik-b", "octo/statistik-a", "P1"])
+    }
+
+    @Test func githubTargetsThatStartAWordComeBeforeThoseThatContainTheText() {
+        var input = SearchInput()
+        input.githubTargets = [repository("octo", "xstatistik"), repository("octo", "statistik")]
+        #expect(targetIDs(make(input)) == ["octo/statistik", "octo/xstatistik"])
+    }
+
+    @Test func githubTargetsAreNotCappedBecausePagingOfTheSheetApplies() {
+        var input = SearchInput()
+        input.githubTargets = (1...40).map { repository("octo", "statistik-\($0)") }
+        #expect(targetIDs(make(input)).count == 40)
+    }
+
+    @Test func githubTargetIdentityDistinguishesKindWithTheSameID() {
+        #expect(repository("a", "b").id != project("a/b", "b").id)
+    }
+
+    @Test func aTapOpensTheProjectProgressOfTheHit() {
+        let repository = repository("octo", "statistik-app").progressReference
+        #expect(repository == ProjectProgressReference(kind: .gitHubRepository, id: "octo/statistik-app", title: "octo/statistik-app"))
+        let project = project("PVT_1", "Prüfungsplanung").progressReference
+        #expect(project == ProjectProgressReference(kind: .gitHubProject, id: "PVT_1", title: "Prüfungsplanung"))
+    }
+
+    @Test func noGithubTargetsMeansNoSection() {
+        #expect(!make(full()).sections.map(\.kind).contains(.githubTargets))
     }
 
     @Test func completedOnlyWithSwitch() {

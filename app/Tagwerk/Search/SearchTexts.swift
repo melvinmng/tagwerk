@@ -17,6 +17,7 @@ enum SearchTexts {
             case .pastEvents: return String(localized: "Vergangene Termine")
             case .notes: return String(localized: "Notizen")
             case .shopping: return String(localized: "Einkaufsliste")
+            case .githubTargets: return String(localized: "Repositories & Projekte")
             case .settings: return String(localized: "Einstellungen")
             }
         }
@@ -28,6 +29,7 @@ enum SearchTexts {
         case .pastEvents: return String(localized: "Vergangene Termine · \(count)")
         case .notes: return String(localized: "Notizen · \(count)")
         case .shopping: return String(localized: "Einkaufsliste · \(count)")
+        case .githubTargets: return String(localized: "Repositories & Projekte · \(count)")
         case .settings: return String(localized: "Einstellungen · \(count)")
         }
     }
@@ -43,7 +45,30 @@ enum SearchTexts {
         case .pastEvents: return String(localized: "Vergangene Termine, \(count)")
         case .notes: return String(localized: "Notizen, \(count)")
         case .shopping: return String(localized: "Einkaufsliste, \(count)")
+        case .githubTargets: return String(localized: "Repositories und Projekte, \(count)")
         case .settings: return String(localized: "Einstellungen, \(count)")
+        }
+    }
+
+    // MARK: GitHub repositories and projects
+
+    /// "Repository · melvinmng", "GitHub-Projekt · acme"; a project without a linked repository has no owner to name and shows its number.
+    static func githubTargetSubtitle(_ item: GitHubTargetSearchItem) -> String {
+        let kind = kindName(item)
+        if !item.ownerText.isEmpty { return "\(kind) · \(item.ownerText)" }
+        if let number = item.projectNumber { return "\(kind) · #\(number)" }
+        return kind
+    }
+
+    /// The spoken label of the row: kind, title, owner.
+    static func githubTargetAccessibility(_ item: GitHubTargetSearchItem) -> String {
+        item.ownerText.isEmpty ? "\(kindName(item)), \(item.title)" : "\(kindName(item)), \(item.title), \(item.ownerText)"
+    }
+
+    private static func kindName(_ item: GitHubTargetSearchItem) -> String {
+        switch item.kind {
+        case .repository: String(localized: "Repository")
+        case .project: String(localized: "GitHub-Projekt")
         }
     }
 

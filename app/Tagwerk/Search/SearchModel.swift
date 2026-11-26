@@ -16,6 +16,9 @@ struct SearchSources {
     var shopping: @MainActor () -> [ShoppingSearchItem] = { [] }
     /// The hits in the settings for a search text, best first (the index of the settings matches titles and keywords).
     var settings: @MainActor (String) -> [SettingsSearchItem] = { _ in [] }
+    /// The repositories and projects of the signed-in GitHub account, read once per search from what is stored on the device (a
+    /// request only when nothing is stored yet); `nil` while GitHub is not connected. The text of a search never leaves the device.
+    var githubTargets: (@MainActor () async -> [GitHubTargetSearchItem])?
     /// Checks a shopping item off; `nil` while no shopping list is set up.
     var checkOffShopping: (@MainActor (String) async -> Void)?
     /// GitHub issue search for one text; `nil` while GitHub is not connected.
@@ -62,6 +65,9 @@ final class SearchModel {
     @ObservationIgnored private var completed: [CompletedTask] = []
     @ObservationIgnored private var completedLoaded = false
     @ObservationIgnored private var online: [OnlineIssue]?
+    /// Candidates for the section "Repositories & Projekte"; empty until `loadGitHubTargets` has read them (and when GitHub is not connected).
+    @ObservationIgnored private var githubTargets: [GitHubTargetSearchItem] = []
+    @ObservationIgnored private var githubTargetsTask: Task<Void, Never>?
     @ObservationIgnored private var visibleCounts: [SearchSectionKind: Int] = [:]
     @ObservationIgnored private var debounceTask: Task<Void, Never>?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
@@ -96,6 +102,7 @@ final class SearchModel {
             return
         }
         if eventState == .idle { scheduleEventLoad() }
+        loadGitHubTargetsOnce()
     }
 
     private func includeCompletedChanged() {
@@ -241,6 +248,20 @@ final class SearchModel {
         evaluate()
     }
 
+    // MARK: GitHub repositories and projects
+
+    /// Reads the repositories and projects at the first search text; no later keystroke asks again. A failed read leaves the list empty
+    /// without a message: the section is simply not there (offline, not signed in).
+    private func loadGitHubTargetsOnce() {
+        guard let source = sources.githubTargets, githubTargetsTask == nil else { return }
+        githubTargetsTask = Task { [weak self] in
+            let items = await source()
+            guard let self, !isClosed, !Task.isCancelled else { return }
+            githubTargets = items
+            evaluate()
+        }
+    }
+
     // MARK: Shopping
 
     /// The circle of a shopping row: the source checks the item off, then the rows are read again.
@@ -261,7 +282,8 @@ final class SearchModel {
         let input = SearchInput(events: eventState == .loaded ? loadedEvents : nil, calendarNames: sources.calendarNames(),
                                 openTasks: sources.openTasks(), completed: completedLoaded ? completed : [], online: online,
                                 notes: sources.notes(), shopping: sources.shopping(),
-                                settings: filter == .all ? sources.settings(query.text) : [])
+                                settings: filter == .all ? sources.settings(query.text) : [],
+                                githubTargets: filter == .all ? githubTargets : [])
         results = SearchResults.make(query: query, filter: filter, includeCompleted: includeCompleted, input: input,
                                      now: now(), calendar: calendar)
     }
@@ -293,8 +315,10 @@ final class SearchModel {
         debounceTask?.cancel()
         loadTask?.cancel()
         completedTask?.cancel()
+        githubTargetsTask?.cancel()
         // Nothing of the search outlives the sheet.
         loadedEvents = []
+        githubTargets = []
         completed = []
         online = nil
         results = .empty
@@ -306,6 +330,7 @@ final class SearchModel {
         await debounceTask?.value
         await loadTask?.value
         await completedTask?.value
+        await githubTargetsTask?.value
     }
     #endif
 }

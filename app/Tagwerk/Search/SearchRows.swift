@@ -283,3 +283,27 @@ struct SearchSettingRow: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+/// A hit among the repositories and projects of the GitHub account: the title with the words found, below it the kind ("Repository",
+/// "GitHub-Projekt") and the owner or organisation. A tap opens the progress of the project.
+struct SearchGitHubTargetRow: View {
+    let item: GitHubTargetSearchItem
+    let titleRanges: [Range<String.Index>]
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: item.kind == .repository ? "shippingbox" : "list.bullet.rectangle")
+                .font(.title3).foregroundStyle(.secondaryText).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(SearchTexts.highlighted(item.title, ranges: titleRanges))
+                Text(SearchTexts.githubTargetSubtitle(item)).font(.caption).foregroundStyle(.secondaryText)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right").imageScale(.small).foregroundStyle(.secondaryText).accessibilityHidden(true)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(SearchTexts.githubTargetAccessibility(item))
+    }
+}

@@ -34,6 +34,13 @@ enum AccessibilityID {
         static let editorTitle = "tasks.editorTitle"
     }
 
+    enum Search {
+        /// A hit among the repositories of the GitHub account in the search; the full name "owner/name" makes it unique.
+        static func repositoryHit(_ fullName: String) -> String { "search.repository.\(fullName)" }
+        /// A hit among the GitHub projects in the search; the title makes it unique.
+        static func projectHit(_ title: String) -> String { "search.project.\(title)" }
+    }
+
     enum Travel {
         /// The capsule "10 min zu früh" of a trip that starts before the previous event ends.
         static let warningCapsule = "travel.warningCapsule"

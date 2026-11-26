@@ -22358,12 +22358,42 @@
         }
       }
     },
+    "Repositories & Projekte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repositories & projects"
+          }
+        }
+      }
+    },
+    "Repositories & Projekte · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repositories & projects · %lld"
+          }
+        }
+      }
+    },
     "Repositories konnten nicht geladen werden.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Repositories couldn’t be loaded."
+          }
+        }
+      }
+    },
+    "Repositories und Projekte, %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repositories and projects, %lld"
           }
         }
       }

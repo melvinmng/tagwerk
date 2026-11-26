@@ -3278,5 +3278,8 @@
   "Ziele vom %@": "Goals since %@",
   "Ø %@ an %@": "Avg. %1$@ on %2$@",
   "Ø %@ g / %lld g an %@": "Avg. %1$@ g / %2$lld g on %3$@",
-  "Ø Budget %@ kcal": "Avg. budget %@ kcal"
+  "Ø Budget %@ kcal": "Avg. budget %@ kcal",
+  "Repositories & Projekte": "Repositories & projects",
+  "Repositories & Projekte · %lld": "Repositories & projects · %lld",
+  "Repositories und Projekte, %lld": "Repositories and projects, %lld"
 }
