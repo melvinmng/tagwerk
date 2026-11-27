@@ -99,8 +99,8 @@ final class ProjectProgressUITests: UITestCase {
         XCTAssertTrue((timeRow("estimate").value as? String)?.contains("7 h 30 min") ?? false, "open estimates")
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists, "The time chart is missing")
         // The demo records lie in the last three weeks: a longer period shows the same time.
-        // The picker lies above the section: scroll back to it first.
-        dragUntilExistsAndHittable(app.buttons["3 Monate"].firstMatch, what: "The period picker")
+        // The picker lies above the section: drag back to the top of the page, where it sits clear of the navigation bar.
+        for _ in 0..<8 { dragPage(towardsTop: true) }
         selectSegment("3 Monate")
         scrollTo(timeRow("planned"), what: "The planned time after the change of the period")
         XCTAssertEqual(timeRow("planned").value as? String, "7 h")
