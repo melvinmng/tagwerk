@@ -61,6 +61,20 @@ final class TaskActivityStore {
         record([entry])
     }
 
+    /// Drops the newest entry of a move of `id` from `from` to `to`, when an undo took that move back. Without such an entry (the task
+    /// was not loaded when it moved) nothing changes.
+    func removePlanDayMove(of id: TaskID, from: PlanDay, to: PlanDay) {
+        let key = id.key, kind = TaskActivityKind.replanned.rawValue
+        let fromText = TaskActivityRules.dayText(from), toText = TaskActivityRules.dayText(to)
+        var descriptor = FetchDescriptor<TaskActivityRecord>(
+            predicate: #Predicate { $0.taskKey == key && $0.kindRaw == kind && $0.fromValue == fromText && $0.toValue == toText },
+            sortBy: [SortDescriptor(\.occurredAt, order: .reverse)])
+        descriptor.fetchLimit = 1
+        guard let record = try? context.fetch(descriptor).first else { return }
+        context.delete(record)
+        try? context.save()
+    }
+
     /// The entries since `date`, newest first; all of them without a date.
     func entries(since date: Date? = nil) -> [TaskActivityEntry] {
         var descriptor = FetchDescriptor<TaskActivityRecord>(sortBy: [SortDescriptor(\.occurredAt, order: .reverse)])

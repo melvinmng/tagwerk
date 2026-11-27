@@ -272,7 +272,7 @@ final class AIPlanner {
         for block in undo.createdBlocks { await planning.deleteBlock(block) }
         for move in undo.moves.reversed() { await planning.undo(move) }
         for (id, previous) in undo.assignments {
-            if let previous { planning.planStore.assign(id, to: previous) } else { planning.planStore.unassign(id) }
+            if let previous { planning.planStore.restore(id, to: previous) } else { planning.planStore.unassign(id) }
         }
         for (day, previous) in undo.overrides { planning.planStore.setOverride(previous, on: day) }
         for batch in planning.suggestionBatches { store.remove(batch.id) }

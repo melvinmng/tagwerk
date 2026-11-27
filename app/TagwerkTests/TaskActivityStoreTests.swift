@@ -23,6 +23,20 @@ struct TaskActivityStoreTests {
     /// The wiring of `AppEnvironment`: the plan store reports a move, the log writes the entry for the loaded task.
     private func connect(_ items: [TaskItem]) {
         plan.onDayMoved = { [log, now] id, from, to in log.recordPlanDayMove(of: id, from: from, to: to, among: items, at: now) }
+        plan.onDayMoveUndone = { [log] id, undone, restored in log.removePlanDayMove(of: id, from: restored, to: undone) }
+    }
+
+    @Test func undoingAMoveRemovesItsEntryAndKeepsEarlierMoves() {
+        let task = makeTask("Bericht", source: .local)
+        let third = PlanDay(year: 2026, month: 11, day: 24)
+        connect([task])
+        plan.assign(task.id, to: today)
+        plan.assign(task.id, to: later)
+        plan.assign(task.id, to: third)
+        plan.restore(task.id, to: later)
+        let entries = log.entries()
+        #expect(entries.count == 1)
+        #expect(entries.first?.from == "2026-11-18" && entries.first?.to == "2026-11-20")
     }
 
     @Test func aMoveOfALoadedTaskIsLoggedWithItsProjects() {

@@ -495,6 +495,10 @@ final class AppEnvironment {
         planStore.onDayMoved = { id, from, to in
             taskActivity.recordPlanDayMove(of: id, from: from, to: to, among: taskList.items, at: taskList.now())
         }
+        // "Widerrufen" of a move takes its entry back; the way back is no reschedule of its own.
+        planStore.onDayMoveUndone = { id, undone, restored in
+            taskActivity.removePlanDayMove(of: id, from: restored, to: undone)
+        }
         self.projectProgress = ProjectProgressStore(
             sources: UITestMode.isActive
                 ? .demo(now: { UITestMode.now() })

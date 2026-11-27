@@ -46,6 +46,20 @@ struct PlanStoreTests {
         #expect(moves == 0)
     }
 
+    @Test func restore_putsTheTaskBackAndReportsTheUndoInsteadOfAMove() {
+        var moves = 0
+        var undone: [(TaskID, PlanDay, PlanDay)] = []
+        let later = PlanDay(year: 2026, month: 11, day: 20)
+        store.assign(a, to: today)
+        store.assign(a, to: later)
+        store.onDayMoved = { _, _, _ in moves += 1 }
+        store.onDayMoveUndone = { undone.append(($0, $1, $2)) }
+        store.restore(a, to: today)
+        #expect(moves == 0)
+        #expect(undone.count == 1 && undone.first?.1 == later && undone.first?.2 == today)
+        #expect(store.assignments(in: today...today).count == 1)
+    }
+
     @Test func unassign_removes() {
         store.assign(a, to: today)
         store.unassign(a)

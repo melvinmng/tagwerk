@@ -10,6 +10,9 @@ final class PlanStore {
     /// Called after a task's planned day moved from one day to another, with the day before and the day after. First planning, removal
     /// from the plan and assigning the same day again do not call it. The activity log of the project progress listens (#332).
     var onDayMoved: ((TaskID, PlanDay, PlanDay) -> Void)?
+    /// Called when an undo puts a task back from the day it was moved to (first day) on its former day (second day), so the log can
+    /// drop the entry of the move instead of counting the way back as a second reschedule.
+    var onDayMoveUndone: ((TaskID, PlanDay, PlanDay) -> Void)?
 
     init(context: ModelContext) {
         self.context = context
@@ -27,6 +30,20 @@ final class PlanStore {
         }
         save()
         if let previous, previous != day { onDayMoved?(id, previous, day) }
+    }
+
+    /// Puts a task back on the day it had before a move ("Widerrufen"). Not a reschedule of its own: it reports `onDayMoveUndone`
+    /// instead of `onDayMoved`.
+    func restore(_ id: TaskID, to day: PlanDay) {
+        guard let existing = record(for: id) else {
+            context.insert(DayAssignment(taskKey: id.key, day: day))
+            save()
+            return
+        }
+        let undone = existing.planDay
+        existing.planDay = day
+        save()
+        if undone != day { onDayMoveUndone?(id, undone, day) }
     }
 
     func unassign(_ id: TaskID) {
