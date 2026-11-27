@@ -13,6 +13,8 @@ final class FakeReminderStore: ReminderStore {
     var records: [String: ReminderRecord] = [:]
     var defaultList = "inbox"
     private(set) var saveCount = 0
+    /// When set, `save` throws this error without changing any record.
+    var saveError: Error?
     /// The recurrence change passed with every save, in order.
     private(set) var recurrenceChanges: [FieldChange<Recurrence?>] = []
     /// The recurrence passed with every create, in order.
@@ -48,6 +50,7 @@ final class FakeReminderStore: ReminderStore {
 
     /// Like the gateway: the rule changes only through `recurrence`, never through `record.recurrence`.
     func save(_ record: ReminderRecord, recurrence: FieldChange<Recurrence?>) throws -> ReminderRecord {
+        if let saveError { throw saveError }
         saveCount += 1
         recurrenceChanges.append(recurrence)
         var stored = record

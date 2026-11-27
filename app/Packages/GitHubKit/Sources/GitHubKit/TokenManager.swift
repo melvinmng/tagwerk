@@ -12,7 +12,8 @@ public actor TokenManager {
     private var credentials: GitHubCredentials?
     private var didLoad = false
     private var refreshTask: Task<GitHubCredentials, Error>?
-    /// Incremented on sign-out; a refresh that finishes after a sign-out must not store its tokens.
+    /// Incremented on sign-out and when new credentials are stored; a refresh that finishes afterwards
+    /// must neither store its tokens nor clear the current credentials.
     private var session = 0
 
     public init(store: CredentialStore, client: DeviceFlowClient, now: @escaping @Sendable () -> Date = Date.init) {
@@ -53,6 +54,10 @@ public actor TokenManager {
     }
 
     public func store(_ credentials: GitHubCredentials) async throws {
+        // A new session invalidates any in-flight refresh: its outcome (tokens or sign-out) belongs to the old credentials.
+        session += 1
+        refreshTask?.cancel()
+        refreshTask = nil
         try store.save(credentials)
         self.credentials = credentials
         didLoad = true
@@ -97,7 +102,8 @@ public actor TokenManager {
             try store.save(fresh)
             return fresh
         } catch GitHubAuthError.server(let code) where Self.signOutErrors.contains(code) {
-            try? clear()
+            // A stale refresh from an earlier session must not wipe credentials stored in the meantime.
+            if session == startedIn { try? clear() }
             throw GitHubAuthError.signedOut
         }
     }

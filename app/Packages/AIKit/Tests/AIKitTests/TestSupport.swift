@@ -22,6 +22,8 @@ final class StubAITransport: AIHTTPTransport {
 
     private let state = Mutex(State())
     private let gate = Gate()
+    /// Opens as soon as a request is parked at the gate, so tests can wait for it instead of sleeping.
+    let entered = Gate()
 
     func enqueue(_ path: String, _ reply: Reply) {
         state.withLock { $0.replies[path, default: []].append(reply) }
@@ -53,6 +55,7 @@ final class StubAITransport: AIHTTPTransport {
         case .json(let status, let body):
             return Self.response(request, status, body)
         case .gated(let status, let body):
+            entered.open()
             await gate.wait()
             return Self.response(request, status, body)
         case .failure(let code):

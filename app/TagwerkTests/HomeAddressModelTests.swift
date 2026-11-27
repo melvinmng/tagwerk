@@ -112,17 +112,19 @@ struct HomeAddressModelTests {
         #expect(settings.homeAddress == nil)
     }
 
-    @Test func staleAnswer_isDropped() async {
+    @Test(.timeLimit(.minutes(1))) func staleAnswer_isDropped() async {
         suggester.answers = ["Mus": [musterweg], "Muster": [musterstrasse]]
         // The first request answers after the second one.
-        suggester.delays = ["Mus": .milliseconds(300)]
+        let firstGate = Gate()
+        suggester.gates = ["Mus": firstGate]
         let model = model()
         model.query = "Mus"
         let first = Task { await model.queryChanged() }
         // The debounce of the first request has passed and it waits for its answer.
-        try? await Task.sleep(for: .milliseconds(80))
+        await firstGate.waitUntilEntered()
         model.query = "Muster"
         await model.queryChanged()
+        firstGate.open()
         await first.value
         #expect(model.suggestions == [musterstrasse])
         #expect(suggester.calls == ["Mus", "Muster"])

@@ -97,15 +97,18 @@ struct IssueTargetSheetModelTests {
         #expect(model.assigneeCandidates == ["octo", "jonas-k", "lea-m"])
     }
 
-    @Test func sheetModel_lateAnswerForAnotherRepository_isDiscarded() async {
+    @Test(.timeLimit(.minutes(1))) func sheetModel_lateAnswerForAnotherRepository_isDiscarded() async {
+        let gate = Gate()
         let model = IssueTargetSheetModel(catalog: catalog, me: "octo", repository: "melvinmng/tagwerk", projectIDs: [],
                                           loadAssignable: { _ in
-                                              try? await Task.sleep(for: .milliseconds(50))
+                                              await gate.wait()
                                               return ["octo", "late"]
                                           })
         let loading = Task { await model.loadAssignees() }
-        while model.assigneeLoad == .idle { await Task.yield() }
+        // The load is suspended; only now does the user pick another repository.
+        await gate.waitUntilEntered()
         model.repository = "melvinmng/app"
+        gate.open()
         await loading.value
         #expect(model.assigneeLoad == .idle && !model.assigneeCandidates.contains("late"))
     }

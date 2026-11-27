@@ -11,8 +11,8 @@ final class FakeNotificationCenter: NotificationCenterClient {
     /// Pending requests by identifier.
     private(set) var pending: [String: PendingNotification] = [:]
     private(set) var added: [PlannedNotification] = []
-    /// Simulates a slow system call, so overlapping runs can be tested.
-    var addDelay: Duration?
+    /// Holds every `add` until the gate opens, so overlapping runs can be tested deterministically.
+    var addGate: Gate?
 
     func authorization() async -> NotificationAuthorization { status }
 
@@ -25,7 +25,7 @@ final class FakeNotificationCenter: NotificationCenterClient {
     func pendingRequests() async -> [PendingNotification] { Array(pending.values) }
 
     func add(_ notification: PlannedNotification) async throws {
-        if let addDelay { try? await Task.sleep(for: addDelay) }
+        if let addGate { await addGate.wait() }
         added.append(notification)
         pending[notification.id] = PendingNotification(id: notification.id, fireDate: notification.fireDate)
     }

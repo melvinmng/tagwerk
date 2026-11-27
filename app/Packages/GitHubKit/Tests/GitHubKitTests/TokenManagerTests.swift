@@ -129,11 +129,22 @@ final class GatedTransport: HTTPTransport {
 actor AsyncGate {
     private var isOpen = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var arrivalObservers: [CheckedContinuation<Void, Never>] = []
     var waiting: Int { waiters.count }
 
     func wait() async {
         if isOpen { return }
-        await withCheckedContinuation { waiters.append($0) }
+        await withCheckedContinuation { continuation in
+            waiters.append(continuation)
+            arrivalObservers.forEach { $0.resume() }
+            arrivalObservers = []
+        }
+    }
+
+    /// Suspends until at least one caller is parked in `wait()`. No polling, no timing assumptions.
+    func waitUntilEntered() async {
+        if !waiters.isEmpty { return }
+        await withCheckedContinuation { arrivalObservers.append($0) }
     }
 
     func release() {
@@ -144,7 +155,7 @@ actor AsyncGate {
 }
 
 struct TokenManagerSignOutRaceTests {
-    @Test func signOutDuringRefresh_staysSignedOut() async throws {
+    @Test(.timeLimit(.minutes(1))) func signOutDuringRefresh_staysSignedOut() async throws {
         let stub = StubTransport()
         stub.enqueueJSON("/login/oauth/access_token", #"{"access_token":"gho_new","expires_in":28800,"refresh_token":"ghr_new"}"#)
         let transport = GatedTransport(stub)
@@ -154,12 +165,34 @@ struct TokenManagerSignOutRaceTests {
         let manager = TokenManager(store: store, client: client, now: { fixedNow })
 
         let refreshing = Task { try await manager.validAccessToken() }
-        for _ in 0..<500 where await transport.gate.waiting == 0 { await Task.yield() }
+        await transport.gate.waitUntilEntered()
         try await manager.signOut()
         await transport.gate.release()
         _ = try? await refreshing.value
 
         #expect(store.current == nil)
         #expect(await manager.isSignedIn == false)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func storeDuringRefreshThatFailsWithSignOutError_keepsNewCredentials() async throws {
+        let stub = StubTransport()
+        stub.enqueueJSON("/login/oauth/access_token", #"{"error":"bad_refresh_token"}"#)
+        let transport = GatedTransport(stub)
+        let store = MemoryCredentialStore(GitHubCredentials(accessToken: "gho_old", refreshToken: "ghr_old",
+                                                            accessExpiresAt: fixedNow.addingTimeInterval(-10), refreshExpiresAt: nil))
+        let client = DeviceFlowClient(clientID: "client", transport: transport, sleep: { _ in }, now: { fixedNow })
+        let manager = TokenManager(store: store, client: client, now: { fixedNow })
+        let replacement = GitHubCredentials(accessToken: "gho_replacement", refreshToken: "ghr_replacement",
+                                            accessExpiresAt: fixedNow.addingTimeInterval(3600), refreshExpiresAt: nil)
+
+        let refreshing = Task { try await manager.validAccessToken() }
+        await transport.gate.waitUntilEntered()
+        try await manager.store(replacement)
+        await transport.gate.release()
+        _ = try? await refreshing.value
+
+        #expect(store.current == replacement)
+        #expect(await manager.isSignedIn)
+        #expect(try await manager.validAccessToken() == "gho_replacement")
     }
 }
