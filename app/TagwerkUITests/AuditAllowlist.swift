@@ -174,13 +174,16 @@ enum AuditAllowlist {
             "erledigt", "neu", "offen am Ende der Woche", "Der offene Bestand ist aus den Anlage- und Schlussdaten zurückgerechnet\\.",
             "eingeplant", "investiert", "Änderungen in Tagwerk", "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat\\.",
             "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk\\.", "Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit\\.",
+            "Nur Änderungen, die du in Tagwerk auf diesem Gerät gemacht hast, seit .+\\. GitHub und Erinnerungen speichern keinen Verlauf\\.",
         ], screens: ["Projektseite", "Projektseite Zeit", "Projektseite Änderungen"], reason:
             "The legend of the weekly chart (drawn by Swift Charts, it grows with the text size) and the note under the chart in `.footnote`: the "
             + "audit reports a partial lack of Dynamic Type support, as for single-line `.subheadline` texts on other screens (entries above). "
             + "No clipping in the large text run (the audit of the AX5 run checks the clipping and reports nothing for these texts). Stays on "
             + "the device test list (large text). The part \"Projektseite Änderungen\" scrolls only a little below the time section, so the legend of the "
             + "time chart is on that screen as well and was reported there (stage 3), and so was the title \"Änderungen in Tagwerk\" of the status history. The legend of the time chart (\"eingeplant\", \"investiert\") is the same mechanism, and the three explanation lines under the time section in `.footnote` were reported "
-            + "(first run with that part, default size) like the note under the weekly chart."),
+            + "(first run with that part, default size) like the note under the weekly chart. The note under the status history "
+            + "(`projectProgress.statusNote`, the same `.footnote` style, three lines) was reported in both attempts of run 46036009837 "
+            + "(default size) and not in the first attempt of run 46013173609 on the same view code."),
         Entry(auditType: .textClipped, labels: [
             "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat\\.",
             "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk\\.",
