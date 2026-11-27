@@ -62,6 +62,6 @@ struct TaskActivityStoreTests {
         plan.assign(task.id, to: today)
         plan.assign(task.id, to: later)
         plan.assign(task.id, to: PlanDay(year: 2026, month: 11, day: 25))
-        #expect(log.entries().map(\.to).sorted() == ["2026-11-20", "2026-11-25"])
+        #expect(log.entries().compactMap(\.to).sorted() == ["2026-11-20", "2026-11-25"])
     }
 }
