@@ -25,7 +25,7 @@ FoodLookupUITests 79
 GitHubProjectPickerUITests 60
 GitHubRepositoryPickerUITests 60
 # est. new class (three tests, search hits of repositories and projects)
-GitHubSearchUITests 75
+GitHubSearchUITests 170
 GoalPlanningUITests 83
 HabitUITests 73
 KeyboardDismissalUITests 93
@@ -37,7 +37,7 @@ NotesUITests 166
 NowMarkerUITests 26
 PlanUITests 148
 # est. class of the project progress (eleven tests, overview and page with time section and status history; 347 s measured locally at 1.4)
-ProjectProgressUITests 490
+ProjectProgressUITests 545
 RoutineUITests 260
 SearchUITests 114
 SettingsNavigationUITests 39

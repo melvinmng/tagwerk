@@ -15,13 +15,18 @@ struct NewTaskSheet: View {
     /// Offered by shared items: "Verwerfen" removes the item instead of only closing the sheet.
     private let onDiscard: (() -> Void)?
 
+    /// The project the task is created for (#348): the sheet opens with its source and fills what the project determines.
+    private let destination: NewTaskDestination?
+
     /// `prefilledTitle` only fills the title; source and the other fields stay as in any new task. Shared content and mails
     /// also fill the notes (the link goes on its own last line) and the due date; a date without a time sets no time.
     init(model: TaskListModel, prefilledTitle: String? = nil, onCreated: (() -> Void)? = nil,
-         prefilledNotes: String? = nil, prefilledURL: URL? = nil, prefilledDue: DueDate? = nil, onDiscard: (() -> Void)? = nil) {
+         prefilledNotes: String? = nil, prefilledURL: URL? = nil, prefilledDue: DueDate? = nil, onDiscard: (() -> Void)? = nil,
+         destination: NewTaskDestination? = nil) {
         self.model = model
         self.onCreated = onCreated
         self.onDiscard = onDiscard
+        self.destination = destination
         _title = State(initialValue: prefilledTitle ?? "")
         _notes = State(initialValue: NewTaskPrefill.notes(text: prefilledNotes, url: prefilledURL) ?? "")
         let dueFields = NewTaskPrefill.dueFields(prefilledDue, calendar: model.calendar, fallback: Date())
@@ -29,8 +34,11 @@ struct NewTaskSheet: View {
         _dueDate = State(initialValue: dueFields.date)
         _hasTime = State(initialValue: dueFields.hasTime)
         let available = Set(Self.availableTargets(in: model))
-        _target = State(initialValue: model.filter.creationTarget(available: available))
-        _priority = State(initialValue: model.filter.creationTarget(available: available) == .reminders ? .p4 : nil)
+        var initialTarget = model.filter.creationTarget(available: available)
+        // A project decides the source, also when the source is not among the available ones (a UI test without GitHub account).
+        if let destination { initialTarget = destination.source }
+        _target = State(initialValue: initialTarget)
+        _priority = State(initialValue: initialTarget == .reminders ? .p4 : nil)
         // The default is always the signed-in user, never a remembered choice.
         let login = (model.provider(for: .github) as? GitHubTaskProvider)?.login
         _assignees = State(initialValue: Set([login].compactMap { $0 }))
@@ -47,6 +55,9 @@ struct NewTaskSheet: View {
     @State private var repository: String?
     @State private var projectIDs: Set<String> = []
     @State private var projectsEdited = false
+    /// The repository that came with the project: the projects were filled in with it, so its change must not preselect them again.
+    @State private var skipPreselectFor: String?
+    @State private var destinationApplied = false
     @State private var startStatus: String?
     @State private var gitHubError: String?
     @State private var isLoadingCatalog = false
@@ -155,6 +166,10 @@ struct NewTaskSheet: View {
                     }
                     .task(id: repository) { await loadAssignees() }
                     .onChange(of: repository) { _, repo in
+                        if let skipped = skipPreselectFor {
+                            skipPreselectFor = nil
+                            if repo == skipped { return }
+                        }
                         // Preselect the projects linked to the chosen repository.
                         guard let repo, let catalog else { return }
                         projectIDs = ProjectSelection.preselect(current: projectIDs, linked: Set(catalog.projectIDs(linkedTo: repo)),
@@ -219,7 +234,10 @@ struct NewTaskSheet: View {
                     }
                 }
             }
-            .task { reminderLists = await model.containers(for: .reminders) }
+            .task {
+                reminderLists = await model.containers(for: .reminders)
+                if listID == nil, let id = destination?.reminderListID(among: reminderLists) { listID = id }
+            }
             .task {
                 if reminders == nil {
                     reminders = NewTaskReminders(defaults: environment.settings.reminderDefaults, source: target, hasTime: hasTime && target != .github)
@@ -366,11 +384,30 @@ extension NewTaskSheet {
     }
 
     private func loadCatalog() async {
+        // UI tests have no GitHub account: `-TagwerkUITestGitHubCatalog` stands in for the catalog.
+        if gitHub == nil, let invented = UITestMode.githubCatalog {
+            catalog = invented
+            applyDestination()
+            return
+        }
         guard let gitHub else { return }
         isLoadingCatalog = true
         defer { isLoadingCatalog = false }
         catalog = await gitHub.catalog(maxAge: AppEnvironment.catalogMaxAge)
         if catalog == nil { gitHubError = String(localized: "Repositories konnten nicht geladen werden.") }
+        applyDestination()
+    }
+
+    /// Fills the repository and the projects of the project the sheet was opened for, once and only while the user has not chosen a
+    /// repository.
+    private func applyDestination() {
+        guard !destinationApplied, let catalog, let fields = destination?.issueFields(in: catalog) else { return }
+        destinationApplied = true
+        guard repository == nil else { return }
+        skipPreselectFor = fields.repository
+        projectIDs = fields.projectIDs
+        projectsEdited = fields.protectsProjects
+        repository = fields.repository
     }
 }
 

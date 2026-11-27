@@ -204,6 +204,16 @@ public struct SearchResults: Sendable {
     /// Sections in display order; empty sections are left out.
     public let sections: [SearchSection]
 
+    /// The order in which a view lays out the kinds of `sections` (and the rows it adds for kinds without hits): the declaration order
+    /// of `SearchSectionKind`, except that "Repositories & Projekte" moves to the front when the query names a repository or project
+    /// (`promotesGitHubTargets`).
+    public let sectionOrder: [SearchSectionKind]
+
+    init(sections: [SearchSection], sectionOrder: [SearchSectionKind] = SearchSectionKind.allCases) {
+        self.sections = sections
+        self.sectionOrder = sectionOrder
+    }
+
     /// Rows of the section "Einstellungen"; more hits are found in the tab "Einstellungen" itself.
     public static let settingsLimit = 5
 
@@ -276,10 +286,18 @@ public struct SearchResults: Sendable {
             rowsByKind[.settings] = input.settings.prefix(settingsLimit).map { .setting($0) }
         }
 
-        let sections = SearchSectionKind.allCases.compactMap { kind -> SearchSection? in
+        var order = SearchSectionKind.allCases
+        let githubMatches = (rowsByKind[.githubTargets] ?? []).compactMap { row -> GitHubTargetSearchItem? in
+            if case .githubTarget(let item) = row { item } else { nil }
+        }
+        if promotesGitHubTargets(query: query.text, matches: githubMatches) {
+            order.removeAll { $0 == .githubTargets }
+            order.insert(.githubTargets, at: 0)
+        }
+        let sections = order.compactMap { kind -> SearchSection? in
             guard let rows = rowsByKind[kind], !rows.isEmpty else { return nil }
             return SearchSection(kind: kind, rows: rows)
         }
-        return SearchResults(sections: sections)
+        return SearchResults(sections: sections, sectionOrder: order)
     }
 }

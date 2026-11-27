@@ -30,6 +30,8 @@ struct SearchSheet: View {
     @State private var showsShopping = false
     /// The task whose planned day is picked in a date sheet ("Anderer Tag …").
     @State private var planningDateFor: TaskItem?
+    /// The repository or project whose "Neue Aufgabe" sheet is open: the entry "Issue anlegen" of a hit (#348).
+    @State private var newIssueFor: NewTaskDestination?
     /// Short hint, e.g. "Der Termin wurde geändert."; shown as an alert together with errors of the task list.
     @State private var notice: String?
 
@@ -91,6 +93,9 @@ struct SearchSheet: View {
         }
         .sheet(isPresented: $showsShopping, onDismiss: refreshAfterSheet) {
             ShoppingListSheet()
+        }
+        .sheet(item: $newIssueFor, onDismiss: refreshAfterSheet) { destination in
+            NewTaskSheet(model: environment.taskList, destination: destination)
         }
         .sheet(item: $planningDateFor) { item in
             RescheduleDateSheet(item: item, calendar: calendar, now: now) { day in
@@ -376,7 +381,8 @@ struct SearchSheet: View {
 
     /// Kinds with hits, plus "Vergangene Termine" when only the row "Ältere Termine durchsuchen" is left to show.
     private var displayedKinds: [SearchSectionKind] {
-        SearchSectionKind.allCases.filter { kind in
+        // The order is the one of the results: "Repositories & Projekte" leads when the query names a repository or project.
+        model.results.sectionOrder.filter { kind in
             if model.results.sections.contains(where: { $0.kind == kind }) { return true }
             switch kind {
             case .pastEvents: return showsOlderEventsRow
@@ -527,8 +533,12 @@ struct SearchSheet: View {
                 .onTapGesture { onShowSetting(item.id) }
                 .accessibilityAddTraits(.isButton)
         case .githubTarget(let item):
+            let destination = NewTaskDestination(reference: item.progressReference)
             SearchGitHubTargetRow(item: item, titleRanges: model.query?.ranges(in: item.title) ?? [])
                 .onTapGesture { onShowGitHubTarget(item) }
+                .modifier(SearchNewIssueEntry(name: destination.isAvailable(in: environment.taskList) ? destination.actionName : nil) {
+                    newIssueFor = destination
+                })
                 .accessibilityIdentifier(item.kind == .repository ? AccessibilityID.Search.repositoryHit(item.targetID)
                                                                    : AccessibilityID.Search.projectHit(item.title))
                 .accessibilityAddTraits(.isButton)
@@ -578,5 +588,23 @@ struct SearchSheet: View {
 
     @ViewBuilder private func taskMenu(_ item: TaskItem) -> some View {
         SearchTaskMenuContent(item: item, entries: taskMenuEntries(item), actions: taskMenuActions(item))
+    }
+}
+
+/// "Issue anlegen" / "Aufgabe anlegen" of a hit among the repositories and projects: an entry of the context menu and an action of
+/// VoiceOver with the same name, and no button in the row. Offered only while `name` is set (the source cannot take a task otherwise);
+/// without it the row has neither a menu nor the action.
+private struct SearchNewIssueEntry: ViewModifier {
+    let name: String?
+    let action: () -> Void
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if let name {
+            content
+                .contextMenu { Button(name, systemImage: "plus.circle", action: action) }
+                .accessibilityAction(named: Text(name), action)
+        } else {
+            content
+        }
     }
 }

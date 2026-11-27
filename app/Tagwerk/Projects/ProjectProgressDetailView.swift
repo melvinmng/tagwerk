@@ -17,6 +17,8 @@ struct ProjectProgressDetailView: View {
     /// The evaluation of the activity log for the same period, read together with the time (the log only grows, so it is not read while
     /// the page is drawn).
     @State private var statusHistory: (load: TimeLoad, value: ProjectStatusHistory)?
+    /// The "Neue Aufgabe" sheet opened with "+" for this project (#348).
+    @State private var creating: NewTaskDestination?
 
     /// Entries of the history added by each tap on "Weitere zeigen", and rows shown per group of open items at first.
     static let eventPageSize = 25
@@ -37,6 +39,9 @@ struct ProjectProgressDetailView: View {
     }
     private var calendar: Calendar { environment.planning.calendar }
     private var now: Date { UITestMode.now() }
+    /// Every kind of project has a source to create a task in: issues for a GitHub repository or Project, tasks for a reminder list and
+    /// the local tasks. The "+" is there while that source can take one (GitHub connected, access to Reminders).
+    private var destination: NewTaskDestination { NewTaskDestination(reference: reference) }
 
     private var period: ProjectPeriod {
         switch choice {
@@ -66,6 +71,19 @@ struct ProjectProgressDetailView: View {
         .refreshable { await store.load(reference, force: true) }
         .task { await store.load(reference) }
         .task(id: timeLoad) { readTime() }
+        .toolbar {
+            if destination.isAvailable(in: environment.taskList) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { creating = destination } label: { Label(destination.actionName, systemImage: "plus") }
+                        .accessibilityIdentifier(AccessibilityID.ProjectProgress.newTask)
+                }
+            }
+        }
+        // The figures of the page follow the new item once it is created.
+        .sheet(item: $creating) { destination in
+            NewTaskSheet(model: environment.taskList, onCreated: { Task { await store.load(reference, force: true) } },
+                         destination: destination)
+        }
     }
 
     /// Reads the recorded time for the tasks of the project and the period. Local data only, so it needs no waiting state.
