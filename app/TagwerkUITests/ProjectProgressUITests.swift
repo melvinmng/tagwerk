@@ -106,6 +106,39 @@ final class ProjectProgressUITests: UITestCase {
         XCTAssertEqual(timeRow("planned").value as? String, "7 h")
     }
 
+    private func statusRow(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusRow(name)].firstMatch
+    }
+
+    /// The demo log of "Beispiel-Projekt" (see `ProjectProgressSources.demo`): four status changes (two of them Ready to In progress),
+    /// one reopening, one change of the due date and two moves of the planned day; "In progress" 4 days, "Review" 2 days.
+    func testProjectPageShowsTheStatusHistoryWithItsNote() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        scrollTo(statusRow("changes"), what: "The count of status changes")
+        XCTAssertEqual(statusRow("changes").value as? String, "4")
+        XCTAssertEqual(statusRow("transition.Ready>In progress").value as? String, "2×")
+        scrollTo(statusRow("duration.In progress"), what: "The time in In progress")
+        XCTAssertEqual(statusRow("duration.In progress").value as? String, "4 Tage")
+        XCTAssertEqual(statusRow("duration.Review").value as? String, "2 Tage")
+        scrollTo(statusRow("reopened"), what: "The reopen count")
+        XCTAssertEqual(statusRow("reopened").value as? String, "1")
+        XCTAssertEqual(statusRow("dueDates").value as? String, "1")
+        XCTAssertEqual(statusRow("planDays").value as? String, "2")
+        let note = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusNote].firstMatch
+        scrollTo(note, what: "The note about what the log covers")
+        XCTAssertTrue(note.label.contains("in Tagwerk auf diesem Gerät"), "The note does not say what the log covers: \(note.label)")
+    }
+
+    func testProjectWithoutLogEntriesSaysSoAndStillShowsTheNote() {
+        openOverview()
+        openProject("Studium")
+        scrollTo(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusEmpty].firstMatch, what: "The note about missing log entries")
+        let note = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusNote].firstMatch
+        scrollTo(note, what: "The note about what the log covers")
+        XCTAssertFalse(statusRow("changes").exists, "A project without log entries shows no counts")
+    }
+
     func testProjectWithoutRecordedTimeSaysSoInsteadOfZero() {
         openOverview()
         openProject("Studium")
@@ -212,6 +245,12 @@ extension UITestCase {
         scrollPageClearOfBarEdges()
         waitUntilScreenIsStable()
         try audit("Projektseite Zeit")
+        // The status history follows the time section: the third part of the page the audits cover.
+        let changes = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusRow("changes")].firstMatch
+        dragUntilExistsAndHittable(changes, what: "The status history of the project page")
+        scrollPageClearOfBarEdges()
+        waitUntilScreenIsStable()
+        try audit("Projektseite Änderungen")
         // Back to "Aufgaben": the next audit starts from the list.
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()

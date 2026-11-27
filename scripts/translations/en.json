@@ -3362,5 +3362,14 @@
   "Offene Schätzungen": "Open estimates",
   "Woche ab %@: %@ eingeplant, %@ investiert": "Week of %1$@: %2$@ planned, %3$@ invested",
   "eingeplant": "planned",
-  "investiert": "invested"
+  "investiert": "invested",
+  "%lld Tage": "%lld days",
+  "Arbeitstag verschoben": "Work day moved",
+  "Das Protokoll hat noch keine Einträge. Es hält nur Änderungen fest, die du in Tagwerk auf diesem Gerät machst. GitHub und Erinnerungen speichern keinen Verlauf.": "The log has no entries yet. It only records changes you make in Tagwerk on this device. GitHub and Reminders keep no history.",
+  "Frist verschoben": "Due date moved",
+  "Im Zeitraum wurde keine Änderung aus Tagwerk protokolliert.": "No change made in Tagwerk was logged in the period.",
+  "Nur Änderungen, die du in Tagwerk auf diesem Gerät gemacht hast, seit %@. GitHub und Erinnerungen speichern keinen Verlauf.": "Only changes you made in Tagwerk on this device, since %@. GitHub and Reminders keep no history.",
+  "Statuswechsel": "Status changes",
+  "Wieder geöffnet": "Reopened",
+  "Änderungen in Tagwerk": "Changes in Tagwerk"
 }

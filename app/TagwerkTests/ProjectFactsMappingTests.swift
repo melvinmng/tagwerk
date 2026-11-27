@@ -44,6 +44,15 @@ struct ProjectFactsMappingTests {
         #expect(keys == [TaskID(source: .github, rawValue: "I_9").key, TaskID(source: .github, rawValue: "I_1").key])
     }
 
+    @Test func closedDates_ofGitHubItemsUseTheIssueKeyEvenWithoutALoadedTask() {
+        let done = ProjectItemFact(id: "I_5", title: "A", closedAt: closed, state: .completed)
+        let open = ProjectItemFact(id: "I_6", title: "B", state: .open)
+        let dates = ProjectFactsMapping.closedDates(of: .gitHubProject, facts: [done, open])
+        #expect(dates == [TaskID(source: .github, rawValue: "I_5").key: closed])
+        let reminder = ProjectItemFact(id: "r1", title: "R", closedAt: closed, state: .completed, taskKey: "reminders:r1")
+        #expect(ProjectFactsMapping.closedDates(of: .remindersList, facts: [reminder]) == ["reminders:r1": closed])
+    }
+
     @Test func timeKeys_ofRemindersAndLocalTasksAreTheirTaskKeys() {
         let facts = [ProjectItemFact(id: "r1", title: "A", taskKey: "reminders:r1"), ProjectItemFact(id: "x", title: "B")]
         #expect(ProjectFactsMapping.timeKeys(of: .remindersList, facts: facts) == ["reminders:r1"])

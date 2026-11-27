@@ -2025,6 +2025,16 @@
         }
       }
     },
+    "%lld Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days"
+          }
+        }
+      }
+    },
     "%lld Tage mit Eintrag": {
       "localizations": {
         "en": {
@@ -5987,6 +5997,16 @@
         }
       }
     },
+    "Arbeitstag verschoben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work day moved"
+          }
+        }
+      }
+    },
     "Arbeitstag: %@": {
       "localizations": {
         "en": {
@@ -8421,6 +8441,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The product becomes an entry of its own in “My foods”, with a note about its source. You choose an amount there."
+          }
+        }
+      }
+    },
+    "Das Protokoll hat noch keine Einträge. Es hält nur Änderungen fest, die du in Tagwerk auf diesem Gerät machst. GitHub und Erinnerungen speichern keinen Verlauf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The log has no entries yet. It only records changes you make in Tagwerk on this device. GitHub and Reminders keep no history."
           }
         }
       }
@@ -13409,6 +13439,16 @@
         }
       }
     },
+    "Frist verschoben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due date moved"
+          }
+        }
+      }
+    },
     "Frist ändern": {
       "localizations": {
         "en": {
@@ -16099,6 +16139,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "There were no completed or new items in this period."
+          }
+        }
+      }
+    },
+    "Im Zeitraum wurde keine Änderung aus Tagwerk protokolliert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change made in Tagwerk was logged in the period."
           }
         }
       }
@@ -21333,6 +21383,16 @@
         }
       }
     },
+    "Nur Änderungen, die du in Tagwerk auf diesem Gerät gemacht hast, seit %@. GitHub und Erinnerungen speichern keinen Verlauf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only changes you made in Tagwerk on this device, since %@. GitHub and Reminders keep no history."
+          }
+        }
+      }
+    },
     "Nutze „Einplanen“ unten oder im Menü einer Aufgabe.": {
       "localizations": {
         "en": {
@@ -25064,6 +25124,16 @@
         }
       }
     },
+    "Statuswechsel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status changes"
+          }
+        }
+      }
+    },
     "Steht unverschlüsselt in der Sicherung": {
       "localizations": {
         "en": {
@@ -28504,6 +28574,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "How are my goals, projects and tasks going?"
+          }
+        }
+      }
+    },
+    "Wieder geöffnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopened"
           }
         }
       }
@@ -32488,6 +32568,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Changes apply to this day only."
+          }
+        }
+      }
+    },
+    "Änderungen in Tagwerk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes in Tagwerk"
           }
         }
       }

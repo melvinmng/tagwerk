@@ -71,12 +71,31 @@ extension ProjectProgressSources {
                 ProjectFocusSpan(taskKey: githubKey("t5"), start: at(3, 10), end: at(3, 11)),
             ],
             completions: [ProjectCompletion(taskKey: githubKey("t2"), completedAt: at(18, 11), countsBlocks: true)])
+        // The local activity log of the demo project, all in the last ten days. Task #338 (completed two days ago) and the two moves
+        // of #332 give fixed times in a Status: "In progress" 20 h + 72 h = 3.8 days (shown as 4 Tage), "Review" 52 h (2 Tage); hours are chosen
+        // away from the boundary between two day counts, so a change of the clock (daylight saving time) cannot move them. The stretch of
+        // #332 in "Ready" runs until now, so its length is not fixed.
+        func entry(_ kind: TaskActivityKind, _ id: String, _ days: Int, hour: Int = 10, from: String? = nil, to: String? = nil) -> TaskActivityEntry {
+            TaskActivityEntry(kind: kind, taskKey: githubKey(id), title: id, from: from, to: to, projectKeys: [tagwerk.key],
+                              occurredAt: ago(days, hour: hour))
+        }
+        let activity = [
+            entry(.statusChanged, "t5", 9, from: "Ready", to: "In progress"),
+            entry(.statusChanged, "t5", 6, from: "In progress", to: "Ready"),
+            entry(.statusChanged, "t9", 5, from: "Ready", to: "In progress"),
+            entry(.statusChanged, "t9", 4, hour: 6, from: "In progress", to: "Review"),
+            entry(.reopened, "t10", 3),
+            entry(.rescheduled, "t5", 7, from: "2026-11-20", to: "2026-12-04"),
+            entry(.replanned, "t5", 5, from: "2026-11-20", to: "2026-11-23"),
+            entry(.replanned, "t8", 4, from: "2026-11-23", to: "2026-11-27"),
+        ]
         return ProjectProgressSources(
             catalog: { ProjectCatalog(references: references, gitHubConnected: true, remindersAccess: true) },
             facts: { reference in
                 guard let facts = items[reference.key] else { throw ProjectLoadFailure.other }
                 return ProjectFactsLoad(facts: facts, fetchedAt: now())
             },
-            time: { _, _ in timeInputs })
+            time: { _, _ in timeInputs },
+            activity: { activity })
     }
 }

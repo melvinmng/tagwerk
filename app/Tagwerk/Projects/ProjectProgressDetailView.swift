@@ -14,6 +14,9 @@ struct ProjectProgressDetailView: View {
     @State private var expandedGroups = Set<String>()
     /// The time of the page, read on the device for the period it was read for (see `TimeLoad`).
     @State private var time: (load: TimeLoad, summary: ProjectTimeSummary)?
+    /// The evaluation of the activity log for the same period, read together with the time (the log only grows, so it is not read while
+    /// the page is drawn).
+    @State private var statusHistory: (load: TimeLoad, value: ProjectStatusHistory)?
 
     /// Entries of the history added by each tap on "Weitere zeigen", and rows shown per group of open items at first.
     static let eventPageSize = 25
@@ -67,11 +70,13 @@ struct ProjectProgressDetailView: View {
 
     /// Reads the recorded time for the tasks of the project and the period. Local data only, so it needs no waiting state.
     private func readTime() {
-        guard let load = store.facts(of: reference) else { return }
+        guard let facts = store.facts(of: reference) else { return }
         let range = ProjectProgress.range(of: period, now: now, calendar: calendar)
-        let keys = ProjectFactsMapping.timeKeys(of: reference.kind, facts: load.facts)
+        let keys = ProjectFactsMapping.timeKeys(of: reference.kind, facts: facts.facts)
         let inputs = store.timeInputs(taskKeys: keys, range: range)
-        time = (timeLoad, ProjectTime.summary(inputs: inputs, taskKeys: keys, range: range, calendar: calendar))
+        let loadKey = timeLoad
+        time = (loadKey, ProjectTime.summary(inputs: inputs, taskKeys: keys, range: range, calendar: calendar))
+        statusHistory = (loadKey, store.statusHistory(of: reference, facts: facts.facts, range: range))
     }
 
     private var retryButton: some View {
@@ -98,6 +103,7 @@ struct ProjectProgressDetailView: View {
         } else {
             chartSection(summary, range: range)
             timeSection(load.facts)
+            statusHistorySections()
             openItemsSections(load.facts)
             historySection(load.facts, range: range)
         }
@@ -201,12 +207,65 @@ struct ProjectProgressDetailView: View {
 
     /// One line of the time section; a single element, title as label and the time as value.
     private func timeRow(_ name: String, _ title: LocalizedStringKey, _ value: String) -> some View {
-        // The value in the primary colour: the secondary grey on the grouped background is reported by the contrast audit.
-        LabeledContent { Text(value).foregroundStyle(.primary) } label: { Text(title) }
+        valueRow(id: AccessibilityID.ProjectProgress.timeRow(name), Text(title), value)
+    }
+
+    /// A line with a title and a value, one element for VoiceOver. The value is in the primary colour: the secondary grey on the grouped
+    /// background is reported by the contrast audit.
+    private func valueRow(id: String, _ title: Text, _ value: String) -> some View {
+        LabeledContent { Text(value).foregroundStyle(.primary) } label: { title }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
             .accessibilityValue(value)
-            .accessibilityIdentifier(AccessibilityID.ProjectProgress.timeRow(name))
+            .accessibilityIdentifier(id)
+    }
+
+    // MARK: Status history
+
+    /// What the user changed through Tagwerk in the period: moves between Status values and the time spent in them (GitHub Projects),
+    /// reopenings and reschedules. The log is local and young, so the note under it says what it covers.
+    @ViewBuilder
+    private func statusHistorySections() -> some View {
+        Section {
+            if let cached = statusHistory, cached.load == timeLoad {
+                statusHistoryRows(cached.value)
+            } else {
+                ProgressView()
+            }
+        } header: {
+            ProgressSectionHeader(title: "Änderungen in Tagwerk")
+        }
+        if let statusHistory {
+            Section {
+                Text(ProjectProgressTexts.statusHistoryNote(since: statusHistory.value.loggedSince))
+                    .accessibilityIdentifier(AccessibilityID.ProjectProgress.statusNote)
+            }
+            .font(.footnote).foregroundStyle(.secondaryText)
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    @ViewBuilder
+    private func statusHistoryRows(_ history: ProjectStatusHistory) -> some View {
+        Group {
+            if history.isEmpty {
+                Text("Im Zeitraum wurde keine Änderung aus Tagwerk protokolliert.").foregroundStyle(.secondaryText)
+                    .accessibilityIdentifier(AccessibilityID.ProjectProgress.statusEmpty)
+            } else {
+                if history.statusChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("changes"), Text("Statuswechsel"), "\(history.statusChanges)") }
+                ForEach(history.transitions.prefix(Self.groupLimit)) { transition in
+                    valueRow(id: AccessibilityID.ProjectProgress.statusRow("transition.\(transition.from)>\(transition.to)"),
+                             Text(verbatim: ProjectProgressTexts.transitionText(transition)), "\(transition.count)×")
+                }
+                ForEach(history.durations.prefix(Self.groupLimit)) { duration in
+                    valueRow(id: AccessibilityID.ProjectProgress.statusRow("duration.\(duration.status)"), Text(verbatim: duration.status),
+                             ProjectProgressTexts.statusDurationText(duration.seconds))
+                }
+                if history.reopenCount > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("reopened"), Text("Wieder geöffnet"), "\(history.reopenCount)") }
+                if history.dueDateChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("dueDates"), Text("Frist verschoben"), "\(history.dueDateChanges)") }
+                if history.planDayChanges > 0 { valueRow(id: AccessibilityID.ProjectProgress.statusRow("planDays"), Text("Arbeitstag verschoben"), "\(history.planDayChanges)") }
+            }
+        }
     }
 
     // MARK: Open items

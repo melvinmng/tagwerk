@@ -97,4 +97,25 @@ struct ProjectProgressTextsTests {
         #expect(text.contains("2 h eingeplant") && text.contains("30 min investiert"))
         #expect(!ProjectProgressTexts.timeChartSummary([], calendar: calendar).isEmpty)
     }
+
+    // MARK: Status history
+
+    @Test func statusDurationText_daysFromTwoDaysOn() {
+        #expect(ProjectProgressTexts.statusDurationText(4 * 86_400) == "4 Tage")
+        #expect(ProjectProgressTexts.statusDurationText(2 * 86_400) == "2 Tage")
+        #expect(ProjectProgressTexts.statusDurationText(36 * 3600) == "36 h")
+        #expect(ProjectProgressTexts.statusDurationText(90 * 60) == "1 h 30 min")
+    }
+
+    @Test func transitionText_namesBothStatus() {
+        #expect(ProjectProgressTexts.transitionText(ProjectStatusTransition(from: "Ready", to: "In progress", count: 2)) == "Ready → In progress")
+    }
+
+    @Test func statusHistoryNote_saysWhatTheLogCoversAndSince() {
+        let none = ProjectProgressTexts.statusHistoryNote(since: nil)
+        #expect(none.contains("noch keine Einträge") && none.contains("GitHub und Erinnerungen"))
+        let since = ProjectProgressTexts.statusHistoryNote(since: now)
+        #expect(since.contains("in Tagwerk auf diesem Gerät") && since.contains("seit"))
+        #expect(since.contains(now.formatted(date: .abbreviated, time: .omitted)))
+    }
 }
