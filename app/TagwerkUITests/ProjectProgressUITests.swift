@@ -248,7 +248,7 @@ extension UITestCase {
         // The status history follows the time section: the third part of the page the audits cover.
         let changes = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusRow("changes")].firstMatch
         dragUntilExistsAndHittable(changes, what: "The status history of the project page")
-        scrollPageClearOfTabBar()
+        scrollPageClearOfBarEdges()
         waitUntilScreenIsStable()
         try audit("Projektseite Änderungen")
         // Back to "Aufgaben": the next audit starts from the list.
