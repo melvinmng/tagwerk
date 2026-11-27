@@ -12,7 +12,10 @@ import XCTest
 /// and every day is measured with one snapshot of the bar instead of one query per button.
 final class PlanHeaderLayoutUITests: UITestCase {
     private var arguments: [String] = []
-    override var extraLaunchArguments: [String] { arguments }
+    override var extraLaunchArguments: [String] { Self.saturdayClockArguments + arguments }
+
+    /// Pins the run to a Saturday morning (2026-11-21 is a Saturday), so the measured days are the same weekdays on every day of the week.
+    private static let saturdayClockArguments = ["-TagwerkUITestNow", "2026-11-21T09:30"]
 
     private struct Variant {
         let name: String
@@ -53,8 +56,14 @@ final class PlanHeaderLayoutUITests: UITestCase {
             let nextDay = app.buttons[variant.language == Self.english ? "Next day" : "Nächster Tag"].firstMatch
             for day in 0...5 {
                 if day > 0 {
+                    let previousTitle = titleLabel(in: bar)
                     XCTAssertTrue(nextDay.exists || nextDay.waitForExistence(timeout: Self.timeout), "\(variant.name): no next day button")
                     nextDay.tap()
+                    // The page change is finished when the title of the bar names another day than before.
+                    eventually("\(variant.name) day+\(day): the title did not change from \(previousTitle ?? "none")") {
+                        guard let current = titleLabel(in: bar) else { return false }
+                        return current != previousTitle
+                    }
                 }
                 if Self.measuredDays.contains(day) { check(variant, in: bar, day: day) }
             }
@@ -62,8 +71,6 @@ final class PlanHeaderLayoutUITests: UITestCase {
     }
 
     private func check(_ variant: Variant, in bar: XCUIElement, day: Int) {
-        // Let the page change finish before measuring.
-        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
         // One snapshot of the whole bar: a query per button would take one round trip each.
         var elements = flattened(bar)
         if title(in: elements) == nil {
@@ -85,6 +92,12 @@ final class PlanHeaderLayoutUITests: UITestCase {
         print("HEADER \(variant.name) day+\(day): window=\(width) title=\(title.label) titleWidth=\(titleFrame.width) "
             + "titleMinX=\(titleFrame.minX) firstTrailingX=\(firstTrailing) gap=\(gap) trailingWidth=\(width - firstTrailing)")
         XCTAssertGreaterThanOrEqual(gap, Self.minimumGap, "\(variant.name) day+\(day): the title \(title.label) comes too close to the bar buttons")
+    }
+
+    /// The label (the date) of the title in the bar, `nil` while the bar shows none.
+    private func titleLabel(in bar: XCUIElement) -> String? {
+        let title = bar.staticTexts.matching(NSPredicate(format: "value != nil AND value != ''")).firstMatch
+        return title.exists ? title.label : nil
     }
 
     /// All elements below the bar, taken from one snapshot.

@@ -57,6 +57,36 @@ struct UITestModeTests {
         #expect(UITestScreen.settingsSiri.settingsPath == [.siri])
     }
 
+    // MARK: Pinned clock (-TagwerkUITestNow)
+
+    private var berlin: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+        return calendar
+    }
+
+    @Test func pinnedClock_timeOnly_keepsTheDateOfToday() {
+        let today = berlin.date(from: DateComponents(year: 2026, month: 11, day: 27, hour: 15, minute: 45))!
+        let pinned = UITestMode.pinnedClock("09:30", today: today, calendar: berlin)
+        #expect(pinned == berlin.date(from: DateComponents(year: 2026, month: 11, day: 27, hour: 9, minute: 30)))
+    }
+
+    @Test func pinnedClock_withDate_pinsTheDayAndTheTime() {
+        let today = berlin.date(from: DateComponents(year: 2026, month: 11, day: 27, hour: 15, minute: 45))!
+        let pinned = UITestMode.pinnedClock("2026-11-21T09:30", today: today, calendar: berlin)
+        #expect(pinned == berlin.date(from: DateComponents(year: 2026, month: 11, day: 21, hour: 9, minute: 30)))
+        // 2026-11-21 is a Saturday.
+        #expect(pinned.map { berlin.component(.weekday, from: $0) } == 7)
+    }
+
+    @Test func pinnedClock_malformedValues_giveNil() {
+        let today = Date()
+        for value in ["", "9", "09:30:00", "25:00", "09:61", "T09:30", "2026-11-21T", "2026-13-01T09:30", "2026-02-30T09:30",
+                      "2026-11T09:30", "2026-11-21T09:30T10:00", "abc"] {
+            #expect(UITestMode.pinnedClock(value, today: today, calendar: berlin) == nil, "\(value)")
+        }
+    }
+
     // MARK: Pinned weekday (-TagwerkUITestWeekday)
 
     @Test func weekday_withoutPin_isTheActualOne() {

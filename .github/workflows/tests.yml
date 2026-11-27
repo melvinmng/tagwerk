@@ -286,7 +286,6 @@ jobs:
           restore-keys: |
             derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
             derived-fast-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-
-            derived-fast-${{ env.XCODE_BUILD_VERSION }}-
 
       - name: ${{ github.event_name == 'push' && 'Build stages, no tests (fast)' || 'Run test stages (fast)' }}
         id: tests
@@ -421,7 +420,6 @@ jobs:
           restore-keys: |
             derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-${{ hashFiles('app/project.yml', 'app/Packages/*/Package.swift', 'app/Packages/*/Package.resolved') }}-
             derived-ui-${{ env.XCODE_BUILD_VERSION }}-${{ steps.prepare.outputs.image_version }}-
-            derived-ui-${{ env.XCODE_BUILD_VERSION }}-
 
       - name: ${{ github.event_name == 'push' && 'Build stages, no tests (ui)' || format('Run test stages (ui shard {0}/{1})', matrix.shard, needs.changes.outputs.ui_shard_total) }}
         id: tests

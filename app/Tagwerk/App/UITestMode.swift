@@ -12,7 +12,8 @@ import TagwerkCore
 /// Two more arguments serve the accessibility audit: `-TagwerkUITestTextSize <size>` forces a Dynamic Type size
 /// (e.g. `accessibility5`) and `-TagwerkUITestDark` forces dark mode, both only for the app, not for the simulator.
 /// `-TagwerkUITestScreen <name>` opens a screen directly at launch (see `UITestScreen`).
-/// `-TagwerkUITestNow HH:mm` pins the time of day of the app (the date stays today's). `-TagwerkUITestWeekday <1...7>` (1 = Sunday)
+/// `-TagwerkUITestNow HH:mm` pins the time of day of the app (the date stays today's); `-TagwerkUITestNow yyyy-MM-ddTHH:mm` pins the
+/// date as well, for the tests whose result depends on the weekday of the shown days. `-TagwerkUITestWeekday <1...7>` (1 = Sunday)
 /// is the weekday that the parts of the app that offer something only on one weekday ("Tagesabschluss" offers the weekly planning
 /// on Sundays) take for the day they show, so they look the same on every day of the run. The date itself does not move: models that
 /// count with the real date (the task list) would otherwise show other tasks.
@@ -38,9 +39,7 @@ enum UITestMode {
     static func now() -> Date {
         let arguments = ProcessInfo.processInfo.arguments
         guard isActive, let index = arguments.firstIndex(of: clockArgument), index + 1 < arguments.count else { return Date() }
-        let parts = arguments[index + 1].split(separator: ":").compactMap { Int($0) }
-        guard parts.count == 2 else { return Date() }
-        return Calendar.tagwerk.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) ?? Date()
+        return pinnedClock(arguments[index + 1], today: Date(), calendar: .tagwerk) ?? Date()
     }
 
     /// The weekday that `-TagwerkUITestWeekday` names, `nil` without the argument.
@@ -111,6 +110,25 @@ enum UITestMode {
     static var scanPageCount: Int? { nil }
     static var githubCatalog: GitHubCatalog? { nil }
     #endif
+
+    /// The date that a value of `-TagwerkUITestNow` names: "HH:mm" is that time on `today`, "yyyy-MM-ddTHH:mm" is that time on that date.
+    /// `nil` for a value in any other form.
+    static func pinnedClock(_ value: String, today: Date, calendar: Calendar) -> Date? {
+        let halves = value.split(separator: "T", omittingEmptySubsequences: false).map(String.init)
+        guard let timeText = halves.last, halves.count <= 2 else { return nil }
+        let time = timeText.split(separator: ":", omittingEmptySubsequences: false).map { Int($0) }
+        guard time.count == 2, let hour = time[0], let minute = time[1], (0...23).contains(hour), (0...59).contains(minute) else { return nil }
+        var day = today
+        if halves.count == 2 {
+            let date = halves[0].split(separator: "-", omittingEmptySubsequences: false).map { Int($0) }
+            guard date.count == 3, let year = date[0], let month = date[1], let dayOfMonth = date[2],
+                  let parsed = calendar.date(from: DateComponents(year: year, month: month, day: dayOfMonth)),
+                  calendar.dateComponents([.year, .month, .day], from: parsed) == DateComponents(year: year, month: month, day: dayOfMonth)
+            else { return nil }
+            day = parsed
+        }
+        return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)
+    }
 
     /// The weekday (1 = Sunday ... 7 = Saturday) a part of the app takes for a day: the pinned weekday of the UI test mode when it is
     /// a valid weekday, else the real one.

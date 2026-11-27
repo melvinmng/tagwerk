@@ -144,8 +144,13 @@ final class BibleStudyUITests: UITestCase {
         let editor = app.textViews.firstMatch
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "The note of the session has no text view", file: file, line: line)
         editor.tap()
+        // Typing before the text view has the focus loses keystrokes, and "Fertig" then closes an editor without the checkbox line.
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Self.timeout), "The text view did not take the focus", file: file, line: line)
         // The tap puts the cursor where it lands, so the checkbox starts on a line of its own whatever came before.
         editor.typeText("\n- [ ] nochmal lesen")
+        eventually("The checkbox line did not reach the text view", file: file, line: line) {
+            (editor.value as? String)?.contains("- [ ] nochmal lesen") == true
+        }
         tapButton("Fertig", file: file, line: line)
     }
 

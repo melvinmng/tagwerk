@@ -160,7 +160,9 @@ for devices in json.load(sys.stdin)["devices"].values():
     xcrun simctl list devices >&2 || true
     return 1
   elif (( boot_status != 0 )); then
-    echo "    simulator $simulator: bootstatus ended with status $boot_status, continuing" >&2
+    echo "Simulator $simulator: bootstatus ended with status $boot_status; the simulator is not usable" >&2
+    xcrun simctl list devices >&2 || true
+    return 1
   fi
   echo "    simulator $simulator: ready after $(( SECONDS - started )) s"
   local service
@@ -214,9 +216,19 @@ tagwerk_acquire_run_lock() {
   local lock="$TAGWERK_TEST_LOG_DIR/run.lock" holder
   if ! mkdir "$lock" 2>/dev/null; then
     holder=$(cat "$lock/pid" 2>/dev/null || true)
-    if [[ -n "$holder" ]] && kill -0 "$holder" 2>/dev/null; then
-      echo "Another test run (process $holder) is active in this checkout; wait for it to finish (lock: $lock)." >&2
-      return 2
+    if [[ -n "$holder" ]]; then
+      if kill -0 "$holder" 2>/dev/null; then
+        echo "Another test run (process $holder) is active in this checkout; wait for it to finish (lock: $lock)." >&2
+        return 2
+      fi
+    else
+      # A lock folder without a process ID file younger than 10 seconds belongs to an owner that is still starting.
+      local modified
+      modified=$(stat -f %m "$lock" 2>/dev/null || date +%s)
+      if (( $(date +%s) - modified < 10 )); then
+        echo "Another test run is starting in this checkout; wait for it to finish (lock: $lock)." >&2
+        return 2
+      fi
     fi
     echo "Taking over the stale test run lock (process ${holder:-unknown} no longer exists)." >&2
     rm -rf "$lock"
