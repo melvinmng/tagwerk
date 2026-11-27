@@ -140,8 +140,9 @@ struct SearchModelTests {
             await model.settle()
         }
         #expect(probe.githubTargetReads == 1)
-        #expect(model.results.sections.map(\.kind) == [.openTasks, .githubTargets])
-        #expect(titles(model.results).suffix(1) == ["statistik-app"])
+        // "statistik" starts the name of the repository, so its section leads the list (#348).
+        #expect(model.results.sections.map(\.kind) == [.githubTargets, .openTasks])
+        #expect(titles(model.results).prefix(1) == ["statistik-app"])
     }
 
     @Test func githubTargetsAreNotReadBeforeTheFirstSearchText() async {

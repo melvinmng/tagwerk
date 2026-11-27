@@ -172,6 +172,39 @@ final class ProjectProgressUITests: UITestCase {
         openProject("Studium")
         waitForText(containing: "Gelöschte Erinnerungen fehlen im Verlauf")
     }
+
+    // MARK: "+" on the project page (#348)
+
+    private var newTaskButton: XCUIElement { app.buttons[AccessibilityID.ProjectProgress.newTask].firstMatch }
+
+    func testProjectPageOfTheLocalTasksCreatesALocalTask() {
+        openOverview()
+        openProject("Lokal")
+        XCTAssertTrue(newTaskButton.waitForExistence(timeout: Self.timeout), "The page has no \"+\"")
+        XCTAssertEqual(newTaskButton.label, "Aufgabe anlegen")
+        newTaskButton.tap()
+        XCTAssertTrue(app.navigationBars["Neue Aufgabe"].waitForExistence(timeout: Self.timeout), "\"Neue Aufgabe\" did not open")
+        XCTAssertTrue(app.buttons["Lokal"].firstMatch.isSelected, "The sheet does not start with the source \"Lokal\"")
+    }
+
+    func testProjectPageOfAReminderListCreatesAReminder() {
+        openOverview()
+        openProject("Studium")
+        XCTAssertTrue(newTaskButton.waitForExistence(timeout: Self.timeout), "The page has no \"+\"")
+        XCTAssertEqual(newTaskButton.label, "Aufgabe anlegen")
+        newTaskButton.tap()
+        XCTAssertTrue(app.navigationBars["Neue Aufgabe"].waitForExistence(timeout: Self.timeout), "\"Neue Aufgabe\" did not open")
+        XCTAssertTrue(app.buttons["Erinnerung"].firstMatch.isSelected, "The sheet does not start with the source \"Erinnerung\"")
+    }
+
+    func testProjectPageOfAGitHubProjectHasNoPlusWithoutAGitHubAccount() {
+        // The UI test mode has no GitHub account, so no issue can be created: the page offers no "+" at all.
+        openOverview()
+        openProject("Beispiel-Projekt")
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.figures].firstMatch.waitForExistence(timeout: Self.timeout),
+                      "The page did not load")
+        XCTAssertFalse(newTaskButton.exists, "A page that cannot create an issue shows a \"+\"")
+    }
 }
 
 extension UITestCase {
@@ -251,6 +284,18 @@ extension UITestCase {
         scrollPageClearOfBarEdges()
         waitUntilScreenIsStable()
         try audit("Projektseite Änderungen")
+        // Back to the overview, then the page of the local tasks: its toolbar shows the "+" (a GitHub project has none without an account).
+        app.navigationBars.buttons.firstMatch.tap()
+        let local = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.row("Lokal")].firstMatch
+        dragUntilExistsAndHittable(local, what: "The local tasks")
+        local.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.ProjectProgress.newTask].firstMatch.waitForExistence(timeout: Self.timeout),
+                      "The page of the local tasks has no \"+\"")
+        waitUntilScreenIsStable()
+        // Only what the "+" can get wrong: its name, its hit area and whether it is found at all. Contrast and Dynamic Type of this page are
+        // those of "Projektseite" (the chart legend and its notes, covered by the entries of that screen).
+        try AuditAllowlist.audit(app, screen: "Projektseite Lokal (Knopf)",
+                                 for: [.sufficientElementDescription, .hitRegion, .elementDetection, .trait, .textClipped])
         // Back to "Aufgaben": the next audit starts from the list.
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()

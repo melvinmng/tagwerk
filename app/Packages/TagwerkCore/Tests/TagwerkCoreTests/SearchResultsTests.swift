@@ -59,10 +59,103 @@ import Testing
     @Test func sectionsFollowSpecOrderAndDropEmptyOnes() {
         var input = full()
         input.settings = [SettingsSearchItem(id: "s", title: "Erfassen", pathText: "")]
-        input.githubTargets = [repository("octo", "statistik-app")]
+        // The query only occurs inside the name, so the section keeps its place before "Einstellungen".
+        input.githubTargets = [repository("octo", "wochenstatistik")]
         #expect(make(input).sections.map(\.kind) == SearchSectionKind.allCases)
         input.completed = []
         #expect(!make(input).sections.map(\.kind).contains(.completedTasks))
+    }
+
+    // MARK: Order of "Repositories & Projekte" (#348, A3)
+
+    private func promotes(_ query: String, _ items: GitHubTargetSearchItem...) -> Bool {
+        SearchResults.promotesGitHubTargets(query: query, matches: items)
+    }
+
+    @Test func promotion_aNameThatStartsTheQueryMovesTheSectionUp() {
+        #expect(promotes("tagwerk", repository("melvinmng", "tagwerk")))
+        #expect(promotes("tagwerk", repository("melvinmng", "tagwerk-docs")))
+        #expect(promotes("tagwerk", project("P1", "Tagwerk")))
+        #expect(promotes("tagwerk", project("P1", "Mein Tagwerk Projekt")))
+        #expect(promotes("docs", repository("melvinmng", "tagwerk-docs")))
+    }
+
+    @Test func promotion_aHitInsideAWordKeepsTheSectionDown() {
+        #expect(!promotes("Bericht", repository("melvinmng", "wochenbericht")))
+        #expect(!promotes("bericht", project("P1", "Wochenbericht")))
+    }
+
+    @Test func promotion_theOwnerAloneDoesNotCount() {
+        #expect(!promotes("melvinmng", repository("melvinmng", "tagwerk")))
+        #expect(!promotes("melvinmng", project("P1", "Haushalt", owner: "melvinmng")))
+        #expect(!promotes("melvinmng/", repository("melvinmng", "tagwerk")))
+    }
+
+    @Test func promotion_theFullNameCountsOnceItReachesIntoTheName() {
+        #expect(promotes("melvinmng/tag", repository("melvinmng", "tagwerk")))
+        #expect(promotes("melvinmng/tagwerk", repository("melvinmng", "tagwerk")))
+        #expect(!promotes("melvinmng/xyz", repository("melvinmng", "tagwerk")))
+        // The ID of a project is no name.
+        #expect(!promotes("melvinmng/tag", project("melvinmng/tagwerk", "Haushalt")))
+    }
+
+    @Test func promotion_needsThreeCharacters() {
+        #expect(!promotes("ta", repository("melvinmng", "tagwerk")))
+        #expect(!promotes("  ta  ", repository("melvinmng", "tagwerk")))
+        #expect(promotes("tag", repository("melvinmng", "tagwerk")))
+        #expect(promotes("  tag ", repository("melvinmng", "tagwerk")))
+        #expect(SearchResults.githubPromotionMinimumLength == 3)
+    }
+
+    @Test func promotion_foldsCaseAndDiacriticsLikeTheSearch() {
+        #expect(promotes("TAGWERK", repository("melvinmng", "tagwerk")))
+        #expect(promotes("prufung", project("P1", "Prüfungsplanung")))
+        #expect(promotes("PRÜFUNG", project("P1", "Prufungsplanung")))
+        #expect(promotes("strasse", repository("octo", "Straße-Karte")))
+        #expect(promotes("MELVINMNG/TAG", repository("melvinmng", "Tagwerk")))
+    }
+
+    @Test func promotion_everyWordOfTheQueryHasToStartAWordOfTheName() {
+        #expect(promotes("tagwerk docs", repository("melvinmng", "tagwerk-docs")))
+        #expect(!promotes("tagwerk bericht", repository("melvinmng", "tagwerk-wochenbericht")))
+    }
+
+    @Test func promotion_oneNameHitIsEnoughAmongOthers() {
+        #expect(promotes("tagwerk", repository("melvinmng", "wochentagwerk"), repository("melvinmng", "tagwerk-docs")))
+        #expect(!promotes("tagwerk", repository("melvinmng", "wochentagwerk")))
+        #expect(!promotes("tagwerk"))
+    }
+
+    @Test func promotion_theSectionLeadsTheListOnANameHit() {
+        var input = full()
+        input.settings = settings(1)
+        input.githubTargets = [repository("octo", "statistik-app")]
+        let results = make(input)
+        #expect(results.sections.map(\.kind) == [.githubTargets] + SearchSectionKind.allCases.filter { $0 != .githubTargets })
+        #expect(results.sectionOrder.first == .githubTargets)
+        #expect(results.sectionOrder.count == SearchSectionKind.allCases.count)
+    }
+
+    @Test func promotion_theSectionKeepsItsPlaceWithoutANameHit() {
+        var input = full()
+        input.settings = settings(1)
+        input.githubTargets = [repository("octo", "wochenstatistik")]
+        let results = make(input)
+        #expect(results.sections.map(\.kind) == SearchSectionKind.allCases)
+        #expect(results.sectionOrder == SearchSectionKind.allCases)
+    }
+
+    @Test func promotion_theOwnerOfARepositoryIsNotEnoughInTheResults() {
+        var input = full()
+        input.githubTargets = [repository("statistik-gruppe", "notizen")]
+        let results = make(input)
+        #expect(targetIDs(results) == ["statistik-gruppe/notizen"])
+        #expect(results.sections.first?.kind == .upcomingEvents)
+    }
+
+    @Test func promotion_noGithubHitsLeaveTheOrderAlone() {
+        #expect(make(full()).sectionOrder == SearchSectionKind.allCases)
+        #expect(SearchResults.empty.sectionOrder == SearchSectionKind.allCases)
     }
 
     @Test func filterEventsShowsOnlyEventSections() {

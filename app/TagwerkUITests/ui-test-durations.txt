@@ -1,51 +1,49 @@
 # Measured duration in seconds of every UI test class, the weights for the shards of the UI test job
 # (scripts/ui-test-shards.py, see TAGWERK_UI_SHARD in app/test-all.sh). One `ClassName seconds` per line.
 #
-# Source: pull request run 45456069245 (both jobs "UI shard (n/2)", pull request test set, runner xcode-27 with 3 cores), the
-# per-test durations from the watchdog progress lines ("started" to "passed"/"failed") summed per class; 3325 s and 2576 s.
-# The earlier weights came from run 45193805665 (one job, 88 tests in 4619 s) and missed the growth of BibleStudyUITests.
+# Source: pull request run 46013173609 (jobs "UI shard (n/3)", pull request test set, runner xcode-27 with 3 cores), the
+# per-test durations from the watchdog progress lines ("started" to "passed"/"failed") summed per class; shard 3 from its second
+# attempt, except TaskFlowUITests (cut off by the watchdog there) and PlanUITests (the longer first attempt). The audits had grown
+# most since they report every finding instead of stopping at the first (AccessibilityAuditLargeTextUITests 68 -> 775 s).
+# The earlier weights came from run 45456069245 (two shards, 3325 s and 2576 s) and run 45193805665 (one job, 4619 s).
 # Estimates (no measurement in that run, marked "est."): classes that are nightly-only.
 #
 # A class without an entry is weighted with the mean of the listed ones (the script reports it), so the list may lag behind
 # new classes; refresh it from the "Executed ..." lines of a run when the shards drift apart (compare the shard durations in the
 # job summaries).
 AccessibilityAuditEveningUITests 112
-AccessibilityAuditLargeTextUITests 68
-AccessibilityAuditRecipesUITests 685
-AccessibilityAuditUITests 540
-AssistantCardFollowUpUITests 84
-AssistantCardLargeTextUITests 58
-AssistantCardUITests 66
-AssistantReviseAllUITests 59
-BackupUITests 100
-BibleStudyUITests 805
-CaptureUITests 273
-FoodLookupUITests 79
-# est. new classes (two tests each, repository and project picker sheets)
-GitHubProjectPickerUITests 60
-GitHubRepositoryPickerUITests 60
-# est. new class (three tests, search hits of repositories and projects)
-GitHubSearchUITests 75
-GoalPlanningUITests 83
-HabitUITests 73
-KeyboardDismissalUITests 93
-NoteEditorUITests 654
-NoteInsertUITests 541
-NoteLockDeniedUITests 167
-NoteLockUITests 185
-NotesUITests 166
-NowMarkerUITests 26
-PlanUITests 148
-# est. class of the project progress (eleven tests, overview and page with time section and status history; 347 s measured locally at 1.4)
-ProjectProgressUITests 490
-RoutineUITests 260
-SearchUITests 114
-SettingsNavigationUITests 39
-ShoppingTranslateUITests 122
-ShoppingUITests 99
-TaskFlowUITests 290
-# est. new class (one test, voice page in the settings)
-VoiceChoiceUITests 45
+AccessibilityAuditLargeTextUITests 775
+AccessibilityAuditRecipesUITests 688
+AccessibilityAuditUITests 873
+AssistantCardFollowUpUITests 81
+AssistantCardLargeTextUITests 41
+AssistantCardUITests 118
+AssistantReviseAllUITests 84
+BackupUITests 88
+BibleStudyUITests 1024
+CaptureUITests 401
+FoodLookupUITests 361
+GitHubProjectPickerUITests 48
+GitHubRepositoryPickerUITests 69
+GitHubSearchUITests 310
+GoalPlanningUITests 102
+HabitUITests 76
+KeyboardDismissalUITests 66
+NoteEditorUITests 418
+NoteInsertUITests 580
+NoteLockDeniedUITests 166
+NoteLockUITests 307
+NotesUITests 209
+NowMarkerUITests 29
+PlanUITests 465
+ProjectProgressUITests 965
+RoutineUITests 296
+SearchUITests 178
+SettingsNavigationUITests 156
+ShoppingTranslateUITests 107
+ShoppingUITests 156
+TaskFlowUITests 315
+VoiceChoiceUITests 29
 # est. nightly-only classes (full set only)
 AccessibilityAuditRecipesLargeTextUITests 600
 AccessibilityAuditEveningLargeTextUITests 100

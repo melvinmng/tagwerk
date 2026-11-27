@@ -20,7 +20,9 @@ public enum ChoiceFilter {
         return prefixHits + otherHits
     }
 
-    private static func startsAWord(_ word: String, in text: String) -> Bool {
+    /// `word` occurs in `text` at the start of the text or right after a character that is neither a letter nor a digit. Both are
+    /// expected folded (`SearchText.fold`).
+    static func startsAWord(_ word: String, in text: String) -> Bool {
         var searchStart = text.startIndex
         while let range = text.range(of: word, range: searchStart..<text.endIndex) {
             if range.lowerBound == text.startIndex { return true }

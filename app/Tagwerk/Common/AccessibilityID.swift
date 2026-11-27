@@ -68,6 +68,8 @@ enum AccessibilityID {
         static let statusNote = "projectProgress.statusNote"
         /// The note "Erneut laden" after a failed load.
         static let retry = "projectProgress.retry"
+        /// The "+" in the toolbar of the project page ("Issue anlegen" / "Aufgabe anlegen").
+        static let newTask = "projectProgress.newTask"
     }
 
     enum Travel {

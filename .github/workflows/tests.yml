@@ -73,10 +73,11 @@ name: Tests
 #   fast  37 min in total (first run, cold build): packages 4.5 + 5.4 + 5.0 + 3.7 + 6.5 min (almost only compiling), app scheme
 #         about 10 min -> job 55 min, test step 45 min
 #   ui    before the split one job needed 60 to 100 minutes with a warm cache (pull request set: 88 tests, 4619 s of test time in
-#         run 45193805665, build 76 s; the 100 minutes were a hang). With UI_SHARD_COUNT = 3 each shard runs about 1970 s of tests
-#         (about 33 min, see scripts/ui-test-shards.py plan 3 --set pr; run 45456069245 measured 5900 s in total) after its own
-#         build (76 s warm, about 34 min cold). Two shards (about 2950 s each) came too close to the 3600 s watchdog limit on a
-#         slow runner, where the simulator boot alone took close to 5 minutes
+#         run 45193805665, build 76 s; the 100 minutes were a hang). With UI_SHARD_COUNT = 4 each shard runs about 2430 s of tests
+#         (about 40 min, see scripts/ui-test-shards.py plan 4 --set pr; run 46013173609 measured about 9700 s in total) after its
+#         own build (76 s warm, about 34 min cold). Three shards (about 3230 s each since the audits report every finding and the
+#         project pages grew) reached the 3600 s watchdog limit; two shards (about 2950 s each in run 45456069245) had already come
+#         too close to it on a slow runner, where the simulator boot alone took close to 5 minutes
 #         -> pull request: job 95 min, test step 85 min; nightly and manual: job 105 min, test step 95 min; a cold run (34 + 39 min)
 #            fits
 #   scripts  about 1 minute of tests plus the runner start -> job 15 min
@@ -126,7 +127,7 @@ env:
   XCODEGEN_VERSION: 2.46.0
   XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
   # Number of UI test shards (one macOS job each). The shards are balanced by app/TagwerkUITests/ui-test-durations.txt.
-  UI_SHARD_COUNT: "3"
+  UI_SHARD_COUNT: "4"
 
 jobs:
   changes:

@@ -6337,6 +6337,16 @@
         }
       }
     },
+    "Aufgabe anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create task"
+          }
+        }
+      }
+    },
     "Aufgabe erledigen": {
       "localizations": {
         "en": {
