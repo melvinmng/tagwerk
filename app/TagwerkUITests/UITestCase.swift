@@ -48,11 +48,16 @@ class UITestCase: XCTestCase {
             }
             return false
         }
+        // Findings of a test that did not report them (a crashed earlier test) must not show up in this one.
+        _ = AuditAllowlist.takeCollectedFindings()
         // A failed test prints what the app showed, so a failure in a CI log can be understood without a rerun.
         addTeardownBlock { [weak self] in
             guard let self, let run = self.testRun, !run.hasSucceeded, let app = self.app else { return }
             print("UI TEST FAILED, accessibility tree:\n\(app.debugDescription)")
         }
+        // Teardown blocks run in reverse order, so this one runs first: the failures it records are already there when the block
+        // above decides whether to print the tree. It runs when the test method ends, also after a failed step or a thrown error.
+        addTeardownBlock { [weak self] in self?.reportCollectedAuditFindings() }
         if launchesInSetUp { launchApp() }
     }
 
@@ -65,6 +70,23 @@ class UITestCase: XCTestCase {
         self.app = app
         let ready = app.descendants(matching: .any)[AccessibilityID.App.demoReady]
         XCTAssertTrue(ready.waitForExistence(timeout: 60), "The demo data was not created (calendar/reminder access granted?)")
+    }
+
+    /// Reports the audit findings that `AuditAllowlist.audit` collected during the test, each as a failure of its own at the call site of
+    /// the audit, followed by a compact summary. Without findings nothing happens.
+    ///
+    /// `continueAfterFailure` is switched on here only: with `false`, the first recorded issue ends the block, and the other findings
+    /// would be lost. The test method has ended by now, so no step can run on after a failure.
+    private func reportCollectedAuditFindings() {
+        let collector = AuditAllowlist.takeCollectedFindings()
+        guard !collector.isEmpty else { return }
+        continueAfterFailure = true
+        for finding in collector.findings {
+            let location = XCTSourceCodeLocation(filePath: finding.file, lineNumber: finding.line)
+            record(XCTIssue(type: .assertionFailure, compactDescription: finding.message,
+                            sourceCodeContext: XCTSourceCodeContext(location: location)))
+        }
+        print(collector.summary)
     }
 
     // MARK: Helpers

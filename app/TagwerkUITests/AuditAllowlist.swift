@@ -414,7 +414,12 @@ enum AuditAllowlist {
             + "together with the check circle of the lists (#188)."),
     ]
 
-    /// Runs the audit on the open screen and fails the test for every finding that is not on the allowlist.
+    /// Runs the audit on the open screen and collects every finding that is not on the allowlist and that the confirmation passes confirm.
+    ///
+    /// A confirmed finding does not stop the test: it is added to `collected` and the test goes on to the next screen, so one run reports
+    /// the findings of all screens. `UITestCase` reports them as failures when the test ends (`reportCollectedAuditFindings`), also when
+    /// the test stops early. A screen that does not settle is collected the same way, and its audit is skipped (a screen that is still
+    /// changing gives findings that depend on the speed of the run). Errors of the audit itself are thrown and stop the test.
     ///
     /// The contrast check runs as a pass of its own. In a combined run (`.all`) the audit also switches the system text size for
     /// the Dynamic Type check, and the elements of the contrast findings can no longer be resolved afterwards: they arrive
@@ -425,31 +430,65 @@ enum AuditAllowlist {
                       file: StaticString = #filePath, line: UInt = #line) throws {
         currentScreen = screen
         logDefinitionsOnce()
+        // The instability of one screen is reported once, however many passes find it.
+        var reportedUnstable = false
+        func settled() throws -> Bool {
+            guard let changing = try UITestCase.unstableElements(of: app) else { return true }
+            if collectsFindings {
+                recordLine("\(screen) | unstable screen | \(changing)\n")
+            } else if !reportedUnstable {
+                reportedUnstable = true
+                collected.add(CollectedAuditFinding(
+                    screen: screen, message: "\(screen): the screen did not settle before the audit; elements that changed last: \(changing)",
+                    file: "\(file)", line: Int(line)))
+            }
+            // In collect mode the audit goes on, so the flaky screens are listed with their findings.
+            return collectsFindings
+        }
         let passes = auditTypes.contains(.contrast) && auditTypes != .contrast ? [.contrast, auditTypes.subtracting(.contrast)] : [auditTypes]
+        var abandoned = false
         for pass in passes {
             // Before each pass: a screen that is still changing (late loading, layout, an animation) gives findings that
             // depend on the speed of the run. The Dynamic Type pass switches the system text size, so the wait also runs
             // between the passes and after the last one, so that the switch back does not run into the next test step.
-            try waitForStableScreen(app, screen: screen, file: file, line: line)
+            guard try settled() else {
+                abandoned = true
+                break
+            }
             let rejected = try rejectedFindings(app, screen: screen, pass: pass)
             guard !rejected.isEmpty else { continue }
             // Another pass confirms or drops each finding (`AuditConfirmation`; Dynamic Type needs three passes in all, the other
             // types two). A further pass only runs when the earlier ones reported something, so a clean screen costs nothing.
+            // A screen that stops settling during a confirmation pass confirms nothing; the instability itself is reported.
             let outcomes = try AuditConfirmation.judge(rejected) {
-                try waitForStableScreen(app, screen: screen, file: file, line: line)
+                guard try settled() else {
+                    abandoned = true
+                    return []
+                }
                 return Set(try rejectedFindings(app, screen: screen, pass: pass).map(\.key))
             }
             for (finding, outcome) in outcomes {
                 switch outcome {
                 case .confirmed:
-                    XCTFail(finding.message, file: file, line: line)
+                    collected.add(CollectedAuditFinding(screen: screen, message: finding.message, file: "\(file)", line: Int(line)))
                 case .unconfirmed(let passes):
                     print("Unconfirmed audit finding (reported by \(passes) of \(AuditConfirmation.requiredPasses(for: finding)) required passes): \(finding.message)")
                 }
             }
+            if abandoned { break }
         }
-        try waitForStableScreen(app, screen: screen, file: file, line: line)
+        if !abandoned { _ = try settled() }
         recordStats(screen: screen)
+    }
+
+    /// The confirmed findings of the current test that are not reported yet; see `AuditFindingCollector`.
+    private static var collected = AuditFindingCollector()
+
+    /// Hands the findings collected so far to the caller and starts an empty collection. `UITestCase` calls it when a test ends and
+    /// before the next one starts.
+    static func takeCollectedFindings() -> AuditFindingCollector {
+        defer { collected = AuditFindingCollector() }
+        return collected
     }
 
     /// Runs one audit pass and returns the findings that are not on the allowlist, each with the message that fails the test and a
@@ -474,17 +513,6 @@ enum AuditAllowlist {
         }
     }
 
-
-    /// Fails with the elements that kept changing when the screen does not settle. In collect mode the instability is
-    /// written to the collect file as a finding of its own and the run goes on, so the flaky screens can be listed.
-    private static func waitForStableScreen(_ app: XCUIApplication, screen: String, file: StaticString, line: UInt) throws {
-        guard let changing = try UITestCase.unstableElements(of: app) else { return }
-        if collectsFindings {
-            recordLine("\(screen) | unstable screen | \(changing)\n")
-        } else {
-            XCTFail("\(screen): the screen did not settle before the audit; elements that changed last: \(changing)", file: file, line: line)
-        }
-    }
 
     /// Error of `performAccessibilityAudit` when the audit did not finish in its (not configurable) time limit: domain
     /// "com.apple.xcode.xctest.accessibilityAudit", code -56, "Audit failed to complete in time".

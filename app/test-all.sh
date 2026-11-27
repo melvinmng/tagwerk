@@ -46,7 +46,10 @@
 #                              retry (nightly and manual runs, so wobbling tests stay visible). UI stage only; the package and
 #                              app unit stages never retry. The retry is a call of its own because xcodebuild's
 #                              -retry-tests-on-failure did not repeat tests that failed an assertion (the runner process ends after the
-#                              failure of a test with continueAfterFailure = false).
+#                              failure of a test with continueAfterFailure = false). A test is one unit for the retry however many failures
+#                              it reports: an accessibility audit test collects the confirmed findings of all its screens and reports
+#                              each as its own "error:" line when it ends (see AuditAllowlist.audit), so one run lists all findings;
+#                              the test is still one failed test, and the retry runs it again as a whole.
 #   TAGWERK_NIGHTLY_ONLY_FILE  alternative path of the nightly-only list (used by scripts/tests/test-all-ui-selection.zsh)
 #   TAGWERK_UI_SHARD           "I/N" (for example 1/2): run only shard I of N of the UI test classes. The classes are read from the
 #                              sources of the UI test target and distributed by their measured durations
