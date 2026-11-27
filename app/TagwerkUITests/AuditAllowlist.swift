@@ -683,7 +683,11 @@ enum AuditAllowlist {
         // (entry above: the label wraps completely, the audit counts the height of the row as clipped). When the page is opened directly
         // with `-TagwerkUITestScreen` the audit reports it without its element; reached through the settings list it came with the element
         // (frame 36, 276, 236 × 187 in both cases, the same single finding on the page).
-        return currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
+        // "Projektseite Änderungen" (the status history of the project page): one "may be clipped" without an element (no label, no
+        // identifier, frame 0×0), seen in a local run of the audit class on 2026-11-27 and as "unconfirmed" in a CI run (reported by one
+        // of the two passes that a finding needs); the section is a plain list of rows that grows with the text size and the AX5 run
+        // checks the clipping of the page. Stays on the device test list (large text).
+        return currentScreen == "Projektseite Änderungen" || currentScreen == "Notizenliste" || currentScreen == "Einkaufsliste › Karte „übersetzen“" || currentScreen == "Planen (Tag)"
             || currentScreen == "AX5/dark Einstellungen › KI › Sprache"
             || (currentScreen == "Rezepte" && issue.detailedDescription.contains("UISearchBarTextField"))
     }
