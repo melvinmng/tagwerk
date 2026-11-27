@@ -147,18 +147,31 @@ enum ShareExtractor {
     }
 
     private nonisolated static func copyFile(at source: URL, into directory: URL) throws -> CopiedFile {
-        let size = (try? source.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
-        guard size <= maximumFileBytes else { throw ShareExtractionError.tooLarge }
+        // A size the system does not report is not "0 bytes": it is read from the file attributes, and checked again after the copy.
+        if let size = knownSize(of: source) { guard size <= maximumFileBytes else { throw ShareExtractionError.tooLarge } }
         // One folder per file keeps equal names apart; the inbox makes the final names unique.
         let folder = directory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let name = source.lastPathComponent.isEmpty ? "Datei" : source.lastPathComponent
         let target = folder.appending(path: name)
-        try FileManager.default.copyItem(at: source, to: target)
-        #if DEBUG
-        log.debug("copied file, \(size, privacy: .public) bytes")
-        #endif
-        return CopiedFile(url: target, name: name, size: size)
+        do {
+            try FileManager.default.copyItem(at: source, to: target)
+            guard let size = knownSize(of: target) else { throw ShareExtractionError.nothingShared }
+            guard size <= maximumFileBytes else { throw ShareExtractionError.tooLarge }
+            #if DEBUG
+            log.debug("copied file, \(size, privacy: .public) bytes")
+            #endif
+            return CopiedFile(url: target, name: name, size: size)
+        } catch {
+            try? FileManager.default.removeItem(at: folder)
+            throw error
+        }
+    }
+
+    /// The size in bytes from the resource values, else from the file attributes; `nil` when neither tells.
+    private nonisolated static func knownSize(of url: URL) -> Int? {
+        if let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize { return size }
+        return (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int
     }
 
     /// The property list Safari adds when the extension has a preprocessing script. It is read inside the callback, so only the

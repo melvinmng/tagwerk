@@ -115,14 +115,12 @@ struct TagwerkApp: App {
                         // Directly, not debounced: the app may be suspended before a delayed run starts.
                         // The snapshot reads the store directly, so it is written first, before any await.
                         environment.writeSnapshot()
-                        // The automatic backup reads the store directly; a background task keeps the app alive until it is written.
-                        var backupTask = UIBackgroundTaskIdentifier.invalid
-                        backupTask = UIApplication.shared.beginBackgroundTask(withName: "tagwerk.backup") {
-                            UIApplication.shared.endBackgroundTask(backupTask)
-                        }
+                        // The automatic backup and the follow-up work below must finish before the app is suspended; one background
+                        // task covers all of it and is ended exactly once, by whichever of expiration and completion comes first.
+                        let backgroundTask = BackgroundTaskHandle(name: "tagwerk.background")
                         environment.backup.runAutomaticBackupIfDue()
-                        if backupTask != .invalid { UIApplication.shared.endBackgroundTask(backupTask) }
                         Task {
+                            defer { backgroundTask.end() }
                             await environment.makeBackgroundRefresh().submitNext()
                             await environment.notifications.reschedule()
                             // Health entries that could not be written or deleted earlier.
@@ -141,5 +139,25 @@ struct TagwerkApp: App {
         .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) { [environment] in
             await environment.makeBackgroundRefresh().run()
         }
+    }
+}
+
+/// One `UIBackgroundTaskIdentifier` that is ended exactly once, whether the system expires it or the work finishes first.
+@MainActor
+private final class BackgroundTaskHandle {
+    private var identifier = UIBackgroundTaskIdentifier.invalid
+
+    init(name: String) {
+        identifier = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
+            self?.end()
+        }
+    }
+
+    /// Ends the task; later calls do nothing.
+    func end() {
+        guard identifier != .invalid else { return }
+        let task = identifier
+        identifier = .invalid
+        UIApplication.shared.endBackgroundTask(task)
     }
 }

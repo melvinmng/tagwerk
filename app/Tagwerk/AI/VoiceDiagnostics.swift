@@ -1,6 +1,7 @@
 import AIKit
 import AVFoundation
 import Foundation
+import os
 import SwiftUI
 
 /// One checked voice endpoint: what was called and what came back (never the token).
@@ -109,26 +110,57 @@ final class SpeechSampleRecorder {
     func germanSample() async -> (samples: [Int16], rate: Int)? {
         let utterance = AVSpeechUtterance(string: VoiceDiagnostics.sampleSentence)
         utterance.voice = AVSpeechSynthesisVoice(language: "de-DE")
+        let collector = SampleCollector()
         return await withCheckedContinuation { continuation in
-            var samples: [Int16] = []
-            var rate = 0
-            var finished = false
+            // `write` calls back on a synthesizer queue, possibly concurrently; the collector serialises the state and
+            // guarantees that the continuation is resumed exactly once.
             synthesizer.write(utterance) { buffer in
-                guard !finished else { return }
                 guard let pcm = buffer as? AVAudioPCMBuffer, pcm.frameLength > 0 else {
-                    finished = true
-                    continuation.resume(returning: samples.isEmpty ? nil : (samples, rate))
+                    collector.finish { continuation.resume(returning: $0) }
                     return
                 }
-                rate = Int(pcm.format.sampleRate)
                 let count = Int(pcm.frameLength)
+                let chunk: [Int16]
                 if let floats = pcm.floatChannelData?[0] {
-                    samples += (0..<count).map { Int16(max(-1, min(1, floats[$0])) * Float(Int16.max)) }
+                    chunk = (0..<count).map { Int16(max(-1, min(1, floats[$0])) * Float(Int16.max)) }
                 } else if let ints = pcm.int16ChannelData?[0] {
-                    samples += (0..<count).map { ints[$0] }
+                    chunk = (0..<count).map { ints[$0] }
+                } else {
+                    chunk = []
                 }
+                collector.append(chunk, rate: Int(pcm.format.sampleRate))
             }
         }
+    }
+}
+
+/// Collects the buffers of `AVSpeechSynthesizer.write` behind a lock. `finish` delivers the result only for the first
+/// call, so a repeated end-of-stream callback cannot resume a continuation twice.
+private final class SampleCollector: @unchecked Sendable {
+    private struct State {
+        var samples: [Int16] = []
+        var rate = 0
+        var finished = false
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State())
+
+    func append(_ chunk: [Int16], rate: Int) {
+        state.withLock { state in
+            guard !state.finished else { return }
+            state.rate = rate
+            state.samples += chunk
+        }
+    }
+
+    /// Calls `deliver` with the collected sample (`nil` when no audio was produced), for the first call only.
+    func finish(deliver: ((samples: [Int16], rate: Int)?) -> Void) {
+        let outcome: (samples: [Int16], rate: Int)?? = state.withLock { state in
+            guard !state.finished else { return .none }
+            state.finished = true
+            return .some(state.samples.isEmpty ? nil : (state.samples, state.rate))
+        }
+        if let outcome { deliver(outcome) }
     }
 }
 

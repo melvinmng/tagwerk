@@ -141,6 +141,7 @@ final class PlanningModel {
     /// The day-relative state the day page shows besides its plan (day scope only), for the plans of `neighbourPlans`.
     var neighbourExtras: [PlanDay: DayPageExtras] = [:]
     @ObservationIgnored var neighbourLoad: Task<Void, Never>?
+    @ObservationIgnored var travelTimeRefresh: Task<Void, Never>?
     /// The app turns this on; tests leave it off, so no background load (neighbour plans, travel times) outlives a
     /// test's store.
     @ObservationIgnored var runsBackgroundLoads = false

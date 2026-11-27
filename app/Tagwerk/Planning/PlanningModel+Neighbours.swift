@@ -44,12 +44,13 @@ extension PlanningModel {
         neighbourExtras = extras
     }
 
-    /// Starts the loads that follow a reload: the neighbour plans (an earlier run that is still going is cancelled) and
-    /// missing travel times. Neither delays `days`.
+    /// Starts the loads that follow a reload: the neighbour plans and missing travel times (an earlier run
+    /// of either that is still going is cancelled). Neither delays `days`.
     func scheduleBackgroundLoads() {
         guard runsBackgroundLoads else { return }
         neighbourLoad?.cancel()
         neighbourLoad = Task { [weak self] in await self?.loadNeighbours() }
-        Task { [weak self] in _ = await self?.refreshTravelTimes() }
+        travelTimeRefresh?.cancel()
+        travelTimeRefresh = Task { [weak self] in _ = await self?.refreshTravelTimes() }
     }
 }

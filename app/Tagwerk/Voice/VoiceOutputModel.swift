@@ -33,7 +33,9 @@ final class VoiceOutputModel {
     @ObservationIgnored private let audio: VoiceAudioSession
     @ObservationIgnored private let preferences: () -> Preferences
     @ObservationIgnored private let isVoiceOverRunning: () -> Bool
-    @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    /// Read in `deinit`, where nothing else can reach the object any more; written only on the main actor before that.
+    @ObservationIgnored nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
+    @ObservationIgnored private let notificationCenter: NotificationCenter
     @ObservationIgnored private let sleep: (Duration) async -> Void
     @ObservationIgnored private var completion: ((Ending) -> Void)?
     @ObservationIgnored private var timeLimit: Task<Void, Never>?
@@ -47,8 +49,14 @@ final class VoiceOutputModel {
         self.preferences = preferences
         self.isVoiceOverRunning = isVoiceOverRunning
         self.sleep = sleep
+        self.notificationCenter = notifications
         speaker.onEvent = { [weak self] event in self?.handle(event) }
         observeInterruptions(notifications)
+    }
+
+    deinit {
+        // The center holds the observer tokens strongly until they are removed.
+        for observer in observers { notificationCenter.removeObserver(observer) }
     }
 
     /// The synthesizer only pauses when the app leaves or a call starts; reading ends there instead of

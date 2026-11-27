@@ -314,10 +314,14 @@ final class AppEnvironment {
         assistant.fixedVoiceLanguage = { settings.contentLanguages.fixedAnswerLanguage }
         assistant.shoppingLanguage = { settings.contentLanguages.shoppingLanguage() }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
+        #if DEBUG && targetEnvironment(simulator)
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
         let makeRecognizer: @MainActor () -> SpeechRecognizing = {
             demoVoice ? DemoSpeechRecognizer() as SpeechRecognizing : AppleSpeechRecognizer(kind: .dictation)
         }
+        #else
+        let makeRecognizer: @MainActor () -> SpeechRecognizing = { AppleSpeechRecognizer(kind: .dictation) }
+        #endif
         self.makeRecognizer = makeRecognizer
         self.voiceMode = VoiceModeController(
             assistant: assistant, makeRecognizer: makeRecognizer, output: voiceOutput, tone: SystemTonePlayer(),

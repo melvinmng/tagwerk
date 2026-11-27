@@ -181,22 +181,25 @@ final class SystemSpeaker: NSObject, SpeechSpeaking, AVSpeechSynthesizerDelegate
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         let id = ObjectIdentifier(utterance)
-        MainActor.assumeIsolated {
-            if let index = utterances[id] { onEvent?(.sentenceStarted(index)) }
+        // Delivered on an arbitrary queue; hop to the main actor instead of asserting isolation.
+        Task { @MainActor [weak self] in
+            guard let self, let index = utterances[id] else { return }
+            onEvent?(.sentenceStarted(index))
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         let id = ObjectIdentifier(utterance)
-        MainActor.assumeIsolated {
-            if utterances[id] == lastIndex { onEvent?(.finished) }
+        Task { @MainActor [weak self] in
+            guard let self, utterances[id] == lastIndex else { return }
+            onEvent?(.finished)
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         let id = ObjectIdentifier(utterance)
-        MainActor.assumeIsolated {
-            guard utterances[id] != nil else { return }
+        Task { @MainActor [weak self] in
+            guard let self, utterances[id] != nil else { return }
             utterances = [:]
             onEvent?(.interrupted)
         }
