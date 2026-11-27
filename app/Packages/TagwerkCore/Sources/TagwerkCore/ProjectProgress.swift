@@ -30,10 +30,14 @@ public struct ProjectItemFact: Sendable, Hashable, Identifiable {
     public var openBlockingCount: Int
     /// The task in Tagwerk (`TaskID.key`) when the item is one of the user's tasks, so a tap can open the editor.
     public var taskKey: String?
+    /// The effort estimate in minutes; `nil` when the source has none (GitHub: the Estimate field of the project, local tasks and
+    /// reminders: the estimate set in Tagwerk).
+    public var estimateMinutes: Int?
 
     public init(id: String, title: String, number: Int? = nil, createdAt: Date? = nil, closedAt: Date? = nil,
                 state: ProjectItemState = .open, due: DueDate? = nil, status: String? = nil, assignees: [String] = [],
-                url: URL? = nil, openBlockedByCount: Int = 0, openBlockingCount: Int = 0, taskKey: String? = nil) {
+                url: URL? = nil, openBlockedByCount: Int = 0, openBlockingCount: Int = 0, taskKey: String? = nil,
+                estimateMinutes: Int? = nil) {
         self.id = id
         self.title = title
         self.number = number
@@ -47,6 +51,7 @@ public struct ProjectItemFact: Sendable, Hashable, Identifiable {
         self.openBlockedByCount = openBlockedByCount
         self.openBlockingCount = openBlockingCount
         self.taskKey = taskKey
+        self.estimateMinutes = estimateMinutes
     }
 
     public var isOpen: Bool { state == .open }
@@ -228,15 +233,24 @@ public enum ProjectProgress {
         return closedAt > instant
     }
 
-    public static func buckets(facts: [ProjectItemFact], range: ProjectRange, calendar: Calendar) -> [ProjectWeekBucket] {
+    /// The calendar weeks of `range` as the weekly charts show them: each from its Monday (the start of the range for the first one)
+    /// to the next Monday (the end of the range for the last one). Both charts of the project page use this, so their weeks match.
+    public static func weekIntervals(of range: ProjectRange, calendar: Calendar) -> [ProjectRange] {
         guard range.start <= range.end else { return [] }
-        var buckets: [ProjectWeekBucket] = []
+        var weeks: [ProjectRange] = []
         var weekFirst = weekStart(of: range.start, calendar: calendar)
         while weekFirst <= range.end {
             let next = calendar.date(byAdding: .weekOfYear, value: 1, to: weekFirst) ?? range.end.addingTimeInterval(1)
-            let interval = ProjectRange(start: max(weekFirst, range.start), end: min(next, range.end))
-            var bucket = ProjectWeekBucket(start: interval.start, created: 0, completed: 0, closedNotPlanned: 0,
-                                           openAtEnd: 0)
+            weeks.append(ProjectRange(start: max(weekFirst, range.start), end: min(next, range.end)))
+            weekFirst = next
+            if next >= range.end { break }
+        }
+        return weeks
+    }
+
+    public static func buckets(facts: [ProjectItemFact], range: ProjectRange, calendar: Calendar) -> [ProjectWeekBucket] {
+        weekIntervals(of: range, calendar: calendar).map { interval in
+            var bucket = ProjectWeekBucket(start: interval.start, created: 0, completed: 0, closedNotPlanned: 0, openAtEnd: 0)
             for item in facts {
                 if let createdAt = item.createdAt, interval.contains(createdAt) { bucket.created += 1 }
                 if let closedAt = item.closedAt, interval.contains(closedAt) {
@@ -250,11 +264,8 @@ public enum ProjectProgress {
             // The last instant of the bucket: items that closed exactly at its end have left by then.
             let endInstant = interval.end > interval.start ? interval.end.addingTimeInterval(-0.001) : interval.end
             bucket.openAtEnd = facts.filter { isOpen($0, at: endInstant) }.count
-            buckets.append(bucket)
-            weekFirst = next
-            if next >= range.end { break }
+            return bucket
         }
-        return buckets
     }
 
     public static func summary(facts: [ProjectItemFact], period: ProjectPeriod, now: Date, calendar: Calendar) -> ProjectSummary {

@@ -985,6 +985,22 @@
       },
       "shouldTranslate": false
     },
+    "%@ · %lld mit, %lld ohne Schätzung": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$lld mit, %3$lld ohne Schätzung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld with, %3$lld without an estimate"
+          }
+        }
+      }
+    },
     "%@ · Rest %@": {
       "localizations": {
         "de": {
@@ -2638,6 +2654,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld h %2$@"
+          }
+        }
+      }
+    },
+    "%lld h %lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld h %2$lld min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld h %2$lld min"
           }
         }
       }
@@ -6463,6 +6495,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tasks, their assignment to days and recurrences"
+          }
+        }
+      }
+    },
+    "Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks that were not worked on in Tagwerk have no time."
           }
         }
       }
@@ -11326,12 +11368,53 @@
         }
       }
     },
+    "Eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned"
+          }
+        }
+      }
+    },
     "Eingeplant für %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Planned for %@"
+          }
+        }
+      }
+    },
+    "Eingeplant sind die Zeitblöcke, die Tagwerk im Plan für diese Aufgaben angelegt hat. Investiert sind der Fokus-Timer und die Blöcke bis zum Erledigen in Tagwerk. Aufgaben, die nicht in Tagwerk bearbeitet wurden, haben keine Zeit.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned is the time blocks Tagwerk created in the plan for these tasks. Invested is the focus timer and the blocks up to completion in Tagwerk. Tasks that were not worked on in Tagwerk have no time."
+          }
+        }
+      }
+    },
+    "Eingeplant: Zeitblöcke, die Tagwerk für diese Aufgaben angelegt hat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned: time blocks Tagwerk created for these tasks."
+          }
+        }
+      }
+    },
+    "Eingeplante und investierte Zeit je Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned and invested time per week"
           }
         }
       }
@@ -16478,6 +16561,26 @@
         }
       }
     },
+    "Investiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invested"
+          }
+        }
+      }
+    },
+    "Investiert: Fokus-Timer und Blöcke bis zum Erledigen in Tagwerk.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invested: focus timer and blocks up to completion in Tagwerk."
+          }
+        }
+      }
+    },
     "Issue #%@": {
       "localizations": {
         "en": {
@@ -16939,6 +17042,16 @@
         }
       }
     },
+    "Kein Kalenderzugriff": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No calendar access"
+          }
+        }
+      }
+    },
     "Kein Lebensmittel passt zu deiner Suche.": {
       "localizations": {
         "en": {
@@ -17239,6 +17352,16 @@
         }
       }
     },
+    "Keine Schätzungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No estimates"
+          }
+        }
+      }
+    },
     "Keine Termine": {
       "localizations": {
         "en": {
@@ -17405,6 +17528,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No suggestions from this note."
+          }
+        }
+      }
+    },
+    "Keine Zeitdaten im Zeitraum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No time data in the period"
           }
         }
       }
@@ -21336,6 +21469,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leave open"
+          }
+        }
+      }
+    },
+    "Offene Schätzungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open estimates"
           }
         }
       }
@@ -28654,6 +28797,22 @@
         }
       }
     },
+    "Woche ab %@: %@ eingeplant, %@ investiert": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Woche ab %1$@: %2$@ eingeplant, %3$@ investiert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week of %1$@: %2$@ planned, %3$@ invested"
+          }
+        }
+      }
+    },
     "Woche ab %@: %lld erledigt, %lld neu, %lld offen am Ende": {
       "localizations": {
         "de": {
@@ -30523,6 +30682,16 @@
         }
       }
     },
+    "eingeplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "planned"
+          }
+        }
+      }
+    },
     "eingetragen": {
       "localizations": {
         "en": {
@@ -31027,6 +31196,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "into English, with ChatGPT"
+          }
+        }
+      }
+    },
+    "investiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "invested"
           }
         }
       }

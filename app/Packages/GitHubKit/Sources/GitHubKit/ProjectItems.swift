@@ -17,6 +17,8 @@ public struct ProjectItemRecord: Sendable, Equatable {
     /// The Status of the item in the project; `nil` for the issues of a repository.
     public let status: String?
     public let due: DueDate?
+    /// The estimate of the item in minutes (project field "Estimate (h)" or "Estimate (MDs)"); `nil` when the project has none.
+    public let estimateMinutes: Int?
     /// Open issues that block this one (native dependency "Blocked by").
     public let openBlockedByCount: Int
     /// Open issues that wait for this one (native dependency "Blocking").
@@ -26,7 +28,8 @@ public struct ProjectItemRecord: Sendable, Equatable {
 
     public init(issueID: String, number: Int, repository: String, title: String, url: URL, state: ProjectItemState,
                 createdAt: Date?, closedAt: Date?, updatedAt: Date? = nil, assignees: [String] = [], status: String? = nil,
-                due: DueDate? = nil, openBlockedByCount: Int = 0, openBlockingCount: Int = 0, isArchived: Bool = false) {
+                due: DueDate? = nil, estimateMinutes: Int? = nil, openBlockedByCount: Int = 0, openBlockingCount: Int = 0,
+                isArchived: Bool = false) {
         self.issueID = issueID
         self.number = number
         self.repository = repository
@@ -39,6 +42,7 @@ public struct ProjectItemRecord: Sendable, Equatable {
         self.assignees = assignees
         self.status = status
         self.due = due
+        self.estimateMinutes = estimateMinutes
         self.openBlockedByCount = openBlockedByCount
         self.openBlockingCount = openBlockingCount
         self.isArchived = isArchived
@@ -120,17 +124,20 @@ extension ProjectsQuery {
             }
             var status: String?
             var due: DueDate?
+            var estimateMinutes: Int?
             for value in item?.fieldValues.nodes ?? [] {
                 switch value.field?.name {
                 case GitHubMapping.statusField?: status = value.name
                 case GitHubMapping.dueField?: due = value.date.flatMap(ProjectsQuery.dueDate)
+                case let name? where value.number != nil:
+                    if let minutes = GitHubMapping.estimateMinutes(fieldName: name, value: value.number ?? 0) { estimateMinutes = minutes }
                 default: break
                 }
             }
             return ProjectItemRecord(
                 issueID: id, number: number, repository: repository.nameWithOwner, title: title, url: url, state: itemState,
                 createdAt: createdAt, closedAt: itemState == .open ? nil : closedAt, updatedAt: updatedAt,
-                assignees: assignees?.nodes.map(\.login) ?? [], status: status, due: due,
+                assignees: assignees?.nodes.map(\.login) ?? [], status: status, due: due, estimateMinutes: estimateMinutes,
                 openBlockedByCount: issueDependenciesSummary?.blockedBy ?? 0,
                 openBlockingCount: issueDependenciesSummary?.blocking ?? 0, isArchived: item?.isArchived ?? false)
         }

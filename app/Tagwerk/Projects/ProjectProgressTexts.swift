@@ -134,6 +134,45 @@ enum ProjectProgressTexts {
         return weeks.joined(separator: ". ") + ". " + stock
     }
 
+    // MARK: Time
+
+    /// "18 h 30 min", "2 h", "45 min"; whole minutes.
+    static func durationText(_ seconds: TimeInterval) -> String {
+        let minutes = Int((seconds / 60).rounded())
+        let hours = minutes / 60, rest = minutes % 60
+        if hours == 0 { return String(localized: "\(rest) min") }
+        return rest == 0 ? String(localized: "\(hours) h") : String(localized: "\(hours) h \(rest) min")
+    }
+
+    /// The value of "Eingeplant": the time, or a dash when no block lies in the period (nothing planned is not "0 h"), or the reason
+    /// when the calendar cannot be read.
+    static func plannedText(_ time: ProjectTimeSummary) -> String {
+        if !time.calendarAvailable { return String(localized: "Kein Kalenderzugriff") }
+        return time.hasPlanned ? durationText(time.plannedSeconds) : "–"
+    }
+
+    /// The value of "Investiert": the time, or a dash when nothing was measured.
+    static func investedText(_ time: ProjectTimeSummary) -> String {
+        time.hasInvested ? durationText(time.investedSeconds) : "–"
+    }
+
+    /// The value of "Offene Schätzungen": "7 h 30 min · 3 mit, 2 ohne Schätzung".
+    static func estimateText(_ estimate: ProjectOpenEstimate) -> String {
+        guard estimate.openCount > 0 else { return "–" }
+        guard estimate.estimatedCount > 0 else { return String(localized: "Keine Schätzungen") }
+        let time = durationText(TimeInterval(estimate.minutes * 60))
+        return String(localized: "\(time) · \(estimate.estimatedCount) mit, \(estimate.withoutEstimateCount) ohne Schätzung")
+    }
+
+    /// The text VoiceOver reads for the time chart: one sentence per week.
+    static func timeChartSummary(_ weeks: [ProjectTimeWeek], calendar: Calendar) -> String {
+        guard !weeks.isEmpty else { return String(localized: "Keine Daten") }
+        return weeks.map { week in
+            let day = DateText.numericDay(PlanDay(date: week.start, calendar: calendar), calendar: calendar)
+            return String(localized: "Woche ab \(day): \(durationText(week.plannedSeconds)) eingeplant, \(durationText(week.investedSeconds)) investiert")
+        }.joined(separator: ". ") + "."
+    }
+
     static func failureText(_ failure: ProjectLoadFailure) -> String {
         switch failure {
         case .notConnected: String(localized: "GitHub ist nicht verbunden.")

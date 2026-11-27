@@ -63,6 +63,17 @@ final class BlockPlanner {
             .sorted { $0.start < $1.start }
     }
 
+    /// Tagwerk's own blocks of any of the tasks (`TaskID.key`) that overlap `interval`, from one read over every calendar. The project
+    /// time (#332) asks for all tasks of a project at once; one read per task would query the calendar for every one of them. The
+    /// filter is the one of `blocks(for:in:)`: only blocks with the task link in their URL, never the user's own appointments.
+    func blocks(forTaskKeys keys: Set<String>, in interval: DateInterval) -> [CalendarEvent] {
+        guard !keys.isEmpty else { return [] }
+        return store.events(in: interval, calendarIDs: nil).filter { event in
+            guard let id = event.url.flatMap(TaskLinkURL.parse), keys.contains(id.key) else { return false }
+            return event.isEditable && !event.isInvitation
+        }
+    }
+
     /// All blocks in the plan calendar from `date` on, grouped by their task.
     func blocksByTask(after date: Date) -> [TaskID: [CalendarEvent]] {
         guard let calendarID = settings.planCalendarID else { return [:] }
