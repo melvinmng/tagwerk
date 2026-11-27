@@ -493,9 +493,7 @@ final class AppEnvironment {
         taskList.onActivity = { entries in taskActivity.record(entries) }
         // A move of the planned work day in "Planen" is a reschedule as well (the due date is logged by the task list).
         planStore.onDayMoved = { id, from, to in
-            guard let item = taskList.items.first(where: { $0.id == id }),
-                  let entry = TaskActivityRules.replanned(item, from: from, to: to, at: taskList.now()) else { return }
-            taskActivity.record([entry])
+            taskActivity.recordPlanDayMove(of: id, from: from, to: to, among: taskList.items, at: taskList.now())
         }
         self.projectProgress = ProjectProgressStore(
             sources: UITestMode.isActive

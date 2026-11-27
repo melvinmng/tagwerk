@@ -53,6 +53,14 @@ final class TaskActivityStore {
         try? context.save()
     }
 
+    /// Writes the entry of a task whose planned work day moved from `from` to `to`. The task is looked up among `items` (the loaded
+    /// list) for its title and projects; a task that is not loaded gets no entry.
+    func recordPlanDayMove(of id: TaskID, from: PlanDay, to: PlanDay, among items: [TaskItem], at date: Date) {
+        guard let item = items.first(where: { $0.id == id }),
+              let entry = TaskActivityRules.replanned(item, from: from, to: to, at: date) else { return }
+        record([entry])
+    }
+
     /// The entries since `date`, newest first; all of them without a date.
     func entries(since date: Date? = nil) -> [TaskActivityEntry] {
         var descriptor = FetchDescriptor<TaskActivityRecord>(sortBy: [SortDescriptor(\.occurredAt, order: .reverse)])
