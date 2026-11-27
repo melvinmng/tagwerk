@@ -73,10 +73,80 @@ final class ProjectProgressUITests: UITestCase {
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.chart].firstMatch.waitForExistence(timeout: Self.timeout),
                       "The weekly chart is missing")
         XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.figures].firstMatch.exists, "The figures are missing")
-        // The blocked issue and the overdue one are open items of the demo project.
-        waitFor("App-Sperre im Fokus-Modus")
+        // The blocked issue and the overdue one are open items of the demo project, below the time section: scroll to them.
+        scrollTo(app.descendants(matching: .any)["App-Sperre im Fokus-Modus"].firstMatch, what: "App-Sperre im Fokus-Modus")
         XCTAssertTrue(app.staticTexts["Blockiert"].firstMatch.exists || app.staticTexts["BLOCKIERT"].firstMatch.exists,
                       "The group of blocked items is missing")
+    }
+
+    private func timeRow(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow(name)].firstMatch
+    }
+
+    /// Drags the page until the element is there: a lazy list creates no row below the fold, and a swipe can pass a short section.
+    private func scrollTo(_ element: XCUIElement, what: String, file: StaticString = #filePath, line: UInt = #line) {
+        dragUntilExistsAndHittable(element, what: what, file: file, line: line)
+    }
+
+    /// The demo project has planned blocks, focus sessions and a completion with a cut block (see `ProjectProgressSources.demo`):
+    /// planned 7 h, invested 4 h, estimates of three open items 7 h 30 min.
+    func testProjectPageShowsPlannedAndInvestedTime() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        scrollTo(timeRow("planned"), what: "The planned time")
+        XCTAssertEqual(timeRow("planned").value as? String, "7 h", "planned time")
+        XCTAssertEqual(timeRow("invested").value as? String, "4 h", "invested time")
+        XCTAssertTrue((timeRow("estimate").value as? String)?.contains("7 h 30 min") ?? false, "open estimates")
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists, "The time chart is missing")
+        // The demo records lie in the last three weeks: a longer period shows the same time.
+        // The picker lies above the section: drag back to the top of the page, where it sits clear of the navigation bar.
+        for _ in 0..<8 { dragPage(towardsTop: true) }
+        selectSegment("3 Monate")
+        scrollTo(timeRow("planned"), what: "The planned time after the change of the period")
+        XCTAssertEqual(timeRow("planned").value as? String, "7 h")
+    }
+
+    private func statusRow(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusRow(name)].firstMatch
+    }
+
+    /// The demo log of "Beispiel-Projekt" (see `ProjectProgressSources.demo`): four status changes (two of them Ready to In progress),
+    /// one reopening, one change of the due date and two moves of the planned day; "In progress" 4 days, "Review" 2 days.
+    func testProjectPageShowsTheStatusHistoryWithItsNote() {
+        openOverview()
+        openProject("Beispiel-Projekt")
+        scrollTo(statusRow("changes"), what: "The count of status changes")
+        XCTAssertEqual(statusRow("changes").value as? String, "4")
+        XCTAssertEqual(statusRow("transition.Ready>In progress").value as? String, "2×")
+        scrollTo(statusRow("duration.In progress"), what: "The time in In progress")
+        XCTAssertEqual(statusRow("duration.In progress").value as? String, "4 Tage")
+        XCTAssertEqual(statusRow("duration.Review").value as? String, "2 Tage")
+        scrollTo(statusRow("reopened"), what: "The reopen count")
+        XCTAssertEqual(statusRow("reopened").value as? String, "1")
+        XCTAssertEqual(statusRow("dueDates").value as? String, "1")
+        XCTAssertEqual(statusRow("planDays").value as? String, "2")
+        let note = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusNote].firstMatch
+        scrollTo(note, what: "The note about what the log covers")
+        XCTAssertTrue(note.label.contains("in Tagwerk auf diesem Gerät"), "The note does not say what the log covers: \(note.label)")
+    }
+
+    func testProjectWithoutLogEntriesSaysSoAndStillShowsTheNote() {
+        openOverview()
+        openProject("Studium")
+        scrollTo(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusEmpty].firstMatch, what: "The note about missing log entries")
+        let note = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusNote].firstMatch
+        scrollTo(note, what: "The note about what the log covers")
+        XCTAssertFalse(statusRow("changes").exists, "A project without log entries shows no counts")
+    }
+
+    func testProjectWithoutRecordedTimeSaysSoInsteadOfZero() {
+        openOverview()
+        openProject("Studium")
+        scrollTo(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeEmpty].firstMatch, what: "The note about missing time data")
+        XCTAssertEqual(timeRow("planned").value as? String, "–")
+        XCTAssertEqual(timeRow("invested").value as? String, "–")
+        XCTAssertFalse(app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeChart].firstMatch.exists,
+                       "A chart of nothing is no information")
     }
 
     func testPeriodPickerChangesThePeriod() {
@@ -117,6 +187,36 @@ extension UITestCase {
         XCTAssertTrue(element.exists && element.isHittable, "\(what) is not reachable by scrolling", file: file, line: line)
     }
 
+    /// Drags the page up in small steps until no text or row is covered by less than half by the navigation bar or the tab bar. The
+    /// contrast check measures a line that straddles the edge of a bar partly against the glass of the bar and reports a real failure;
+    /// only text that a bar covers by half or more is accepted (`SystemBarOverlap`). Where a list happens to stop after the drags depends
+    /// on timing, so the part of the page the audit looks at is moved until the row at each edge is mostly under the bar or clear of it.
+    func scrollPageClearOfBarEdges() {
+        let screen = app.windows.firstMatch.frame
+        let navigationBar = CGRect(x: screen.minX, y: screen.minY, width: screen.width, height: app.navigationBars.firstMatch.frame.maxY)
+        let tabBar = app.tabBars.firstMatch.frame
+        for _ in 0..<12 {
+            guard let snapshot = try? app.snapshot(),
+                  Self.hasPartlyCoveredElement(in: snapshot, bars: [navigationBar, tabBar], screen: screen) else { return }
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.66)))
+        }
+    }
+
+    private static func hasPartlyCoveredElement(in snapshot: XCUIElementSnapshot, bars: [CGRect], screen: CGRect) -> Bool {
+        for child in snapshot.children {
+            let frame = child.frame
+            // Containers (the list, the window) are as high as the screen; rows and texts are not.
+            if frame.width > 0, frame.height > 0, frame.height < 120, [.staticText, .cell].contains(child.elementType),
+               bars.contains(where: {
+                   let share = SystemBarOverlap.coveredShare(of: frame, by: $0, within: screen)
+                   return share > 0 && share < SystemBarOverlap.minimumCoveredShare
+               }) { return true }
+            if hasPartlyCoveredElement(in: child, bars: bars, screen: screen) { return true }
+        }
+        return false
+    }
+
     /// The overview of the project progress and the page of its first project, in the two screens the audits cover.
     func auditProjectProgress(_ audit: (String) throws -> Void) throws {
         tab("Aufgaben")
@@ -139,6 +239,18 @@ extension UITestCase {
         XCTAssertTrue(app.navigationBars["Beispiel-Projekt"].waitForExistence(timeout: Self.timeout), "The page of the project did not open")
         waitUntilScreenIsStable()
         try audit("Projektseite")
+        // The time section lies below the chart: scroll to it and audit that part of the page as well.
+        let planned = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.timeRow("planned")].firstMatch
+        dragUntilExistsAndHittable(planned, what: "The time section of the project page")
+        scrollPageClearOfBarEdges()
+        waitUntilScreenIsStable()
+        try audit("Projektseite Zeit")
+        // The status history follows the time section: the third part of the page the audits cover.
+        let changes = app.descendants(matching: .any)[AccessibilityID.ProjectProgress.statusRow("changes")].firstMatch
+        dragUntilExistsAndHittable(changes, what: "The status history of the project page")
+        scrollPageClearOfBarEdges()
+        waitUntilScreenIsStable()
+        try audit("Projektseite Änderungen")
         // Back to "Aufgaben": the next audit starts from the list.
         app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()

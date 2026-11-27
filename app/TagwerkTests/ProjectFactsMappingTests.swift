@@ -32,6 +32,33 @@ struct ProjectFactsMappingTests {
         #expect(ProjectFactsMapping.fact(record(), loadedTaskKeys: []).taskKey == nil, "a foreign issue is no task of the user")
     }
 
+    @Test func gitHub_carriesTheEstimateAndTheTimeKeyDoesNotDependOnLoadedTasks() {
+        let withEstimate = ProjectItemRecord(issueID: "I_9", number: 9, repository: "octo/repo", title: "T",
+                                             url: URL(string: "https://github.com/octo/repo/issues/9")!, state: .completed, createdAt: created,
+                                             closedAt: closed, estimateMinutes: 90)
+        let fact = ProjectFactsMapping.fact(withEstimate, loadedTaskKeys: [])
+        #expect(fact.estimateMinutes == 90)
+        #expect(fact.taskKey == nil)
+        // The key of a closed issue Tagwerk no longer has loaded is still the key its focus sessions and blocks were stored under.
+        let keys = ProjectFactsMapping.timeKeys(of: .gitHubProject, facts: [fact, ProjectFactsMapping.fact(record(), loadedTaskKeys: [])])
+        #expect(keys == [TaskID(source: .github, rawValue: "I_9").key, TaskID(source: .github, rawValue: "I_1").key])
+    }
+
+    @Test func closedDates_ofGitHubItemsUseTheIssueKeyEvenWithoutALoadedTask() {
+        let done = ProjectItemFact(id: "I_5", title: "A", closedAt: closed, state: .completed)
+        let open = ProjectItemFact(id: "I_6", title: "B", state: .open)
+        let dates = ProjectFactsMapping.closedDates(of: .gitHubProject, facts: [done, open])
+        #expect(dates == [TaskID(source: .github, rawValue: "I_5").key: closed])
+        let reminder = ProjectItemFact(id: "r1", title: "R", closedAt: closed, state: .completed, taskKey: "reminders:r1")
+        #expect(ProjectFactsMapping.closedDates(of: .remindersList, facts: [reminder]) == ["reminders:r1": closed])
+    }
+
+    @Test func timeKeys_ofRemindersAndLocalTasksAreTheirTaskKeys() {
+        let facts = [ProjectItemFact(id: "r1", title: "A", taskKey: "reminders:r1"), ProjectItemFact(id: "x", title: "B")]
+        #expect(ProjectFactsMapping.timeKeys(of: .remindersList, facts: facts) == ["reminders:r1"])
+        #expect(ProjectFactsMapping.timeKeys(of: .local, facts: facts) == ["reminders:r1"])
+    }
+
     @Test func gitHub_closedStatesStayApart() {
         #expect(ProjectFactsMapping.fact(record(state: .completed), loadedTaskKeys: []).state == .completed)
         #expect(ProjectFactsMapping.fact(record(state: .closedNotPlanned), loadedTaskKeys: []).state == .closedNotPlanned)
@@ -42,10 +69,11 @@ struct ProjectFactsMappingTests {
                                   lastModified: nil, createdAt: created)
         let done = ReminderRecord(id: "r2", title: "Fertig", notes: nil, due: nil, ekPriority: 0, isCompleted: true, listID: "l",
                                   lastModified: nil, createdAt: created, completedAt: closed)
-        let openFact = ProjectFactsMapping.fact(open), doneFact = ProjectFactsMapping.fact(done)
+        let openFact = ProjectFactsMapping.fact(open, estimateMinutes: 45), doneFact = ProjectFactsMapping.fact(done)
         #expect(openFact.state == .open && openFact.closedAt == nil && openFact.createdAt == created)
         #expect(doneFact.state == .completed && doneFact.closedAt == closed)
         #expect(openFact.taskKey == "reminders:r1")
+        #expect(openFact.estimateMinutes == 45 && doneFact.estimateMinutes == nil)
     }
 
     @Test func local_completedWithoutADateHasNoClosingTime() throws {

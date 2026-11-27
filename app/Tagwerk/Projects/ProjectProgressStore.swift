@@ -33,6 +33,11 @@ enum ProjectLoadFailure: Error, Equatable {
 struct ProjectProgressSources {
     var catalog: @MainActor () async -> ProjectCatalog
     var facts: @MainActor (ProjectProgressReference) async throws -> ProjectFactsLoad
+    /// The time recorded for the given tasks (`TaskID.key`) inside a range: planned blocks, focus sessions, measured completions. It
+    /// depends on the period, so it is not part of the loaded facts. Without a source no time is known.
+    var time: @MainActor (Set<String>, ProjectRange) -> ProjectTimeInputs = { _, _ in ProjectTimeInputs() }
+    /// The local activity log: what the user changed through Tagwerk on this device. Without a source the log is empty.
+    var activity: @MainActor () -> [TaskActivityEntry] = { [] }
 }
 
 /// Loads and keeps the items of the projects for the overview and the project pages. One instance lives in the app environment, so a
@@ -78,6 +83,18 @@ final class ProjectProgressStore {
 
     /// The items of a project that are loaded or stale, in the order the sources delivered them.
     func facts(of reference: ProjectProgressReference) -> ProjectFactsLoad? { state(of: reference).load }
+
+    /// What the app recorded about time for the tasks of a project in `range`; read on the device, no request.
+    func timeInputs(taskKeys: Set<String>, range: ProjectRange) -> ProjectTimeInputs {
+        sources.time(taskKeys, range)
+    }
+
+    /// The status history of a project in `range`, evaluated from the local activity log and the items as loaded (a task closed outside
+    /// Tagwerk stops spending time in its last Status). Read on the device, no request.
+    func statusHistory(of reference: ProjectProgressReference, facts: [ProjectItemFact], range: ProjectRange) -> ProjectStatusHistory {
+        ProjectStatusHistoryRules.make(entries: sources.activity(), projectKey: reference.key, range: range,
+                                       closedAt: ProjectFactsMapping.closedDates(of: reference.kind, facts: facts), now: now())
+    }
 
     func reloadCatalog() async {
         catalog = await sources.catalog()

@@ -1658,7 +1658,7 @@ final class PlanningModel {
             guard let block = calendarStore.event(id: id) else { continue }
             try? blocks.moveBlock(block, to: start)
         }
-        if let previous = move.previousDay { planStore.assign(move.taskID, to: previous) } else { planStore.unassign(move.taskID) }
+        if let previous = move.previousDay { planStore.restore(move.taskID, to: previous) } else { planStore.unassign(move.taskID) }
         await reload()
     }
 

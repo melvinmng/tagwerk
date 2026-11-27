@@ -1,7 +1,9 @@
 import XCTest
 
 /// Automatic accessibility audit (`performAccessibilityAudit`) of the core screens in the default text size.
-/// One launch covers all screens, to keep the run short. Findings must be fixed or sit on `AuditAllowlist` with a reason.
+/// One launch covers the screens of `testAuditDefaultSize`, to keep the run short; the project progress has a test of its own
+/// (`testAuditProjectProgress`), because the long run ran out of audit time on the CI runners. Findings must be fixed or sit on
+/// `AuditAllowlist` with a reason.
 final class AccessibilityAuditUITests: UITestCase {
     // A fixed time of day: the hour grid of "Planen" scrolls to the current time, so without it the audited part of the
     // grid (and with it the findings) would depend on the hour of the run.
@@ -18,6 +20,14 @@ final class AccessibilityAuditUITests: UITestCase {
     /// device test list.
     private func auditWeekReview(_ screen: String) throws {
         try AuditAllowlist.audit(app, screen: screen, for: XCUIAccessibilityAuditType.all.subtracting(.dynamicType))
+    }
+
+    /// The overview of the project progress and the parts of the page of its demo project. A test of its own: the audit of the
+    /// screens in `testAuditDefaultSize` is one long run, and on the CI runners the audit ran out of its time limit on later screens
+    /// (runs of 2026-11-26/27, "Audit failed to complete in time", also on the screens after the project page), so the three audited
+    /// parts of the project page start from a fresh launch instead of adding to that run.
+    func testAuditProjectProgress() throws {
+        try auditProjectProgress(audit)
     }
 
     func testAuditDefaultSize() throws {
@@ -64,8 +74,6 @@ final class AccessibilityAuditUITests: UITestCase {
         try audit("Notizenliste")
 
         try auditBarcodeScan(audit)
-
-        try auditProjectProgress(audit)
 
         tab("Planen")
         // The return key closes the keyboard, so its suggestion bar is not part of the audit.

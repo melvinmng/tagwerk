@@ -55,4 +55,67 @@ struct ProjectProgressTextsTests {
         let name = ProjectPeriodChoice.custom.periodName(range: range, calendar: calendar)
         #expect(name.contains("2") && name.contains("8"), "the end day is the last day inside the range, not the day after")
     }
+
+    // MARK: Time
+
+    @Test func durationText_hoursAndMinutes() {
+        #expect(ProjectProgressTexts.durationText(18.5 * 3600) == "18 h 30 min")
+        #expect(ProjectProgressTexts.durationText(2 * 3600) == "2 h")
+        #expect(ProjectProgressTexts.durationText(45 * 60) == "45 min")
+        #expect(ProjectProgressTexts.durationText(0) == "0 min")
+    }
+
+    private func timeSummary(planned: TimeInterval, invested: TimeInterval, calendarAvailable: Bool = true) -> ProjectTimeSummary {
+        ProjectTimeSummary(weeks: [], plannedSeconds: planned, investedSeconds: invested, hasPlanned: planned > 0, hasInvested: invested > 0,
+                           calendarAvailable: calendarAvailable)
+    }
+
+    @Test func timeValues_noRecordIsADashNotZero() {
+        let empty = timeSummary(planned: 0, invested: 0)
+        #expect(ProjectProgressTexts.plannedText(empty) == "–" && ProjectProgressTexts.investedText(empty) == "–")
+        let some = timeSummary(planned: 7200, invested: 3600)
+        #expect(ProjectProgressTexts.plannedText(some) == "2 h" && ProjectProgressTexts.investedText(some) == "1 h")
+    }
+
+    @Test func plannedText_saysWhenTheCalendarCannotBeRead() {
+        let text = ProjectProgressTexts.plannedText(timeSummary(planned: 0, invested: 0, calendarAvailable: false))
+        #expect(text != "–" && text.contains("Kalender"))
+    }
+
+    @Test func estimateText_sumAndCountsOrADash() {
+        #expect(ProjectProgressTexts.estimateText(ProjectOpenEstimate(minutes: 450, estimatedCount: 3, withoutEstimateCount: 2))
+            .contains("7 h 30 min"))
+        #expect(ProjectProgressTexts.estimateText(ProjectOpenEstimate(minutes: 0, estimatedCount: 0, withoutEstimateCount: 4))
+            == String(localized: "Keine Schätzungen"))
+        #expect(ProjectProgressTexts.estimateText(ProjectOpenEstimate(minutes: 0, estimatedCount: 0, withoutEstimateCount: 0)) == "–")
+    }
+
+    @Test func timeChartSummary_namesEveryWeek() {
+        let weeks = [ProjectTimeWeek(start: now, plannedSeconds: 7200, investedSeconds: 3600),
+                     ProjectTimeWeek(start: now.addingTimeInterval(7 * 86_400), plannedSeconds: 0, investedSeconds: 1800)]
+        let text = ProjectProgressTexts.timeChartSummary(weeks, calendar: calendar)
+        #expect(text.contains("2 h eingeplant") && text.contains("30 min investiert"))
+        #expect(!ProjectProgressTexts.timeChartSummary([], calendar: calendar).isEmpty)
+    }
+
+    // MARK: Status history
+
+    @Test func statusDurationText_daysFromTwoDaysOn() {
+        #expect(ProjectProgressTexts.statusDurationText(4 * 86_400) == "4 Tage")
+        #expect(ProjectProgressTexts.statusDurationText(2 * 86_400) == "2 Tage")
+        #expect(ProjectProgressTexts.statusDurationText(36 * 3600) == "36 h")
+        #expect(ProjectProgressTexts.statusDurationText(90 * 60) == "1 h 30 min")
+    }
+
+    @Test func transitionText_namesBothStatus() {
+        #expect(ProjectProgressTexts.transitionText(ProjectStatusTransition(from: "Ready", to: "In progress", count: 2)) == "Ready → In progress")
+    }
+
+    @Test func statusHistoryNote_saysWhatTheLogCoversAndSince() {
+        let none = ProjectProgressTexts.statusHistoryNote(since: nil)
+        #expect(none.contains("noch keine Einträge") && none.contains("GitHub und Erinnerungen"))
+        let since = ProjectProgressTexts.statusHistoryNote(since: now)
+        #expect(since.contains("in Tagwerk auf diesem Gerät") && since.contains("seit"))
+        #expect(since.contains(now.formatted(date: .abbreviated, time: .omitted)))
+    }
 }

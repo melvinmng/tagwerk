@@ -17,6 +17,7 @@ struct ProjectProgressStoreTests {
         var catalog = ProjectCatalog(references: [], gitHubConnected: true, remindersAccess: true)
         var clock = testNow()
         var gate: Gate?
+        var activity: [TaskActivityEntry] = []
 
         func sources() -> ProjectProgressSources {
             ProjectProgressSources(
@@ -29,7 +30,8 @@ struct ProjectProgressStoreTests {
                     case .failure(let failure)?: throw failure
                     case nil: throw ProjectLoadFailure.other
                     }
-                })
+                },
+                activity: { self.activity })
         }
     }
 
@@ -151,5 +153,34 @@ struct ProjectProgressStoreTests {
         let subtitle = store.entrySubtitle(calendar: calendar)
         #expect(subtitle?.contains("2") == true)
         #expect(subtitle?.contains("1") == true)
+    }
+
+    // MARK: Status history
+
+    @Test func statusHistory_evaluatesTheLogForTheProjectAndClosesTasksAtTheirClosingDate() {
+        let recorder = Recorder()
+        let now = testNow()
+        let issueKey = TaskID(source: .github, rawValue: "I_1").key
+        recorder.activity = [
+            TaskActivityEntry(kind: .statusChanged, taskKey: issueKey, title: "A", from: "Ready", to: "In progress",
+                              projectKeys: [github.key], occurredAt: now.addingTimeInterval(-3 * 86_400)),
+            TaskActivityEntry(kind: .reopened, taskKey: issueKey, title: "A", projectKeys: ["gitHubProject:other"],
+                              occurredAt: now.addingTimeInterval(-86_400)),
+        ]
+        // The issue was closed on GitHub a day after the change: the stretch in "In progress" ends there, not now.
+        let closed = ProjectItemFact(id: "I_1", title: "A", closedAt: now.addingTimeInterval(-2 * 86_400), state: .completed)
+        let store = makeStore(recorder)
+        let range = ProjectRange(start: now.addingTimeInterval(-14 * 86_400), end: now)
+        let history = store.statusHistory(of: github, facts: [closed], range: range)
+        #expect(history.durations.first?.status == "In progress")
+        #expect(history.durations.first?.seconds == 86_400)
+        #expect(history.reopenCount == 0, "the reopening belongs to another project")
+        #expect(history.loggedSince == now.addingTimeInterval(-3 * 86_400))
+    }
+
+    @Test func statusHistory_withoutALogIsEmpty() {
+        let store = makeStore(Recorder())
+        let now = testNow()
+        #expect(store.statusHistory(of: github, facts: [], range: ProjectRange(start: now.addingTimeInterval(-86_400), end: now)).isEmpty)
     }
 }

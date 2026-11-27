@@ -491,10 +491,24 @@ final class AppEnvironment {
         let taskActivity = TaskActivityStore(context: context)
         self.taskActivity = taskActivity
         taskList.onActivity = { entries in taskActivity.record(entries) }
+        // A move of the planned work day in "Planen" is a reschedule as well (the due date is logged by the task list).
+        planStore.onDayMoved = { id, from, to in
+            taskActivity.recordPlanDayMove(of: id, from: from, to: to, among: taskList.items, at: taskList.now())
+        }
+        // "Widerrufen" of a move takes its entry back; the way back is no reschedule of its own.
+        planStore.onDayMoveUndone = { id, undone, restored in
+            taskActivity.removePlanDayMove(of: id, from: restored, to: undone)
+        }
         self.projectProgress = ProjectProgressStore(
             sources: UITestMode.isActive
                 ? .demo(now: { UITestMode.now() })
-                : .live(taskList: taskList, settings: settings, reminderStore: reminderStore, gitHub: gitHubProvider, context: context),
+                : .live(taskList: taskList, settings: settings, reminderStore: reminderStore, gitHub: gitHubProvider,
+                        estimates: SwiftDataEstimateStore(context: context),
+                        time: ProjectTimeReader(focusStore: focusStore,
+                                                blocks: { blockPlanner.blocks(forTaskKeys: $0, in: $1) },
+                                                calendarAvailable: { gateway.calendarAccessState == .fullAccess }),
+                        activity: { taskActivity.entries() },
+                        context: context),
             now: { UITestMode.now() })
         // An ended GitHub sign-in (expired or revoked) forgets the cached issues of that account.
         taskList.onSignedOut = { source in

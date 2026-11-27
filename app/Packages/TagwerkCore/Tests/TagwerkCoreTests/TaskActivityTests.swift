@@ -70,4 +70,14 @@ struct TaskActivityTests {
         #expect(entry.kind == .created)
         #expect(entry.projectKeys == ["gitHubRepository:octo/repo", "gitHubProject:PVT_1"])
     }
+
+    @Test func replanned_isAMoveFromOnePlannedDayToAnother() {
+        let entry = TaskActivityRules.replanned(task(), from: PlanDay(year: 2026, month: 11, day: 25), to: PlanDay(year: 2026, month: 11, day: 27), at: now)
+        #expect(entry?.kind == .replanned)
+        #expect(entry?.from == "2026-11-25" && entry?.to == "2026-11-27")
+        #expect(entry?.projectKeys == ["gitHubRepository:octo/repo", "gitHubProject:PVT_1"])
+        #expect(entry?.taskKey == "github:I_1")
+        let same = PlanDay(year: 2026, month: 11, day: 25)
+        #expect(TaskActivityRules.replanned(task(), from: same, to: same, at: now) == nil)
+    }
 }

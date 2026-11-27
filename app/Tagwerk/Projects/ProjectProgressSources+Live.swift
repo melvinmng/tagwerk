@@ -11,7 +11,9 @@ extension ProjectProgressSources {
     /// The real sources: GitHub through the signed-in account, Reminders through EventKit, local tasks from the store.
     @MainActor
     static func live(taskList: TaskListModel, settings: AppSettings, reminderStore: any ReminderStore, gitHub: GitHubTaskProvider,
-                     context: ModelContext, now: @escaping () -> Date = Date.init) -> ProjectProgressSources {
+                     estimates: any EstimateStore, time: ProjectTimeReader, activity: @escaping @MainActor () -> [TaskActivityEntry],
+                     context: ModelContext,
+                     now: @escaping () -> Date = Date.init) -> ProjectProgressSources {
         ProjectProgressSources(
             catalog: {
                 var catalog = ProjectCatalog()
@@ -61,11 +63,14 @@ extension ProjectProgressSources {
                     let interval = DateInterval(start: start, end: now().addingTimeInterval(60))
                     let open = await reminderStore.openReminders(in: [reference.id])
                     let completed = await reminderStore.completedReminders(in: interval, listIDs: [reference.id])
-                    return ProjectFactsLoad(facts: (open + completed).map(ProjectFactsMapping.fact), fetchedAt: now())
+                    let facts = (open + completed).map { ProjectFactsMapping.fact($0, estimateMinutes: estimates.minutes(for: $0.id)) }
+                    return ProjectFactsLoad(facts: facts, fetchedAt: now())
                 case .local:
                     let tasks = (try? context.fetch(FetchDescriptor<LocalTask>())) ?? []
                     return ProjectFactsLoad(facts: tasks.map(ProjectFactsMapping.fact), fetchedAt: now())
                 }
-            })
+            },
+            time: { taskKeys, range in time.inputs(taskKeys: taskKeys, range: range) },
+            activity: activity)
     }
 }
