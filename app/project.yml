@@ -151,6 +151,8 @@ targets:
       - path: TagwerkUITests/AuditConfirmation.swift
       # Same for the geometry rule that ignores contrast findings of content under a system bar.
       - path: TagwerkUITests/SystemBarOverlap.swift
+      # And the collection of confirmed audit findings that a UI test reports when it ends.
+      - path: TagwerkUITests/AuditFindingCollector.swift
     dependencies:
       - target: Tagwerk
     settings:
