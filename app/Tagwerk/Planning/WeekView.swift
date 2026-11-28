@@ -103,9 +103,10 @@ struct WeekView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(plan.day == model.today ? Color.accentColor : .primary)
                             Spacer()
-                            Text(CapacityText.summary(plan.capacity))
+                            Text(CapacityText.summaryWithUntimed(plan.capacity))
                                 .font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
+                                .multilineTextAlignment(.trailing)
+                                .foregroundStyle(CapacityText.isOverloaded(plan.capacity) ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
                     }

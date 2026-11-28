@@ -660,4 +660,34 @@ struct AssistantGitHubCardTests {
         model.open(task: issue)
         #expect(model.instructions().contains("Naheliegendes Ziel für neue Issues: beispiel/app."))
     }
+
+    // MARK: Context line of the planning view
+
+    private func dayCapacity(untimed: Int, count: Int, busy: [Range<Int>] = [720..<840], now: Int? = nil,
+                             dayOff: Bool = false) -> DayCapacity {
+        var input = CapacityInput(hours: dayOff ? nil : WorkHours(startMinutes: 540, endMinutes: 1080), lunchStartMinutes: 720,
+                                  lunchMinutes: 60, bufferMinutes: 10, busyIntervals: busy, untimedPlannedMinutes: untimed,
+                                  estimatedCount: 0, untimedCount: count)
+        input.nowMinutes = now
+        return capacity(input)
+    }
+
+    @Test func planningDayLine_untimedTasksTakeNoFreeTime() {
+        let day = PlanDay(year: 2026, month: 11, day: 28)
+        let line = AssistantModel.planningDayLine(day: day, capacity: dayCapacity(untimed: 180, count: 6), blockCount: 0)
+        #expect(line == "- 2026-11-28: 6 h 40 frei von 6 h 40, 6 Aufgaben ohne Uhrzeit (3 h), 0 Zeitblöcke")
+    }
+
+    @Test func planningDayLine_namesTheExcess_andOverbookingOnlyForBlocks() {
+        let day = PlanDay(year: 2026, month: 11, day: 28)
+        let tooMuch = AssistantModel.planningDayLine(day: day, capacity: dayCapacity(untimed: 450, count: 15), blockCount: 1)
+        #expect(tooMuch == "- 2026-11-28: 6 h 40 frei von 6 h 40, 15 Aufgaben ohne Uhrzeit (7 h 30, 50 min mehr als frei), 1 Zeitblöcke")
+        #expect(!tooMuch.contains("überbucht"))
+    }
+
+    @Test func planningDayLine_dayOffAndWithoutUntimedTasks() {
+        let day = PlanDay(year: 2026, month: 11, day: 28)
+        #expect(AssistantModel.planningDayLine(day: day, capacity: dayCapacity(untimed: 0, count: 0, dayOff: true), blockCount: 0)
+                == "- 2026-11-28: frei (kein Arbeitstag), 0 Zeitblöcke")
+    }
 }

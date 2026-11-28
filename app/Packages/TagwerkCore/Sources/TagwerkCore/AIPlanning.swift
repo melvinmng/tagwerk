@@ -43,15 +43,21 @@ public struct PlanInputDay: Sendable, Hashable {
     /// Existing time blocks and other task-linked events.
     public var blocks: [Range<Int>]
     public var bufferMinutes: Int
-    /// Load already on the day: assigned tasks and the part of the time blocks that uses free working time. Effort
-    /// that recurring tasks only reserve is not load; their time blocks are.
+    /// Load for the AI checks: tasks without a time block (assigned, due that day) plus the part of the time blocks that
+    /// uses free working time. Effort that recurring tasks only reserve is not load; their time blocks are. The free
+    /// time shown to the user (`freeMinutes`) does not count the tasks without a time block.
     public var plannedMinutes: Int
+    /// The part of the time blocks that uses free working time; tasks without a time block are not part of it.
+    public var blockMinutes: Int
     /// Part of `plannedMinutes` per task (`TaskID.key`), for tasks counted without a block (assigned,
     /// due today). A new block or assignment for such a task replaces this load instead of adding to it.
     public var countedTaskMinutes: [String: Int]
     /// Working time left for tasks after events with buffer, lunch and travel time.
     public var availableMinutes: Int
     public var events: [PlanInputEvent]
+
+    /// Free working time of the day as the capacity card shows it: tasks without a time block take none of it.
+    public var freeMinutes: Int { availableMinutes - blockMinutes }
 
     /// Builds a day from calendar events; occupied time and capacity come from `busyIntervals` and `capacity`.
     public init(day: PlanDay, hours: WorkHours?, lunch: Range<Int>?, events: [CalendarEvent], linkedEventIDs: Set<String>,
@@ -73,7 +79,9 @@ public struct PlanInputDay: Sendable, Hashable {
             bufferMinutes: bufferMinutes, busyIntervals: busy, untimedPlannedMinutes: untimedPlannedMinutes,
             estimatedCount: 0, travelIntervals: travel, blockIntervals: blocks))
         self.availableMinutes = dayCapacity.availableMinutes
-        self.plannedMinutes = dayCapacity.plannedMinutes
+        // The load for the AI checks keeps counting tasks without a time block, although the capacity does not.
+        self.plannedMinutes = dayCapacity.plannedMinutes + untimedPlannedMinutes
+        self.blockMinutes = dayCapacity.plannedMinutes
 
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
@@ -120,6 +128,7 @@ extension PlanInputDay {
         let updated = capacity(for: hours)
         day.availableMinutes = updated.availableMinutes
         day.plannedMinutes = plannedMinutes - capacity(for: self.hours).plannedMinutes + updated.plannedMinutes
+        day.blockMinutes = updated.plannedMinutes
         return day
     }
 }

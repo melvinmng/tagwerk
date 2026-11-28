@@ -120,7 +120,10 @@ struct PlanningModelTests {
         planStore.assign(id("Fahrrad"), to: today)
         let model = await model()
         let day = model.days.first { $0.day == today }
-        #expect(day?.capacity.plannedMinutes == 30)
+        #expect(day?.capacity.untimedMinutes == 30)
+        #expect(day?.capacity.untimedCount == 1)
+        #expect(day?.capacity.plannedMinutes == 0)
+        #expect(day?.capacity.freeMinutes == 480)
         #expect(day?.capacity.estimatedCount == 1)
         #expect(day?.capacity.availableMinutes == 480)
     }
@@ -150,7 +153,8 @@ struct PlanningModelTests {
         let day = try? #require(model.days.first { $0.day == today })
         let input = try? #require(day?.planInput)
         #expect(input?.availableMinutes == day?.capacity.availableMinutes)
-        #expect(input?.plannedMinutes == day?.capacity.plannedMinutes)
+        // The load for the AI checks keeps the tasks without a time; the capacity of the day does not.
+        #expect(input?.plannedMinutes == (day?.capacity.plannedMinutes ?? 0) + (day?.capacity.untimedMinutes ?? 0))
         #expect(input?.busy == [600..<660])
         #expect(input?.blocks == [840..<900])
         #expect(input?.countedTaskMinutes == ["local:Fahrrad": 30])
@@ -186,12 +190,13 @@ struct PlanningModelTests {
         #expect(model.overdue.map(\.title) == ["Fahrrad"])
     }
 
-    @Test func dueToday_appearsAndCountsAsLoad() async throws {
+    @Test func dueToday_appearsAndCountsAsUntimedEffort() async throws {
         local.tasks.append(makeTask("Heute fällig", source: .local, due: DueDate(year: 2026, month: 11, day: 18)))
         let model = await model()
         let day = try #require(model.days.first)
         #expect(day.openToday.map(\.title) == ["Heute fällig"])
-        #expect(day.capacity.plannedMinutes == 30)
+        #expect(day.capacity.untimedMinutes == 30)
+        #expect(day.capacity.plannedMinutes == 0)
     }
 
     @Test func openToday_staleAssignment_dueToday_isOpenNotOverdue() async throws {
@@ -233,13 +238,13 @@ struct PlanningModelTests {
         return model
     }
 
-    @Test func futureDay_listsTasksDueThatDay_andCountsTheirLoad() async throws {
+    @Test func futureDay_listsTasksDueThatDay_andCountsTheirUntimedEffort() async throws {
         let model = await model()
         model.anchor = tomorrow
         await model.reload()
         let day = try #require(model.days.first)
         #expect(day.openToday.map(\.title) == ["Abgabe"])  // due on the 19th, no estimate: 30 min
-        #expect(day.capacity.plannedMinutes == 30)
+        #expect(day.capacity.untimedMinutes == 30)
     }
 
     @Test func futureDay_dueTaskAssignedToAnotherFutureDay_notListedTwice() async throws {
@@ -250,9 +255,9 @@ struct PlanningModelTests {
         let thursday = try #require(model.days.first { $0.day == tomorrow })
         let friday = try #require(model.days.first { $0.day == PlanDay(year: 2026, month: 11, day: 20) })
         #expect(thursday.openToday.isEmpty)
-        #expect(thursday.capacity.plannedMinutes == 0)
+        #expect(thursday.capacity.untimedMinutes == 0)
         #expect(friday.assigned.map(\.title) == ["Abgabe"])
-        #expect(friday.capacity.plannedMinutes == 30)
+        #expect(friday.capacity.untimedMinutes == 30)
     }
 
     @Test func futureDay_dueTaskAssignedToToday_countsOnlyToday() async throws {
@@ -261,15 +266,17 @@ struct PlanningModelTests {
         model.scope = .week
         await model.reload()
         #expect(try #require(model.days.first { $0.day == tomorrow }).openToday.isEmpty)
-        #expect(try #require(model.days.first { $0.day == today }).capacity.plannedMinutes == 30)
+        #expect(try #require(model.days.first { $0.day == today }).capacity.untimedMinutes == 30)
     }
 
-    @Test func week_countsTasksDueOnFutureDaysAsLoad() async throws {
-        // Decision 11: due on the day counts as load in week and month too.
+    @Test func week_countsTasksDueOnFutureDaysAsUntimedEffort() async throws {
+        // Due on the day counts as untimed effort in week and month too; it takes no free time.
         let model = await model()
         model.scope = .week
         await model.reload()
-        #expect(try #require(model.days.first { $0.day == tomorrow }).capacity.plannedMinutes == 30)
+        let tomorrowCapacity = try #require(model.days.first { $0.day == tomorrow }).capacity
+        #expect(tomorrowCapacity.untimedMinutes == 30)
+        #expect(tomorrowCapacity.plannedMinutes == 0)
     }
 
     @Test func isTodayOver_afterWorkEnd_andOnDayOff() async {
@@ -333,7 +340,7 @@ struct PlanningModelTests {
         let model = await model(at: 18, 40)
         let entry = try #require(model.eveningEntry)
         #expect(entry.day == tomorrow)
-        #expect(entry.freeMinutes == 450)  // 480 minus "Abgabe" due tomorrow (30 min)
+        #expect(entry.freeMinutes == 480)  // "Abgabe" due tomorrow (30 min, no time block) takes no free time
         #expect(entry.leftCount == 1)
         model.anchor = tomorrow
         await model.reload()
@@ -358,17 +365,24 @@ struct PlanningModelTests {
         #expect(model.overdue.map(\.title) == ["Fahrrad"])  // planned for yesterday
     }
 
-    @Test func freeAfterAccepting_doesNotCountReplacedLoadTwice() {
-        // Mockup MP2: 3 h 15 free; 4 h suggested, of which 2 h (due tomorrow) are already counted: 1 h 15 remain.
+    @Test func freeAfterAccepting_subtractsTheSuggestedBlocks() {
+        // Mockup MP2: 5 h free, 4 h suggested as blocks; tasks without a time block take no free time, so 1 h remains.
         let suggestions = [("a", 75), ("b", 45), ("c", 30), ("d", 90)].map { key, minutes in
             PlanSuggestion(id: UUID(), kind: .block, taskKey: key, title: key, day: tomorrow, startMinutes: 540,
                            minutes: minutes, reason: "r")
         }
         let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "e", title: "e", day: tomorrow, startMinutes: nil,
                                   minutes: nil, reason: "r")
-        let free = PlanningModel.freeAfterAccepting(free: 195, suggestions: suggestions + [move], counted: ["a": 75, "b": 45])
-        #expect(free == 75)
-        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions, counted: [:]) == 0)
+        let free = PlanningModel.freeAfterAccepting(free: 300, suggestions: suggestions + [move])
+        #expect(free == 60)
+        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions) == 0)
+    }
+
+    @Test func leftoverTargetCapacity_ignoresTasksWithoutTime() async {
+        // "Abgabe" is due tomorrow and has no time block: it takes no free time of the target day.
+        let capacity = await model().leftoverTargetCapacity(on: tomorrow)
+        #expect(capacity.freeMinutes == 480)
+        #expect(!capacity.isDayOff)
     }
 
     @Test func overdue_shownTodayAndTomorrow_notLater() async {

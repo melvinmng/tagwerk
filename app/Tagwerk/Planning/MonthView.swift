@@ -137,7 +137,8 @@ struct MonthView: View {
         .opacity(inMonth ? 1 : 0.45)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(plan.day.startDate(in: model.calendar).formatted(date: .complete, time: .omitted))
-        .accessibilityValue(hasDeadline ? String(localized: "Deadline, \(CapacityText.summary(plan.capacity))") : CapacityText.summary(plan.capacity))
+        .accessibilityValue(hasDeadline ? String(localized: "Deadline, \(CapacityText.summaryWithUntimed(plan.capacity))")
+                            : CapacityText.summaryWithUntimed(plan.capacity))
     }
 }
 
@@ -156,7 +157,9 @@ private struct MonthDayDetail: View {
                 Text(plan.day.startDate(in: model.calendar).formatted(.dateTime.weekday(.wide).day().month(.wide)))
                     .font(.headline)
                 Spacer()
-                Text(CapacityText.summary(plan.capacity)).font(.caption).foregroundStyle(.secondaryText)
+                Text(CapacityText.summaryWithUntimed(plan.capacity)).font(.caption)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(CapacityText.isOverloaded(plan.capacity) ? Color.redText : Color.secondaryText)
             }
             ForEach(plan.deadlines) { deadline in
                 DeadlineLine(deadline: deadline)

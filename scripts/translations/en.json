@@ -250,10 +250,7 @@
   "%@: frei": "%@: free",
   "%@: hast du selbst verschoben, bleibt.": "%@: you moved this yourself, so it stays.",
   "%lld": "%lld",
-  "%lld Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet": {
-    "one": "%lld task without effort counted at the default duration",
-    "other": "%lld tasks without effort counted at the default duration"
-  },
+  "%lld davon ohne Aufwand mit Standarddauer gerechnet": "%lld of them without effort counted at the default duration",
   "%lld Aufgaben": {
     "one": "%lld task",
     "other": "%lld tasks"
@@ -3372,5 +3369,27 @@
   "Statuswechsel": "Status changes",
   "Wieder geöffnet": "Reopened",
   "Änderungen in Tagwerk": "Changes in Tagwerk",
-  "Aufgabe anlegen": "Create task"
+  "Aufgabe anlegen": "Create task",
+  "%lld Aufgabe(n) ohne Uhrzeit · %@ – passt in die freie Zeit": {
+    "one": "%lld task without a time · %@ – fits into the free time",
+    "other": "%lld tasks without a time · %@ – fit into the free time"
+  },
+  "%lld Aufgabe(n) ohne Uhrzeit · %@ – passt in die noch freie Zeit": {
+    "one": "%lld task without a time · %@ – fits into the time still free",
+    "other": "%lld tasks without a time · %@ – fit into the time still free"
+  },
+  "%lld Aufgabe(n) ohne Uhrzeit · %@ – %@ mehr als frei": {
+    "one": "%lld task without a time · %@ – %@ more than free",
+    "other": "%lld tasks without a time · %@ – %@ more than free"
+  },
+  "%lld Aufgabe(n) ohne Uhrzeit · %@ – %@ mehr als noch frei": {
+    "one": "%lld task without a time · %@ – %@ more than still free",
+    "other": "%lld tasks without a time · %@ – %@ more than still free"
+  },
+  "%lld Aufgabe(n) ohne Uhrzeit · %@": {
+    "one": "%lld task without a time · %@",
+    "other": "%lld tasks without a time · %@"
+  },
+  "%@ ohne Uhrzeit": "%@ without a time",
+  "%@ ohne Uhrzeit (%@ zu viel)": "%1$@ without a time (%2$@ over)"
 }

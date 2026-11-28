@@ -255,7 +255,7 @@ extension RoutinesModel {
     func overview(for day: PlanDay) async -> Overview? {
         guard day == today else { return nil }
         let input = await planning.planInputs(in: day...day).first
-        let free = input.map { max(0, $0.availableMinutes - $0.plannedMinutes) } ?? 0
+        let free = input.map { max(0, $0.freeMinutes) } ?? 0
         return Overview(events: input?.events.count ?? 0, tasks: tasks(of: day).count, freeMinutes: free)
     }
 

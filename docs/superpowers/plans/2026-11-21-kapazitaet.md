@@ -1,6 +1,8 @@
 # Tageskapazität richtig rechnen – Implementation Plan (Entwurf)
 
 
+> **Hinweis (28.11.2026):** Regel 11 bis 13 sind ersetzt durch `2026-11-28-ungeplante-aufgaben.md`: Aufgaben ohne Zeitblock verringern die freie Zeit nicht mehr; sie erscheinen nur als Hinweis auf der Tageskarte.
+
 > **Stand 21.11.2026 (Nutzer):** KA6a gewählt. Ursache der 3 h 10 bestätigt: Arbeitszeit am Dienstag ist die normale; wiederkehrende Aufgabe „Karteikarten“ mit 4 h reserviertem Aufwand (7 h 40 − 4 h 30 = 3 h 10). **KA3 entschieden:** Reservierter Aufwand wiederkehrender Aufgaben verringert die freie Zeit gar nicht mehr; Zeit wird erst abgezogen, wenn Zeitblöcke gebucht sind (strenger als KA3a: auch kein Abzug als „eingeplant“). Weiter entschieden: **KA1c, KA2a, KA4a, KA5a**. Alle Entscheidungen stehen; Task 0 entfällt. Erwartung für den gemeldeten Tag: „8 h frei von 8 h“ (Karteikarten ohne gebuchten Block zählen nicht).
 
 > **For agentic workers:** Dieser Plan ist ein **Entwurf vor den Entscheidungen des Nutzers**. Kein Task wird begonnen, bevor die Entscheidungen im Abschnitt „Entscheidungen des Nutzers“ getroffen und hier eingetragen sind. Jeder Task nennt unter „Hängt ab von“ die Kürzel, gegen deren Empfehlung er geschrieben ist; fällt eine Entscheidung anders aus, wird der Task vor der Umsetzung überarbeitet. Danach gilt: Task für Task, jeweils mit TDD, Schritte als Checkbox (`- [ ]`).

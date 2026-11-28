@@ -864,15 +864,28 @@ final class AssistantModel {
             return "Ansicht: Aufgaben (\(open) offene Aufgaben; Einzelheiten über list_tasks)."
         case .planning(let scope, _):
             let days = planning.days.filter { !$0.isPast || $0.day == planning.today }
-            let lines = days.prefix(31).map { plan -> String in
-                let capacity = plan.capacity
-                let load = capacity.isDayOff ? "frei (kein Arbeitstag)"
-                    : "\(CapacityText.duration(max(0, capacity.freeMinutes))) frei von \(CapacityText.duration(capacity.availableMinutes))"
-                        + (capacity.isOverbooked ? ", überbucht" : "")
-                return "- \(AIPlanner.dayString(plan.day)): \(load), \(plan.assigned.count) Aufgaben zugeordnet, \(plan.blocks.count) Zeitblöcke"
+            let lines = days.prefix(31).map {
+                Self.planningDayLine(day: $0.day, capacity: $0.capacity, blockCount: $0.blocks.count)
             }
             return "Ansicht: Planen · \(AIPlanBar.actionName(scope))\n" + lines.joined(separator: "\n")
         }
+    }
+
+    /// One day of the planning view for the context of the chat: free time (tasks without a time block take none), those
+    /// tasks with their effort and whether they exceed the free time, and the number of time blocks.
+    static func planningDayLine(day: PlanDay, capacity: DayCapacity, blockCount: Int) -> String {
+        var parts = [capacity.isDayOff ? "frei (kein Arbeitstag)"
+            : "\(CapacityText.duration(max(0, capacity.freeMinutes))) frei von \(CapacityText.duration(capacity.availableMinutes))"
+                + (capacity.isOverbooked ? ", überbucht" : "")]
+        if capacity.untimedCount > 0 {
+            var effort = CapacityText.duration(capacity.untimedMinutes)
+            if capacity.untimedOverflowMinutes > 0 {
+                effort += ", \(CapacityText.duration(capacity.untimedOverflowMinutes)) mehr als frei"
+            }
+            parts.append("\(capacity.untimedCount) Aufgaben ohne Uhrzeit (\(effort))")
+        }
+        parts.append("\(blockCount) Zeitblöcke")
+        return "- \(AIPlanner.dayString(day)): " + parts.joined(separator: ", ")
     }
 
     // MARK: Action cards
