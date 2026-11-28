@@ -74,19 +74,21 @@ struct CapacityTests {
         #expect(capacity(input(busy: [690..<750])).availableMinutes == 440)
     }
 
-    @Test func capacity_untimedAndBlocksAreLoad() {
-        // 120 min of tasks without a time and a block of 3 h: 480 available, 300 planned.
+    @Test func capacity_onlyBlocksAreLoad() {
+        // 120 min of tasks without a time and a block of 3 h: 480 available, only the block is planned.
         let result = capacity(input(blocks: [840..<1020], untimed: 120))
         #expect(result.availableMinutes == 480)
-        #expect(result.plannedMinutes == 300)
-        #expect(result.freeMinutes == 180)
+        #expect(result.plannedMinutes == 180)
+        #expect(result.freeMinutes == 300)
+        #expect(result.untimedMinutes == 120)
         #expect(!result.isOverbooked)
     }
 
-    @Test func capacity_overbooked() {
+    @Test func capacity_untimedBeyondTheDay_isNoOverbooking() {
         let result = capacity(input(untimed: 540))
-        #expect(result.freeMinutes == -60)
-        #expect(result.isOverbooked)
+        #expect(result.freeMinutes == 480)
+        #expect(!result.isOverbooked)
+        #expect(result.untimedOverflowMinutes == 60)
     }
 
     private func now(_ minutes: Int, busy: [Range<Int>] = [], blocks: [Range<Int>] = [], untimed: Int = 0) -> DayCapacity {
@@ -105,9 +107,9 @@ struct CapacityTests {
         #expect(now(14 * 60, busy: [810..<900]).remainingMinutes == 170)  // 14:00–15:10 blocked
     }
 
-    @Test func capacity_withNow_subtractsUntimedInFullAndBlocksAhead() {
-        // Block 13:00–15:00 is half over at 14:00; 30 min of tasks without a time still wait.
-        #expect(now(14 * 60, blocks: [780..<900], untimed: 30).remainingMinutes == 240 - 60 - 30)
+    @Test func capacity_withNow_countsBlocksAheadOnly() {
+        // Block 13:00–15:00 is half over at 14:00; 30 min of tasks without a time use no free time.
+        #expect(now(14 * 60, blocks: [780..<900], untimed: 30).remainingMinutes == 240 - 60)
     }
 
     @Test func capacity_nowAfterWork_remainingZero() {
@@ -127,7 +129,7 @@ struct CapacityTests {
                                             busyIntervals: [], untimedPlannedMinutes: 30, estimatedCount: 1))
         #expect(result.availableMinutes == 0)
         #expect(result.isDayOff)
-        #expect(result.isOverbooked)
+        #expect(!result.isOverbooked)
     }
 
     @Test func busyIntervals_skipsAllDayFreeAndLinked() {

@@ -1908,12 +1908,13 @@ final class PlanningModel {
             : []
 
         // Time blocks go to the capacity as intervals: overlapping blocks count once and blocks outside the working
-        // hours use no free time. Tasks without a block count with their effort.
+        // hours use no free time. Tasks without a block use no free time either; the capacity only reports their effort.
         let blockIntervals = linkedEvents.compactMap { event -> Range<Int>? in
             let from = max(0, minutes(event.start, from: start)), to = min(minutes(end, from: start), minutes(event.end, from: start))
             return from < to ? from..<to : nil
         }
         var untimedPlanned = 0
+        var untimedCount = 0
         var estimated = 0
         var counted: [String: Int] = [:]
         for task in assignedSorted + openToday where !tasksWithBlocks.contains(task.id) {
@@ -1922,6 +1923,7 @@ final class PlanningModel {
             let minutes = task.estimateMinutes ?? settings.defaultTaskMinutes
             if task.estimateMinutes == nil { estimated += 1 }
             untimedPlanned += minutes
+            untimedCount += 1
             counted[task.id.key, default: 0] += minutes
         }
         let hours = TagwerkCore.workHours(on: day, schedule: settings.weekSchedule, overrides: overrides, calendar: calendar)
@@ -1933,7 +1935,7 @@ final class PlanningModel {
             bufferMinutes: settings.bufferMinutes,
             busyIntervals: busyIntervals(events: dayEvents, on: day, calendar: calendar, excluding: linkedIDs),
             untimedPlannedMinutes: untimedPlanned, estimatedCount: estimated, travelIntervals: travel.map(\.range),
-            blockIntervals: blockIntervals
+            blockIntervals: blockIntervals, untimedCount: untimedCount
         )
         let planInput = PlanInputDay(
             day: day, hours: hours, lunch: lunch(on: day), events: dayEvents, linkedEventIDs: linkedIDs,

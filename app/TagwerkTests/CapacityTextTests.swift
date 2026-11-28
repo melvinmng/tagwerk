@@ -23,14 +23,16 @@ struct CapacityTextTests {
     }
 
     @Test func explanation_namesEveryDeduction() {
-        // Event 10:00–11:00 with buffer 80 min, trip 30 min, block 14:00–15:00 and 30 min of tasks.
+        // Event 10:00–11:00 with buffer 80 min, trip 30 min, block 14:00–15:00; 30 min of tasks without a time are no deduction.
         let value = capacity(busy: [600..<660], travel: [840..<870], blocks: [900..<960], untimed: 30)
-        #expect(line(value) == "9:00–18:00 · 1 h Pause · 1 h 20 Termine · 30 min Fahrzeit · 1 h 30 eingeplant")
+        #expect(line(value) == "9:00–18:00 · 1 h Pause · 1 h 20 Termine · 30 min Fahrzeit · 1 h eingeplant")
     }
 
     @Test func explanation_leavesOutPartsWithoutMinutes() {
         #expect(line(capacity(lunch: false)) == "9:00–18:00")
-        #expect(line(capacity(untimed: 45, lunch: false)) == "9:00–18:00 · 45 min eingeplant")
+        #expect(line(capacity(blocks: [600..<645], lunch: false)) == "9:00–18:00 · 45 min eingeplant")
+        // Tasks without a time block are named by the hint, not by the explanation line.
+        #expect(line(capacity(untimed: 45, lunch: false)) == "9:00–18:00")
     }
 
     @Test func explanation_dayOff_hasNoLine() {

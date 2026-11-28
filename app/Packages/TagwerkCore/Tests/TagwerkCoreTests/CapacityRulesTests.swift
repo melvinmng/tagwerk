@@ -8,10 +8,12 @@ struct CapacityRulesTests {
     let nineToSix = WorkHours(startMinutes: 540, endMinutes: 1080)
 
     private func input(busy: [Range<Int>] = [], travel: [Range<Int>] = [], blocks: [Range<Int>] = [], untimed: Int = 0,
-                       hours: WorkHours? = nil, lunch: Bool = true, now: Int? = nil) -> CapacityInput {
-        var result = CapacityInput(hours: hours ?? nineToSix, lunchStartMinutes: lunch ? 720 : 0, lunchMinutes: lunch ? 60 : 0,
-                                   bufferMinutes: 10, busyIntervals: busy, untimedPlannedMinutes: untimed, estimatedCount: 0,
-                                   travelIntervals: travel, blockIntervals: blocks)
+                       untimedCount: Int = 0, estimated: Int = 0, hours: WorkHours? = nil, lunch: Bool = true,
+                       now: Int? = nil, dayOff: Bool = false) -> CapacityInput {
+        var result = CapacityInput(hours: dayOff ? nil : (hours ?? nineToSix), lunchStartMinutes: lunch ? 720 : 0,
+                                   lunchMinutes: lunch ? 60 : 0, bufferMinutes: 10, busyIntervals: busy,
+                                   untimedPlannedMinutes: untimed, estimatedCount: estimated,
+                                   travelIntervals: travel, blockIntervals: blocks, untimedCount: untimedCount)
         result.nowMinutes = now
         return result
     }
@@ -122,15 +124,72 @@ struct CapacityRulesTests {
         #expect(result.breakdown.blockMinutes == 20)
     }
 
-    @Test func blocksAndTasksWithoutTime_addUp() {
-        let result = capacity(input(blocks: [600..<660], untimed: 45))
-        #expect(result.plannedMinutes == 105)
-        #expect(result.freeMinutes == 375)
+    @Test func tasksWithoutTime_addNothingToTheBlocks() {
+        let result = capacity(input(blocks: [600..<660], untimed: 45, untimedCount: 2))
+        #expect(result.plannedMinutes == 60)
+        #expect(result.freeMinutes == 420)
+        #expect(result.untimedMinutes == 45)
     }
 
     @Test func blocksBeyondTheDay_areOverbooked() {
-        let result = capacity(input(blocks: [540..<1080], untimed: 120))
-        #expect(result.freeMinutes == -120)  // 480 min block time outside lunch + 120 min of tasks
+        // The blocks fill the window outside lunch (480 min); 60 min more would not fit, tasks without a time do not count.
+        let result = capacity(input(blocks: [540..<1080], untimed: 120, untimedCount: 4))
+        #expect(result.plannedMinutes == 480)
+        #expect(result.freeMinutes == 0)
+        #expect(!result.isOverbooked)
+        #expect(result.untimedOverflowMinutes == 120)
+    }
+
+    // MARK: Tasks without a time block
+
+    /// The day from the 28 Nov report: appointment 12:00–14:00, lunch 12:00–13:00, six tasks without effort counted at 30 min.
+    @Test func reportedDay_untimedTasksUseNoFreeTime() {
+        let result = capacity(input(busy: [720..<840], untimed: 180, untimedCount: 6, estimated: 6, now: 804))
+        #expect(result.availableMinutes == 400)
+        #expect(result.plannedMinutes == 0)
+        #expect(result.freeMinutes == 400)
+        #expect(result.remainingMinutes == 230)
+        #expect(result.untimedMinutes == 180)
+        #expect(result.untimedCount == 6)
+        #expect(result.estimatedCount == 6)
+        #expect(result.untimedOverflowMinutes == 0)
+        #expect(!result.isOverbooked)
+        #expect(result.breakdown.eventMinutes == 80)
+        #expect(result.breakdown.lunchMinutes == 60)
+    }
+
+    @Test func untimedTasks_exceedTheTimeStillFree() {
+        let result = capacity(input(busy: [720..<840], untimed: 180, untimedCount: 6, estimated: 6, now: 960))
+        #expect(result.remainingMinutes == 120)
+        #expect(result.untimedOverflowMinutes == 60)
+    }
+
+    @Test func untimedTasks_futureDay_compareWithTheWholeDay() {
+        let result = capacity(input(busy: [720..<840], untimed: 450, untimedCount: 9))
+        #expect(result.freeMinutes == 400)
+        #expect(result.untimedOverflowMinutes == 50)
+    }
+
+    @Test func untimedTasks_afterWork_exceedCompletely() {
+        let result = capacity(input(untimed: 90, untimedCount: 3, now: 1140))
+        #expect(result.remainingMinutes == 0)
+        #expect(result.untimedOverflowMinutes == 90)
+    }
+
+    @Test func dayOff_untimedTasksAreNoOverbooking() {
+        let result = capacity(input(untimed: 30, untimedCount: 1, dayOff: true))
+        #expect(result.freeMinutes == 0)
+        #expect(!result.isOverbooked)
+        #expect(result.untimedMinutes == 30)
+        #expect(result.untimedCount == 1)
+        // A day off has nothing to compare with, so there is no overflow either.
+        #expect(result.untimedOverflowMinutes == 0)
+    }
+
+    @Test func dayOff_blocksStillCountAsTooMuch() {
+        let result = capacity(input(blocks: [600..<660], dayOff: true))
+        #expect(result.plannedMinutes == 60)
+        #expect(result.freeMinutes == -60)
         #expect(result.isOverbooked)
     }
 
@@ -142,7 +201,7 @@ struct CapacityRulesTests {
         let parts = result.breakdown
         #expect(parts.lunchMinutes == 60)
         #expect(parts.travelMinutes + parts.eventMinutes + parts.lunchMinutes == parts.windowMinutes - result.availableMinutes)
-        #expect(parts.lunchMinutes + parts.travelMinutes + parts.eventMinutes + parts.blockMinutes + result.freeMinutes + parts.untimedMinutes
+        #expect(parts.lunchMinutes + parts.travelMinutes + parts.eventMinutes + parts.blockMinutes + result.freeMinutes
                 == parts.windowMinutes)
     }
 

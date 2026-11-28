@@ -73,7 +73,8 @@ public struct PlanInputDay: Sendable, Hashable {
             bufferMinutes: bufferMinutes, busyIntervals: busy, untimedPlannedMinutes: untimedPlannedMinutes,
             estimatedCount: 0, travelIntervals: travel, blockIntervals: blocks))
         self.availableMinutes = dayCapacity.availableMinutes
-        self.plannedMinutes = dayCapacity.plannedMinutes
+        // The load for the AI checks keeps counting tasks without a time block, although the capacity does not.
+        self.plannedMinutes = dayCapacity.plannedMinutes + untimedPlannedMinutes
 
         let dayStart = day.startDate(in: calendar)
         let dayEnd = day.adding(days: 1, calendar: calendar).startDate(in: calendar)
