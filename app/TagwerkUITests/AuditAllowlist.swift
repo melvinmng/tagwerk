@@ -62,8 +62,10 @@ enum AuditAllowlist {
     /// search sheet, the settings search, the manual barcode field and the recipe sheets with a link or quantity field. Multi-line
     /// fields (notes, weekly review) are text views and need no entry.
     private static let textFieldScreens = withLargeText([
-        "Einkaufsliste", "Suche", "Einstellungen › Suche", "Rezepte", "Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)",
-        "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)", "Rezept anlegen (Eingabe)",
+        "Einkaufsliste", "Einkaufsliste › Karte „übersetzen“", "Einkaufsliste › Übersetzung",
+        "Suche", "Einstellungen › Suche", "Rezepte", "Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)",
+        "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
+        "Rezept anlegen (Eingabe)", "Rezept anlegen (Bestätigung)",
     ])
     /// The screens with bar buttons, filter marks and quick entry buttons on Liquid Glass (collect runs of 2026-11-25).
     private static let glassButtonScreens = withLargeText([
