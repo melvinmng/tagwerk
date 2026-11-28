@@ -6,6 +6,8 @@
 # attempt, except TaskFlowUITests (cut off by the watchdog there) and PlanUITests (the longer first attempt). The audits had grown
 # most since they report every finding instead of stopping at the first (AccessibilityAuditLargeTextUITests 68 -> 775 s).
 # The earlier weights came from run 45456069245 (two shards, 3325 s and 2576 s) and run 45193805665 (one job, 4619 s).
+# BibleStudyUITests (1024 s) and ProjectProgressUITests (965 s) were split into two classes each to balance the shards; the halves
+# are estimates (est.: half of the measured sum each, 512 + 512 and 482 + 483 s) until a run measures them.
 # Estimates (no measurement in that run, marked "est."): classes that are nightly-only.
 #
 # A class without an entry is weighted with the mean of the listed ones (the script reports it), so the list may lag behind
@@ -20,7 +22,8 @@ AssistantCardLargeTextUITests 41
 AssistantCardUITests 118
 AssistantReviseAllUITests 84
 BackupUITests 88
-BibleStudyUITests 1024
+BibleStudyTasksUITests 512
+BibleStudyUITests 512
 CaptureUITests 401
 FoodLookupUITests 361
 GitHubProjectPickerUITests 48
@@ -36,7 +39,8 @@ NoteLockUITests 307
 NotesUITests 209
 NowMarkerUITests 29
 PlanUITests 465
-ProjectProgressUITests 965
+ProjectProgressPageUITests 482
+ProjectProgressUITests 483
 RoutineUITests 296
 SearchUITests 178
 SettingsNavigationUITests 156

@@ -79,6 +79,30 @@ struct BackupCryptoTests {
         #expect(key.map { String(format: "%02x", $0) }.joined() == expected)
     }
 
+    @Test func deriveKey_clampsTheIterationCountIntoTheSupportedRange() {
+        #expect(BackupCrypto.clampedIterations(Int.min) == 1)
+        #expect(BackupCrypto.clampedIterations(-5) == 1)
+        #expect(BackupCrypto.clampedIterations(0) == 1)
+        #expect(BackupCrypto.clampedIterations(1_000) == 1_000)
+        #expect(BackupCrypto.clampedIterations(BackupCrypto.maximumIterations) == BackupCrypto.maximumIterations)
+        #expect(BackupCrypto.clampedIterations(BackupCrypto.maximumIterations + 1) == BackupCrypto.maximumIterations)
+        #expect(BackupCrypto.clampedIterations(Int(UInt32.max) + 1) == BackupCrypto.maximumIterations)
+        #expect(BackupCrypto.clampedIterations(Int.max) == BackupCrypto.maximumIterations)
+    }
+
+    @Test func deriveKey_withNonPositiveIterations_behavesLikeOneIteration() {
+        let salt = Data("salt".utf8)
+        let one = BackupCrypto.deriveKey(password: "passwd", salt: salt, iterations: 1)
+        #expect(BackupCrypto.deriveKey(password: "passwd", salt: salt, iterations: 0) == one)
+        #expect(BackupCrypto.deriveKey(password: "passwd", salt: salt, iterations: Int.min) == one)
+    }
+
+    @Test func deriveKey_withAHugeIterationCount_doesNotTrapAndUsesTheMaximum() {
+        // Int.max does not fit into UInt32; without the clamp the conversion would trap.
+        let key = BackupCrypto.deriveKey(password: "passwd", salt: Data("salt".utf8), iterations: Int.max)
+        #expect(key.count == BackupCrypto.keyLength)
+    }
+
     @Test func deriveKey_shortPassword_throws() {
         #expect(throws: BackupCrypto.CryptoError.passwordTooShort) { try BackupCrypto.deriveKey(password: "1234567") }
         #expect(throws: BackupCrypto.CryptoError.passwordTooShort) { try BackupCrypto.deriveKey(password: "") }

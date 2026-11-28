@@ -1,5 +1,6 @@
 import Foundation
 import ImageIO
+import OSLog
 import PDFKit
 import SwiftData
 import TagwerkCore
@@ -36,6 +37,7 @@ final class NoteAttachmentStore {
     private let directory: URL
     private let now: () -> Date
     private let fileManager = FileManager.default
+    private let logger = Logger(subsystem: "local.tagwerk", category: "attachments")
 
     /// `directory` is injectable so tests use a temporary folder.
     init(context: ModelContext, directory: URL = NoteAttachmentStore.defaultDirectory, now: @escaping () -> Date = Date.init) {
@@ -97,14 +99,17 @@ final class NoteAttachmentStore {
         return record
     }
 
-    /// Puts a file back from a backup, with its original ID, so the references in the notes work again.
+    /// Puts a file back from a backup, with its original ID, so the references in the notes work again. Returns the URL of the
+    /// written file, so a caller can clean up after a failed restore.
+    @discardableResult
     func restore(id: UUID, noteID: UUID?, fileName: String, typeIdentifier: String, createdAt: Date, data: Data,
-                 roleRaw: String = "", companionOfID: UUID? = nil, recognizedText: String? = nil, pageCount: Int = 0) throws {
+                 roleRaw: String = "", companionOfID: UUID? = nil, recognizedText: String? = nil, pageCount: Int = 0) throws -> URL {
         let record = NoteAttachmentRecord(id: id, noteID: noteID, fileName: fileName, typeIdentifier: typeIdentifier, byteCount: data.count,
                                           createdAt: createdAt, roleRaw: roleRaw, companionOfID: companionOfID,
                                           recognizedText: recognizedText, pageCount: pageCount)
         try write(data, for: record)
         context.insert(record)
+        return fileURL(for: record)
     }
 
     /// Replaces the bytes of an attachment and keeps its ID, so the references in the text stay valid (a drawing that was
@@ -360,6 +365,33 @@ final class NoteAttachmentStore {
         save()
     }
 
+    /// Marks attachments (and the files that belong to them) for deletion in the context without touching the disk or saving,
+    /// and returns the files that go once the deletion is persisted (see `removeFiles(at:)`). A backup restore uses it so no
+    /// file is lost before the replacement of the records succeeded.
+    func stageDelete(ids: some Collection<UUID>) -> [URL] {
+        guard !ids.isEmpty else { return [] }
+        let wanted = Set(ids)
+        var urls: [URL] = []
+        for record in records() where wanted.contains(record.id) || record.companionOfID.map(wanted.contains) == true {
+            urls.append(fileURL(for: record))
+            context.delete(record)
+        }
+        return urls
+    }
+
+    /// Removes files from the store directory. A file that is already gone is not an error.
+    func removeFiles(at urls: some Collection<URL>) {
+        for url in urls {
+            do {
+                try fileManager.removeItem(at: url)
+            } catch let error as CocoaError where error.code == .fileNoSuchFile {
+                continue
+            } catch {
+                logger.error("Could not remove attachment file \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
     /// Removes every attachment of a note, e.g. when the note is deleted for good.
     func deleteAll(of noteID: UUID) {
         delete(ids: attachments(of: noteID).map(\.id))
@@ -407,7 +439,11 @@ final class NoteAttachmentStore {
     }
 
     private func save() {
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            logger.error("Saving the attachment records failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// "Foto.jpg": the name without a path and with the extension of the stored file.

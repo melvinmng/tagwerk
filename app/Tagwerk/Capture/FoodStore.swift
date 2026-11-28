@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 import TagwerkCore
 
@@ -6,6 +7,7 @@ import TagwerkCore
 @MainActor
 final class FoodStore {
     private let context: ModelContext
+    private let logger = Logger(subsystem: "local.tagwerk", category: "food")
     private let now: () -> Date
 
     init(context: ModelContext, now: @escaping () -> Date = { Date() }) {
@@ -41,7 +43,8 @@ final class FoodStore {
         return ((try? context.fetchCount(descriptor)) ?? 0) == 0
     }
 
-    /// Adds a food, or replaces the one with the same identity. An invalid food (no name, negative energy) is not stored.
+    /// Adds a food, or replaces the one with the same identity. An invalid food (no name, negative energy) is not stored,
+    /// and `false` is returned when saving failed.
     @discardableResult
     func save(_ value: FoodValue) -> Bool {
         guard value.isValid else { return false }
@@ -52,14 +55,24 @@ final class FoodStore {
         } else {
             context.insert(FoodRecord(food, createdAt: now()))
         }
-        try? context.save()
-        return true
+        return persist()
     }
 
     func delete(_ id: UUID) {
         guard let existing = record(id) else { return }
         context.delete(existing)
-        try? context.save()
+        persist()
+    }
+
+    @discardableResult
+    private func persist() -> Bool {
+        do {
+            try context.save()
+            return true
+        } catch {
+            logger.error("Saving foods failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
     }
 
     private func record(_ id: UUID) -> FoodRecord? {

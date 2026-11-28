@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 import SwiftData
 import TagwerkCore
 
@@ -62,6 +63,8 @@ final class BackupService {
         case folderUnavailable
         case writeFailed
         case restoreFailed
+        /// The restore failed and so did putting the previous state back from the safety copy.
+        case recoveryFailed
         /// The file is encrypted and neither the key of this device nor a password is available.
         case passwordRequired
         case wrongPassword
@@ -77,6 +80,7 @@ final class BackupService {
         case failed(BackupError)
     }
 
+    @ObservationIgnored private let logger = Logger(subsystem: "local.tagwerk", category: "backup")
     @ObservationIgnored private let context: ModelContext
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let now: () -> Date
@@ -233,6 +237,8 @@ final class BackupService {
     /// Replaces the data of everything in the file. Call `writeSafetyCopy` first and pass its content as `safetyCopy`:
     /// the replacement saves twice (old unique keys must be gone first), so a failure after the first save would leave
     /// the store without data. In that case the previous state comes back from the safety copy and `.restoreFailed` is thrown.
+    /// When putting the previous state back fails as well, the error is logged and `.recoveryFailed` is thrown, so the caller
+    /// never reports a recovery that did not happen.
     func restore(_ inspection: Inspection, recoveringFrom safetyCopy: Data? = nil) throws {
         do {
             try inspection.entities.restore(into: context, settings: settings, replacePrivate: inspection.header.includesPrivateNotes,
@@ -240,16 +246,29 @@ final class BackupService {
             // Locked notes on a device without the protection would be open until the switch is found: the safe state is on.
             if inspection.entities.notes.contains(where: { $0.isLocked == true }), canProtectNotes() {
                 settings.noteLockEnabled = true
-                try? context.save()
+                do {
+                    try context.save()
+                } catch {
+                    logger.error("Saving the note lock switch after a restore failed: \(error.localizedDescription, privacy: .public)")
+                }
             }
             afterRestore()
         } catch {
+            logger.error("Restore failed: \(error.localizedDescription, privacy: .public)")
             context.rollback()
-            if let safetyCopy, let previous = try? inspectFile(safetyCopy) {
-                try? previous.entities.restore(into: context, settings: settings, replacePrivate: true, attachments: attachments)
+            var recoveryError: Error?
+            if let safetyCopy {
+                do {
+                    let previous = try inspectFile(safetyCopy)
+                    try previous.entities.restore(into: context, settings: settings, replacePrivate: true, attachments: attachments)
+                } catch {
+                    context.rollback()
+                    logger.error("Recovery from the safety copy failed: \(error.localizedDescription, privacy: .public)")
+                    recoveryError = error
+                }
             }
             afterRestore()
-            throw BackupError.restoreFailed
+            throw recoveryError == nil ? BackupError.restoreFailed : BackupError.recoveryFailed
         }
     }
 
@@ -438,6 +457,7 @@ final class BackupService {
         case .passwordRequired: String(localized: "Diese Sicherung ist mit einem Passwort verschlüsselt.")
         case .wrongPassword: String(localized: "Das Passwort stimmt nicht. Es wurde nichts geändert.")
         case .keyMissing: String(localized: "Passwort erneut eingeben: Der Schlüssel fehlt auf diesem iPhone. Öffne „Mit Passwort verschlüsseln“.")
+        case .recoveryFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen und der vorherige Stand konnte nicht zurückgeholt werden. Eine Kopie des vorherigen Stands steht unter „Sicherheitskopien“ in der Datensicherung; stelle sie von dort wieder her.")
         case .restoreFailed: String(localized: "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie steht unter „Sicherheitskopien“ in der Datensicherung.")
         }
     }

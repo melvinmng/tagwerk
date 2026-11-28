@@ -1,6 +1,10 @@
 import XCTest
 
 final class TaskFlowUITests: UITestCase {
+    /// Pinned to the morning (09:30), so the morning card, the hour grid and the wrap-up give the same result at every hour of the day,
+    /// also shortly before midnight.
+    override var extraLaunchArguments: [String] { Self.morningClockArguments }
+
     func testCreateEditCompleteUndo() {
         tab("Aufgaben")
         tapButton("Neue Aufgabe")

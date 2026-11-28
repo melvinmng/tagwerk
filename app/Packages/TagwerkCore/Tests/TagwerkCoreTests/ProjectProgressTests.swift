@@ -118,6 +118,28 @@ struct ProjectProgressTests {
         #expect(result.periodCreated == 0)
     }
 
+    @Test func buckets_itemCreatedJustBeforeTheEndOfAWeekIsOpenAtThatEnd() {
+        // Monday 23 Nov 00:00 ends the week of 16 Nov; the item is created half a millisecond before.
+        let boundary = date(11, 23, 0)
+        let result = summary([open("late", created: boundary.addingTimeInterval(-0.0005))])
+        #expect(result.buckets.map(\.created) == [0, 0, 1, 0])
+        #expect(result.buckets.map(\.openAtEnd) == [0, 0, 1, 1], "created in the bucket and still open: open at its end")
+    }
+
+    @Test func buckets_itemClosedJustBeforeTheEndOfAWeekHasLeftAtThatEnd() {
+        let boundary = date(11, 23, 0)
+        let result = summary([closed("gone", created: date(11, 3), closedAt: boundary.addingTimeInterval(-0.0005))])
+        #expect(result.buckets.map(\.completed) == [0, 0, 1, 0])
+        #expect(result.buckets.map(\.openAtEnd) == [1, 1, 0, 0])
+    }
+
+    @Test func buckets_itemCreatedExactlyAtTheEndBelongsToTheNextWeek() {
+        let boundary = date(11, 23, 0)
+        let result = summary([open("next", created: boundary)])
+        #expect(result.buckets.map(\.created) == [0, 0, 0, 1])
+        #expect(result.buckets.map(\.openAtEnd) == [0, 0, 0, 1])
+    }
+
     @Test func buckets_lastWeekEndsAtNow() {
         let result = summary([open("later", created: date(11, 25, 11))])
         #expect(result.buckets.last?.openAtEnd == 0, "an item created after now is not counted")

@@ -66,6 +66,32 @@ struct SystemBarOverlapTests {
         #expect(SystemBarOverlap.bar(covering: element, in: bars, within: screen) == navigationBar)
     }
 
+    @Test func elementOutsideTheHorizontalSpanOfTheBar_isNotCovered() {
+        // A narrow bar (e.g. a floating capsule or a sheet bar) from x 100 to 300 with an element at the same height beside it.
+        let narrowBar = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 100, y: 791, width: 200, height: 83))
+        let leftOfBar = CGRect(x: 0, y: 800, width: 90, height: 30)
+        let rightOfBar = CGRect(x: 310, y: 800, width: 80, height: 30)
+        #expect(SystemBarOverlap.coveredShare(of: leftOfBar, by: narrowBar.frame, within: screen) == 0)
+        #expect(SystemBarOverlap.coveredShare(of: rightOfBar, by: narrowBar.frame, within: screen) == 0)
+        #expect(SystemBarOverlap.bar(covering: leftOfBar, in: [narrowBar], within: screen) == nil)
+        #expect(SystemBarOverlap.bar(covering: rightOfBar, in: [narrowBar], within: screen) == nil)
+    }
+
+    @Test func elementTouchingTheBarOnlyAtItsSide_isNotCovered() {
+        let narrowBar = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 100, y: 791, width: 200, height: 83))
+        let touching = CGRect(x: 20, y: 800, width: 80, height: 30)
+        #expect(SystemBarOverlap.coveredShare(of: touching, by: narrowBar.frame, within: screen) == 0)
+        #expect(SystemBarOverlap.bar(covering: touching, in: [narrowBar], within: screen) == nil)
+    }
+
+    @Test func elementOverlappingTheBarOnlyPartlyHorizontally_isStillCovered() {
+        // Text that starts a few points left of an inset glass capsule is measured against the glass.
+        let insetBar = SystemBarOverlap.Bar(name: "tab bar", frame: CGRect(x: 16, y: 791, width: 370, height: 83))
+        let element = CGRect(x: 10, y: 808, width: 70, height: 30)
+        #expect(SystemBarOverlap.coveredShare(of: element, by: insetBar.frame, within: screen) == 1)
+        #expect(SystemBarOverlap.bar(covering: element, in: [insetBar], within: screen) == insetBar)
+    }
+
     @Test func elementOutsideTheScreen_isNotCovered() {
         let element = CGRect(x: 20, y: 900, width: 300, height: 40)
         #expect(SystemBarOverlap.coveredShare(of: element, by: tabBar.frame, within: screen) == 0)

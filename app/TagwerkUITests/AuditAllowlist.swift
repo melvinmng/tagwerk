@@ -58,6 +58,15 @@ enum AuditAllowlist {
         "Aufgaben", "Notizenliste", "Rezepte", "Suche", "Einkaufsliste", "Einkaufsliste › Karte „übersetzen“", "Erfassen",
         "Tagesabschluss", "Tagesabschluss (Abend)", "Einstellungen › Suche",
     ]) + gridScreens
+    /// The screens that show a single-line text field (`TextField` without a vertical axis) in the audits: the shopping input bar, the
+    /// search sheet, the settings search, the manual barcode field and the recipe sheets with a link or quantity field. Multi-line
+    /// fields (notes, weekly review) are text views and need no entry.
+    private static let textFieldScreens = withLargeText([
+        "Einkaufsliste", "Einkaufsliste › Karte „übersetzen“", "Einkaufsliste › Übersetzung",
+        "Suche", "Einstellungen › Suche", "Rezepte", "Strichcode (Nummer eingeben)", "Strichcode (nicht gefunden)",
+        "Einkauf › Rezept hinzufügen", "Einkauf › Rezept hinzufügen (Notiz)",
+        "Rezept anlegen (Eingabe)", "Rezept anlegen (Bestätigung)",
+    ])
     /// The screens with bar buttons, filter marks and quick entry buttons on Liquid Glass (collect runs of 2026-11-25).
     private static let glassButtonScreens = withLargeText([
         "Aufgaben", "Suche", "Erfassen", "Tagesabschluss", "Tagesabschluss (Abend)", "Einkauf › Rezept hinzufügen",
@@ -296,14 +305,15 @@ enum AuditAllowlist {
             "Footer of the wrap-up in the AX5 run of the evening sheet. Checked on the frame of the finding: 370 × 217 pt, completely inside the "
             + "screen (874 pt high), so the text wraps and nothing is cut; the audit reports its generic warning \"may be clipped at larger "
             + "Dynamic Type sizes\". Stays on the device test list (large text)."),
-        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+", "[\\d,]+ l / [\\d,]+ l"], reason:
+        Entry(auditType: .textClipped, labels: ["[\\d.]+ / [\\d.]+", "[\\d,]+ l / [\\d,]+ l"], screens: withLargeText(["Erfassen"]), reason:
             "Steps and water values of \"Erfassen\" in the largest text size: single-line summary cells of the same tile row (the water "
             + "value was first reported on 25.11.2026 at frame 152.7 × 44 pt, right above the tab bar). Layout for AX sizes is a "
             + "design decision (#188, \"Layout bei Bedienungshilfen-Schriftgrößen\"). The date caption above the day title wraps at "
             + "accessibility sizes (`PageTitleLabel`), so it needs no entry; its weekday changes every day."),
-        Entry(auditType: .textClipped, labels: [""], elementType: .textField, reason:
-            "Text fields (shopping input, search field) report their placeholder as clipped; the field itself is a single line with a fixed "
-            + "pill height. Layout for AX sizes: #188."),
+        Entry(auditType: .textClipped, labels: [""], elementType: .textField, screens: textFieldScreens, reason:
+            "Text fields (shopping input, search field, barcode number field, link and quantity fields of the recipe sheets) report their "
+            + "placeholder as clipped; the field itself is a single line with a fixed pill height. Only the screens that show such a field "
+            + "(`textFieldScreens`) are covered, so a clipped field on any other screen stays visible. Layout for AX sizes: #188."),
 
         // MARK: Recipe screens and settings (G1, G2)
         Entry(auditType: .contrast, labels: [

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 import SwiftData
 import TagwerkCore
 
@@ -8,6 +9,7 @@ import TagwerkCore
 @Observable
 final class FocusStore {
     @ObservationIgnored private let context: ModelContext
+    @ObservationIgnored private let logger = Logger(subsystem: "local.tagwerk", category: "focus")
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
 
@@ -37,8 +39,14 @@ final class FocusStore {
     }
 
     /// Persists changes made to a record.
+    /// A failed write is logged and does not bump `revision`: nothing was persisted.
     func save() {
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            logger.error("Saving focus data failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
         revision += 1
     }
 

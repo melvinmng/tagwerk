@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 import SwiftData
 import TagwerkCore
 
@@ -21,6 +22,7 @@ final class NoteStore {
 
     /// Internal, so the extensions for journal and Bible Study in other files write through the same context.
     @ObservationIgnored let context: ModelContext
+    @ObservationIgnored private let logger = Logger(subsystem: "local.tagwerk", category: "notes")
     @ObservationIgnored let now: () -> Date
     /// Bumped by every write; views read it to follow changes.
     private(set) var revision = 0
@@ -436,8 +438,14 @@ final class NoteStore {
 
     /// Saves and bumps `revision`; internal so the routines' extension can write through the same path. `affectsHabits: false` leaves
     /// `habitRevision` alone (see there).
+    /// A failed write is logged and leaves both revisions alone: nothing was persisted, so views must not announce a change.
     func save(affectsHabits: Bool = true) {
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            logger.error("Saving notes failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
         invalidateCaches()
         revision += 1
         if affectsHabits { habitRevision += 1 }

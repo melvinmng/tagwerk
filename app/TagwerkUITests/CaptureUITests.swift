@@ -1,6 +1,10 @@
 import XCTest
 
 final class CaptureUITests: UITestCase {
+    /// Pinned to the morning (09:30), so the morning card, the hour grid and the wrap-up give the same result at every hour of the day,
+    /// also shortly before midnight.
+    override var extraLaunchArguments: [String] { Self.morningClockArguments }
+
     /// The budget line of the day head, one element: "Noch etwa 1.480 Kilokalorien: Ziel 2.300, plus 260 aktiv, minus etwa 1.340 gegessen".
     private var budgetLine: XCUIElement {
         let line = app.descendants(matching: .any).matching(identifier: AccessibilityID.Capture.budgetLine)
@@ -113,7 +117,7 @@ final class CaptureUITests: UITestCase {
         onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
         let hint = app.descendants(matching: .any).matching(identifier: AccessibilityID.WeekReview.noWeight).firstMatch
         eventually("The hint for a week without a weight is missing") {
-            if !hint.isHittable { app.swipeUp() }
+            if !hint.isHittable { dragPage(towardsTop: false) }
             return hint.exists
         }
         let link = app.descendants(matching: .any).matching(identifier: AccessibilityID.WeekReview.trendLink).firstMatch
@@ -139,7 +143,7 @@ final class CaptureUITests: UITestCase {
         onScreen(label: "Wochenrückblick, Woche.*", matching: true).tap()
         let latest = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Letzte Messung'")).firstMatch
         eventually("The latest measurement is missing in the weight section") {
-            if !latest.exists { app.swipeUp() }
+            if !latest.exists { dragPage(towardsTop: false) }
             return latest.exists
         }
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Für ein 7-Tage-Mittel fehlen Messungen'"))

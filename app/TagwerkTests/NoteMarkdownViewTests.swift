@@ -16,7 +16,26 @@ struct NoteMarkdownViewTests {
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) { continuation?.resume(); continuation = nil }
     }
 
-    private func load(_ page: String, configuration: WKWebViewConfiguration) async -> WKWebView {
+    /// True once every image of the page has finished loading (a rejected image counts: it is complete with a width of 0).
+    private static let allImagesSettled = "document.images.length > 0 && [...document.images].every(i => i.complete)"
+
+    /// Evaluates `read` until `isReady` accepts its value or the timeout passes; returns the last value either way, so a
+    /// failing expectation still shows what the page reported. The timeout is generous because only a failure ever waits for it.
+    private func poll<Value>(timeout: Duration = .seconds(15), _ read: () async throws -> Value?,
+                             until isReady: (Value) -> Bool) async throws -> Value? {
+        let deadline = ContinuousClock.now + timeout
+        var latest: Value?
+        while true {
+            latest = try await read()
+            if let latest, isReady(latest) { return latest }
+            if ContinuousClock.now >= deadline { return latest }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
+
+    /// Loads the page and returns the web view once the navigation has finished and, when `readyScript` is given, once that
+    /// JavaScript expression (evaluated in the app's own world, because the page script is off) is true.
+    private func load(_ page: String, configuration: WKWebViewConfiguration, readyScript: String? = nil) async -> WKWebView {
         let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
         let loader = Loader()
         webView.navigationDelegate = loader
@@ -24,15 +43,28 @@ struct NoteMarkdownViewTests {
             loader.continuation = continuation
             webView.loadHTMLString(page, baseURL: nil)
         }
-        // Give a late script or image a moment; the delegate is kept alive by this local until here.
-        try? await Task.sleep(for: .milliseconds(300))
+        if let readyScript {
+            _ = try? await poll({
+                try await webView.evaluateJavaScript(readyScript, in: nil, contentWorld: .defaultClient) as? Bool
+            }, until: { $0 })
+        }
+        // The delegate is kept alive by this local until here.
         withExtendedLifetime(loader) {}
         return webView
     }
 
     @Test func contentRules_compile() async throws {
-        let list = try await WKContentRuleListStore.default().compileContentRuleList(forIdentifier: "TagwerkNoteRulesTest",
-                                                                                      encodedContentRuleList: NoteMarkdownView.contentRules)
+        // A unique identifier per run, removed afterwards: the store is shared by the whole process (and survives it).
+        let identifier = "TagwerkNoteRulesTest-\(UUID().uuidString)"
+        let store = WKContentRuleListStore.default()
+        let list: WKContentRuleList?
+        do {
+            list = try await store?.compileContentRuleList(forIdentifier: identifier, encodedContentRuleList: NoteMarkdownView.contentRules)
+        } catch {
+            try? await store?.removeContentRuleList(forIdentifier: identifier)
+            throw error
+        }
+        try? await store?.removeContentRuleList(forIdentifier: identifier)
         #expect(list != nil)
     }
 
@@ -50,8 +82,9 @@ struct NoteMarkdownViewTests {
         #expect(webView.configuration.defaultWebpagePreferences.allowsContentJavaScript == false)
     }
 
-    /// The text colour the system-scheme page computes while the web view is in the given interface style.
-    private func bodyColor(style: UIUserInterfaceStyle) async throws -> String? {
+    /// The text colour the system-scheme page computes while the web view is in the given interface style. Polls until the
+    /// colour equals `expected` (the style reaches the page asynchronously) and returns the last value that was read.
+    private func bodyColor(style: UIUserInterfaceStyle, expected: String) async throws -> String? {
         let configuration = NoteMarkdownView.makeConfiguration(attachments: nil)
         let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
@@ -69,15 +102,18 @@ struct NoteMarkdownViewTests {
             loader.continuation = continuation
             webView.loadHTMLString(NoteHTMLRenderer.page(body: "<p>x</p>"), baseURL: nil)
         }
-        try? await Task.sleep(for: .milliseconds(500))
-        withExtendedLifetime(loader) {}
-        return try await webView.evaluateJavaScript("getComputedStyle(document.body).color", in: nil, contentWorld: .defaultClient) as? String
+        defer { withExtendedLifetime(loader) {} }
+        return try await poll({
+            try await webView.evaluateJavaScript("getComputedStyle(document.body).color", in: nil, contentWorld: .defaultClient) as? String
+        }, until: { $0 == expected })
     }
 
     @Test func systemPage_followsTheInterfaceStyle() async throws {
         // The app uses the system scheme: the page's own media query must follow the web view's style.
-        #expect(try await bodyColor(style: .dark) == "rgb(242, 242, 247)")
-        #expect(try await bodyColor(style: .light) == "rgb(28, 28, 30)")
+        let darkColor = "rgb(242, 242, 247)"
+        let lightColor = "rgb(28, 28, 30)"
+        #expect(try await bodyColor(style: .dark, expected: darkColor) == darkColor)
+        #expect(try await bodyColor(style: .light, expected: lightColor) == lightColor)
     }
 
     @Test func attachmentImage_isServedFromTheStore_andOthersAre404() async throws {
@@ -97,14 +133,16 @@ struct NoteMarkdownViewTests {
         let body = "<img id=\"a\" src=\"tagwerk-attachment://\(record.id.uuidString)\"><img id=\"b\" src=\"tagwerk-attachment://\(pdf.id.uuidString)\">"
             + "<img id=\"c\" src=\"tagwerk-attachment://\(UUID().uuidString)\">"
         // Page script is off, so the result is read from the app's own world.
-        let webView = await load(NoteHTMLRenderer.page(body: body), configuration: NoteMarkdownView.makeConfiguration(attachments: attachments))
+        let webView = await load(NoteHTMLRenderer.page(body: body), configuration: NoteMarkdownView.makeConfiguration(attachments: attachments),
+                                 readyScript: Self.allImagesSettled)
         let widths = try await webView.evaluateJavaScript("[...document.images].map(i => i.naturalWidth)", in: nil, contentWorld: .defaultClient) as? [Int]
         #expect(widths == [40, 0, 0])
     }
 
     /// The natural sizes of two pictures of the page, read from the app's own world (the page script is off).
     private func naturalSizes(_ body: String, attachments: NoteAttachmentStore) async throws -> [[Int]] {
-        let webView = await load(NoteHTMLRenderer.page(body: body), configuration: NoteMarkdownView.makeConfiguration(attachments: attachments))
+        let webView = await load(NoteHTMLRenderer.page(body: body), configuration: NoteMarkdownView.makeConfiguration(attachments: attachments),
+                                 readyScript: Self.allImagesSettled)
         return try await webView.evaluateJavaScript("[...document.images].map(i => [i.naturalWidth, i.naturalHeight])", in: nil,
                                                     contentWorld: .defaultClient) as? [[Int]] ?? []
     }

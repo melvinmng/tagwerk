@@ -133,15 +133,15 @@ class Watchdog:
         arguments = self.arguments
         log_path = Path(arguments.log)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(log_path, "ab" if arguments.append else "wb") as output:
+        with open(log_path, "ab" if arguments.append else "wb") as output, open(log_path, "rb") as reader:
+            # The start offset is fixed before the command exists, so nothing it writes right away can be skipped.
+            if arguments.append:
+                reader.seek(0, os.SEEK_END)
             environment = dict(os.environ, NSUnbufferedIO="YES")
             self.process = subprocess.Popen(self.command, stdout=output, stderr=subprocess.STDOUT,
                                             env=environment, start_new_session=True)
             self.install_signal_handlers()
-            with open(log_path, "rb") as reader:
-                if arguments.append:
-                    reader.seek(0, os.SEEK_END)
-                status = self.follow(reader)
+            status = self.follow(reader)
         return status
 
     def install_signal_handlers(self):
@@ -242,11 +242,11 @@ class Watchdog:
             if pid in below and re.search(r"xcodebuild|xctest|xcodebuild-runner", command):
                 found.append((pid, "xcodebuild"))
                 continue
-            simulator_match = not self.arguments.simulator_id or self.arguments.simulator_id in command
-            if not simulator_match:
-                continue
             for label, pattern in SAMPLE_PATTERNS:
                 if pattern.search(command):
+                    # testmanagerd does not carry the simulator UDID in its command line, so it is never filtered by it.
+                    if label != "testmanagerd" and self.arguments.simulator_id and self.arguments.simulator_id not in command:
+                        break
                     found.append((pid, label))
                     break
         return found
@@ -268,7 +268,8 @@ class Watchdog:
                 except OSError:
                     pass
             deadline = time.monotonic() + (self.arguments.grace if send == signal.SIGTERM else 5)
-            while time.monotonic() < deadline and process.poll() is None:
+            # The window also covers descendants that outlive a parent which exits at once.
+            while time.monotonic() < deadline and (process.poll() is None or any(alive(pid) for pid in below)):
                 time.sleep(0.1)
             if process.poll() is not None and not any(alive(pid) for pid in below):
                 return

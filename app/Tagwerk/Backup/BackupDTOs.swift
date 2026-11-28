@@ -1920,14 +1920,54 @@ extension BackupEntities {
     /// Replaces the data of every model in the file with the content of the file. The settings record is updated in place. When
     /// `replacePrivate` is false (the file was written without journal and Bible Study content), the journal and Bible Study
     /// notes, their folders and the sessions on this device stay as they are.
+    ///
+    /// Nothing outside the store changes before the records are saved: the settings are applied and the files of the replaced
+    /// attachments are removed only after the final save succeeded. If a step after the first save throws, the previous
+    /// settings are put back and the attachment files written so far are removed; the records themselves come back from the
+    /// caller's safety copy (see `BackupService.restore`).
     @MainActor
     func restore(into context: ModelContext, settings: AppSettings, replacePrivate: Bool, attachments: NoteAttachmentStore? = nil) throws {
+        let previousSettings = AppSettingsBackup(settings)
+        let previousGoalPlansMigrated = settings.goalPlansMigrated
+        var obsoleteAttachmentFiles: [URL] = []
+        var writtenAttachmentFiles: [URL] = []
+        do {
+            try replaceEntities(into: context, settings: settings, replacePrivate: replacePrivate, attachments: attachments,
+                                obsoleteAttachmentFiles: &obsoleteAttachmentFiles, writtenAttachmentFiles: &writtenAttachmentFiles)
+        } catch {
+            // Files of the old attachments stay: the safety copy needs them and a record may still point at them.
+            let keep = Set(obsoleteAttachmentFiles)
+            attachments?.removeFiles(at: writtenAttachmentFiles.filter { !keep.contains($0) })
+            throw error
+        }
+        // The entities are persisted: the settings and the cleanup of the disk follow.
         self.settings?.apply(to: settings)
+        // A file without goal plans: the plans of this device would not match the restored single goals, so the first plan is
+        // rebuilt from them.
+        if goalPlans == nil { settings.goalPlansMigrated = false }
+        do {
+            if goalPlans == nil { GoalStore(context: context, settings: settings).migrateIfNeeded() }
+            try context.save()
+        } catch {
+            previousSettings.apply(to: settings)
+            settings.goalPlansMigrated = previousGoalPlansMigrated
+            throw error
+        }
+        // A restored attachment that reuses the file name of an old one keeps its file.
+        let restoredFiles = Set(writtenAttachmentFiles)
+        attachments?.removeFiles(at: obsoleteAttachmentFiles.filter { !restoredFiles.contains($0) })
+    }
+
+    @MainActor
+    private func replaceEntities(into context: ModelContext, settings: AppSettings, replacePrivate: Bool, attachments: NoteAttachmentStore?,
+                                 obsoleteAttachmentFiles: inout [URL], writtenAttachmentFiles: inout [URL]) throws {
         if let attachments {
             // The attachments of notes that stay on this device (private notes not in the file) stay too.
             let protectedNoteIDs = Set(Self.fetch(NoteRecord.self, in: context)
                 .filter { !replacePrivate && !$0.kind.isInDefaultBackup }.map(\.id))
-            attachments.delete(ids: attachments.records().filter { $0.noteID.map { !protectedNoteIDs.contains($0) } ?? true }.map(\.id))
+            // Only the records go now; their files are removed once the replacement is saved.
+            obsoleteAttachmentFiles = attachments.stageDelete(
+                ids: attachments.records().filter { $0.noteID.map { !protectedNoteIDs.contains($0) } ?? true }.map(\.id))
         }
         Self.delete(LocalTask.self, in: context) { _ in true }
         Self.delete(LocalOccurrenceCompletion.self, in: context) { _ in true }
@@ -1967,9 +2007,6 @@ extension BackupEntities {
         if effortSamples != nil { Self.delete(EffortSampleRecord.self, in: context) { _ in true } }
         Self.delete(WeekReflectionRecord.self, in: context) { _ in true }
         Self.delete(GoalPlanRecord.self, in: context) { _ in true }
-        // A file without goal plans: the plans of this device would not match the restored single goals, so the first plan is
-        // rebuilt from them below.
-        if goalPlans == nil { settings.goalPlansMigrated = false }
         // Files from before the stored Health values leave those of this device untouched.
         if dayHealth != nil { Self.delete(DayHealthRecord.self, in: context) { _ in true } }
         // Files from before "Meine Lebensmittel" leave the foods of this device untouched.
@@ -2005,9 +2042,10 @@ extension BackupEntities {
         for item in noteFolders where replacePrivate || Self.isInDefaultBackup(folderRole: item.roleRaw.flatMap(NoteFolderRole.init(rawValue:))) { context.insert(item.makeRecord()) }
         if let attachments {
             for item in noteAttachments {
-                try attachments.restore(id: item.id, noteID: item.noteID, fileName: item.fileName, typeIdentifier: item.typeIdentifier,
-                                        createdAt: item.createdAt, data: item.data, roleRaw: item.roleRaw ?? "",
-                                        companionOfID: item.companionOfID, recognizedText: item.recognizedText, pageCount: item.pageCount ?? 0)
+                writtenAttachmentFiles.append(
+                    try attachments.restore(id: item.id, noteID: item.noteID, fileName: item.fileName, typeIdentifier: item.typeIdentifier,
+                                            createdAt: item.createdAt, data: item.data, roleRaw: item.roleRaw ?? "",
+                                            companionOfID: item.companionOfID, recognizedText: item.recognizedText, pageCount: item.pageCount ?? 0))
             }
         }
         if replacePrivate { for item in bibleStudySessions { context.insert(item.makeRecord()) } }
@@ -2025,7 +2063,6 @@ extension BackupEntities {
         for item in foods ?? [] { context.insert(item.makeRecord()) }
         for item in taskActivities ?? [] { context.insert(item.makeRecord()) }
         try context.save()
-        if goalPlans == nil { GoalStore(context: context, settings: settings).migrateIfNeeded() }
     }
 
     /// Whether a note folder is part of a backup written without the switch "Tagebuch und Bible Study einschließen": the

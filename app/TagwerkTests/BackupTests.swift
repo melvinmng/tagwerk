@@ -34,11 +34,11 @@ struct BackupTests {
     }
 
     /// A target with its own settings record, as a fresh install has.
-    private func makeTarget() throws -> (container: ModelContainer, settings: AppSettings, service: BackupService, files: NoteAttachmentStore) {
+    private func makeTarget(directory: URL = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory))
+        throws -> (container: ModelContainer, settings: AppSettings, service: BackupService, files: NoteAttachmentStore) {
         let container = try ModelContainerFactory.make(inMemory: true)
         let settings = try AppSettings.current(in: container.mainContext)
         let clock = self.clock
-        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
         let files = NoteAttachmentStore(context: container.mainContext, directory: directory, now: { clock.now })
         let service = BackupService(context: container.mainContext, settings: settings, calendar: calendar, appVersion: "1.0-test",
                                     now: { clock.now }, attachments: files, keyStore: .inMemory(),
@@ -1395,6 +1395,100 @@ struct BackupTests {
         try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
         let journal = try context.fetch(FetchDescriptor<NoteRecord>()).filter { $0.kind == .journal }
         #expect(journal.count == 1 && journal[0].text.hasPrefix("Allgemeine Stimmung\nDankbar"))
+    }
+
+    // MARK: Restore safety (files, settings, recovery)
+
+    /// A target with one note that has an attachment file, plus its own values that differ from the backup's.
+    private func makeTargetWithAttachment(directory: URL) throws -> (container: ModelContainer, settings: AppSettings, service: BackupService, files: NoteAttachmentStore, oldFile: URL) {
+        let target = try makeTarget(directory: directory)
+        let context = target.container.mainContext
+        let note = NoteRecord(text: "Nur auf dem Ziel", now: clock.now)
+        context.insert(note)
+        context.insert(LocalTask(title: "Nur auf dem Ziel", createdAt: clock.now))
+        try context.save()
+        let source = FileManager.default.temporaryDirectory.appending(path: "old-" + UUID().uuidString + ".pdf")
+        try Data(repeating: 5, count: 64).write(to: source)
+        defer { try? FileManager.default.removeItem(at: source) }
+        let record = try target.files.addFile(at: source, to: note.id)
+        target.settings.goalKilocalories = 1234
+        try context.save()
+        return (target.container, target.settings, target.service, target.files, try #require(target.files.url(for: record.id)))
+    }
+
+    /// Makes the attachment folder read-only so writing a restored file fails.
+    private func lockDirectory(_ directory: URL) throws {
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+    }
+
+    private func unlockDirectory(_ directory: URL) {
+        try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+    }
+
+    @Test func restore_removesTheFilesOfReplacedAttachments_afterTheRecordsAreSaved() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = try makeTargetWithAttachment(directory: directory)
+        #expect(FileManager.default.fileExists(atPath: target.oldFile.path))
+        try target.service.restore(try target.service.inspect(try backup.makeBackupData(includePrivate: true)))
+        #expect(!FileManager.default.fileExists(atPath: target.oldFile.path), "the file of the replaced attachment is gone")
+        #expect(Set(target.files.records().map(\.fileName)) == ["Plan.pdf", "Gebet.pdf"])
+        for record in target.files.records() { #expect(target.files.url(for: record.id) != nil) }
+    }
+
+    @Test func restore_ofTheSameBackupTwice_keepsTheFilesOfAttachmentsThatAreInTheFile() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = try makeTarget(directory: directory)
+        let data = try backup.makeBackupData(includePrivate: true)
+        try target.service.restore(try target.service.inspect(data))
+        try target.service.restore(try target.service.inspect(data))
+        let records = target.files.records()
+        #expect(records.count == 2)
+        for record in records { #expect(target.files.data(for: record.id) != nil, "a file that the second restore wrote again must not be removed as obsolete") }
+    }
+
+    @Test func restore_thatFailsWritingAnAttachment_keepsTheOldFilesAndTheSettings() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        defer { unlockDirectory(directory); try? FileManager.default.removeItem(at: directory) }
+        let target = try makeTargetWithAttachment(directory: directory)
+        let inspection = try target.service.inspect(try backup.makeBackupData(includePrivate: true))
+        try lockDirectory(directory)
+        #expect(throws: (any Error).self) {
+            try inspection.entities.restore(into: target.container.mainContext, settings: target.settings, replacePrivate: true,
+                                            attachments: target.files)
+        }
+        #expect(FileManager.default.fileExists(atPath: target.oldFile.path), "an old file is only removed after the records are saved")
+        #expect(target.settings.goalKilocalories == 1234, "the settings of the file are not applied before the records are saved")
+    }
+
+    @Test func restore_thatFails_returnsToThePreviousStateFromTheSafetyCopy() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        defer { unlockDirectory(directory); try? FileManager.default.removeItem(at: directory) }
+        let target = try makeTarget(directory: directory)
+        let context = target.container.mainContext
+        context.insert(LocalTask(title: "Nur auf dem Ziel", createdAt: clock.now))
+        target.settings.goalKilocalories = 1234
+        try context.save()
+        let safetyCopy = try target.service.makeSafetyCopyData()
+        let inspection = try target.service.inspect(try backup.makeBackupData(includePrivate: true))
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try lockDirectory(directory)
+        #expect(throws: BackupService.BackupError.restoreFailed) { try target.service.restore(inspection, recoveringFrom: safetyCopy) }
+        #expect(try context.fetch(FetchDescriptor<LocalTask>()).map(\.title) == ["Nur auf dem Ziel"])
+        #expect(target.settings.goalKilocalories == 1234)
+    }
+
+    @Test func restore_whoseRecoveryFailsToo_reportsRecoveryFailed() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "backup-target-" + UUID().uuidString, directoryHint: .isDirectory)
+        defer { unlockDirectory(directory); try? FileManager.default.removeItem(at: directory) }
+        let target = try makeTargetWithAttachment(directory: directory)
+        let safetyCopy = try target.service.makeSafetyCopyData()
+        let inspection = try target.service.inspect(try backup.makeBackupData(includePrivate: true))
+        // The safety copy holds an attachment, so putting the old state back needs the folder that is read-only now.
+        try lockDirectory(directory)
+        #expect(throws: BackupService.BackupError.recoveryFailed) { try target.service.restore(inspection, recoveringFrom: safetyCopy) }
+        #expect(!BackupService.message(for: .recoveryFailed).isEmpty)
     }
 
     // MARK: Safety copy and automatic backup

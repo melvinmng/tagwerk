@@ -10136,6 +10136,16 @@
         }
       }
     },
+    "Die Sicherung ließ sich nicht wiederherstellen und der vorherige Stand konnte nicht zurückgeholt werden. Eine Kopie des vorherigen Stands steht unter „Sicherheitskopien“ in der Datensicherung; stelle sie von dort wieder her.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup could not be restored and the previous state could not be brought back. A copy of the previous state is under “Safety copies” in the data backup; restore it from there."
+          }
+        }
+      }
+    },
     "Die Sicherung ließ sich nicht wiederherstellen. Der vorherige Stand wurde zurückgeholt; eine Kopie liegt im Ordner „Sicherungen“ in den Dokumenten von Tagwerk.": {
       "extractionState": "stale",
       "localizations": {
