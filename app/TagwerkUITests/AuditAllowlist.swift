@@ -80,7 +80,7 @@ enum AuditAllowlist {
         Entry(auditType: .contrast, labels: [
             "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "HEUTE · KW \\d+", "\\d\\d:00", "Überfällig", "Heute", "·", "Lokal",
             "Aufgaben, 1 offen", "Vergangene Termine", "Durchsucht: 6 Monate zurück, 12 Monate voraus\\.",
-            "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
+            "\\d+ davon ohne Aufwand mit Standarddauer gerechnet", "Pflanzen gießen",
             "Trinkportionen", "heute \\d+:\\d+( · diktiert)?",
             // Section headers of the notes overview and the date groups of the notes list (NF1, NF3), in the tone `secondaryText` like the others.
             "Meine Ordner", "Persönlich", "Angeheftet", "Letzte 7 Tage",
@@ -286,7 +286,7 @@ enum AuditAllowlist {
             + "screen is reached by swiping and its text is complete; the audit reports the chip at the edge of the visible area. Large text is "
             + "checked on the device (large text test list)."),
         Entry(auditType: .textClipped, labels: [
-            "Mit ChatGPT planen: in Einstellungen › KI anmelden", "1 Aufgabe ohne Aufwand mit Standarddauer gerechnet",
+            "Mit ChatGPT planen: in Einstellungen › KI anmelden", "\\d+ davon ohne Aufwand mit Standarddauer gerechnet",
             "zuletzt: „(Römer|Demo Linsensuppe)“ · heute \\d+:\\d+", "Wochenrückblick", "Punkte in den Einstellungen anlegen",
             "Ältere Termine durchsuchen · vor .*",
         ], screens: withLargeText(["Aufgaben", "Suche", "Erfassen", "Tagesabschluss"]) + eveningSheetScreens + gridScreens, reason: "Reported in the default size for texts that are shown completely on the screenshot of the run (cards of \"Planen\", "

@@ -269,7 +269,7 @@ struct CapacityCard: View {
                 Divider()
                 eveningLine(entry)
             }
-            if plan.day == model.today, model.showsLeftoverLine(overbooked: plan.capacity.isOverbooked) {
+            if plan.day == model.today, model.showsLeftoverLine(overbooked: plan.capacity.untimedMinutes > plan.capacity.freeMinutes) {
                 Divider()
                 LeftoverLine(count: model.openFromToday.count) { environment.routines.openLeftover() }
             }
@@ -348,9 +348,12 @@ struct CapacityCard: View {
                 if !plan.isPast, let explanation = CapacityText.explanation(plan.capacity, hours: model.workHours(on: plan.day), clock: clock) {
                     Text(explanation).font(.caption).foregroundStyle(.secondaryText)
                 }
-                if plan.capacity.estimatedCount > 0 {
-                    Text("\(plan.capacity.estimatedCount) Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet")
-                        .font(.caption).foregroundStyle(.secondaryText)
+                if !plan.isPast, let hint = CapacityText.untimedHint(plan.capacity) {
+                    Text(hint).font(.caption)
+                        .foregroundStyle(plan.capacity.untimedOverflowMinutes > 0 ? Color.redText : Color.secondaryText)
+                    if let note = CapacityText.estimateNote(plan.capacity) {
+                        Text(note).font(.caption).foregroundStyle(.secondaryText)
+                    }
                 }
                 if suggestedMinutes > 0 {
                     let suggested = CapacityText.duration(suggestedMinutes)

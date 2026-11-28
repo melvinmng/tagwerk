@@ -1507,7 +1507,7 @@
         }
       }
     },
-    "%lld Aufgabe(n) ohne Aufwand mit Standarddauer gerechnet": {
+    "%lld Aufgabe(n) ohne Uhrzeit · %@": {
       "localizations": {
         "de": {
           "variations": {
@@ -1515,13 +1515,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld Aufgabe ohne Aufwand mit Standarddauer gerechnet"
+                  "value": "%lld Aufgabe ohne Uhrzeit · %@"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld Aufgaben ohne Aufwand mit Standarddauer gerechnet"
+                  "value": "%lld Aufgaben ohne Uhrzeit · %@"
                 }
               }
             }
@@ -1533,13 +1533,173 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld task without effort counted at the default duration"
+                  "value": "%lld task without a time · %@"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld tasks without effort counted at the default duration"
+                  "value": "%lld tasks without a time · %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Aufgabe(n) ohne Uhrzeit · %@ – %@ mehr als frei": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe ohne Uhrzeit · %@ – %@ mehr als frei"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben ohne Uhrzeit · %@ – %@ mehr als frei"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task without a time · %@ – %@ more than free"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks without a time · %@ – %@ more than free"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Aufgabe(n) ohne Uhrzeit · %@ – %@ mehr als noch frei": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe ohne Uhrzeit · %@ – %@ mehr als noch frei"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben ohne Uhrzeit · %@ – %@ mehr als noch frei"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task without a time · %@ – %@ more than still free"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks without a time · %@ – %@ more than still free"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Aufgabe(n) ohne Uhrzeit · %@ – passt in die freie Zeit": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe ohne Uhrzeit · %@ – passt in die freie Zeit"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben ohne Uhrzeit · %@ – passen in die freie Zeit"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task without a time · %@ – fits into the free time"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks without a time · %@ – fit into the free time"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Aufgabe(n) ohne Uhrzeit · %@ – passt in die noch freie Zeit": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe ohne Uhrzeit · %@ – passt in die noch freie Zeit"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben ohne Uhrzeit · %@ – passen in die noch freie Zeit"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task without a time · %@ – fits into the time still free"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks without a time · %@ – fit into the time still free"
                 }
               }
             }
@@ -2473,6 +2633,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld selected · “Free” releases %2$@"
+          }
+        }
+      }
+    },
+    "%lld davon ohne Aufwand mit Standarddauer gerechnet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of them without effort counted at the default duration"
           }
         }
       }

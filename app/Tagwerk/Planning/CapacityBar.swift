@@ -1,7 +1,8 @@
 import SwiftUI
 import TagwerkCore
 
-/// Planned load against available time (mockups a/b): filled part = planned, red when overbooked.
+/// Time blocks against available time (mockups a/b): filled part = time blocks, red when overbooked. Tasks without a
+/// time block take no free time and do not fill the bar.
 struct CapacityBar: View {
     let capacity: DayCapacity
 
@@ -42,6 +43,29 @@ enum CapacityText {
         if parts.travelMinutes > 0 { line.append(String(localized: "\(duration(parts.travelMinutes)) Fahrzeit")) }
         if capacity.plannedMinutes > 0 { line.append(String(localized: "\(duration(capacity.plannedMinutes)) eingeplant")) }
         return line.joined(separator: " · ")
+    }
+
+    /// Hint line under the explanation: the tasks of the day without a time block, their effort and whether they fit into
+    /// the free time ("noch frei" today). They use no free time; `nil` without such tasks. A day off names only the effort.
+    static func untimedHint(_ capacity: DayCapacity) -> String? {
+        let count = capacity.untimedCount
+        guard count > 0 else { return nil }
+        let effort = duration(capacity.untimedMinutes)
+        if capacity.isDayOff { return String(localized: "\(count) Aufgabe(n) ohne Uhrzeit · \(effort)") }
+        let over = duration(capacity.untimedOverflowMinutes)
+        switch (capacity.remainingMinutes != nil, capacity.untimedOverflowMinutes > 0) {
+        case (false, false): return String(localized: "\(count) Aufgabe(n) ohne Uhrzeit · \(effort) – passt in die freie Zeit")
+        case (true, false): return String(localized: "\(count) Aufgabe(n) ohne Uhrzeit · \(effort) – passt in die noch freie Zeit")
+        case (false, true): return String(localized: "\(count) Aufgabe(n) ohne Uhrzeit · \(effort) – \(over) mehr als frei")
+        case (true, true): return String(localized: "\(count) Aufgabe(n) ohne Uhrzeit · \(effort) – \(over) mehr als noch frei")
+        }
+    }
+
+    /// Extra line of the hint: how many of the tasks without a time block have no effort and count with the default
+    /// duration. `nil` when there are none.
+    static func estimateNote(_ capacity: DayCapacity) -> String? {
+        guard capacity.untimedCount > 0, capacity.estimatedCount > 0 else { return nil }
+        return String(localized: "\(capacity.estimatedCount) davon ohne Aufwand mit Standarddauer gerechnet")
     }
 
     /// Today: "1 h 10 noch frei" or "30 min zu viel", from now on.
