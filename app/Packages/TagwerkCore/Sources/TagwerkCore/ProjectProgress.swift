@@ -233,6 +233,17 @@ public enum ProjectProgress {
         return closedAt > instant
     }
 
+    /// Whether the item existed and was still open at the end of a bucket, which `ProjectRange.contains` treats as exclusive: an
+    /// item belongs to the bucket when it was created or closed before `end`, so it has left exactly when its closing date is before
+    /// `end`. This uses the same comparison as `contains`, so an item created or closed within a millisecond before `end` is
+    /// counted the same way in `created`/`completed` and in `openAtEnd`.
+    static func isOpen(_ item: ProjectItemFact, before end: Date) -> Bool {
+        if let createdAt = item.createdAt, createdAt >= end { return false }
+        if item.isOpen { return true }
+        guard let closedAt = item.closedAt else { return false }
+        return closedAt >= end
+    }
+
     /// The calendar weeks of `range` as the weekly charts show them: each from its Monday (the start of the range for the first one)
     /// to the next Monday (the end of the range for the last one). Both charts of the project page use this, so their weeks match.
     public static func weekIntervals(of range: ProjectRange, calendar: Calendar) -> [ProjectRange] {
@@ -261,9 +272,11 @@ public enum ProjectProgress {
                     }
                 }
             }
-            // The last instant of the bucket: items that closed exactly at its end have left by then.
-            let endInstant = interval.end > interval.start ? interval.end.addingTimeInterval(-0.001) : interval.end
-            bucket.openAtEnd = facts.filter { isOpen($0, at: endInstant) }.count
+            // The end of a bucket is exclusive (see `ProjectRange.contains`), so the state at its end is the state just before it.
+            // An empty bucket has no such moment and takes the state at its single instant.
+            bucket.openAtEnd = facts.filter {
+                interval.end > interval.start ? isOpen($0, before: interval.end) : isOpen($0, at: interval.end)
+            }.count
             return bucket
         }
     }

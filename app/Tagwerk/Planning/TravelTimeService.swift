@@ -138,7 +138,9 @@ final class TravelTimeService {
     /// Trips without a value whose last request failed for a network reason.
     @ObservationIgnored private var provisionalKeys: Set<String> = []
     @ObservationIgnored private var retryAfter: [String: Date] = [:]
-    @ObservationIgnored private var isFetching = false
+    /// The most recent queued `fetchMissing` run. A new call waits for it (not by polling) and then starts its own, so runs
+    /// never overlap and the cache and the failure sets are only touched by one run at a time.
+    @ObservationIgnored private var lastRun: Task<Void, Never>?
 
     init(estimator: any TravelTimeEstimating = MapKitTravelEstimator(), cacheURL: URL? = TravelTimeCache.defaultFileURL,
          now: @escaping () -> Date = Date.init) {
@@ -172,10 +174,24 @@ final class TravelTimeService {
     /// Returns `true` when the plan changes (a new or different value, a trip that turned provisional or got its
     /// value); the caller reloads once. The same failure a second time returns `false`, so there is no loop.
     /// `home` is the home place; with coordinates it is the reference point for looking up free-text places.
+    ///
+    /// Concurrent calls run one after the other in the order they arrived. A cancelled caller stops its own run; the runs of
+    /// other callers are not affected.
     func fetchMissing(legs: [TravelLeg], transport: TravelTransport, home: TravelPlace? = nil) async -> Bool {
-        while isFetching { try? await Task.sleep(for: .milliseconds(50)) }
-        isFetching = true
-        defer { isFetching = false }
+        let previousRun = lastRun
+        let run = Task { [self] () -> Bool in
+            await previousRun?.value
+            return await performFetch(legs: legs, transport: transport, home: home)
+        }
+        lastRun = Task { _ = await run.value }
+        return await withTaskCancellationHandler {
+            await run.value
+        } onCancel: {
+            run.cancel()
+        }
+    }
+
+    private func performFetch(legs: [TravelLeg], transport: TravelTransport, home: TravelPlace?) async -> Bool {
         var requests = 0
         var changesPlan = false
         var changesCache = false
@@ -183,6 +199,7 @@ final class TravelTimeService {
         for leg in legs {
             let legTransport = leg.transport ?? transport
             let key = TravelTimeCache.tripKey(from: leg.from, to: leg.to, transport: legTransport)
+            if Task.isCancelled { break }
             guard seen.insert(key).inserted, cache.needsRefresh(forTrip: key, now: now()), !failedKeys.contains(key),
                   (retryAfter[key] ?? .distantPast) <= now() else { continue }
             guard requests < Self.requestsPerRun else { break }
@@ -206,6 +223,8 @@ final class TravelTimeService {
                 changesCache = true
                 if wasProvisional || previous != minutes { changesPlan = true }
             } catch {
+                // A cancelled run says nothing about the trip: it is neither remembered as failed nor as not found.
+                if error is CancellationError || Task.isCancelled { break }
                 switch TravelFailure.classify(error) {
                 case .offline:
                     retryAfter[key] = now().addingTimeInterval(Self.transientRetryInterval)

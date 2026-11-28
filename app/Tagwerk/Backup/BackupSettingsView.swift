@@ -269,9 +269,10 @@ struct BackupSettingsView: View {
         do {
             try service.restore(inspection, recoveringFrom: safetyCopy)
         } catch {
+            let failure = (error as? BackupService.BackupError) == .recoveryFailed ? BackupService.BackupError.recoveryFailed : .restoreFailed
             Task {
                 await environment.reloadAfterRestore()
-                alertText = BackupService.message(for: .restoreFailed)
+                alertText = BackupService.message(for: failure)
             }
             return
         }

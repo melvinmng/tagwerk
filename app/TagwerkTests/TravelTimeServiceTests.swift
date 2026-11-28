@@ -63,6 +63,29 @@ struct TravelTimeServiceTests {
         #expect(service.revision == 0)
     }
 
+    @Test func concurrentCalls_runOneAfterTheOther_andAskOnce() async {
+        let service = service()
+        let trip = leg()
+        async let first = service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        async let second = service.fetchMissing(legs: [trip], transport: .automobile, home: home)
+        let results = await [first, second]
+        // The second call starts after the first one stored the value, so it finds it in the cache.
+        #expect(results.filter { $0 }.count == 1)
+        #expect(estimator.tripCalls.count == 1)
+        #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
+    }
+
+    @Test func cancelledCall_returnsWithoutRememberingAFailure() async {
+        let service = service()
+        let trip = leg()
+        let task = Task { await service.fetchMissing(legs: [trip], transport: .automobile, home: home) }
+        task.cancel()
+        _ = await task.value
+        // Nothing was marked as failed, so a later call still asks.
+        #expect(await service.fetchMissing(legs: [trip], transport: .automobile, home: home))
+        #expect(service.cachedMinutes(for: [trip], transport: .automobile) == ["e1": 25])
+    }
+
     @Test func missingValue_isFetchedOnce() async {
         let service = service()
         let trip = leg()

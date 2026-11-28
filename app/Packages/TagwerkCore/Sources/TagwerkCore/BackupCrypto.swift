@@ -56,8 +56,14 @@ public enum BackupCrypto {
         return KeyMaterial(key: deriveKey(password: password, salt: salt, iterations: iterations), salt: salt, iterations: iterations)
     }
 
+    /// The iteration count that is actually used: at least 1, at most `maximumIterations`. A manipulated file or a caller can hand in
+    /// any `Int`; this keeps the conversion to `UInt32` safe and the run time bounded.
+    static func clampedIterations(_ requested: Int) -> Int {
+        min(max(1, requested), maximumIterations)
+    }
+
     /// The key a password gives for a known salt and iteration count (to open a file). The password is normalised, so the same
-    /// letters typed on another keyboard give the same key.
+    /// letters typed on another keyboard give the same key. `iterations` is limited to `1...maximumIterations`.
     public static func deriveKey(password: String, salt: Data, iterations: Int) -> Data {
         let passwordBytes = Array(password.precomposedStringWithCanonicalMapping.utf8)
         var derived = [UInt8](repeating: 0, count: keyLength)
@@ -65,7 +71,7 @@ public enum BackupCrypto {
             passwordBytes.withUnsafeBufferPointer { passwordBuffer in
                 CCKeyDerivationPBKDF(CCPBKDFAlgorithm(kCCPBKDF2), passwordBuffer.baseAddress.map { UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self) },
                                      passwordBytes.count, saltBuffer.bindMemory(to: UInt8.self).baseAddress, salt.count,
-                                     CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256), UInt32(max(1, iterations)), &derived, derived.count)
+                                     CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256), UInt32(clampedIterations(iterations)), &derived, derived.count)
             }
         }
         precondition(status == kCCSuccess, "PBKDF2 failed")

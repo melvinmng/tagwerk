@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 import TagwerkCore
 
@@ -7,6 +8,7 @@ import TagwerkCore
 @MainActor
 final class DayHealthStore {
     private let context: ModelContext
+    private let logger = Logger(subsystem: "local.tagwerk", category: "health")
     private let now: () -> Date
 
     init(context: ModelContext, now: @escaping () -> Date = { Date() }) {
@@ -34,13 +36,21 @@ final class DayHealthStore {
             if merged != existing.value {
                 existing.apply(merged)
                 existing.updatedAt = now()
-                try? context.save()
+                persist()
             }
             return merged
         }
         context.insert(DayHealthRecord(reading, updatedAt: now()))
-        try? context.save()
+        persist()
         return reading
+    }
+
+    private func persist() {
+        do {
+            try context.save()
+        } catch {
+            logger.error("Saving stored Health values failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func record(on day: PlanDay) -> DayHealthRecord? {
