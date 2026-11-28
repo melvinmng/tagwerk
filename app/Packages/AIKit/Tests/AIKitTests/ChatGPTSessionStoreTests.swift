@@ -30,7 +30,7 @@ struct ChatGPTSessionStoreTests {
         #expect(await session.isSignedIn == false)
     }
 
-    @Test func validAccessToken_expiringSoon_refreshesOnce_evenWithTwoCallers() async throws {
+    @Test(.timeLimit(.minutes(1))) func validAccessToken_expiringSoon_refreshesOnce_evenWithTwoCallers() async throws {
         transport.enqueue(Self.tokenPath, .gated(200, refreshReply))
         transport.enqueueJSON(Self.tokenPath, status: 400, #"{"error":"invalid_grant"}"#)
         let store = InMemoryChatGPTCredentialStore(tokens: expiring)
@@ -38,7 +38,7 @@ struct ChatGPTSessionStoreTests {
 
         async let first = session.validAccessToken()
         async let second = session.validAccessToken()
-        try await Task.sleep(for: .milliseconds(50))
+        try await transport.entered.waitOrFail()
         transport.release()
         let tokens = try await [first, second]
 
@@ -131,13 +131,13 @@ struct ChatGPTSessionStoreTests {
         #expect(transport.requests.count == 1)
     }
 
-    @Test func signOutDuringRefresh_doesNotStoreTokens() async throws {
+    @Test(.timeLimit(.minutes(1))) func signOutDuringRefresh_doesNotStoreTokens() async throws {
         transport.enqueue(Self.tokenPath, .gated(200, refreshReply))
         let store = InMemoryChatGPTCredentialStore(tokens: expiring)
         let session = makeSession(store)
 
         let pending = Task { try await session.validAccessToken() }
-        try await Task.sleep(for: .milliseconds(50))
+        try await transport.entered.waitOrFail()
         try await session.signOut()
         transport.release()
 

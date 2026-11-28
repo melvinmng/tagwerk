@@ -69,14 +69,19 @@ public final class RemindersTaskProvider: TaskProvider {
         if let expectedVersion, expectedVersion != currentItem.version {
             throw TaskWriteError.conflict(current: currentItem)
         }
-        if case .set(let minutes) = edit.estimateMinutes { estimates?.setMinutes(minutes, for: current.id) }
         var reminderEdit = edit
         reminderEdit.estimateMinutes = .unchanged
         reminderEdit.recurrence = try ReminderMapping.recurrenceChange(for: edit, current: current)
-        guard !reminderEdit.isEmpty else { return map(current, lists: lists) }
+        // The local estimate is written only after validation and the EventKit save succeeded,
+        // so a rejected edit never leaves a half-applied estimate behind.
+        guard !reminderEdit.isEmpty else {
+            persistEstimate(edit.estimateMinutes, for: current.id)
+            return map(current, lists: lists)
+        }
         let saved = try perform {
             try store.save(ReminderMapping.applying(reminderEdit, to: current), recurrence: reminderEdit.recurrence)
         }
+        persistEstimate(edit.estimateMinutes, for: current.id)
         return map(saved, lists: lists)
     }
 
@@ -106,6 +111,10 @@ public final class RemindersTaskProvider: TaskProvider {
         }
         if let minutes = draft.estimateMinutes { estimates?.setMinutes(minutes, for: record.id) }
         return map(record, lists: listsByID())
+    }
+
+    private func persistEstimate(_ change: FieldChange<Int?>, for reminderID: String) {
+        if case .set(let minutes) = change { estimates?.setMinutes(minutes, for: reminderID) }
     }
 
     private func requireAccess() throws {

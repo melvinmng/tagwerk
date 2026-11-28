@@ -184,10 +184,25 @@ func testNow() -> Date {
 final class Gate {
     private var isOpen = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var arrivalObservers: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
 
     func wait() async {
         if isOpen { return }
-        await withCheckedContinuation { waiters.append($0) }
+        await withCheckedContinuation { continuation in
+            waiters.append(continuation)
+            var stillWaiting: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
+            for observer in arrivalObservers {
+                if waiters.count >= observer.count { observer.continuation.resume() } else { stillWaiting.append(observer) }
+            }
+            arrivalObservers = stillWaiting
+        }
+    }
+
+    /// Suspends until `count` callers are parked in `wait()`. No polling, no timing assumptions: a test that
+    /// needs a task to be suspended at the gate waits here instead of sleeping or yielding.
+    func waitUntilEntered(_ count: Int = 1) async {
+        if waiters.count >= count { return }
+        await withCheckedContinuation { arrivalObservers.append((count, $0)) }
     }
 
     func open() {

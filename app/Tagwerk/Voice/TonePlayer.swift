@@ -30,11 +30,11 @@ final class SystemTonePlayer: NSObject, ToneSounding, AVAudioPlayerDelegate {
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        MainActor.assumeIsolated { finish() }
+        Task { @MainActor [weak self] in self?.finish() }
     }
 
     nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-        MainActor.assumeIsolated { finish() }
+        Task { @MainActor [weak self] in self?.finish() }
     }
 
     private func finish() {

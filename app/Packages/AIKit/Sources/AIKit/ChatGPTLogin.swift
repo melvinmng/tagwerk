@@ -62,31 +62,70 @@ public final class SystemWebAuthenticator: NSObject, WebAuthenticating, ASWebAut
     }
 
     public func authenticate(url: URL, callbackScheme: String) async throws {
+        // Fail early instead of presenting a sheet without an anchor window.
+        guard Self.presentationWindow() != nil else {
+            throw ChatGPTAuthError.serverFailed("The sign-in sheet could not be shown.")
+        }
         defer { activeSession = nil }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            // The completion handler and a failed `start()` can both fire; the continuation must resume exactly once.
+            let resumeOnce = SingleShotResume(continuation)
             let session = ASWebAuthenticationSession(url: url, callback: .customScheme(callbackScheme)) { _, error in
                 if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
-                    continuation.resume(throwing: ChatGPTAuthError.cancelled)
+                    resumeOnce.resume(throwing: ChatGPTAuthError.cancelled)
                 } else if let error {
-                    continuation.resume(throwing: ChatGPTAuthError.serverFailed(error.localizedDescription))
+                    resumeOnce.resume(throwing: ChatGPTAuthError.serverFailed(error.localizedDescription))
                 } else {
-                    continuation.resume()
+                    resumeOnce.resume()
                 }
             }
             session.presentationContextProvider = self
             session.prefersEphemeralWebBrowserSession = false
             activeSession = session
             if !session.start() {
-                continuation.resume(throwing: ChatGPTAuthError.serverFailed("The sign-in sheet could not be shown."))
+                resumeOnce.resume(throwing: ChatGPTAuthError.serverFailed("The sign-in sheet could not be shown."))
             }
         }
     }
 
     public nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         MainActor.assumeIsolated {
-            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            if let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow) { return window }
-            return UIWindow(windowScene: scenes.first!)
+            // `authenticate` checked for a window before starting; an empty window is the safe fallback
+            // if the last scene disappeared in between.
+            Self.presentationWindow() ?? ASPresentationAnchor()
         }
+    }
+
+    /// The key window of any connected scene, otherwise a fresh window in the first scene.
+    private static func presentationWindow() -> UIWindow? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        if let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow) { return window }
+        return scenes.first.map { UIWindow(windowScene: $0) }
+    }
+}
+
+/// Resumes a continuation at most once, from any thread; later calls are ignored.
+private final class SingleShotResume: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Void, Error>?
+
+    init(_ continuation: CheckedContinuation<Void, Error>) {
+        self.continuation = continuation
+    }
+
+    func resume() {
+        take()?.resume()
+    }
+
+    func resume(throwing error: Error) {
+        take()?.resume(throwing: error)
+    }
+
+    private func take() -> CheckedContinuation<Void, Error>? {
+        lock.lock()
+        defer { lock.unlock() }
+        let taken = continuation
+        continuation = nil
+        return taken
     }
 }

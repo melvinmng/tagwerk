@@ -283,17 +283,22 @@ struct NotificationSchedulerTests {
         #expect(center.pending["tagwerk.task.local:Gleich#0"]?.fireDate == expected)
     }
 
-    @Test func concurrentRuns_doNotReviveRemovedNotifications() async {
+    @Test(.timeLimit(.minutes(1))) func concurrentRuns_doNotReviveRemovedNotifications() async {
         local.tasks = [makeTask("A", source: .local, due: due(20))]
         let list = await loadedList([local])
         let scheduler = makeScheduler(list)
-        center.addDelay = .milliseconds(100)
+        let gate = Gate()
+        center.addGate = gate
         let first = Task { await scheduler.reschedule() }
-        await Task.yield()
+        // The first run has planned "A" and is suspended inside the system call.
+        await gate.waitUntilEntered()
         local.tasks = []
         await list.reload()
-        await scheduler.reschedule()
+        // Runs are queued: the second one starts only after the first has finished, so it cannot be awaited before the gate opens.
+        let second = Task { await scheduler.reschedule() }
+        gate.open()
         await first.value
+        await second.value
         #expect(center.pending.isEmpty)
     }
 

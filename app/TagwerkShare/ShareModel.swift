@@ -101,6 +101,8 @@ final class ShareModel {
             try? await Task.sleep(for: .seconds(2))
             finish()
         } catch {
+            // Nothing can be saved from this state again (`canSave` needs `.ready`), so the copied files must not stay behind.
+            try? FileManager.default.removeItem(at: extracted.directory)
             state = .failed(String(localized: "Tagwerk kann gerade nichts übernehmen."))
         }
     }

@@ -206,6 +206,38 @@ struct RemindersTaskProviderTests {
         #expect(estimates.minutes(for: "a") == 90)
         #expect(store.saveCount == 0)
     }
+
+    @Test func estimate_isNotStoredWhenRecurrenceValidationFails() async throws {
+        let estimates = MemoryEstimateStore()
+        estimates.setMinutes(30, for: "a")
+        let sut = RemindersTaskProvider(store: store, estimates: estimates, selectedListIDs: { nil })
+        let id = TaskID(source: .reminders, rawValue: "a")
+        // Reminder "a" has no due date, so a repetition is rejected by the validation.
+        var edit = TaskEdit()
+        edit.estimateMinutes = .set(90)
+        edit.recurrence = .set(Recurrence(rule: .daily(interval: 1), start: PlanDay(DueDate(year: 2026, month: 11, day: 19)),
+                                          end: nil, count: nil))
+        await #expect(throws: TaskWriteError.self) { try await sut.apply(edit, to: id, expectedVersion: nil) }
+        #expect(estimates.minutes(for: "a") == 30)
+        #expect(store.saveCount == 0)
+    }
+
+    @Test func estimate_isNotStoredWhenEventKitSaveFails() async throws {
+        let estimates = MemoryEstimateStore()
+        estimates.setMinutes(30, for: "a")
+        let sut = RemindersTaskProvider(store: store, estimates: estimates, selectedListIDs: { nil })
+        let id = TaskID(source: .reminders, rawValue: "a")
+        store.saveError = TaskWriteError.failed("save failed")
+        var edit = titleEdit("Neuer Titel")
+        edit.estimateMinutes = .set(90)
+        await #expect(throws: TaskWriteError.failed("save failed")) { try await sut.apply(edit, to: id, expectedVersion: nil) }
+        #expect(estimates.minutes(for: "a") == 30)
+
+        store.saveError = nil
+        let saved = try await sut.apply(edit, to: id, expectedVersion: nil)
+        #expect(saved.estimateMinutes == 90)
+        #expect(estimates.minutes(for: "a") == 90)
+    }
 }
 
 @MainActor

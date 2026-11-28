@@ -10,23 +10,37 @@ final class PlanUITests: UITestCase {
         app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH[c] %@", caption)).firstMatch
     }
 
+    /// Aufgaben › "Literatur sichten" › editor › "Zeitblock hinzufügen" › "Sichern", then back to "Planen". The row lies at the edge of
+    /// the tab bar with the row "Projektfortschritt" at the head of the list, so the page is moved up first and the tap is retried
+    /// when the editor did not open (a tap on a row that was still scrolling or not hittable does nothing).
+    private func addTimeBlockToTheLiteratureTask(file: StaticString = #filePath, line: UInt = #line) {
+        tab("Aufgaben", file: file, line: line)
+        let task = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Literatur sichten")]
+        XCTAssertTrue(task.waitForExistence(timeout: Self.timeout), "The task row is missing", file: file, line: line)
+        dragPage(towardsTop: false)
+        let save = app.buttons["Sichern"].firstMatch
+        var attempts = 0
+        while !save.exists && attempts < 3 {
+            if !task.isHittable { dragPage(towardsTop: false) }
+            if task.isHittable { task.tap() }
+            _ = save.waitForExistence(timeout: Self.timeout / 2)
+            attempts += 1
+        }
+        XCTAssertTrue(save.exists, "The task editor did not open", file: file, line: line)
+        // The editor is a long form; "Geplant" is further down.
+        let addBlock = app.buttons["Zeitblock hinzufügen"].firstMatch
+        scrollTo(addBlock, file: file, line: line)
+        addBlock.tap()
+        tapButton("Sichern", file: file, line: line)
+        tab("Planen", file: file, line: line)
+    }
+
     func testDayViewBlockAndPaging() {
         // The day view shows the demo appointment.
         waitFor("Sprechstunde")
 
         // A time block through the task editor, "Geplant" › "Zeitblock hinzufügen".
-        tab("Aufgaben")
-        let task = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Literatur sichten")]
-        XCTAssertTrue(task.waitForExistence(timeout: Self.timeout))
-        // With the row "Projektfortschritt" at the head of the list the task lies at the edge of the tab bar: move it up before the tap.
-        dragPage(towardsTop: false)
-        task.tap()
-        // The editor is a long form; "Geplant" is further down.
-        let addBlock = app.buttons["Zeitblock hinzufügen"].firstMatch
-        scrollTo(addBlock)
-        addBlock.tap()
-        tapButton("Sichern")
-        tab("Planen")
+        addTimeBlockToTheLiteratureTask()
         let block = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Literatur sichten, ")).firstMatch
         XCTAssertTrue(block.waitForExistence(timeout: Self.timeout), "The time block is not in the day")
 
@@ -34,12 +48,14 @@ final class PlanUITests: UITestCase {
         let today = dayTitle(startingWith: "Heute")
         XCTAssertTrue(today.waitForExistence(timeout: Self.timeout))
         let todayTitle = today.label
-        tapButton("Nächster Tag")
+        onScreen(label: "Nächster Tag").tap()
+        // The neighbouring days stay in the tree as page previews: only a title that is on screen counts.
         let tomorrow = dayTitle(startingWith: "Morgen")
-        XCTAssertTrue(tomorrow.waitForExistence(timeout: Self.timeout), "The title did not change to tomorrow")
+        eventually("The title did not change to tomorrow") { tomorrow.exists && tomorrow.isHittable }
         XCTAssertNotEqual(tomorrow.label, todayTitle)
         app.windows.firstMatch.swipeRight()
-        XCTAssertTrue(dayTitle(startingWith: "Heute").waitForExistence(timeout: Self.timeout), "The swipe did not return to today")
+        let backToToday = dayTitle(startingWith: "Heute")
+        eventually("The swipe did not return to today") { backToToday.exists && backToToday.isHittable }
     }
 
     /// The week lists the events of its days (#259) in the rows of the day list; a tap opens the sheet of the event as in the
@@ -98,17 +114,7 @@ final class PlanUITests: UITestCase {
     /// the timer at once and does not open the block's sheet (FO4b).
     func testFocusButtonOnTheRunningBlockStartsFocus() {
         waitFor("Sprechstunde")
-        tab("Aufgaben")
-        let task = app.descendants(matching: .any)[AccessibilityID.Tasks.row("Literatur sichten")]
-        XCTAssertTrue(task.waitForExistence(timeout: Self.timeout))
-        // With the row "Projektfortschritt" at the head of the list the task lies at the edge of the tab bar: move it up before the tap.
-        dragPage(towardsTop: false)
-        task.tap()
-        let addBlock = app.buttons["Zeitblock hinzufügen"].firstMatch
-        scrollTo(addBlock)
-        addBlock.tap()
-        tapButton("Sichern")
-        tab("Planen")
+        addTimeBlockToTheLiteratureTask()
         let block = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Literatur sichten, ")).firstMatch
         XCTAssertTrue(block.waitForExistence(timeout: Self.timeout), "The time block is not in the day")
         let button = app.buttons[AccessibilityID.Focus.planButton].firstMatch

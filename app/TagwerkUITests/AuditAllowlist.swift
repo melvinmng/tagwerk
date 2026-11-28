@@ -450,6 +450,8 @@ enum AuditAllowlist {
     static func audit(_ app: XCUIApplication, screen: String, for auditTypes: XCUIAccessibilityAuditType,
                       file: StaticString = #filePath, line: UInt = #line) throws {
         currentScreen = screen
+        // The cost counters belong to this call only: a thrown error must not hand them to the next test.
+        defer { stats = Stats() }
         logDefinitionsOnce()
         // The instability of one screen is reported once, however many passes find it.
         var reportedUnstable = false
@@ -480,13 +482,24 @@ enum AuditAllowlist {
             guard !rejected.isEmpty else { continue }
             // Another pass confirms or drops each finding (`AuditConfirmation`; Dynamic Type needs three passes in all, the other
             // types two). A further pass only runs when the earlier ones reported something, so a clean screen costs nothing.
-            // A screen that stops settling during a confirmation pass confirms nothing; the instability itself is reported.
-            let outcomes = try AuditConfirmation.judge(rejected) {
-                guard try settled() else {
-                    abandoned = true
-                    return []
+            // A screen that stops settling during a confirmation pass confirms nothing. The findings of the first pass are not dropped
+            // for that: they are collected as unconfirmed, with the reason, next to the report of the instability itself.
+            let outcomes: [(finding: AuditFinding, outcome: AuditConfirmation.Outcome)]
+            do {
+                outcomes = try AuditConfirmation.judge(rejected) {
+                    guard try settled() else {
+                        abandoned = true
+                        throw ConfirmationAborted()
+                    }
+                    return Set(try rejectedFindings(app, screen: screen, pass: pass).map(\.key))
                 }
-                return Set(try rejectedFindings(app, screen: screen, pass: pass).map(\.key))
+            } catch is ConfirmationAborted {
+                for finding in rejected {
+                    collected.add(CollectedAuditFinding(
+                        screen: screen, message: "Confirmation aborted because the screen stopped settling; reported by the first pass only: \(finding.message)",
+                        file: "\(file)", line: Int(line)))
+                }
+                break
             }
             for (finding, outcome) in outcomes {
                 switch outcome {
@@ -501,6 +514,9 @@ enum AuditAllowlist {
         if !abandoned { _ = try settled() }
         recordStats(screen: screen)
     }
+
+    /// Thrown by the confirmation pass when the screen stopped settling, so `audit` can report the first-pass findings instead of dropping them.
+    private struct ConfirmationAborted: Error {}
 
     /// The confirmed findings of the current test that are not reported yet; see `AuditFindingCollector`.
     private static var collected = AuditFindingCollector()

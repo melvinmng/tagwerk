@@ -16,14 +16,17 @@ final class SwiftDataGitHubCatalogStore: GitHubCatalogStore {
         return try? JSONDecoder().decode(GitHubCatalog.self, from: cached.payload)
     }
 
+    /// Replaces the catalog in a context of its own, so a failed write never rolls back the pending changes of the shared `context`.
     func store(_ catalog: GitHubCatalog) {
+        let writer = ModelContext(context.container)
+        writer.autosaveEnabled = false
         do {
-            try context.delete(model: CachedGitHubCatalog.self)
-            context.insert(CachedGitHubCatalog(payload: try JSONEncoder().encode(catalog), fetchedAt: catalog.fetchedAt))
-            try context.save()
+            try writer.delete(model: CachedGitHubCatalog.self)
+            writer.insert(CachedGitHubCatalog(payload: try JSONEncoder().encode(catalog), fetchedAt: catalog.fetchedAt))
+            try writer.save()
         } catch {
             // The catalog is a convenience cache; the next refresh writes it again.
-            context.rollback()
+            writer.rollback()
         }
     }
 

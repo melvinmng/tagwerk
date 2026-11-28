@@ -75,11 +75,15 @@ def classify(path):
 
 def affects_script_tests(path, kind):
     """True when a change can alter the result of scripts/tests: scripts, the workflow, the test script and its selection files.
-    A pure app change (Swift sources, project.yml, packages) cannot."""
+    The shard, selection and build-only tests also read the UI test sources, app/project.yml and the package manifests, so
+    those count. A pure app change (other Swift sources, package sources) cannot."""
     if kind == "docs":
         return False
     if path.startswith("app/"):
-        return path == "app/test-all.sh" or path.startswith("app/TagwerkUITests/") and not path.endswith(".swift")
+        return (path == "app/test-all.sh"
+                or path == "app/project.yml"
+                or path.startswith("app/TagwerkUITests/")
+                or fnmatch.fnmatchcase(path, "app/Packages/*/Package.swift"))
     return True
 
 

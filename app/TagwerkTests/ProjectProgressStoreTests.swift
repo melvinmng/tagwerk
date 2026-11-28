@@ -74,15 +74,16 @@ struct ProjectProgressStoreTests {
         #expect(recorder.loads[github.key] == 3)
     }
 
-    @Test func load_twoCallsAtOnceStartOneRequest() async {
+    @Test(.timeLimit(.minutes(1))) func load_twoCallsAtOnceStartOneRequest() async {
         let recorder = Recorder()
         recorder.answers[github.key] = .success(load())
         let gate = Gate()
         recorder.gate = gate
         let store = makeStore(recorder)
         async let first: Void = store.load(github)
+        // The first load is suspended inside its request; the second one must join it instead of starting another.
+        await gate.waitUntilEntered()
         async let second: Void = store.load(github)
-        await Task.yield()
         gate.open()
         _ = await (first, second)
         #expect(recorder.loads[github.key] == 1)

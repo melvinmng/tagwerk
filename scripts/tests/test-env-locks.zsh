@@ -156,6 +156,18 @@ hold ui-stage.lock "$DEAD_PID"
 check "a UI lock of a crashed run is taken over" "0:$$" "$(ui_status):$(holder_of ui-stage.lock)"
 reset_locks
 
+print -- "-- run lock"
+reset_locks
+mkdir -p "$TAGWERK_TEST_LOG_DIR/run.lock"
+tagwerk_acquire_run_lock > /dev/null 2>&1; rc=$?
+check "a fresh run lock folder without a process ID counts as held" "2" "$rc"
+check "the fresh run lock folder is left alone" "yes" "$([[ -d "$TAGWERK_TEST_LOG_DIR/run.lock" && ! -f "$TAGWERK_TEST_LOG_DIR/run.lock/pid" ]] && print yes || print no)"
+touch -t 202001010000 "$TAGWERK_TEST_LOG_DIR/run.lock"
+tagwerk_acquire_run_lock > /dev/null 2>&1; rc=$?
+check "an old run lock folder without a process ID is taken over" "0:$$" "$rc:$(cat "$TAGWERK_TEST_LOG_DIR/run.lock/pid" 2>/dev/null)"
+tagwerk_release_run_lock
+reset_locks
+
 print -- "-- cleanup at the end of a run"
 # The run lock of the checkout, a slot and the UI lock are all held; shut-down must hit only the own slot's simulator.
 tagwerk_acquire_run_lock 2>/dev/null

@@ -224,7 +224,8 @@ enum DemoData {
         try context.delete(model: PendingHealthDeletion.self)
         try context.save()
         let calendar = Calendar.tagwerk
-        let today = calendar.startOfDay(for: .now)
+        let now = UITestMode.now()
+        let today = calendar.startOfDay(for: now)
         func at(_ dayOffset: Int, _ hour: Int, _ minute: Int) -> Date {
             today.addingTimeInterval(TimeInterval(dayOffset * 86_400 + hour * 3600 + minute * 60))
         }
@@ -247,11 +248,11 @@ enum DemoData {
             (0, 7, 40, .breakfast, "2 Brötchen mit Käse", rolls, .estimated),
             (0, 10, 45, .snack, "Proteinriegel", bar, .manual),
         ]
-        for (offset, hour, minute, kind, title, items, origin) in history where at(offset, hour, minute) <= .now {
+        for (offset, hour, minute, kind, title, items, origin) in history where at(offset, hour, minute) <= now {
             intake.addMeal(MealValue(id: UUID(), date: at(offset, hour, minute), kind: kind, title: title, items: items, origin: origin),
                            estimatedAt: origin == .estimated ? at(offset, hour, minute) : nil)
         }
-        for (hour, minute, milliliters) in [(8, 0, 250), (9, 10, 500), (11, 30, 250)] where at(0, hour, minute) <= .now {
+        for (hour, minute, milliliters) in [(8, 0, 250), (9, 10, 500), (11, 30, 250)] where at(0, hour, minute) <= now {
             intake.addDrink(DrinkValue(id: UUID(), date: at(0, hour, minute), milliliters: milliliters))
         }
     }

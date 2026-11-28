@@ -114,6 +114,8 @@ final class AppEnvironment {
     let eventSearcher: any EventSearching
     /// Reminders as tasks; also the source of the completed ones for the search.
     private let remindersProvider: RemindersTaskProvider
+    /// The clock of the routine notifications and "Heute nicht"; tests pin it.
+    private let routineClock: () -> Date
     /// The search sheet is open. Set through `openSearch()`; assistant, notifications and links close it.
     var isSearchPresented = false
     /// The model of the open (or last) search sheet; it holds nothing after `close()`.
@@ -197,8 +199,10 @@ final class AppEnvironment {
          focusNotificationCenter: (any FocusNotificationCenter)? = nil,
          travelTimes: TravelTimeService? = nil, addressSuggester: (any AddressSuggesting)? = nil, shareInbox: ShareInbox? = nil,
          controlState: ControlState? = nil, controlReloader: ControlReloading? = nil,
-         deviceOwnerAuthenticator: (any DeviceOwnerAuthenticating)? = nil) throws {
+         deviceOwnerAuthenticator: (any DeviceOwnerAuthenticating)? = nil,
+         routineClock: @escaping () -> Date = Date.init) throws {
         self.modelContainer = modelContainer
+        self.routineClock = routineClock
         self.controlState = controlState
         self.snapshotWriter = snapshotWriter ?? WidgetSnapshotWriter(directory: nil, reload: {})
         let context = modelContainer.mainContext
@@ -310,10 +314,14 @@ final class AppEnvironment {
         assistant.fixedVoiceLanguage = { settings.contentLanguages.fixedAnswerLanguage }
         assistant.shoppingLanguage = { settings.contentLanguages.shoppingLanguage() }
         assistant.readAutomatically = { id, text, fallback in voiceOutput.speak(id: id, text: text, explicit: false, fallback: fallback) }
+        #if DEBUG && targetEnvironment(simulator)
         let demoVoice = ProcessInfo.processInfo.arguments.contains("-TagwerkDemoVoice")
         let makeRecognizer: @MainActor () -> SpeechRecognizing = {
             demoVoice ? DemoSpeechRecognizer() as SpeechRecognizing : AppleSpeechRecognizer(kind: .dictation)
         }
+        #else
+        let makeRecognizer: @MainActor () -> SpeechRecognizing = { AppleSpeechRecognizer(kind: .dictation) }
+        #endif
         self.makeRecognizer = makeRecognizer
         self.voiceMode = VoiceModeController(
             assistant: assistant, makeRecognizer: makeRecognizer, output: voiceOutput, tone: SystemTonePlayer(),
@@ -440,7 +448,7 @@ final class AppEnvironment {
         // The Bible Study reminder reads the sessions of the notes: which days are done and where reading goes on.
         let bibleStudyNotes = self.notes
         self.routineNotifications = RoutineNotificationScheduler(
-            center: notificationCenter ?? SystemNotificationCenter(), store: routineStore, settings: settings,
+            center: notificationCenter ?? SystemNotificationCenter(), store: routineStore, settings: settings, now: routineClock,
             bibleStudyCompletedDays: { bibleStudyNotes.completedSessionDays(in: $0) },
             bibleStudyNextPassage: { showsPassage, locale in
                 let continuation = bibleStudyNotes.reminderContinuation()
@@ -678,7 +686,7 @@ final class AppEnvironment {
     /// "Heute nicht" on the Bible Study reminder: the calendar day is remembered and the reminder of today goes at once. The
     /// planner leaves the day out from now on, so the next run does not bring it back.
     func skipBibleStudyToday() async {
-        let today = PlanDay(date: Date(), calendar: planning.calendar)
+        let today = PlanDay(date: routineClock(), calendar: planning.calendar)
         settings.bibleStudySkippedDayKey = today.dayKey
         try? modelContainer.mainContext.save()
         await routineNotifications.removeBibleStudyReminder(on: today)

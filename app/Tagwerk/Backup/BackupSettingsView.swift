@@ -293,7 +293,9 @@ struct BackupSettingsView: View {
     }
 
     private var passwordBinding: Binding<Bool> {
-        Binding(get: { fileAwaitingPassword != nil }, set: { if !$0 { typedPassword = "" } })
+        // Dismissing the alert by any route forgets the file and the typed password. SwiftUI runs the "Öffnen" action before it
+        // sets this binding to false, and `openWithTypedPassword` has already taken both values by then.
+        Binding(get: { fileAwaitingPassword != nil }, set: { if !$0 { fileAwaitingPassword = nil; typedPassword = "" } })
     }
 
     private var alertBinding: Binding<Bool> {

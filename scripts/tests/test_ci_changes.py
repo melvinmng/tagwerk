@@ -27,14 +27,24 @@ class PullRequestDecisionTests(unittest.TestCase):
 
     def test_appSources_runFastAndUiButNoScriptTests(self):
         self.assertEqual(decide(["app/Tagwerk/Plan/PlanView.swift"]), (True, True, False))
-        self.assertEqual(decide(["app/project.yml"]), (True, True, False))
         self.assertEqual(decide(["app/Packages/AIKit/Sources/AIKit/Client.swift", "docs/x.md"]), (True, True, False))
-        self.assertEqual(decide(["app/TagwerkUITests/NotesUITests.swift"]), (True, True, False))
 
     def test_testScriptAndSelectionFilesOfTheApp_alsoRunScriptTests(self):
         self.assertEqual(decide(["app/test-all.sh"]), (True, True, True))
         self.assertEqual(decide(["app/TagwerkUITests/nightly-only.txt"]), (True, True, True))
         self.assertEqual(decide(["app/TagwerkUITests/ui-test-durations.txt"]), (True, True, True))
+
+    def test_filesReadByTheScriptTests_alsoRunScriptTests(self):
+        # The shard, selection and build-only tests read the UI test sources, project.yml and the package manifests.
+        for path in ["app/TagwerkUITests/NotesUITests.swift", "app/project.yml", "app/Packages/AIKit/Package.swift"]:
+            with self.subTest(path=path):
+                self.assertEqual(decide([path]), (True, True, True))
+
+    def test_packageSourcesAndLockFiles_doNotRunScriptTests(self):
+        for path in ["app/Packages/AIKit/Sources/AIKit/Client.swift", "app/Packages/AIKit/Tests/AIKitTests/ClientTests.swift",
+                     "app/Packages/AIKit/Package.resolved"]:
+            with self.subTest(path=path):
+                self.assertEqual(decide([path]), (True, True, False))
 
     def test_workflowAndTheScriptsOfTheTestRun_runEverything(self):
         for path in [".github/workflows/tests.yml", ".github/actions/x/action.yml", "scripts/test-env.sh", "scripts/ui-hang-sampler.py",
