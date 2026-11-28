@@ -3389,5 +3389,7 @@
   "%lld Aufgabe(n) ohne Uhrzeit · %@": {
     "one": "%lld task without a time · %@",
     "other": "%lld tasks without a time · %@"
-  }
+  },
+  "%@ ohne Uhrzeit": "%@ without a time",
+  "%@ ohne Uhrzeit (%@ zu viel)": "%1$@ without a time (%2$@ over)"
 }

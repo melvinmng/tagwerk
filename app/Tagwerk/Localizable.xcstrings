@@ -689,6 +689,26 @@
         }
       }
     },
+    "%@ ohne Uhrzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ without a time"
+          }
+        }
+      }
+    },
+    "%@ ohne Uhrzeit (%@ zu viel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ without a time (%2$@ over)"
+          }
+        }
+      }
+    },
     "%@ ohne Zuweisung": {
       "localizations": {
         "en": {

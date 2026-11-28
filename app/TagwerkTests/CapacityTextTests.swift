@@ -100,4 +100,28 @@ struct CapacityTextTests {
         #expect(CapacityText.estimateNote(reportedDay()) == "6 davon ohne Aufwand mit Standarddauer gerechnet")
         #expect(CapacityText.estimateNote(capacity(untimed: 60, count: 2)) == nil)
     }
+
+    // MARK: Compact form for week, preview and month
+
+    @Test func untimedCompact_fits() {
+        #expect(CapacityText.untimedCompact(reportedDay()) == "3 h ohne Uhrzeit")
+    }
+
+    @Test func untimedCompact_exceeds() {
+        let tooMuch = capacity(busy: [720..<840], untimed: 450, count: 15)
+        #expect(CapacityText.untimedCompact(tooMuch) == "7 h 30 ohne Uhrzeit (50 min zu viel)")
+    }
+
+    @Test func untimedCompact_withoutTasks_isNil() {
+        #expect(CapacityText.untimedCompact(capacity(busy: [720..<840])) == nil)
+    }
+
+    @Test func summaryWithUntimed_joinsBoth() {
+        #expect(CapacityText.summaryWithUntimed(reportedDay()) == "6 h 40 frei von 6 h 40 · 3 h ohne Uhrzeit")
+        #expect(CapacityText.summaryWithUntimed(capacity(busy: [720..<840])) == "6 h 40 frei von 6 h 40")
+    }
+
+    @Test func summaryWithUntimed_dayOff_keepsTheEffort() {
+        #expect(CapacityText.summaryWithUntimed(capacity(untimed: 90, count: 3, dayOff: true)) == "kein Arbeitstag · 1 h 30 ohne Uhrzeit")
+    }
 }

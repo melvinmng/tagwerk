@@ -68,6 +68,25 @@ enum CapacityText {
         return String(localized: "\(capacity.estimatedCount) davon ohne Aufwand mit Standarddauer gerechnet")
     }
 
+    /// Short form of the hint for week, page preview and month: "3 h ohne Uhrzeit", or "7 h 30 ohne Uhrzeit (50 min zu
+    /// viel)" when the tasks exceed the free time. `nil` without tasks that have no time block.
+    static func untimedCompact(_ capacity: DayCapacity) -> String? {
+        guard capacity.untimedCount > 0 else { return nil }
+        let effort = duration(capacity.untimedMinutes)
+        guard capacity.untimedOverflowMinutes > 0 else { return String(localized: "\(effort) ohne Uhrzeit") }
+        return String(localized: "\(effort) ohne Uhrzeit (\(duration(capacity.untimedOverflowMinutes)) zu viel)")
+    }
+
+    /// `summary` with the short hint appended: "6 h 40 frei von 6 h 40 · 3 h ohne Uhrzeit".
+    static func summaryWithUntimed(_ capacity: DayCapacity) -> String {
+        [summary(capacity), untimedCompact(capacity)].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// Whether the day is shown in red: time blocks overbook it, or the tasks without a time block exceed the free time.
+    static func isOverloaded(_ capacity: DayCapacity) -> Bool {
+        capacity.isOverbooked || capacity.untimedOverflowMinutes > 0
+    }
+
     /// Today: "1 h 10 noch frei" or "30 min zu viel", from now on.
     static func remaining(_ capacity: DayCapacity) -> String {
         guard let remaining = capacity.remainingMinutes else { return summary(capacity) }

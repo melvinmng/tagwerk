@@ -46,8 +46,9 @@ struct WeekPagePreview: View {
                             Text(plan.day.startDate(in: model.calendar).formatted(.dateTime.weekday(.abbreviated).day()))
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
-                            Text(CapacityText.summary(plan.capacity)).font(.caption)
-                                .foregroundStyle(plan.capacity.isOverbooked ? Color.redText : Color.secondaryText)
+                            Text(CapacityText.summaryWithUntimed(plan.capacity)).font(.caption)
+                                .multilineTextAlignment(.trailing)
+                                .foregroundStyle(CapacityText.isOverloaded(plan.capacity) ? Color.redText : Color.secondaryText)
                         }
                         CapacityBar(capacity: plan.capacity)
                         weekRows(of: plan)
