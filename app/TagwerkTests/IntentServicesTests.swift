@@ -9,7 +9,21 @@ struct IntentServicesTests {
     let directory = FileManager.default.temporaryDirectory.appending(path: "intents-\(UUID().uuidString)")
     let health = FakeHealthStore()
 
+    /// The services, the habit store and the capture store each read the current time themselves, and the tests compare days
+    /// that they computed from `.now` before the call. A test that runs across midnight would see two different days. The tests
+    /// therefore never start within this window before midnight; they wait for the new day instead (only for a few seconds).
+    private static let midnightGuardSeconds: TimeInterval = 60
+
+    private static func waitUntilFarFromMidnight(now: Date = .now, calendar: Calendar = .tagwerk) {
+        guard let nextMidnight = calendar.nextDate(after: now, matching: DateComponents(hour: 0, minute: 0, second: 0),
+                                                   matchingPolicy: .nextTime) else { return }
+        let remaining = nextMidnight.timeIntervalSince(now)
+        guard remaining < midnightGuardSeconds else { return }
+        Thread.sleep(forTimeInterval: remaining + 1)
+    }
+
     private func make() throws -> (IntentServices, AppEnvironment) {
+        Self.waitUntilFarFromMidnight()
         let container = try ModelContainerFactory.make(inMemory: true)
         let environment = try AppEnvironment(modelContainer: container, notificationCenter: FakeNotificationCenter(),
                                              health: health, snapshotWriter: WidgetSnapshotWriter(directory: directory, reload: {}),
@@ -264,6 +278,7 @@ struct IntentServicesTests {
     // MARK: Habit list for the control (#167)
 
     @Test func habitList_writtenOnChange_withoutStats() throws {
+        Self.waitUntilFarFromMidnight()
         let suite = "test.habits.\(UUID().uuidString)"
         let state = ControlState(defaults: UserDefaults(suiteName: suite)!)
         let container = try ModelContainerFactory.make(inMemory: true)

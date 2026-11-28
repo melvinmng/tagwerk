@@ -4,6 +4,9 @@ import TagwerkCore
 @testable import Tagwerk
 
 struct LocalizedTests {
+    /// The German texts below are asserted literally, so the lookup is pinned to German instead of following `Locale.current`.
+    private static let german = Locale(identifier: "de_DE")
+
     @Test func picksTheRequestedLanguage() {
         #expect(Localized.string("Planen", in: .english, bundle: .main) == "Plan")
         #expect(Localized.string("Planen", in: .german, bundle: .main) == "Planen")
@@ -11,18 +14,18 @@ struct LocalizedTests {
 
     /// The one-form keys come from the catalog's German plural variations (the singular is no `count == 1` branch).
     @Test func pluralKeys_germanSingularAndPlural() {
-        func suggestions(_ count: Int) -> String { String(localized: "\(count) Vorschläge") }
-        func risks(_ count: Int) -> String { String(localized: "\(count) Risiken") }
-        func days(_ count: Int) -> String { String(localized: "\(count) Tagen") }
-        func applied(_ count: Int) -> String { String(localized: "\(count) Vorschläge übernommen") }
-        func fields(_ count: Int) -> String { String(localized: "Seit dem Öffnen wurden \(count) Felder geändert.") }
+        func suggestions(_ count: Int) -> String { String(localized: "\(count) Vorschläge", locale: Self.german) }
+        func risks(_ count: Int) -> String { String(localized: "\(count) Risiken", locale: Self.german) }
+        func days(_ count: Int) -> String { String(localized: "\(count) Tagen", locale: Self.german) }
+        func applied(_ count: Int) -> String { String(localized: "\(count) Vorschläge übernommen", locale: Self.german) }
+        func fields(_ count: Int) -> String { String(localized: "Seit dem Öffnen wurden \(count) Felder geändert.", locale: Self.german) }
         #expect([suggestions(1), suggestions(3)] == ["1 Vorschlag", "3 Vorschläge"])
         #expect([risks(1), risks(2)] == ["1 Risiko", "2 Risiken"])
         #expect([days(1), days(4)] == ["1 Tag", "4 Tagen"])
         #expect([applied(1), applied(2)] == ["1 Vorschlag übernommen", "2 Vorschläge übernommen"])
         #expect([fields(1), fields(2)] == ["Seit dem Öffnen wurde 1 Feld geändert.", "Seit dem Öffnen wurden 2 Felder geändert."])
-        func events(_ count: Int) -> String { String(localized: "\(count) Termine") }
-        func overlaps(_ count: Int) -> String { String(localized: "überschneidet \(count) Termine") }
+        func events(_ count: Int) -> String { String(localized: "\(count) Termine", locale: Self.german) }
+        func overlaps(_ count: Int) -> String { String(localized: "überschneidet \(count) Termine", locale: Self.german) }
         #expect([events(1), events(2)] == ["1 Termin", "2 Termine"])
         #expect([overlaps(1), overlaps(3)] == ["überschneidet 1 Termin", "überschneidet 3 Termine"])
     }
@@ -39,7 +42,7 @@ struct LocalizedTests {
     }
 
     @Test func handOverBlocks_pluralForms() {
-        func german(_ count: Int) -> String { String(localized: "\(count) geplante Zeitblöcke werden gelöscht.") }
+        func german(_ count: Int) -> String { String(localized: "\(count) geplante Zeitblöcke werden gelöscht.", locale: Self.german) }
         func english(_ count: Int) -> String {
             Localized.string("\(count) geplante Zeitblöcke werden gelöscht.", in: .english, bundle: .main)
         }
@@ -112,8 +115,8 @@ struct LocalizedTests {
 
     /// Recurrence page (plan 2026-11-18): interval labels read "Jede Woche" for one, and the English texts exist.
     @Test func recurrenceKeys_pluralAndEnglish() {
-        func weeks(_ count: Int) -> String { String(localized: "Alle \(count) Wochen") }
-        func days(_ count: Int) -> String { String(localized: "Alle \(count) Tage") }
+        func weeks(_ count: Int) -> String { String(localized: "Alle \(count) Wochen", locale: Self.german) }
+        func days(_ count: Int) -> String { String(localized: "Alle \(count) Tage", locale: Self.german) }
         #expect([weeks(1), weeks(2)] == ["Jede Woche", "Alle 2 Wochen"])
         #expect([days(1), days(3)] == ["Jeden Tag", "Alle 3 Tage"])
         func english(_ key: String.LocalizationValue) -> String { Localized.string(key, in: .english, bundle: .main) }

@@ -130,12 +130,48 @@ remove_embedded_resource_bundles() {
     -exec rm -rf {} + 2> /dev/null || true
 }
 
-# Fails when a resource bundle that was embedded before remove_embedded_resource_bundles is missing after the build.
+# Succeeds when a recorded bundle (path relative to the products folder) is still part of the current sources. The restored
+# DerivedData cache can hold bundles of targets or extensions that a pull request removed; they are recorded before the build
+# but legitimately do not come back, so only bundles that are still declared are verified:
+#   - A path inside <Name>.appex counts only while app/project.yml still declares the target <Name>.
+#   - A bundle <Package>_<Target>.bundle of a local package (app/Packages/<Package>) counts only while its Package.swift
+#     still names the target.
+#   - For a package that is not a local one, the bundle counts while the package name still appears in app/project.yml or in
+#     a local Package.swift (external dependency); a package that is mentioned nowhere any more was removed.
+# Whatever cannot be shown to be removed stays verified, so Xcode dropping an existing bundle still fails the stage.
+# Usage: resource_bundle_still_declared RELATIVE_PATH
+resource_bundle_still_declared() {
+  local relative_path="$1" extension_name bundle_name package_name target_name
+  local project_spec="$SCRIPT_DIR/project.yml" packages_folder="$SCRIPT_DIR/Packages"
+  if [[ "$relative_path" == *.appex/* ]]; then
+    extension_name="${relative_path%%.appex/*}"
+    extension_name="${extension_name:t}"
+    grep -qE "^  ${extension_name}:" "$project_spec" 2> /dev/null || return 1
+  fi
+  bundle_name="${relative_path:t}"
+  bundle_name="${bundle_name%.bundle}"
+  [[ "$bundle_name" == *_* ]] || return 0
+  package_name="${bundle_name%%_*}"
+  target_name="${bundle_name#*_}"
+  if [[ -d "$packages_folder/$package_name" ]]; then
+    grep -qF "\"$target_name\"" "$packages_folder/$package_name/Package.swift" 2> /dev/null
+    return $?
+  fi
+  grep -qE "(^|[^A-Za-z0-9_])${package_name}([^A-Za-z0-9_]|$)" "$project_spec" "$packages_folder"/*/Package.swift 2> /dev/null
+}
+
+# Fails when a resource bundle that was embedded before remove_embedded_resource_bundles is missing after the build, unless
+# the bundle was removed from the sources (see resource_bundle_still_declared).
 # Usage: verify_embedded_resource_bundles PRODUCTS_FOLDER
 verify_embedded_resource_bundles() {
   local products_folder="$1" relative_path missing=()
   for relative_path in "${EMBEDDED_BUNDLES_BEFORE[@]}"; do
-    [[ -d "$products_folder/$relative_path" ]] || missing+=("$relative_path")
+    [[ -d "$products_folder/$relative_path" ]] && continue
+    if resource_bundle_still_declared "$relative_path"; then
+      missing+=("$relative_path")
+    else
+      echo "    $relative_path is no longer declared in the sources and is not expected after the build"
+    fi
   done
   (( ${#missing} == 0 )) && return 0
   echo "Resource bundles are missing after the build (they were embedded before it):" >&2
@@ -278,7 +314,32 @@ if [[ -n "${TAGWERK_UI_ONLY:-}" ]]; then
   TAGWERK_ONLY_UI_TESTS=1
 fi
 
-# Sourced by scripts/tests/test-all-ui-selection.zsh and test-all-resource-bundles.zsh: only the functions above are needed, not the test run.
+# Resolves the scheme to test: "<Pkg>" if the package exposes a single product, else "<Pkg>-Package".
+resolve_package_scheme() {
+  local package_name="$1"
+  local schemes_json list_errors
+  list_errors=$(mktemp)
+  if ! schemes_json=$(xcodebuild -list -json 2> "$list_errors"); then
+    echo "xcodebuild -list -json failed in $PWD while resolving the scheme of package $package_name:" >&2
+    cat "$list_errors" >&2
+    rm -f "$list_errors"
+    return 1
+  fi
+  rm -f "$list_errors"
+  print -r -- "$schemes_json" | /usr/bin/python3 -c '
+import json, sys
+name = sys.argv[1]
+try:
+    schemes = json.load(sys.stdin)["workspace"]["schemes"]
+except (ValueError, KeyError, TypeError) as error:
+    sys.stderr.write("xcodebuild -list -json returned no usable scheme list for package %s (%s: %s)\n"
+                     % (name, type(error).__name__, error))
+    sys.exit(1)
+print(name if name in schemes else name + "-Package")
+' "$package_name"
+}
+
+# Sourced by scripts/tests/test-all-ui-selection.zsh and test-all-resource-bundles.zsh and test-all-package-scheme.zsh: only the functions above are needed, not the test run.
 if [[ -n "${TAGWERK_SOURCE_ONLY:-}" ]]; then return 0; fi
 
 # Phase of the last failed xcodebuild call ("build" or "test"), set by build_for_testing and run_tests.
@@ -494,22 +555,6 @@ run_stage() {
   else
     run_tests test "$@"
   fi
-}
-
-# Resolves the scheme to test: "<Pkg>" if the package exposes a single product, else "<Pkg>-Package".
-resolve_package_scheme() {
-  local package_name="$1"
-  local schemes_json
-  schemes_json=$(xcodebuild -list -json 2>/dev/null)
-  print -r -- "$schemes_json" | /usr/bin/python3 -c '
-import json, sys
-name = sys.argv[1]
-try:
-    schemes = json.load(sys.stdin)["workspace"]["schemes"]
-except (ValueError, KeyError):
-    schemes = [name]
-print(name if name in schemes else name + "-Package")
-' "$package_name"
 }
 
 for package_dir in "$SCRIPT_DIR"/Packages/*(/N); do
