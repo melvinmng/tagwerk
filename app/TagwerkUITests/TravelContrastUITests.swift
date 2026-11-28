@@ -22,11 +22,15 @@ final class TravelContrastUITests: UITestCase {
     func testAttachmentSitsAboveItsEventInTheGrid() {
         let capsule = capsules.firstMatch
         XCTAssertTrue(capsule.waitForExistence(timeout: Self.timeout), "No capsule on screen")
-        let seminars = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Seminar")).allElementsBoundByIndex
-        XCTAssertFalse(seminars.isEmpty, "The seminar is not on screen")
+        let seminarButtons = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Seminar"))
+        XCTAssertTrue(seminarButtons.firstMatch.waitForExistence(timeout: Self.timeout), "The seminar is not on screen")
+        // The grid scrolls to "now" when the day opens (`DayGridScreen.scrollToNowOnOpening()`); the frames are only read once that
+        // scroll has finished and the capsule and the seminar buttons keep their position.
+        waitUntilScreenIsStable()
         let frame = capsule.frame
-        let below = seminars.filter { frame.maxY <= $0.frame.minY + 2 && $0.frame.minY - frame.maxY < 30
-            && frame.minX < $0.frame.maxX && frame.maxX > $0.frame.minX }
-        XCTAssertFalse(below.isEmpty, "No seminar sits right below the capsule \(frame): \(seminars.map(\.frame))")
+        let seminarFrames = seminarButtons.allElementsBoundByIndex.map(\.frame)
+        let below = seminarFrames.filter { frame.maxY <= $0.minY + 2 && $0.minY - frame.maxY < 30
+            && frame.minX < $0.maxX && frame.maxX > $0.minX }
+        XCTAssertFalse(below.isEmpty, "No seminar sits right below the capsule \(frame): \(seminarFrames)")
     }
 }

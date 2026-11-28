@@ -127,8 +127,9 @@ class UITestCase: XCTestCase {
     /// Scrolls a list or form up until the element exists and is hittable.
     func scrollTo(_ element: XCUIElement, maxSwipes: Int = 8, file: StaticString = #filePath, line: UInt = #line) {
         var swipes = 0
+        // A drag of a fixed length: a swipe keeps scrolling by inertia while the next query or tap already runs.
         while !(element.exists && element.isHittable), swipes < maxSwipes {
-            app.swipeUp()
+            dragPage(towardsTop: false)
             swipes += 1
         }
         XCTAssertTrue(element.exists && element.isHittable, "\(element) is not reachable by scrolling", file: file, line: line)
@@ -161,10 +162,19 @@ class UITestCase: XCTestCase {
         field.typeText(text)
     }
 
-    /// Replaces the text of a field: a tap at its right end puts the cursor behind the text, then the old text is deleted.
+    /// Replaces the text of a field. A field with a clear button (search fields) is cleared with it. Any other field gets the cursor behind
+    /// the text by a tap at its right end, then the old text is deleted. The first tap goes to the middle of the field, which gives it the
+    /// focus without touching the clear button at the right end; only then the right end is tapped.
     func replaceText(of field: XCUIElement, with text: String, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(field.waitForExistence(timeout: Self.timeout), "Field missing", file: file, line: line)
         let current = (field.value as? String) ?? ""
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let clearButton = field.buttons.matching(NSPredicate(format: "label IN %@", ["Text löschen", "Clear text"])).firstMatch
+        if clearButton.exists, clearButton.isHittable {
+            clearButton.tap()
+            field.typeText(text)
+            return
+        }
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + text)
     }

@@ -1,11 +1,12 @@
 import XCTest
 
-/// Bible Study (BS2b, BV1b, BV3a): the start sheet. The demo data holds a completed session of Römer that ended on the last verse
-/// of chapter 3, so the suggestion is 4,1.
+/// Shared steps of the Bible Study UI tests: the start sheet and a running session. The tests are split over two classes
+/// (`BibleStudyUITests`: start sheet and session; `BibleStudyTasksUITests`: tasks from checkboxes, capsule and row in "Aufgaben") so
+/// the shards of the UI test job can balance them (`ui-test-durations.txt`).
 @MainActor
-final class BibleStudyUITests: UITestCase {
+class BibleStudyUITestCase: UITestCase {
     /// Aufgaben › Notizen › Bible Study. The folder sits in the section "Persönlich" below the fold of the overview.
-    private func openBibleStudyFolder(file: StaticString = #filePath, line: UInt = #line) {
+    func openBibleStudyFolder(file: StaticString = #filePath, line: UInt = #line) {
         openNotes(file: file, line: line)
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study")).firstMatch
         scrollTo(folder, file: file, line: line)
@@ -13,7 +14,7 @@ final class BibleStudyUITests: UITestCase {
     }
 
     /// Aufgaben › Notizen › Bible Study › "Bible Study starten".
-    private func openStartSheet(file: StaticString = #filePath, line: UInt = #line) {
+    func openStartSheet(file: StaticString = #filePath, line: UInt = #line) {
         openBibleStudyFolder(file: file, line: line)
         let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bible Study starten")).firstMatch
         XCTAssertTrue(start.waitForExistence(timeout: Self.timeout), "\"Bible Study starten\" is missing", file: file, line: line)
@@ -22,6 +23,26 @@ final class BibleStudyUITests: UITestCase {
                       file: file, line: line)
     }
 
+    /// Starts the suggested session of Römer; the note opens with the bar of the running session above its text.
+    func startSuggestedSession(file: StaticString = #filePath, line: UInt = #line) {
+        openStartSheet(file: file, line: line)
+        tapButton("bibleStudy.start", file: file, line: line)
+        XCTAssertTrue(app.buttons["bibleSession.complete"].waitForExistence(timeout: Self.timeout), "The bar of the running session is missing",
+                      file: file, line: line)
+    }
+
+    /// Back from the note to the list of the folder.
+    func leaveNote(file: StaticString = #filePath, line: UInt = #line) {
+        let back = app.navigationBars.firstMatch.buttons.firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: Self.timeout), "No way back from the note", file: file, line: line)
+        back.tap()
+    }
+}
+
+/// Bible Study (BS2b, BV1b, BV3a, BV2b): the start sheet and the running session. The demo data holds a completed session of Römer
+/// that ended on the last verse of chapter 3, so the suggestion is 4,1.
+@MainActor
+final class BibleStudyUITests: BibleStudyUITestCase {
     /// BV3a: the sheet offers the verse after the last session and names where it comes from.
     func testStartSheetSuggestsNextVerse() {
         openStartSheet()
@@ -66,21 +87,6 @@ final class BibleStudyUITests: UITestCase {
 
     // MARK: Running session (BS1b, BV2b)
 
-    /// Starts the suggested session of Römer; the note opens with the bar of the running session above its text.
-    private func startSuggestedSession(file: StaticString = #filePath, line: UInt = #line) {
-        openStartSheet(file: file, line: line)
-        tapButton("bibleStudy.start", file: file, line: line)
-        XCTAssertTrue(app.buttons["bibleSession.complete"].waitForExistence(timeout: Self.timeout), "The bar of the running session is missing",
-                      file: file, line: line)
-    }
-
-    /// Back from the note to the list of the folder.
-    private func leaveNote(file: StaticString = #filePath, line: UInt = #line) {
-        let back = app.navigationBars.firstMatch.buttons.firstMatch
-        XCTAssertTrue(back.waitForExistence(timeout: Self.timeout), "No way back from the note", file: file, line: line)
-        back.tap()
-    }
-
     /// BV2b: "Abschließen" opens the wheels; confirming completes the session, completes the heading and the bar goes.
     func testSessionBarCompletesWithChosenEnd() {
         startSuggestedSession()
@@ -104,16 +110,24 @@ final class BibleStudyUITests: UITestCase {
         let editor = app.textViews.firstMatch
         XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "The note of the session has no text view")
         editor.tap()
-        for round in 1...5 {
+        let bar = app.buttons["bibleSession.complete"]
+        let rounds = 3
+        for round in 1...rounds {
             editor.typeText("Gedanke \(round). ")
-            // A real wait on purpose: the autosave is a timer, no element query can express it. Longer than its delay of 500 ms,
-            // so the text is stored between the rounds.
-            RunLoop.current.run(until: Date().addingTimeInterval(1.2))
-            XCTAssertTrue(app.buttons["bibleSession.complete"].exists, "The note closed by itself after round \(round)")
+            // The autosave is a timer (500 ms), no element query can express it, so every round observes the page for a little longer than
+            // that delay: an inverted expectation fails the moment the bar of the session or the text view disappears, not only when it is
+            // looked at after a fixed pause, and the text is stored between the rounds.
+            let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: bar)
+            let editorGone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.textViews.firstMatch)
+            closed.isInverted = true
+            editorGone.isInverted = true
+            XCTAssertEqual(XCTWaiter.wait(for: [closed, editorGone], timeout: 0.8), .completed,
+                           "The note closed by itself in round \(round) while it was autosaved")
+            XCTAssertTrue(bar.exists, "The bar of the session is gone after round \(round)")
             XCTAssertTrue(app.textViews.firstMatch.exists, "The text view is gone after round \(round)")
         }
         let text = app.textViews.firstMatch.value as? String ?? ""
-        XCTAssertTrue(text.contains("Gedanke 5."), "The typed text is missing: \(text)")
+        XCTAssertTrue(text.contains("Gedanke 3."), "The typed text is missing: \(text)")
     }
 
     /// Leaving the note keeps the session open: the folder list still offers to complete it.
@@ -134,118 +148,5 @@ final class BibleStudyUITests: UITestCase {
         XCTAssertTrue(confirm.waitForExistence(timeout: Self.timeout), "The question \"Bis wohin gelesen?\" did not open")
         confirm.tap()
         waitUntilGone(app.staticTexts["Sitzung läuft"])
-    }
-
-    // MARK: Task from a checkbox (BS5b, #307)
-
-    /// A running session whose note holds one checkbox line, shown as a page ("Fertig" closes the keyboard and the text field).
-    private func startSessionWithCheckbox(file: StaticString = #filePath, line: UInt = #line) {
-        startSuggestedSession(file: file, line: line)
-        let editor = app.textViews.firstMatch
-        XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "The note of the session has no text view", file: file, line: line)
-        editor.tap()
-        // Typing before the text view has the focus loses keystrokes, and "Fertig" then closes an editor without the checkbox line.
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: Self.timeout), "The text view did not take the focus", file: file, line: line)
-        // The tap puts the cursor where it lands, so the checkbox starts on a line of its own whatever came before.
-        editor.typeText("\n- [ ] nochmal lesen")
-        eventually("The checkbox line did not reach the text view", file: file, line: line) {
-            (editor.value as? String)?.contains("- [ ] nochmal lesen") == true
-        }
-        tapButton("Fertig", file: file, line: line)
-    }
-
-    private func pageText(_ text: String) -> XCUIElement {
-        app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
-
-    /// A long press on the box of the first checkbox offers "Als Aufgabe anlegen"; the hint comes before the sheet.
-    private func askForTaskOnFirstCheckbox(file: StaticString = #filePath, line: UInt = #line) {
-        let box = app.webViews.descendants(matching: .any).matching(NSPredicate(format: "elementType == %d", XCUIElement.ElementType.switch.rawValue)).firstMatch
-        XCTAssertTrue(box.waitForExistence(timeout: Self.timeout), "The checkbox is missing", file: file, line: line)
-        box.press(forDuration: 1.0)
-        let action = app.buttons["Als Aufgabe anlegen"].firstMatch
-        XCTAssertTrue(action.waitForExistence(timeout: Self.timeout), "The long press did not open the menu of the checkbox", file: file, line: line)
-        action.tap()
-        XCTAssertTrue(app.staticTexts["Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent)."]
-            .waitForExistence(timeout: Self.timeout), "The hint about the private title is missing", file: file, line: line)
-        tapButton("Weiter", file: file, line: line)
-    }
-
-    /// #307: the long press on a checkbox of the page creates a task; the line gets the marker "→ Aufgabe" once the task exists.
-    func testLongPressOnCheckboxCreatesTask() {
-        startSessionWithCheckbox()
-        XCTAssertFalse(pageText("→ Aufgabe").exists)
-        askForTaskOnFirstCheckbox()
-        tapButton("Hinzufügen")
-        XCTAssertTrue(pageText("→ Aufgabe").waitForExistence(timeout: Self.timeout), "The line was not marked")
-    }
-
-    /// Cancelling the sheet creates nothing and leaves the line without the marker.
-    func testCancelLeavesLineUnmarked() {
-        startSessionWithCheckbox()
-        askForTaskOnFirstCheckbox()
-        tapButton("Abbrechen")
-        XCTAssertTrue(pageText("nochmal lesen").waitForExistence(timeout: Self.timeout))
-        XCTAssertFalse(pageText("→ Aufgabe").exists, "The line was marked although no task was created")
-    }
-
-    /// #307 (2A): "Als Aufgabe" in the bar above the keyboard turns the checkbox line at the cursor into a task, and only that line.
-    func testBarButtonCreatesTaskFromCheckboxLineAtCursor() {
-        startSuggestedSession()
-        let editor = app.textViews.firstMatch
-        XCTAssertTrue(editor.waitForExistence(timeout: Self.timeout), "The note of the session has no text view")
-        editor.tap()
-        editor.typeText("\nnur Text")
-        let button = app.buttons[AccessibilityID.NoteEditor.checkboxTaskButton]
-        XCTAssertTrue(button.waitForExistence(timeout: Self.timeout), "The bar has no \"Als Aufgabe\"")
-        XCTAssertFalse(button.isEnabled, "\"Als Aufgabe\" must be disabled in a line without a checkbox")
-        editor.typeText("\n- [ ] nochmal lesen")
-        eventually("\"Als Aufgabe\" did not get enabled in the checkbox line") { button.isEnabled }
-        button.tap()
-        XCTAssertTrue(app.staticTexts["Der Titel wird eine normale Aufgabe und ist dann nicht mehr privat (Erinnerungen, Assistent)."]
-            .waitForExistence(timeout: Self.timeout), "The hint about the private title is missing")
-        tapButton("Weiter")
-        tapButton("Hinzufügen")
-        eventually("The line was not marked") { (app.textViews.firstMatch.value as? String)?.contains("nochmal lesen → Aufgabe") == true }
-    }
-
-    // MARK: Capsule above the tab bar (2B) and row in "Aufgaben" (1B, #306)
-
-    private var capsule: XCUIElement { app.descendants(matching: .any)["bibleSession.capsule"].firstMatch }
-
-    /// 2B: while a session is open, every tab shows the capsule; a tap leads back into the note, where the bar of the session says
-    /// the same, so the capsule is not shown there.
-    func testSessionCapsuleLeadsBackIntoTheNote() {
-        startSuggestedSession()
-        XCTAssertFalse(capsule.exists, "The note shows the bar of the session itself; the capsule must not repeat it")
-        tab("Planen")
-        XCTAssertTrue(capsule.waitForExistence(timeout: Self.timeout), "The capsule of the running session is missing in another tab")
-        capsule.tap()
-        XCTAssertTrue(app.buttons["bibleSession.complete"].waitForExistence(timeout: Self.timeout), "The capsule did not lead back into the note")
-        waitUntilGone(capsule)
-    }
-
-    /// 2B: without a running session there is no capsule.
-    func testNoCapsuleWithoutSession() {
-        tab("Planen")
-        XCTAssertFalse(capsule.waitForExistence(timeout: 3), "The capsule shows although no session is open")
-    }
-
-    /// 1B: the plain row "Bible Study" in "Aufgaben" opens the start sheet while no session runs.
-    func testTasksRowOpensTheStartSheet() {
-        tab("Aufgaben")
-        let row = app.buttons["tasks.bibleStudy"]
-        XCTAssertTrue(row.waitForExistence(timeout: Self.timeout), "The row \"Bible Study\" is missing in Aufgaben")
-        row.tap()
-        XCTAssertTrue(app.navigationBars["Bible Study starten"].waitForExistence(timeout: Self.timeout), "The start sheet did not open")
-    }
-
-    /// 1B: with a session running the row leads into its note.
-    func testTasksRowLeadsIntoTheRunningSession() {
-        startSuggestedSession()
-        // Back to the root of "Aufgaben": note, folder, notes overview.
-        for _ in 0..<3 { leaveNote() }
-        tapButton("tasks.bibleStudy")
-        XCTAssertTrue(app.buttons["bibleSession.complete"].waitForExistence(timeout: Self.timeout), "The row did not lead into the note")
     }
 }

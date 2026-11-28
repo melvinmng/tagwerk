@@ -28,10 +28,14 @@ enum SystemBarOverlap {
     ///
     /// - The part of the element outside `screen` is not visible and does not count (a block that continues below the tab bar and beyond
     ///   the lower edge of the screen is judged by what is on the screen).
-    /// - Only the vertical extent is compared. The bars span the full width of the window in the accessibility tree, and the glass
-    ///   capsule of the tab bar is inset by a few points; a text that starts a few points left of it is still measured against the glass.
+    /// - The share is measured on the vertical extent, but the element must also overlap the bar horizontally (by more than zero
+    ///   points). The bars span the full width of the window in the accessibility tree, and the glass capsule of the tab bar is inset by
+    ///   a few points; a text that starts a few points left of it still overlaps the bar and is measured against the glass. An element
+    ///   that lies completely beside the horizontal span of a bar is never covered by it, however its vertical position matches.
     static func coveredShare(of element: CGRect, by bar: CGRect, within screen: CGRect) -> CGFloat {
         guard !element.isNull, !element.isEmpty, element.height > 0 else { return 0 }
+        let overlapWidth = min(element.maxX, bar.maxX) - max(element.minX, bar.minX)
+        guard overlapWidth > 0 else { return 0 }
         let visibleTop = max(element.minY, screen.minY)
         let visibleBottom = min(element.maxY, screen.maxY)
         let visibleHeight = visibleBottom - visibleTop

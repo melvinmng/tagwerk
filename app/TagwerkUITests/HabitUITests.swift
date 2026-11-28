@@ -3,14 +3,14 @@ import XCTest
 /// The habits of "Erfassen" (GW3): a habit that its source fulfilled keeps its check when it is tapped and explains itself.
 final class HabitUITests: UITestCase {
     /// The button with a label that starts with `prefix` and can be hit now; the page of "Erfassen" scrolls until it is there:
-    /// up while the row is below the screen, then down when a swipe moved it past the top (the list below the habits is long
-    /// enough to carry a swipe that far, and a row above the screen may not be in the tree any more, so scrolling in one
-    /// direction only would never find the row again).
+    /// up while the row is below the screen, then down when a drag moved it past the top (a row above the screen may not be in the
+    /// tree any more, so scrolling in one direction only would never find the row again). The drags have a fixed length and no
+    /// inertia (`dragPage`), so the page stands still when the next query runs.
     /// "Erfassen" keeps the neighbouring days as page previews in the tree, so only a hittable match counts.
     private func hittableButton(_ prefix: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let query = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", prefix))
-        let maxSwipesUp = 8
-        let maxSwipesDown = 8
+        let maxSwipesUp = 12
+        let maxSwipesDown = 12
         var swipesUp = 0
         var swipesDown = 0
         var isScrollingUp = true
@@ -23,11 +23,11 @@ final class HabitUITests: UITestCase {
                 isScrollingUp = false
             }
             if isScrollingUp && swipesUp < maxSwipesUp {
-                app.swipeUp()
+                dragPage(towardsTop: false)
                 swipesUp += 1
             } else if swipesDown < maxSwipesDown {
                 isScrollingUp = false
-                app.swipeDown()
+                dragPage(towardsTop: true)
                 swipesDown += 1
             } else {
                 break
@@ -68,7 +68,7 @@ final class HabitUITests: UITestCase {
 
         eventually("The row is fulfilled automatically") { self.stateValue(of: self.hittableButton("Tag abschließen")).hasPrefix("automatisch erfüllt") }
         // The hint appears under the list: scroll the row up first, so that there is room below it on the screen.
-        app.swipeUp()
+        dragPage(towardsTop: false)
         waitUntilScreenIsStable()
         // The check mark is the button of the row, at its left edge; the middle of the row opens nothing. The mark image is
         // tapped itself: a fixed offset into the row (8 % of its width) landed just left of it.

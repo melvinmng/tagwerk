@@ -1,6 +1,10 @@
 import XCTest
 
 final class RoutineUITests: UITestCase {
+    /// Pinned to the morning (09:30), so the morning card, the hour grid and the wrap-up give the same result at every hour of the day,
+    /// also shortly before midnight.
+    override var extraLaunchArguments: [String] { Self.morningClockArguments }
+
     // The deep links `tagwerk://routine/start` and `tagwerk://routine/evening` are covered by the AppRoute unit tests;
     // the system confirmation of a custom URL scheme makes them unreliable in a UI test, so the sheets open from the
     // routine cards of "Erfassen".
