@@ -355,8 +355,7 @@ struct CapacityCard: View {
                 if suggestedMinutes > 0 {
                     let suggested = CapacityText.duration(suggestedMinutes)
                     let freeAfter = CapacityText.duration(PlanningModel.freeAfterAccepting(
-                        free: plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes, suggestions: plan.suggestions,
-                        counted: plan.planInput?.countedTaskMinutes ?? [:]))
+                        free: plan.capacity.remainingMinutes ?? plan.capacity.freeMinutes, suggestions: plan.suggestions))
                     Label(String(localized: "\(suggested) vorgeschlagen · nach dem Übernehmen \(freeAfter) frei"), systemImage: "sparkles")
                         .font(.caption).foregroundStyle(.purpleText)
                 }

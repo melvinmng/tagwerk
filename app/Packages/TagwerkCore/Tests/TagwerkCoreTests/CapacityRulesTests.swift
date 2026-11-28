@@ -301,6 +301,25 @@ struct CapacityRulesTests {
         #expect(day.plannedMinutes == 90 + 30)
     }
 
+    @Test func planInput_freeMinutes_ignoreTasksWithoutTime() {
+        let day = planDay(blocks: [600..<660], untimed: 120)
+        #expect(day.blockMinutes == 60)
+        #expect(day.freeMinutes == 420)
+        // The load for the AI checks still counts the tasks without a time.
+        #expect(day.plannedMinutes == 180)
+    }
+
+    @Test func planInput_freeMinutes_followTheNewHours() {
+        let day = planDay(blocks: [1090..<1150], untimed: 30)
+        #expect(day.blockMinutes == 0)
+        #expect(day.freeMinutes == 480)
+        let longer = day.withHours(WorkHours(startMinutes: 540, endMinutes: 1200))
+        #expect(longer.blockMinutes == 60)
+        #expect(longer.freeMinutes == 540)
+        // Load: the block in the new hours plus the 30 min of tasks without a time.
+        #expect(longer.plannedMinutes == 90)
+    }
+
     @Test func planInput_withHours_countsBlocksInTheNewHours() {
         let day = planDay(blocks: [1090..<1150], untimed: 30)
         #expect(day.plannedMinutes == 30)

@@ -340,7 +340,7 @@ struct PlanningModelTests {
         let model = await model(at: 18, 40)
         let entry = try #require(model.eveningEntry)
         #expect(entry.day == tomorrow)
-        #expect(entry.freeMinutes == 450)  // 480 minus "Abgabe" due tomorrow (30 min)
+        #expect(entry.freeMinutes == 480)  // "Abgabe" due tomorrow (30 min, no time block) takes no free time
         #expect(entry.leftCount == 1)
         model.anchor = tomorrow
         await model.reload()
@@ -365,17 +365,24 @@ struct PlanningModelTests {
         #expect(model.overdue.map(\.title) == ["Fahrrad"])  // planned for yesterday
     }
 
-    @Test func freeAfterAccepting_doesNotCountReplacedLoadTwice() {
-        // Mockup MP2: 3 h 15 free; 4 h suggested, of which 2 h (due tomorrow) are already counted: 1 h 15 remain.
+    @Test func freeAfterAccepting_subtractsTheSuggestedBlocks() {
+        // Mockup MP2: 5 h free, 4 h suggested as blocks; tasks without a time block take no free time, so 1 h remains.
         let suggestions = [("a", 75), ("b", 45), ("c", 30), ("d", 90)].map { key, minutes in
             PlanSuggestion(id: UUID(), kind: .block, taskKey: key, title: key, day: tomorrow, startMinutes: 540,
                            minutes: minutes, reason: "r")
         }
         let move = PlanSuggestion(id: UUID(), kind: .move, taskKey: "e", title: "e", day: tomorrow, startMinutes: nil,
                                   minutes: nil, reason: "r")
-        let free = PlanningModel.freeAfterAccepting(free: 195, suggestions: suggestions + [move], counted: ["a": 75, "b": 45])
-        #expect(free == 75)
-        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions, counted: [:]) == 0)
+        let free = PlanningModel.freeAfterAccepting(free: 300, suggestions: suggestions + [move])
+        #expect(free == 60)
+        #expect(PlanningModel.freeAfterAccepting(free: 30, suggestions: suggestions) == 0)
+    }
+
+    @Test func leftoverTargetCapacity_ignoresTasksWithoutTime() async {
+        // "Abgabe" is due tomorrow and has no time block: it takes no free time of the target day.
+        let capacity = await model().leftoverTargetCapacity(on: tomorrow)
+        #expect(capacity.freeMinutes == 480)
+        #expect(!capacity.isDayOff)
     }
 
     @Test func overdue_shownTodayAndTomorrow_notLater() async {

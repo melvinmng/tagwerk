@@ -314,6 +314,8 @@ struct RoutinesModelTests {
         let model = makeModel()
         let overview = await model.overview(for: today)
         #expect(overview?.tasks == 2 && overview?.events == 0)
+        // Tasks without a time block take no free time.
+        #expect(overview?.freeMinutes == 480)
         #expect(await model.overview(for: today.adding(days: -1, calendar: calendar)) == nil)
     }
 

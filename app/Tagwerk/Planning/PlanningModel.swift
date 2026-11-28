@@ -1544,7 +1544,7 @@ final class PlanningModel {
     func leftoverTargetCapacity(on day: PlanDay) async -> (freeMinutes: Int?, isDayOff: Bool) {
         let isDayOff = (workHours(on: day)?.minutes ?? 0) == 0
         guard !isDayOff, let input = await planInputs(in: day...day).first else { return (nil, isDayOff) }
-        return (input.availableMinutes - input.plannedMinutes, false)
+        return (input.freeMinutes, false)
     }
 
     /// "In den nächsten freien Block" (#163): every task gets a time block in the first free stretch from the next working
@@ -1601,13 +1601,11 @@ final class PlanningModel {
         for move in moves.reversed() { await undo(move) }
     }
 
-    /// Free time after accepting the day's block suggestions (mockup V1, plan-tomorrow F10): a block replaces the
-    /// load its task already has on the day (assigned or due that day), so that load is not subtracted twice.
-    static func freeAfterAccepting(free: Int, suggestions: [PlanSuggestion], counted: [String: Int]) -> Int {
-        let blocks = suggestions.filter { $0.kind == .block }
-        let added = blocks.reduce(0) { $0 + ($1.minutes ?? 0) }
-        let replaced = Set(blocks.map(\.taskKey)).reduce(0) { $0 + (counted[$1] ?? 0) }
-        return max(0, free - added + replaced)
+    /// Free time after accepting the day's block suggestions (mockup V1): every block takes its minutes. The tasks of the
+    /// day without a time block take no free time, so a block that replaces one of them has nothing to give back.
+    static func freeAfterAccepting(free: Int, suggestions: [PlanSuggestion]) -> Int {
+        let added = suggestions.filter { $0.kind == .block }.reduce(0) { $0 + ($1.minutes ?? 0) }
+        return max(0, free - added)
     }
 
     func clearMoveGroupUndo() {
@@ -1636,7 +1634,7 @@ final class PlanningModel {
         leftFromToday = isTodayOver ? openFromToday : []
         if scope == .day, anchor == today, isTodayOver, let next = nextPlanDay,
            let input = await planInputs(in: next...next).first {
-            eveningEntry = EveningEntry(day: next, freeMinutes: max(0, input.availableMinutes - input.plannedMinutes),
+            eveningEntry = EveningEntry(day: next, freeMinutes: max(0, input.freeMinutes),
                                         leftCount: leftFromToday.count)
         } else {
             eveningEntry = nil
